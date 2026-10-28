@@ -6,6 +6,7 @@ export function definirPesca(json, sprites) { P = json; SP = sprites; }
 export const pescaPronta = () => !!(P?.pontos?.length && SP?.ancora);
 export const cfgPesca = () => P?.config || {};
 export const pontosDoMapa = (n) => (P?.pontos || []).filter(p => p.mapa === n);
+export const peixeEhRaro = (id) => (P?.pontos || []).some(p => (p.peixes || []).some(f => f.id === id && f.raro));   // ⭐ XP retroativo (PROMPT-156)
 export const spritePesca = () => SP || {};
 export const pontaVara = (pers, pose) => SP?.ponta_vara?.[pers]?.[pose] || null;
 

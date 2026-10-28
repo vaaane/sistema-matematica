@@ -285,7 +285,7 @@
 <script type="module">
 import { numeroChamada, BIMESTRES, bimestreAtual, dentroDoAtestado, normalizarAtestados, aulasNoDia, LISTA_ATIVIDADES, regrasJogo } from "/js/constants.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
-import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS, TOTAL_INSIGNIAS } from "/js/jogo-revisao/nota.js";
+import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_XP, XP_META, TOTAL_INSIGNIAS } from "/js/jogo-revisao/nota.js";
 import { indexarBiblioteca, resolverAula, tipoInfo } from "/js/biblioteca.js";
 import { getResultadosByAluno, getLiberacoesHistoricoTodas } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
@@ -359,7 +359,7 @@ let libHistorico = [];     // liberacoes_historico (datas oficiais + 2ª chamada
 let _dataAgendaReg = {};   // data agendada por atividade (atividades_agenda)
 let atestados = [];    // [ {inicio,fim,ts,obs} ] do aluno logado
 let nivelTab = 0, nivelNeg = 0, nivelEsc = 0;   // progresso nos jogos (tabuada e escalada)
-let revIns = 0, revDour = 0;   // Jogo de Revisão: insígnias e douradas
+let revIns = 0, revDour = 0, revXP = 0;   // Jogo de Revisão: insígnias, douradas e XP do jogo (PROMPT-156)
 
 // Barra de um jogo na regra de pontuação do 4º bim em diante (marcos de
 // regrasJogo em js/constants.js). Valores exibidos são ACUMULADOS.
@@ -424,10 +424,11 @@ async function carregar(){
     // Jogo de Revisão (modo teste lê do histórico de teste); falha não derruba a ficha
     try {
       const _base = isModoTeste() ? `modo_teste_historico/${_uid}/jogo_revisao` : `jogo_revisao/${_uid}`;
-      const sRev = await get(ref(db, `${_base}/insignias`));
+      const [sRev, sXP] = await Promise.all([get(ref(db, `${_base}/insignias`)), get(ref(db, `${_base}/xp_jogo/total`)).catch(() => null)]);
       const _ins = sRev.exists() ? Object.values(sRev.val() || {}).filter(Boolean) : [];
       revIns = _ins.length; revDour = _ins.filter(i => i.dourada).length;
-    } catch (_) { revIns = 0; revDour = 0; }
+      revXP = sXP?.exists() ? Number(sXP.val()) || 0 : 0;
+    } catch (_) { revIns = 0; revDour = 0; revXP = 0; }
     // data agendada por atividade — usada só para EXIBIR a data quando a atividade
     // ainda não foi aplicada (estado "agendada"). Não conta como presença/falta.
     _dataAgendaReg = {};
@@ -896,13 +897,15 @@ function render(){
             Jogo de Revisão
           </div>
           <div class="jogo-prog">
-            <div class="jp-top"><span class="jp-nome">🏅 Insígnias <span class="jp-bonus ${revIns>0?"on":""}">Nota ${formatarNota(notaJogoRevisao(revIns, revDour))} / ${NOTA_MAX}</span></span><span class="jp-niv">${revIns} <span class="jp-max">/ ${TOTAL_INSIGNIAS}</span></span></div>
+            <div class="jp-top"><span class="jp-nome">🏅 Insígnias <span class="jp-bonus ${revIns>0?"on":""}">Nota ${formatarNota(notaJogoRevisao(revIns, revXP))} / ${NOTA_MAX}</span></span><span class="jp-niv">${revIns} <span class="jp-max">/ ${TOTAL_INSIGNIAS}</span></span></div>
             <div class="jp-bar"><div class="jp-fill" style="width:${(revIns/TOTAL_INSIGNIAS*100).toFixed(1)}%;background:var(--gold)"></div></div>
             <div class="jp-note">🌟 Douradas: ${revDour} de ${TOTAL_INSIGNIAS}</div>
+            <div class="jp-top" style="margin-top:10px"><span class="jp-nome">⭐ Experiência</span><span class="jp-niv">${Math.min(revXP, XP_META).toLocaleString("pt-BR")} <span class="jp-max">/ ${XP_META.toLocaleString("pt-BR")}</span></span></div>
+            <div class="jp-bar"><div class="jp-fill" style="width:${Math.min(100, revXP / XP_META * 100).toFixed(1)}%;background:var(--gold)"></div></div>
           </div>
           <div class="ficha-nota ouro">
             <svg viewBox="0 0 24 24"><path d="M12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3 18.2 21l-1.7-7.1L22 9.2l-7.2-.6z"/></svg>
-            <span>O jogo completo vale <b>${NOTA_MAX} pontos</b>: as ${TOTAL_INSIGNIAS} insígnias valem <b>${PESO_INSIGNIAS},0</b> e deixar todas douradas (revanches) vale mais <b>${PESO_DOURADAS},0</b>.${bimestre >= 4 ? ` No ${bimestre}º bimestre, a nota do Jogo de Revisão (<b>0 a ${NOTA_MAX}</b>) entra <b>inteira</b> como ponto extra na média.` : ""}</span>
+            <span>O jogo completo vale <b>${NOTA_MAX} pontos</b>: as ${TOTAL_INSIGNIAS} insígnias dos ginásios valem <b>${PESO_INSIGNIAS},0</b> e a experiência do jogo (${XP_META.toLocaleString("pt-BR")} XP, até 200 por dia) vale <b>${PESO_XP},0</b>.${bimestre >= 4 ? ` No ${bimestre}º bimestre, a nota do Jogo de Revisão (<b>0 a ${NOTA_MAX}</b>) entra <b>inteira</b> como ponto extra na média.` : ""}</span>
           </div>
         </div>
       </div>

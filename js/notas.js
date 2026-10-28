@@ -438,16 +438,16 @@ export function cadernoCompletoAtivo(pct) {
   return pct != null && pct >= CADERNO_COMPLETO.limiarPct;
 }
 
-// ── Jogo de Revisão (4º bim): nota 0–10 pelas insígnias/douradas ──
+// ── Jogo de Revisão (4º bim): nota 0–10 pelas insígnias (8,0) e o XP do jogo (2,0) ──
 // Mesma leitura da Ficha do aluno (modo teste lê do histórico de teste).
 // Falha ou nunca jogou → 0.
 export async function buscarNotaRevisao(turma, nome) {
   try {
     const uid  = makeUid(turma, nome);
     const base = isModoTeste() ? `modo_teste_historico/${uid}/jogo_revisao` : `jogo_revisao/${uid}`;
-    const snap = await get(ref(db, `${base}/insignias`));
+    const [snap, sXP] = await Promise.all([get(ref(db, `${base}/insignias`)), get(ref(db, `${base}/xp_jogo/total`)).catch(() => null)]);
     const ins  = snap.exists() ? Object.values(snap.val() || {}).filter(Boolean) : [];
-    return notaJogoRevisao(ins.length, ins.filter(i => i.dourada).length);
+    return notaJogoRevisao(ins.length, sXP?.exists() ? Number(sXP.val()) || 0 : 0);   // insígnias + XP do jogo (PROMPT-156)
   } catch (e) { console.error("Falha ao buscar nota do Jogo de Revisão:", e); return 0; }
 }
 

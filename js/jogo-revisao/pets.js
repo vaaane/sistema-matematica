@@ -225,6 +225,9 @@ export class PetSeguidor {
     this.zFixo = null;              // 🏠 deitado na cama da casinha (PROMPT-105): desenha por cima dela
     this.zCasa = null;              // 🏠 dentro da casinha (PROMPT-114): sempre na frente de todos os móveis de chão
     this.antesDaAcao = null;        // (nome) => true: quem chamou cuida da ação (na casinha, dormir/descansar vai para a cama)
+    this.evitar = null;             // (x, y) => [x, y] | null: parou em cima de uma porta/saída → para ao lado (PROMPT-155)
+    this.desvio = null;             // indo para esse ponto ao lado
+    this.desviado = false;          // já foi para o lado: fica lá até o personagem andar de novo
     SEGUIDORES.add(this);
   }
 
@@ -282,6 +285,7 @@ export class PetSeguidor {
     this.x = x; this.y = y;
     this.rastro = [[x, y]];
     this.paradoMs = 0; this.andandoMs = 0; this.ultJog = null; this.esperar = false; this.alcancando = false;
+    this.desvio = null; this.desviado = false;
     this.pararAcao();
     if (this.pet) { this.reacao = null; this.trocar('sentado_girando', true); this.desenhar(); }
   }
@@ -322,7 +326,7 @@ export class PetSeguidor {
     // dois contadores: tempo andando e tempo parado do personagem (comparando com o quadro anterior)
     const mexeu = !!this.ultJog && dist(this.ultJog[0], this.ultJog[1], jx, jy) > 0.01;
     this.ultJog = [jx, jy];
-    if (mexeu) { this.andandoMs += ms; this.paradoMs = 0; }
+    if (mexeu) { this.andandoMs += ms; this.paradoMs = 0; this.desvio = null; this.desviado = false; }
     else { this.paradoMs += ms; this.andandoMs = 0; }
     const jogParado = this.paradoMs > 250;
     if (jogParado) this.esperar = true;                                  // ao voltar a andar, espera 0,5 s
@@ -343,12 +347,21 @@ export class PetSeguidor {
     const longe = !jogParado && falta > distPet + 62 * esc;
     const mult = jogParado ? 1 : longe ? 1.6 : this.alcancando ? 1.3 : 1;
     const x0 = this.x, y0 = this.y;
-    let anda = esperando ? 0 : Math.min(falta - atras, vel * mult * dt);
+    let anda = esperando || this.desviado ? 0 : Math.min(falta - atras, vel * mult * dt);
     while (anda > 0.01 && this.rastro.length) {
       const [qx, qy] = this.rastro[0];
       const d = dist(this.x, this.y, qx, qy);
       if (d <= anda) { this.x = qx; this.y = qy; anda -= d; this.rastro.shift(); }
       else { this.x += (qx - this.x) / d * anda; this.y += (qy - this.y) / d * anda; anda = 0; }
+    }
+    // parou em cima de uma porta, saída ou zona de entrada: anda até o ponto ao lado (e fica lá enquanto o personagem não andar)
+    if (this.desvio) {
+      const [qx, qy] = this.desvio, d = dist(this.x, this.y, qx, qy), passo = vel * 0.7 * dt;
+      if (d <= passo) { this.x = qx; this.y = qy; this.desvio = null; }
+      else { this.x += (qx - this.x) / d * passo; this.y += (qy - this.y) / d * passo; }
+    } else if (jogParado && this.evitar && !this.desviado && dist(this.x, this.y, x0, y0) < 0.05) {
+      const p = this.evitar(this.x, this.y);
+      if (p) { this.desvio = p; this.desviado = true; }
     }
     const dx = this.x - x0, dy = this.y - y0;
     const andando = Math.hypot(dx, dy) > 0.05;

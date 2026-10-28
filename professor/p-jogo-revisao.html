@@ -214,7 +214,7 @@
           <span class="muted" id="copiado" style="font-size:13px"></span>
         </div>
         <div class="tabela-wrap" id="tabela-alunos"><div class="empty">Carregando…</div></div>
-        <div class="legenda">Clique no aluno para ver os 26 ginásios. Nota do jogo: insígnias valem 8,0 e douradas mais 2,0 (total 10).</div>
+        <div class="legenda">Clique no aluno para ver os 26 ginásios. Nota do jogo: insígnias valem 8,0 e a experiência do jogo (⭐ XP, 2.000 = nota cheia, até 200 por dia) vale 2,0 (total 10).</div>
       </section>
 
       <!-- Aba — 📊 Antes e depois (PROMPT-134): % de acerto de primeira por ginásio, antes e depois de um marco -->
@@ -283,6 +283,9 @@
           <h3>⚔️ Desafios entre alunos</h3>
           <div class="sub">Desligue os desafios da praça durante avaliações. Desligado, o botão "Desafiar" some e os convites não chegam.</div>
           <div class="chaves" id="chaves-desafios"></div>
+          <h3 style="margin-top:12px">💰 Apostas</h3>
+          <div class="sub">Nos desafios entre colegas, quem chama pode apostar 5, 10, 20 ou 50 moedas (quem vence leva as duas). Desligado, o convite só oferece "sem aposta".</div>
+          <div class="chaves" id="chaves-apostas"></div>
           <div class="linha-acao"><button class="btn-pri" id="btn-salvar-desafios">Salvar</button><span id="msg-desafios"></span></div>
         </div>
         <div class="bloco">
@@ -323,7 +326,7 @@ import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
-import { notaJogoRevisao, formatarNota, TOTAL_INSIGNIAS } from "/js/jogo-revisao/nota.js";
+import { notaJogoRevisao, formatarNota, TOTAL_INSIGNIAS, XP_META } from "/js/jogo-revisao/nota.js";
 import { gerarUma, assuntoDe } from "/js/jogo-revisao/geradores.js";
 import { NOME_PET } from "/js/jogo-revisao/pets.js";
 import { semanaPesca } from "/js/jogo-revisao/pesca.js";
@@ -400,7 +403,7 @@ function calcularAluno(turma, nome) {
   const uid = uidDe(turma, nome);
   const n = dados[uid] || null;
   const ins = n?.insignias ? Object.values(n.insignias).filter(Boolean) : [];
-  const insignias = ins.length, douradas = ins.filter(i => i.dourada).length;
+  const insignias = ins.length, douradas = ins.filter(i => i.dourada).length, xp = Number(n?.xp_jogo?.total) || 0;
   let mapaAtual = 0, acertos = 0, total = 0;
   for (const [chave, g] of Object.entries(n?.ginasios || {})) {
     const m = /^mapa(\d+)-/.exec(chave);
@@ -415,8 +418,8 @@ function calcularAluno(turma, nome) {
   const ultimo = n?.ultimo_acesso || null;
   const jogou = !!(n && (ultimo || n.ginasios || n.respostas));
   return {
-    uid, nome, n, jogou, insignias, douradas,
-    nota: notaJogoRevisao(insignias, douradas),
+    uid, nome, n, jogou, insignias, douradas, xp,
+    nota: notaJogoRevisao(insignias, xp),
     mapaAtual, acertos, total, pctPrimeira: pct(acertos, total),
     seq: n?.sequencia?.atual ?? null,
     ultimo,
@@ -557,16 +560,17 @@ function renderPraca() {
     <div class="bloco"><h3>⚔️ Desafios da semana · ${esc(turma)}</h3>
       ${duelosSemana === null ? '<div class="sub">Sem acesso aos desafios. Confira se a regra jogo_revisao_praca foi publicada no Firebase.</div>'
         : !duelos.length ? '<div class="sub">Nenhum desafio desta turma nesta semana.</div>'
-        : `<div class="tabela-wrap"><table class="jr bt"><thead><tr><th>Quando</th><th>Desafio</th><th>Placar</th><th>Vencedor</th></tr></thead><tbody>
+        : `<div class="tabela-wrap"><table class="jr bt"><thead><tr><th>Quando</th><th>Desafio</th><th>Placar</th><th>Vencedor</th><th>Aposta</th></tr></thead><tbody>
           ${duelos.sort((a, b) => (b.ts || 0) - (a.ts || 0)).map(d => `<tr><td class="num">${fmtData(d.ts || 0)}</td><td class="aluno">${nm(d.a, d.an, d.at)} × ${nm(d.b, d.bn, d.bt)}</td>
-            <td class="num">${esc(d.placar || "")}</td><td>${d.vencedor === "empate" ? "Empate" : nm(d.vencedor, d.vencedor === d.a ? d.an : d.bn, d.vencedor === d.a ? d.at : d.bt)}${d.wo ? " (W.O.)" : ""}</td></tr>`).join("")}
+            <td class="num">${esc(d.placar || "")}</td><td>${d.vencedor === "empate" ? "Empate" : nm(d.vencedor, d.vencedor === d.a ? d.an : d.bn, d.vencedor === d.a ? d.at : d.bt)}${d.wo ? " (W.O.)" : ""}</td>
+            <td class="num">${Number(d.aposta) > 0 ? `💰 ${Number(d.aposta)}` : "—"}</td></tr>`).join("")}
           </tbody></table></div><div class="legenda">${duelos.length} desafio${duelos.length === 1 ? "" : "s"} nesta semana (segunda a domingo).</div>`}</div>`;
 }
 
 // ── Aba — Pesca: pontos da semana (segunda a domingo) e presentes dados/recebidos por aluno ──
 // ── Aba — Moedas: o que cada aluno ganhou na semana, por fonte (jogo_revisao/{uid}/moedas_semana/{segunda}) ──
 const FONTES_MOEDA = [["ginasio", "Ginásios"], ["insignia", "Insígnias"], ["batalha", "Batalhas"], ["batalha_primeira", "1ª vitória"], ["pedido", "Pedidos"],
-  ["cavar", "Cavar/mato"], ["colecao", "Coleção"], ["fliperama", "Fliperama"], ["desafio", "Desafios"], ["pesca", "Peixes"], ["aovivo", "Ao vivo"], ["missao", "Missões"], ["programe", "Programe"], ["bonus", "🎁 Bônus"]];
+  ["cavar", "Cavar/mato"], ["colecao", "Coleção"], ["fliperama", "Fliperama"], ["desafio", "Desafios"], ["aposta", "💰 Apostas"], ["damas", "♟️ Damas"], ["pesca", "Peixes"], ["aovivo", "Ao vivo"], ["missao", "Missões"], ["programe", "Programe"], ["bonus", "🎁 Bônus"]];
 // ── Aba — Programe o pet (PROMPT-69): mapa da turma (alunos × capítulos), por fase (calor das batidas, programas errados) e por aluno ──
 let PROG = null;
 const CONCEITO = { sequencia: "Sequência", repeticao: "Repetição", angulos: "Ângulos 45°", funcoes: "Funções", condicionais: "Condicionais", repita_ate: "Repita até" };
@@ -743,7 +747,7 @@ function renderResumo() {
 
 // ── Aba 1 — Alunos ──────────────────────────────────────────
 const COLS = [
-  { k: "nome", t: "Aluno" }, { k: "insignias", t: "Insígnias" }, { k: "douradas", t: "Douradas" },
+  { k: "nome", t: "Aluno" }, { k: "insignias", t: "Insígnias" }, { k: "douradas", t: "Douradas" }, { k: "xp", t: "⭐ XP" },
   { k: "nota", t: "Nota do jogo" }, { k: "mapaAtual", t: "Mapa atual" }, { k: "pctPrimeira", t: "Acertos de 1ª" },
   { k: "seq", t: "🔥" }, { k: "ultimo", t: "Último acesso" },
 ];
@@ -770,6 +774,7 @@ function renderAlunos() {
       <td class="aluno">${esc(l.nome)}</td>
       <td class="num ${l.insignias ? "ouro" : ""}">${l.insignias}<span class="muted"> / ${TOTAL_INSIGNIAS}</span></td>
       <td class="num">${l.douradas || (l.jogou ? 0 : "—")}</td>
+      <td class="num ${l.xp >= XP_META ? "ouro" : ""}">${l.jogou ? l.xp.toLocaleString("pt-BR") : "—"}<span class="muted"> / ${XP_META.toLocaleString("pt-BR")}</span></td>
       <td>${l.jogou ? `<span class="nota-chip">${formatarNota(l.nota)}</span>` : "—"}</td>
       <td>${l.mapaAtual ? `Mapa ${l.mapaAtual}` : "—"}</td>
       <td class="num">${l.pctPrimeira == null ? "—" : l.pctPrimeira + "%"}</td>
@@ -823,8 +828,8 @@ $("tabela-alunos").addEventListener("click", (e) => {
 });
 
 $("btn-copiar").addEventListener("click", async () => {
-  const cab = ["Aluno", "Insígnias", "Douradas", "Nota do jogo", "Mapa atual", "Acertos de 1ª (%)", "Sequência", "Último acesso"];
-  const rows = linhas.map(l => [l.nome, l.insignias, l.douradas, l.jogou ? formatarNota(l.nota) : "",
+  const cab = ["Aluno", "Insígnias", "Douradas", "XP do jogo", "Nota do jogo", "Mapa atual", "Acertos de 1ª (%)", "Sequência", "Último acesso"];
+  const rows = linhas.map(l => [l.nome, l.insignias, l.douradas, l.xp, l.jogou ? formatarNota(l.nota) : "",
     l.mapaAtual || "", l.pctPrimeira ?? "", l.seq ?? "", l.ultimo ? fmtData(l.ultimo) : "nunca jogou"]);
   const tsv = [cab, ...rows].map(r => r.join("\t")).join("\n");
   try { await navigator.clipboard.writeText(tsv); $("copiado").textContent = "Copiado ✓ — cole na planilha"; }
@@ -1129,6 +1134,10 @@ function renderConfig() {
   const off = config.desafios_off || {};
   $("chaves-desafios").innerHTML = `<label class="chave"><input type="checkbox" data-off="todas" ${off.todas ? "checked" : ""}/> <b>Desligar para todas as turmas</b></label>` +
     TURMAS.map(t => `<label class="chave"><input type="checkbox" data-off="${t}" ${off[t] ? "checked" : ""}/> Desligar na ${t}</label>`).join("");
+  // 💰 apostas nos desafios (PROMPT-154): mesmo formato de desafios_off
+  const aOff = config.apostas_off || {};
+  $("chaves-apostas").innerHTML = `<label class="chave"><input type="checkbox" data-aoff="todas" ${aOff.todas ? "checked" : ""}/> <b>Apostas desligadas para todas as turmas</b></label>` +
+    TURMAS.map(t => `<label class="chave"><input type="checkbox" data-aoff="${t}" ${aOff[t] ? "checked" : ""}/> Apostas desligadas na ${t}</label>`).join("");
   // 🎵 música do jogo (PROMPT-88): mesmo formato de desafios_off
   const mOff = config.musica_off || {};
   $("chaves-musica").innerHTML = `<label class="chave"><input type="checkbox" data-moff="todas" ${mOff.todas ? "checked" : ""}/> <b>Música desligada para todas as turmas</b></label>` +
@@ -1144,7 +1153,13 @@ $("btn-salvar-musica").addEventListener("click", async () => {
 $("btn-salvar-desafios").addEventListener("click", async () => {
   const off = {};
   for (const i of document.querySelectorAll("#chaves-desafios input[data-off]")) if (i.checked) off[i.dataset.off] = true;
-  try { await set(ref(db, "jogo_revisao_config/global/desafios_off"), Object.keys(off).length ? off : null); config.desafios_off = off; msg("msg-desafios", "Salvo ✓"); }
+  const aOff = {};
+  for (const i of document.querySelectorAll("#chaves-apostas input[data-aoff]")) if (i.checked) aOff[i.dataset.aoff] = true;
+  try {
+    await set(ref(db, "jogo_revisao_config/global/desafios_off"), Object.keys(off).length ? off : null); config.desafios_off = off;
+    await set(ref(db, "jogo_revisao_config/global/apostas_off"), Object.keys(aOff).length ? aOff : null); config.apostas_off = aOff;
+    msg("msg-desafios", "Salvo ✓");
+  }
   catch (e) { console.error(e); msg("msg-desafios", "Não foi possível salvar.", true); }
 });
 

@@ -451,6 +451,13 @@ html.jr-deitado #tela-geral .jr-on-txt { display: none; }   /* no celular: só "
   font-weight: 700; font-size: clamp(16px, 2.4vw, 24px); background: linear-gradient(180deg, #221a4a, #120c2c); border: 2px solid #4b3a8a; }
 .jr-estojo .ins-nota b { font-weight: 900; font-size: 1.8em; color: var(--ins-ouro-claro); }
 .jr-estojo .ins-nota-legenda { color: #94a3b8; font-size: 15px; margin-top: -4px; }
+/* ⭐ Experiência do jogo (PROMPT-156): "⭐ Experiência: 1.240 / 2.000 → 1,2 de 2,0" · hoje: 80 / 200 */
+.jr-estojo .ins-xp { margin: 0 auto 8px; max-width: 520px; padding: 0 16px; text-align: left; }
+.jr-estojo .ins-xp-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; color: #e2e8f0; font-size: 14px; }
+.jr-estojo .ins-xp-top b { color: var(--ins-ouro-claro); }
+.jr-estojo .ins-xp-top small { color: #94a3b8; font-size: 12px; }
+.jr-estojo .ins-xp-barra { height: 8px; margin-top: 4px; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; }
+.jr-estojo .ins-xp-barra span { display: block; height: 100%; background: linear-gradient(90deg, #7c5cfc, #ffd700); }
 /* botões */
 .jr-estojo .ins-botoes { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin: 18px 0 12px; }
 .jr-estojo .ins-btn { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-width: 210px; padding: 14px 22px; border-radius: 16px; cursor: pointer;
@@ -804,8 +811,18 @@ html.jr-deitado .jr-rel-caixa.com-plano .jr-rel-rodape .jr-btn { min-width: 80px
   font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
   backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); pointer-events: none;
 }
+/* "+N ⭐" do XP do jogo (PROMPT-156): pequeno, no canto de cima à direita, sem cobrir o "+XP" do meio */
+.jr-xp-jogo {
+  position: fixed; right: max(14px, var(--sa-r, 0px)); top: 64px; z-index: 70; pointer-events: none;
+  font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 800; color: var(--jr-ouro);
+  padding: 3px 10px; border-radius: 999px; background: rgba(13,15,26,.75); border: 1px solid rgba(255,215,0,.45);
+  animation: jr-xp-jogo 1.8s ease-out forwards;
+}
+@keyframes jr-xp-jogo { 0% { transform: translateY(6px); opacity: 0; } 15%, 75% { transform: none; opacity: 1; } 100% { transform: translateY(-14px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .jr-xp { animation: jr-xp-fixo 1.4s linear forwards; }
+  .jr-xp-jogo { animation: jr-xp-fixo2 1.6s linear forwards; }
+  @keyframes jr-xp-fixo2 { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
   @keyframes jr-xp-fixo { 0%, 80% { transform: translate(-50%, 0); opacity: 1; } 100% { opacity: 0; } }
 }
 
@@ -2047,6 +2064,11 @@ html.jr-deitado #meu-pet .jr-mp-botoes.jr-mp-principais .jr-btn { font-size: 14p
 .cv-caixa p b { color: #6c3fe0; }
 .cv-caixa small { color: #b3541e; font-size: 12px; }
 .cv-caixa small[hidden] { display: none; }
+/* 💰 Aposta no convite (PROMPT-154): saldo, contraproposta e valores apagados sem saldo */
+.cv-caixa small.cv-saldo { color: #6b6f86; }
+#convite-botoes[hidden], .cv-valores[hidden] { display: none; }
+.cv-valores { display: flex; flex-direction: column; gap: 4px; }
+.jr-presente-lista button:disabled, .pg-fases .jr-btn:disabled, .jr-pessoa-botoes .jr-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
 .cv-tempo { height: 5px; border-radius: 999px; background: #e7e3f7; overflow: hidden; }
 .cv-tempo i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #7c5cfc, #c77dff); }
 /* Duelo ao vivo */
@@ -3609,6 +3631,10 @@ html.jr-deitado .venc-corpo { grid-template-columns: repeat(3, minmax(0, 1fr)); 
 .ex-cor { width: 46px; height: 46px; padding: 3px; border-radius: 10px; border: 2px solid rgba(255,255,255,.25); background: rgba(13,15,26,.85); cursor: pointer; }
 .ex-cor.sel { border-color: var(--jr-ouro); }
 .ex-cor img { width: 100%; height: 100%; object-fit: contain; display: block; }
+/* PROMPT-152: 📏 tamanho do objeto de chão (➖ 100% ➕) */
+.ex-tam { align-items: center; }
+.ex-tam b { min-width: 54px; text-align: center; font: 700 16px 'Orbitron', sans-serif; color: #fff; }
+.ex-tam .jr-btn:disabled { opacity: .35; cursor: default; }
 .ex-faixa { align-items: stretch; }
 .ex-faixa-esq { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .ex-faixa-dir { display: flex; flex-direction: column; justify-content: center; gap: 6px; align-items: stretch; }
@@ -3646,3 +3672,6 @@ html.jr-girado .ex-ver-foto img { max-height: 52dvw; }
 .ex-ver-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .ex-ver-nav small { font: 700 13px 'Inter', sans-serif; color: #c9cde0; }
 .ex-ver-nav .jr-btn:disabled { opacity: .35; }
+
+/* ♟️ moedas da vitória contra o computador e resultado da aposta no fim das Damas (PROMPT-154) */
+.dm-fim-moedas { display: block; margin-top: 4px; color: var(--jr-ouro); }

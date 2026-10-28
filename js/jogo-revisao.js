@@ -15,7 +15,7 @@ import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarrig
 import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comMult, multMoedas, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
   motivoNaoCome, comumAte, naoCome, listaNaoCome, enche, barrigaCheia, somarLealdade, nivelAmizade, validarNomePet, temPalavraProibida } from '/js/jogo-revisao/loja.js';
 import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre,
-  semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha } from '/js/jogo-revisao/pesca.js';
+  semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha, peixeEhRaro } from '/js/jogo-revisao/pesca.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado,
   temAnim, formaAdulta, formaValida, sentadoNoQuadro, escalaPet, escalaMax, quadrosSeq, sortearOcioso, temSequencia, tocarSequencia, pararSequencia, msAtePasso,
   sortearAcaoParado, EMOCOES, MS_EMOCAO, coresDragao, aceitaCor, ehFormaAdulta, formaComCor, definirNoite } from '/js/jogo-revisao/pets.js';
@@ -27,7 +27,7 @@ import { definirPraca, pracaPronta, cfgPraca, cfgDesafio, frasesPraca, temaDoDes
   premioDesafio, ordenarRanking } from '/js/jogo-revisao/praca.js';
 import { codigoValido, premioDoPodio, pontosDaResposta, TEMPO_RODADA_MS } from '/js/jogo-revisao/aovivo.js';
 import { baseAoVivo, criarSala, entrarNaSala, sairDaSala, responder as responderNaSala, ouvirSala, ouvirConviteTurma, Anfitriao, placar } from '/js/jogo-revisao/aovivo-sala.js';
-import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS } from '/js/jogo-revisao/nota.js';
+import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_XP, XP_META, XP_DIA, notaXP } from '/js/jogo-revisao/nota.js';
 import { configurarPrograme, ligarBotoesPrograme, abrirTela as abrirTelaProgrameBase, fecharTela as fecharTelaPrograme, mostrarCorrida, mensagemCorrida, mostrarCartao as cartaoPrograme,
   programaParaTexto, programaDeTexto, caixaDoQuadro } from '/js/jogo-revisao/programe.js';
 import { faseDoDia, faseDaCorrida, resultadoCorrida, rodadaOQueFaz } from '/js/jogo-revisao/programe-logica.js';
@@ -471,6 +471,9 @@ async function carregarEstado() {
     estado.casinha = lerCasinha(v.casinha);   // 🏠 { guardados, moveis, cama_gratis } (PROMPT-105)
     estado.pescaEspecies = v.pesca_especies && typeof v.pesca_especies === 'object' ? { ...v.pesca_especies } : null;   // 🐠 { peixe: vezes } (PROMPT-106)
     estado.desafiosDia = v.desafios_dia || null;
+    estado.apostasPendentes = v.apostas_pendentes && typeof v.apostas_pendentes === 'object' ? { ...v.apostas_pendentes } : {};   // 💰 { duelo: { valor, ts } } (PROMPT-154)
+    estado.damasCpuDia = v.damas_cpu_dia || null;
+    estado.xpJogo = { total: Number(v.xp_jogo?.total) || 0, dia: v.xp_jogo?.dia || null, comida: v.xp_jogo?.comida || null, expo: { ...(v.xp_jogo?.expo || {}) } };   // ⭐ XP do jogo (PROMPT-156)   // ♟️ { data, n } — vitórias contra o computador que valeram moedas hoje
     estado.fliperDia = v.fliperama_dia || null;
     estado.cavarDia = v.cavar_dia || null;            // { data, m: { 'mapa-i': true }, moedas } — montinhos/tesouros cavados hoje
     estado.matoMexido = v.mato_mexido || {};          // { 'mapa-i': ts } — rebrota depois de mato_rebrota_h
@@ -506,6 +509,7 @@ async function carregarEstado() {
     if (Number(c.meta_turma) > 0) metaTurma = Number(c.meta_turma);
     definirPausas(c.pausas);
     aplicarMusicaOff(c.musica_off);   // a professora desliga a música (PROMPT-88)
+    apostasOff = c.apostas_off || {};
     desafiosOff = c.desafios_off || {};   // a professora desliga os desafios da praça (todas as turmas ou uma)   // feriados/férias: não contam para a fome nem para a lealdade
   } catch (e) { /* sem config: vale só a regra padrão e meta 100 */ }
   try {
@@ -658,6 +662,62 @@ function gravarVitoria(chave, p) {
   gravar(patch);
 }
 
+// ⭐ XP do jogo (PROMPT-156): contador próprio, vale 2,0 da nota (js/jogo-revisao/nota.js). No máximo XP_DIA por dia (o que passar
+// não conta). Separado do XP geral do site (darXP). Professora, modo teste e contas de teste: conta na tela, não grava.
+//   xp_jogo = { total, dia: { data, n }, comida: { data, n } }   (comida: quantas vezes o alimentar já deu XP hoje)
+const xpJogoGrava = () => carregouProgresso && !teste && !ehProfessora() && !contaEscondida(sessao?.uid, sessao?.nome);
+function ganharXPJogo(n, motivo = '') {
+  n = Math.round(Number(n) || 0);
+  if (n <= 0 || !estado?.xpJogo) return 0;
+  const x = estado.xpJogo, hoje = diaLocal();
+  if (x.dia?.data !== hoje) x.dia = { data: hoje, n: 0 };
+  const g = Math.min(n, XP_DIA - (Number(x.dia.n) || 0));
+  if (g <= 0) return 0;
+  x.total += g;
+  x.dia = { data: hoje, n: (Number(x.dia.n) || 0) + g };
+  if (xpJogoGrava()) gravar({ 'xp_jogo/total': x.total, 'xp_jogo/dia': x.dia });
+  mostrarXPJogo(g, motivo);
+  return g;
+}
+// "+N ⭐" pequeno, no canto (o "+XP" do site sobe no meio)
+function mostrarXPJogo(n) {
+  const el = document.createElement('div');
+  el.className = 'jr-xp-jogo';
+  el.textContent = `+${n} ⭐`;
+  $('jr-app').appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+  setTimeout(() => el.remove(), 2600);
+}
+// Retroativo (uma vez por aluno, em qualquer aparelho): o XP do que já está registrado, sem o limite do dia
+const XP_JOGO = { pergunta: 2, treinador: 10, lider: 20, revanche: 40, batalha: 10, peixe: 3, peixe_raro: 10, fase: 15, bug: 15 };
+function xpJogoDoQueJaFez() {
+  const perguntas = Object.entries(estado.respostas || {}).filter(([id, r]) => RE_ID.test(id) && r?.acertou === true).length;
+  let n = perguntas * XP_JOGO.pergunta;
+  for (const g of Object.values(estado.ginasios || {})) {
+    for (const t of ['treinador1', 'treinador2', 'treinador3']) if (g?.[t]?.vencido) n += XP_JOGO.treinador;
+    if (g?.lider?.vencido) n += XP_JOGO.lider;
+    if (g?.revanche?.vencido || g?.dourada) n += XP_JOGO.revanche;
+  }
+  for (const b of Object.values(estado.batalhas || {})) n += (Number(b?.vitorias) || 0) * XP_JOGO.batalha;
+  for (const [id, q] of Object.entries(estado.pescaEspecies || {})) n += (Number(q) || 0) * (peixeEhRaro(id) ? XP_JOGO.peixe_raro : XP_JOGO.peixe);
+  n += Object.values(estado.programe?.fases || {}).filter(f => Number(f?.estrelas) > 0).length * XP_JOGO.fase;
+  n += Object.values(estado.programe?.bugs || {}).filter(b => Number(b?.estrelas) > 0).length * XP_JOGO.bug;
+  return n;
+}
+async function xpJogoRetroativo() {
+  if (!xpJogoGrava() || !estado?.xpJogo || estado.avisos?.xp_jogo_retro) return;
+  const n = xpJogoDoQueJaFez(), marca = { n, ts: Date.now() };
+  try {   // transação: dois aparelhos ao mesmo tempo não recebem duas vezes
+    const t = await runTransaction(ref(db, `${raiz()}/avisos/xp_jogo_retro`), (cur) => (cur ? undefined : marca));
+    (estado.avisos ||= {}).xp_jogo_retro = t.snapshot.val() || marca;
+    if (!t.committed) return;
+  } catch (e) { console.warn('[jogo-revisao] XP retroativo', e?.code || e); return; }
+  if (n <= 0) return;
+  estado.xpJogo.total += n;
+  gravar({ 'xp_jogo/total': estado.xpJogo.total });
+  avisoPet(`⭐ Você ganhou ${n.toLocaleString('pt-BR')} de experiência pelo que já fez no jogo!`, true);
+}
+
 function darXP(delta, mostrar = true) {
   if (!delta) return;
   if (mostrar) mostrarXP(delta);
@@ -771,7 +831,7 @@ export async function iniciarJogo(sess) {
   // só para a professora testar pelo console (?dev=1 no modo teste): jogoRevisaoDev.somarTurma('ZZ_DEV', 'insignias')
   if (modoDev) window.jogoRevisaoDev = { somarTurma, batalha: () => bt, pesca: () => pesca,   // batalha/pesca em andamento (testes)
     praca: () => abrirPraca(), laboratorio: () => abrirLaboratorio(), computador: (id) => abrirComputador(id), fantasma: () => abrirFantasma(), fase: (n) => abrirFasePrograme(n), escolherPet: (p) => escolherPet(p),
-    desafiar: (uid, modo) => desafiarColega(colegas.get(uid), modo), colegas: () => [...colegas.keys()],
+    desafiar: (uid, modo, aposta) => desafiarColega(colegas.get(uid), modo, aposta), colegas: () => [...colegas.keys()],
     mapa: (n) => abrirMapa(n, 'entrada'), pescar: () => { const p = pontosDoMapa(cena.n)[0]; if (p) sentarPesca(p); return !!p; }, pergunta: (chave, p) => abrirPergunta(chave, p),
     festa: (t) => mostrarFestaMestre(t || 'mestre'), hall: () => abrirHallMestres(), estado: () => estado, geral: () => abrirMapaGeral(),
     batalhar: (id) => iniciarBatalha(id), pg: () => pg, meuPet: () => (abrirMeuPet(), mp), mp: () => mp, carinho: () => carinhoPet(),
@@ -795,6 +855,7 @@ export async function iniciarJogo(sess) {
   }
 
   await carregarEstado();
+  resolverApostasPendentes();   // 💰 apostas de desafios que ficaram no meio (fechou o jogo, caiu a internet)
   try { definirFalas(await fetch(`${DADOS}/falas-pets.json`).then(r => { if (!r.ok) throw new Error('falas-pets.json'); return r.json(); })); }
   catch (e) { console.warn('[jogo-revisao] falas dos pets indisponíveis', e); }
   try { NPCS = (await fetch(`${DADOS}/npcs.json`).then(r => { if (!r.ok) throw new Error('npcs.json'); return r.json(); })).npcs || []; }
@@ -896,6 +957,7 @@ export async function iniciarJogo(sess) {
   setTimeout(verificarCores, 2500);   // quem já cumpriu as condições ganha as cores (aviso uma vez)
   setTimeout(avisarCorSoVermelho, 3200);
   setTimeout(bonusMoedasRetroativo, 1800);   // 🎁 PROMPT-133
+  setTimeout(xpJogoRetroativo, 6000);       // ⭐ PROMPT-156 (depois dos outros avisos da entrada)
   setTimeout(avisarTrocaPersonagem, 4200);
   if (comecaNaPraca) abrirPraca('fonte').catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   atualizarBotaoMissoes();
@@ -1017,6 +1079,7 @@ const petConquistavel = (p) => INICIAIS.includes(p) || Object.values(PETS_GINASI
 function iniciarPet() {
   if (!petsOk) return;
   seguidor = new PetSeguidor($('pet'), $('pet-sombra'));
+  seguidor.evitar = (x, y) => ladoForaDaPorta(x, y, [jog.x, jog.y]);   // 🐾 não para em cima de portas (PROMPT-155)
   if (window.jogoRevisaoDev) window.jogoRevisaoDev.seguidor = seguidor;   // só no modo dev (?dev=1 no modo teste)
   $('btn-trocar-pet').hidden = false;
   // pet que não existe no sprites.json (ex.: cachorro, porco de testes antigos) é ignorado
@@ -2220,6 +2283,17 @@ function darComida(id) {
   falarPet(fav ? 'Minha favorita! 💖' : fc?.baloes[0]?.texto || 'Hmm, que delícia!');
   tocar('acerto');
   verificarMarcosLealdade(pet);
+  xpPorComida();
+}
+// ⭐ alimentar o pet: 2 XP, até 5 vezes por dia (PROMPT-156)
+function xpPorComida() {
+  const x = estado.xpJogo, hoje = diaLocal();
+  if (!x) return;
+  const c = x.comida?.data === hoje ? Number(x.comida.n) || 0 : 0;
+  if (c >= 5) return;
+  x.comida = { data: hoje, n: c + 1 };
+  if (xpJogoGrava()) gravar({ 'xp_jogo/comida': x.comida });
+  ganharXPJogo(2, 'comida');
 }
 
 // ── Tinta e efeito do pet ativo (entre os comprados) ───────
@@ -2679,6 +2753,7 @@ function fimBarrinha(fim) {
 function pescaPegou(f) {
   pesca.estado = 'festa';
   missaoProgresso('pescar');
+  ganharXPJogo(f.raro ? XP_JOGO.peixe_raro : XP_JOGO.peixe, 'peixe');   // ⭐ (PROMPT-156)
   const dia = pescaDia(), lim = cfgPesca().limite_peixes_dia ?? 5, pts = Number(f.pontos) || 0;
   const esportiva = dia.n >= lim, patch = {};
   const esp = estado.pescaEspecies ||= {};   // 🐠 aquário da casinha (PROMPT-106): toda espécie pega conta, até na pesca esportiva
@@ -4055,6 +4130,7 @@ function concluirTreino() {
   if (dia && !dia.completo) {
     dia.completo = true;
     patch['treino/dia/completo'] = true;
+    ganharXPJogo(20, 'treino');   // ⭐ (PROMPT-156)
     if (pet && cuidadosDe(pet)) { ganharLealdade(pet, LEALDADE_TREINO_FIM, patch); pg.lealdade = (pg.lealdade || 0) + LEALDADE_TREINO_FIM; }
   }
   gravar(patch);
@@ -5341,7 +5417,7 @@ function destinosDoMapa() {
     const p = cena.portas[G];
     return { id: 'porta-' + G, tipo: 'porta', lado: G, x: p.x, y: p.y, trilha: p.trilha };
   });
-  cena.saidas.forEach((s, i) => lista.push({ id: 'saida-' + i, tipo: 'saida', i, x: s.x, y: s.y, trilha: s.trilha }));
+  cena.saidas.forEach((s, i) => lista.push({ id: 'saida-' + i, tipo: 'saida', i, x: s.x, y: s.y, trilha: s.trilha, faixa: s.faixa || null }));
   // prédios que também entram andando pelas setas: Fliperama e Loja na Praça, Loja no Mercado (o Mural é só por toque/perto)
   if (ehPraca()) for (const alvo of ['fliperama', 'loja', 'laboratorio', 'casinha']) {
     const b = cena[alvo];
@@ -5351,7 +5427,7 @@ function destinosDoMapa() {
   if (cena.n === 'laboratorio') for (const c of cena.computadores || []) lista.push({ id: 'pc-' + c.id, tipo: 'predio', alvo: 'pc:' + c.id, x: c.x, y: c.y, trilha: c.trilha });
   const ex = ehPraca() && cena.exposicao;   // 🖼️ pavilhão da Exposição
   if (ex) lista.push({ id: 'predio-exposicao', tipo: 'predio', alvo: 'exposicao', x: ex.ponto[0], y: ex.ponto[1], trilha: ex.trilha, largura: 80 });
-  if (ehSaguao()) for (const p of cena.expoPortas || []) lista.push({ id: 'expo-' + p.n, tipo: 'predio', alvo: 'expo:' + p.n, x: p.ponto[0], y: p.ponto[1], trilha: p.trilha, largura: 40 });
+  if (ehSaguao()) for (const p of cena.expoPortas || []) lista.push({ id: 'expo-' + p.n, tipo: 'predio', alvo: 'expo:' + p.n, x: p.ponto[0], y: p.ponto[1], trilha: p.trilha, largura: 40 });   // a zona fica no mínimo (70 × a escala ≈ 122 px): mais de 1,5 × a folha da porta (~65–70 px) sem invadir a vizinha
   const md = ehPraca() && cena.mesa_damas;
   if (md) lista.push({ id: 'predio-mesa-damas', tipo: 'predio', alvo: 'mesa_damas', x: md.x, y: md.y, trilha: md.trilha, largura: 80 });
   const qe = cena.estudos;
@@ -5374,8 +5450,11 @@ function tocarNoMapa(e) {
   if (pesca && !tocouPescando(p)) return;   // pescando: o toque puxa a linha (ou levanta, se for longe)
   const caixote = caixoteEm(p);
   if (caixote) { irPescar(caixote); return; }
+  // 🚪 perto de uma porta, saída ou prédio, a porta vale antes do pet e do próprio personagem (PROMPT-155)
+  const porta = !ex?.editando && !cs?.arrumando ? destinoPertoDoToque(p) : null;
   // pet e pessoa podem estar lado a lado: vale o que estiver mais perto do toque
   const pessoa = pessoaEm(p);
+  if (porta && !pessoa && (tocouNoPet(p) || tocouEmMim(p))) { irAoDestino(porta); return; }
   // 👤 eu × pet (o pet anda colado em mim): vale o que estiver mais perto do toque
   const emMim = !pessoa && tocouEmMim(p), dEu = dist(p.x, p.y, jog.x, jog.y - altJogCena() / 2);
   const noPet = tocouNoPet(p) && !(emMim && dEu < dist(p.x, p.y, seguidor.x, seguidor.y - seguidor.altura / 2));
@@ -5384,7 +5463,7 @@ function tocarNoMapa(e) {
     if (cs?.ida) soltarPet();   // 🏠 dormindo sozinho na cama (ou num móvel): volta
     falarPorToque(); return;   // tocar no pet: ele fala (não anda até lá)
   }
-  if (emMim) { balaoEu(); return; }   // 👤 tocar em si mesmo: "Trocar personagem" (PROMPT-130)
+  if (emMim) return;   // 👤 tocar em si mesmo não abre nada (PROMPT-155: a troca de personagem é no guarda-roupa da casinha)
   const colega = colegaEm(p);
   if (colega && (!pessoa || dist(p.x, p.y, colega.x, colega.y - ALT_JOGADOR_MAPA / 2) < dist(p.x, p.y, pessoa.p.x, pessoa.p.y - pessoa.alt / 2))) {
     abrirCartaoColega(colega); return;   // tocar num colega: cartão com nome · turma e o pet dele
@@ -5412,11 +5491,7 @@ function tocarNoMapa(e) {
     return;
   }
   // Tocou a até 60 px de uma porta ou saída → esse ponto vira o destino especial
-  let perto = null, melhor = DIST_TOQUE;
-  for (const d of destinosDoMapa()) {
-    const dd = Math.min(dist(p.x, p.y, d.x, d.y), dist(p.x, p.y, d.trilha[0], d.trilha[1]));
-    if (dd < melhor) { melhor = dd; perto = d; }
-  }
+  let perto = destinoPertoDoToque(p);
   // Tocou na fachada do ginásio (acima da porta) também vale
   if (!perto) {
     perto = destinosDoMapa().find(d => d.tipo === 'porta' &&
@@ -5427,6 +5502,16 @@ function tocarNoMapa(e) {
   caminharNaTrilha(p.x, p.y);
 }
 
+// a porta/saída/prédio a até DIST_TOQUE do toque (do ponto da porta ou do fim da trilha dela)
+function destinoPertoDoToque(p) {
+  let perto = null, melhor = DIST_TOQUE;
+  for (const d of destinosDoMapa()) {
+    if (d.faixa && dentroDe(zonaSaida(d), p.x, p.y)) return d;   // 🖼️ a faixa da saída embaixo (saguão e salas da Exposição)
+    const dd = Math.min(dist(p.x, p.y, d.x, d.y), dist(p.x, p.y, d.trilha[0], d.trilha[1]));
+    if (dd < melhor) { melhor = dd; perto = d; }
+  }
+  return perto;
+}
 // Anda até a porta/saída e, ao chegar, entra
 function irAoDestino(d) {
   if (d.tipo === 'porta' && estado.ginasios[chaveGinasio(cena.n, d.lado)]?.lider.vencido) { irAoGinasioVencido(d); return; }
@@ -5459,31 +5544,20 @@ function irAoGinasioVencido(d) {
 }
 function posicionarBalaoPorta() {
   if (!balaoPorta) return;
-  if (balaoPorta.eu && dist(jog.x, jog.y, balaoPorta.d.x, balaoPorta.d.y) > 3) { fecharBalaoPorta(); return; }   // andou: some
-  posicionarNaTela($('porta-balao'), balaoPorta.d.x, balaoPorta.d.y - (balaoPorta.eu ? altJogCena() + 18 : ALT_JOGADOR + 30));
+  posicionarNaTela($('porta-balao'), balaoPorta.d.x, balaoPorta.d.y - ALT_JOGADOR - 30);
 }
-// 👤 PROMPT-130: tocar no próprio personagem (fora de batalha, pesca e edição) → balão pequeno "Trocar personagem"
+// 👤 tocou no próprio personagem (fora de batalha, pesca e edição): não abre nada (PROMPT-155), mas o pet ao lado não "rouba" o toque
 function tocouEmMim(pt) {
   if (!jog || ex?.editando || cs?.arrumando || pesca || perguntaAberta) return false;
   const h = altJogCena(), folga = 6 * ESCALA_ATORES;
   return Math.abs(pt.x - jog.x) <= h * 0.3 + folga && pt.y >= jog.y - h - folga && pt.y <= jog.y + folga;
 }
-function balaoEu() {
-  fecharBalaoPorta();
-  destinoEspecial = null;
-  const el = $('porta-balao');
-  el.innerHTML = '<div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-porta="personagem">👤 Trocar personagem</button></div>';
-  el.hidden = false;
-  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
-  balaoPorta = { d: { x: jog.x, y: jog.y }, eu: true, timer: setTimeout(fecharBalaoPorta, 6000) };
-  posicionarBalaoPorta();
-}
-// na 1ª entrada depois da atualização: como trocar de personagem agora
+// na 1ª entrada depois da atualização: como trocar de personagem agora (PROMPT-155: tocar em si mesmo não troca mais)
 function avisarTrocaPersonagem() {
-  if (!carregouProgresso || estado?.avisos?.dica_personagem) return;
-  (estado.avisos ||= {}).dica_personagem = true;
-  gravar({ 'avisos/dica_personagem': true });
-  avisoPet('Para trocar de personagem, toque em você mesmo! 👤', true);
+  if (!carregouProgresso || estado?.avisos?.dica_guarda_roupa) return;
+  (estado.avisos ||= {}).dica_guarda_roupa = true;
+  gravar({ 'avisos/dica_guarda_roupa': true });
+  avisoPet('Para trocar de personagem, use o guarda-roupa da sua casinha! 👤🏠', true);
 }
 function fecharBalaoPorta() {
   if (balaoPorta) clearTimeout(balaoPorta.timer);
@@ -5497,7 +5571,6 @@ function acaoBalaoPorta(e) {
   const { d } = balaoPorta;
   fecharBalaoPorta();
   if (b.dataset.porta === 'entrar') entrarNoDestino({ tipo: 'porta', lado: d.lado });
-  else if (b.dataset.porta === 'personagem') abrirEscolhaPersonagem();
 }
 
 function entrarNoDestino(esp) {
@@ -5538,32 +5611,89 @@ function entrarNoPredio(alvo) {
 // (Loja, Laboratório) termina antes da porta, então "encostar na porta" quase nunca acontecia. Passar de lado não entra.
 const entraPorZona = (d) => d.tipo === 'porta' || d.tipo === 'predio';
 function zonaEntrada(d) {
-  const w = Math.max(70, 1.5 * (Number(d.largura) || 0)) * (cena?.salao ? escalaAtoresCena() / ESCALA_ATORES : 1), [tx, ty] = d.trilha;
-  return { x0: tx - w / 2, x1: tx + w / 2, y0: ty - 12, y1: ty + 40 };
+  // nos salões (personagem maior), a profundidade também cresce com a escala (PROMPT-155: no saguão eram 52 px para um personagem de ~120)
+  const e = cena?.salao ? escalaAtoresCena() / ESCALA_ATORES : 1, w = Math.max(70, 1.5 * (Number(d.largura) || 0)) * e, [tx, ty] = d.trilha;
+  return { x0: tx - w / 2, x1: tx + w / 2, y0: ty - 12 * e, y1: ty + 40 * e };
 }
 const naZona = (d) => { const z = zonaEntrada(d); return jog.x >= z.x0 && jog.x <= z.x1 && jog.y >= z.y0 && jog.y <= z.y1; };
-const destinoNaZona = () => (cena?.tipo === 'mapa' ? destinosDoMapa().find(d => entraPorZona(d) && naZona(d)) || null : null);
+// duas zonas encostadas (portas vizinhas do saguão): vale a da porta mais perto
+const destinoNaZona = () => (cena?.tipo === 'mapa' ? destinosDoMapa().filter(d => entraPorZona(d) && naZona(d))
+  .sort((a, b) => Math.abs(jog.x - a.trilha[0]) - Math.abs(jog.x - b.trilha[0]))[0] || null : null);
 function verificarZonaEntrada(vx, vy) {
   if (!soltouDesdeTroca || !(vy < 0 && Math.abs(vy) > Math.abs(vx))) return;
   const d = destinoNaZona();
   if (d) entrarNoDestino(espDe(d));
 }
+// 🐾 O pet não para em cima de portas, saídas e zonas de entrada (PROMPT-155): o ponto (x, y) cai numa delas →
+// um ponto ao lado, na trilha e fora de todas (o mais perto); fora delas → null
+function ocupaEntrada(x, y, ds) {
+  for (const d of ds) {
+    if (entraPorZona(d)) { const z = zonaEntrada(d); if (x >= z.x0 - 6 && x <= z.x1 + 6 && y >= z.y0 - 30 && y <= z.y1) return true; }
+    else if (d.faixa ? dentroDe(zonaSaida(d), x, y) : dist(x, y, d.x, d.y) < DIST_PORTA + 10 || dist(x, y, d.trilha[0], d.trilha[1]) < 24) return true;   // na Exposição, a faixa inteira da porta de vidro
+  }
+  return false;
+}
+function ladoForaDaPorta(x, y, longe = null) {   // longe: [x, y] do dono (o pet não para colado nele)
+  if (cena?.tipo !== 'mapa' || !cena.grade || ex?.editando || cs?.arrumando) return null;
+  const ds = destinosDoMapa();
+  if (!ocupaEntrada(x, y, ds)) return null;
+  const e = escalaAtoresCena() / ESCALA_ATORES;
+  for (let r = 16; r <= 200; r += 8) for (let k = 0; k < 16; k++) {
+    const a = k * Math.PI / 8, px = x + Math.cos(a) * r * e, py = y + Math.sin(a) * r * e;
+    if (px < 0 || py < 0 || py >= H || !andavel(cena.grade, Math.floor(px / CEL), Math.floor(py / CEL))) continue;
+    if (ocupaEntrada(px, py, ds) || (longe && dist(px, py, longe[0], longe[1]) < 26 * e)) continue;
+    return [px, py];
+  }
+  return null;
+}
 // "⬆ Entrar" (⬆ Damas, ⬆ Usar) acima do personagem enquanto ele está na zona de uma porta
 function dicaEntrar() {
-  const d = destinoNaZona(), atores = $('cena-atores');
+  const ds = !destinoNaZona() && saidaNaZona(), d = destinoNaZona() || (ds?.faixa ? ds : null), atores = $('cena-atores');   // ⬇ Sair: só nas faixas da Exposição
   let el = atores.querySelector('.jr-dica-entrar');
   if (!d || conversa.falando) { if (el) el.hidden = true; return; }
   if (!el) { el = document.createElement('div'); el.className = 'jr-rotulo-porta jr-dica-entrar'; el.innerHTML = '<span></span>'; atores.appendChild(el); }
-  const txt = d.alvo === 'mesa_damas' ? '⬆ Damas' : d.alvo === 'estudos' ? '⬆ Ler' : String(d.alvo || '').startsWith('pc:') ? '⬆ Usar' : '⬆ Entrar';
+  const txt = d.tipo === 'saida' ? `${SETA_SAIDA[zonaSaida(d).lado]} Sair` : d.alvo === 'mesa_damas' ? '⬆ Damas' : d.alvo === 'estudos' ? '⬆ Ler' : String(d.alvo || '').startsWith('pc:') ? '⬆ Usar' : '⬆ Entrar';
   if (el.firstChild.textContent !== txt) el.firstChild.textContent = txt;
+  const fs = 16 * escalaAtoresCena() / ESCALA_ATORES + 'px';   // maior que os rótulos: no celular deitado a cena encolhe pela metade (PROMPT-155)
+  if (el.firstChild.style.fontSize !== fs) el.firstChild.style.fontSize = fs;
   const altJ = cena.salao ? alturaSalao() : ALT_JOGADOR_MAPA;
   el.style.left = jog.x + 'px'; el.style.top = (jog.y - altJ - 30 * escalaAtoresCena() / ESCALA_ATORES) + 'px';
   el.hidden = false;
 }
-// Saídas do mapa (como antes): encostar andando na direção dela entra direto.
+// Saídas pela borda (PROMPT-155): uma ZONA na frente da saída — 45 px para cada lado da trilha (ou a faixa inteira, na Exposição)
+// e 60 px para dentro do mapa. Na zona, empurrar para a borda (a componente para a borda maior que a de lado) sai.
+// Antes só saía quem estava a 12 px do ponto da trilha: com as setas, quase nunca dava (e o aluno ficava andando na borda).
+function ladoSaida(d) {
+  if (d.y >= H - 80) return 'baixo';   // a porta do laboratório fica em y = 702
+  if (d.x <= 40) return 'esq';
+  if (d.x >= larguraCena() - 40) return 'dir';
+  if (d.y <= 40) return 'cima';
+  return null;
+}
+function zonaSaida(d) {
+  const lado = ladoSaida(d);
+  if (!lado) return null;
+  const e = cena?.salao ? escalaAtoresCena() / ESCALA_ATORES : 1, [tx, ty] = d.trilha, fundo = 60 * e, L = larguraCena();
+  const cx = d.faixa ? (d.faixa[0] + d.faixa[1]) / 2 : tx, meia = Math.max(45 * e, d.faixa ? (d.faixa[1] - d.faixa[0]) / 2 : 0);
+  if (lado === 'baixo') return { lado, x0: cx - meia, x1: cx + meia, y0: ty - fundo, y1: H };
+  if (lado === 'cima') return { lado, x0: cx - meia, x1: cx + meia, y0: 0, y1: ty + fundo };
+  if (lado === 'esq') return { lado, x0: 0, x1: tx + fundo, y0: ty - meia, y1: ty + meia };
+  return { lado, x0: tx - fundo, x1: L, y0: ty - meia, y1: ty + meia };
+}
+const dentroDe = (z, x, y) => !!z && x >= z.x0 && x <= z.x1 && y >= z.y0 && y <= z.y1;
+const SETA_SAIDA = { baixo: '⬇', cima: '⬆', esq: '⬅', dir: '➡' };
+// quanto o vetor (vx, vy) empurra para a borda da saída e quanto vai de lado
+const paraBorda = (lado, vx, vy) => (lado === 'baixo' ? [vy, vx] : lado === 'cima' ? [-vy, vx] : lado === 'esq' ? [-vx, vy] : [vx, vy]);
+const saidaNaZona = () => (cena?.tipo === 'mapa' ? destinosDoMapa().find(d => d.tipo === 'saida' && dentroDe(zonaSaida(d), jog.x, jog.y)) || null : null);
+// Saídas do mapa: na zona, empurrar para a borda sai; perto do ponto, encostar andando na direção dela também (como antes).
 function verificarEncostou(vx, vy) {
   if (!soltouDesdeTroca) return;
   const m = Math.hypot(vx, vy);
+  const ds = saidaNaZona();
+  if (ds) {
+    const [a, b] = paraBorda(zonaSaida(ds).lado, vx, vy);
+    if (a > 0 && a >= Math.abs(b)) { entrarNoDestino(espDe(ds)); return; }
+  }
   for (const d of destinosDoMapa()) {
     if (entraPorZona(d)) continue;   // portas e prédios: pela zona (verificarZonaEntrada)
     if (dist(jog.x, jog.y, d.x, d.y) >= DIST_PORTA && dist(jog.x, jog.y, d.trilha[0], d.trilha[1]) >= 12) continue;
@@ -5858,14 +5988,24 @@ function avisarEm(texto, x, y) {
 //  jogo_revisao_praca/ (modo teste: jogo_revisao_praca_teste/):
 //    insignias/{uid} = { n, d, nome, turma, pers, ts }            resumo para o mural (atualizado ao entrar e ao ganhar insígnia)
 //    desafios/{segunda}/{uid} = { pontos, vitorias, nome, turma, pers, ts }   ranking semanal dos desafios
-//    convites/{quem recebe} = { id, de, de_nome, ts }
-//    duelos/{id} = { a, b, estado, tema, atual, rodadas: { i: { conta, opcoes, resposta, inicio, resp: { uid: { op, t } }, fim } }, on, fim }
-//    historico/{segunda}/{id} = { a, b, an, bn, at, bt, vencedor, placar, wo, ts }   para o painel da professora
+//    convites/{quem recebe} = { id, de, de_nome, aposta, ts }
+//    duelos/{id} = { a, b, estado, tema, atual, rodadas: { i: { conta, opcoes, resposta, inicio, resp: { uid: { op, t } }, fim } }, on, fim,
+//                    aposta: { valor, de, etapa: 'convite' | 'contra', ts } }   (estado 'contra' = contraproposta esperando quem chamou)
+//    historico/{segunda}/{id} = { a, b, an, bn, at, bt, vencedor, placar, wo, aposta, ts }   para o painel da professora
 // ============================================================
 const ehPraca = () => cena?.tipo === 'mapa' && cena.n === 'praca';
 const basePraca = () => (teste ? 'jogo_revisao_praca_teste' : 'jogo_revisao_praca');
 let desafiosOff = {};   // jogo_revisao_config/global/desafios_off: { todas: true } ou { '8D': true } (painel da professora)
 const desafiosLigados = () => !desafiosOff?.todas && !desafiosOff?.[sessao.turma];
+// 💰 Apostas nos desafios (PROMPT-154): jogo_revisao_config/global/apostas_off, no mesmo formato de desafios_off
+let apostasOff = {};
+const apostasLigadas = () => !apostasOff?.todas && !apostasOff?.[sessao.turma];
+const VALORES_APOSTA = [0, 5, 10, 20, 50];
+const saldoMoedas = () => Number(estado?.pets?.moedas) || 0;
+// professora, modo teste e contas de teste: a aposta aparece, mas não mexe em moedas (de nenhum dos dois)
+const contaDeVerdade = (uid) => !!uid && uid !== UID_PROFESSORA && !contaEscondida(uid);
+const apostaValeMoedas = (d) => !teste && contaDeVerdade(d?.a?.uid) && contaDeVerdade(d?.b?.uid);
+const textoAposta = (v) => (v > 0 ? `${v} 🪙` : 'sem aposta');
 let offsetServidor = 0;
 const agoraServ = () => Date.now() + offsetServidor;
 let editarPraca = false;   // ?editarPraca=1 no modo teste: arrastar mural, porta, bancos e ponto do desafio
@@ -6118,7 +6258,7 @@ function abrirEstudos() {
   if (!e || sobreposicaoAberta()) return;
   fecharCartaoColega();
   const q = D.questoes[n];
-  abrirQuadroEstudos({ dados: e, nomeMapa: q?.nome || '', ginasios: Object.keys(q?.ginasios || { A: 1, B: 1 }) });
+  abrirQuadroEstudos({ dados: e, nomeMapa: q?.nome || '', ginasios: Object.keys(q?.ginasios || { A: 1, B: 1 }), aoAcertarTente: () => ganharXPJogo(3, 'tente') });
   estado.avisos ||= {};
   if (!estado.avisos.estudos_vistos?.['mapa' + n]) {   // o brilho do quadro some
     (estado.avisos.estudos_vistos ||= {})['mapa' + n] = true;
@@ -6333,6 +6473,7 @@ function iniciarPraca() {
   try { onValue(ref(db, '.info/serverTimeOffset'), (s) => { offsetServidor = Number(s.val()) || 0; }); } catch (_) {}
   // a professora liga/desliga os desafios pelo painel: vale na hora
   try { onValue(ref(db, 'jogo_revisao_config/global/desafios_off'), (s) => { desafiosOff = (s.exists() && s.val()) || {}; }, () => {}); } catch (_) {}
+  try { onValue(ref(db, 'jogo_revisao_config/global/apostas_off'), (s) => { apostasOff = (s.exists() && s.val()) || {}; }, () => {}); } catch (_) {}
   try { onValue(ref(db, 'jogo_revisao_config/global/musica_off'), (s) => aplicarMusicaOff(s.exists() ? s.val() : null), () => {}); } catch (_) {}
   if (pararConvites || !onlineAtivo()) return;
   try {
@@ -6514,6 +6655,7 @@ async function responderRelampago(op) {
   $('rl-msg').innerHTML = certo ? '<span class="ok">Acertou! ⚡ Vamos ver se foi dos mais rápidos…</span>' : '<span class="erro">Errou! Não dá para responder de novo.</span>';
   pintarOpcoesRelampago();
   if (!pontuaNoRelampago()) return;
+  if (certo) ganharXPJogo(5, 'relampago');   // ⭐ (PROMPT-156)
   try {
     await runTransaction(ref(db, `${basePraca()}/relampago/${rl.chave}/respostas/${sessao.uid}`),
       (cur) => (cur ? undefined : { op, t: serverTimestamp(), nome: nomeRanking(), turma: sessao.turma || '' }));
@@ -6574,6 +6716,7 @@ function pintarLetreiroRelampago() {
 // Transação no estado do desafio: convite → novo. Quem recebeu o convite ainda não tem o desafio no aparelho, e a transação começa
 // com null; devolver null (e não undefined, que cancela) faz o Firebase buscar o valor real no servidor e repetir a conta.
 const deConvitePara = (novo) => (cur) => (cur === null ? null : cur === 'convite' ? novo : undefined);
+const deContraPara = (novo) => (cur) => (cur === null ? null : cur === 'contra' ? novo : undefined);   // 💬 contraproposta da aposta
 function podeDesafiar() { return ehPraca() && desafiosLigados() && onlineAtivo() && !duelo && carregouProgresso; }
 // ⚔️ no cartão do colega: Contas (o desafio de sempre), Corrida de programação (PROMPT-50) ou Damas (PROMPT-72)
 function escolherModoDesafio(c) {
@@ -6588,7 +6731,7 @@ function escolherModoDesafio(c) {
 function confirmarDesafio(c, modo = 'contas') {
   if (!podeDesafiar()) return;
   if (modo === 'corrida' && petFora()) { fecharCartaoColega(); avisoPetFora(); return; }   // a corrida precisa do pet
-  if (modo === 'damas' || vale(estado.desafiosDia, diaLocal(), c.uid)) { desafiarColega(c, modo); return; }   // damas não tem prêmio: não precisa do aviso
+  if (modo === 'damas' || vale(estado.desafiosDia, diaLocal(), c.uid)) { escolherAposta(c, modo); return; }   // damas não tem prêmio: não precisa do aviso
   const el = $('colega-cartao');
   clearTimeout(cartaoColega.timer);
   cartaoColega.timer = setTimeout(fecharCartaoColega, 10000);
@@ -6597,19 +6740,36 @@ function confirmarDesafio(c, modo = 'contas') {
     <span class="jr-presente-lista"><button data-desafiar-mesmo="${modo}">⚔️ Desafiar mesmo assim</button></span></span>`;
   posicionarCartaoColega();
 }
-async function desafiarColega(c, modo = 'contas') {
+// 💰 Valendo quanto? (PROMPT-154) Valores acima do saldo ficam apagados; apostas desligadas pela professora: vai direto, sem aposta
+const botoesAposta = (attr, valores = VALORES_APOSTA) => valores
+  .map(v => `<button ${attr}="${v}"${v > saldoMoedas() ? ' disabled' : ''}>${v ? `${v} 🪙` : 'Sem aposta'}</button>`).join('');
+function escolherAposta(c, modo) {
+  if (!podeDesafiar()) return;
+  if (!apostasLigadas()) { desafiarColega(c, modo, 0); return; }
+  const el = $('colega-cartao');
+  clearTimeout(cartaoColega.timer);
+  cartaoColega.timer = setTimeout(fecharCartaoColega, 10000);
+  cartaoColega.modo = modo;
+  el.innerHTML = `<span class="jr-colega-info jr-presente"><b>💰 Valendo quanto?</b>
+    <small>Quem vencer leva as duas apostas. Você tem ${saldoMoedas()} 🪙.</small>
+    <span class="jr-presente-lista">${botoesAposta('data-aposta')}</span></span>`;
+  posicionarCartaoColega();
+}
+async function desafiarColega(c, modo = 'contas', aposta = 0) {
   if (!podeDesafiar()) return;
   fecharCartaoColega();
+  aposta = apostasLigadas() && VALORES_APOSTA.includes(Number(aposta)) && Number(aposta) <= saldoMoedas() ? Number(aposta) : 0;
   const C = cfgDesafio(), base = basePraca();
   const id = push(ref(db, `${base}/duelos`)).key;
   const eu = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), vencidos: vencidosMeus(), premio: vale(estado.desafiosDia, diaLocal(), c.uid), ...dadosCorrida() };
   const nomeOutro = nomeCurto(c.uid, c.reg?.apelido);
   try {
     const m = modo === 'corrida' || modo === 'damas' ? modo : 'contas';
-    await set(ref(db, `${base}/duelos/${id}`), { a: eu, b: { uid: c.uid, nome: nomeOutro }, estado: 'convite', modo: m, criado: serverTimestamp() });
-    await set(ref(db, `${base}/convites/${c.uid}`), { id, de: sessao.uid, de_nome: eu.nome, modo: m, ts: serverTimestamp() });
+    await set(ref(db, `${base}/duelos/${id}`), { a: eu, b: { uid: c.uid, nome: nomeOutro }, estado: 'convite', modo: m, criado: serverTimestamp(),
+      aposta: aposta ? { valor: aposta, de: sessao.uid, etapa: 'convite', ts: agoraServ() } : null });
+    await set(ref(db, `${base}/convites/${c.uid}`), { id, de: sessao.uid, de_nome: eu.nome, modo: m, aposta: aposta || null, ts: serverTimestamp() });
   } catch (e) { console.warn('[jogo-revisao] desafio indisponível', e?.code || e); avisoPet('Não deu para desafiar agora.'); return; }
-  avisarEm(`⚔️ Convite enviado para ${nomeOutro}…`, jog.x, jog.y - ALT_JOGADOR_MAPA - 10);
+  avisarEm(`⚔️ Convite enviado para ${nomeOutro}${aposta ? ` valendo ${aposta} 🪙` : ''}…`, jog.x, jog.y - ALT_JOGADOR_MAPA - 10);
   ouvirDuelo(id, true);
   duelo.timers.push(setTimeout(async () => {   // ninguém respondeu: expira
     if (duelo?.id !== id || duelo.d?.estado !== 'convite') return;
@@ -6629,22 +6789,107 @@ async function receberConvite(cv) {
     return;
   }
   const premio = vale(estado.desafiosDia, diaLocal(), cv.de);
-  convite = { ...cv, premio };
-  $('convite-txt').innerHTML = cv.modo === 'corrida' ? `<b>${nomeT(cv.de, nomeCurto(cv.de, cv.de_nome))}</b> te chamou para uma Corrida de programação! 🤖`
-    : cv.modo === 'damas' ? `<b>${nomeT(cv.de, nomeCurto(cv.de, cv.de_nome))}</b> te chamou para uma partida de Damas! ♟️`
-    : `<b>${nomeT(cv.de, nomeCurto(cv.de, cv.de_nome))}</b> te desafiou! ⚔️`;
+  const aposta = Number(cv.aposta) || 0;
+  convite = { ...cv, premio, aposta, etapa: 'convite' };
+  const quem = `<b>${nomeT(cv.de, nomeCurto(cv.de, cv.de_nome))}</b>`, valendo = aposta ? ` valendo <b>${aposta} 🪙</b>` : '';
+  $('convite-txt').innerHTML = cv.modo === 'corrida' ? `${quem} te chamou para uma Corrida de programação${valendo}! 🤖`
+    : cv.modo === 'damas' ? `${quem} te chamou para uma partida de Damas${valendo}! ♟️`
+    : `${quem} te desafiou${valendo}! ⚔️`;
   $('convite-aviso').hidden = premio || cv.modo === 'damas';
+  mostrarBotoesConvite(aposta, !!aposta);
   $('convite').hidden = false;
   tocar('vitoria');
-  const fim = Date.now() + exp - Math.max(0, idade);
+  barraConvite(cv.id, Date.now() + exp - Math.max(0, idade), exp, () => responderConvite(false, true));
+}
+// barra do tempo do convite (e da contraproposta): acabou → expira
+function barraConvite(id, fim, exp, expirou) {
   const barra = () => {
-    if (!convite || convite.id !== cv.id) return;
+    if (!convite || convite.id !== id) return;
     const f = (fim - Date.now()) / exp;
     $('convite-tempo').style.width = Math.max(0, f) * 100 + '%';
-    if (f <= 0) { responderConvite(false, true); return; }
+    if (f <= 0) { expirou(); return; }
     requestAnimationFrame(barra);
   };
   barra();
+}
+// ✅ Aceitar (apagado sem saldo para a aposta) · 💬 Contraproposta (só para quem foi convidado, com aposta) · ❌ Recusar
+function mostrarBotoesConvite(aposta, contra) {
+  $('convite-valores').hidden = true;
+  $('convite-botoes').hidden = false;
+  $('convite-sim').disabled = aposta > saldoMoedas();
+  $('convite-sim').textContent = aposta ? '✅ Aceitar' : '⚔️ Aceitar';
+  $('convite-nao').textContent = aposta ? '❌ Recusar' : 'Agora não';
+  $('convite-contra').hidden = !contra;
+  $('convite-saldo').hidden = !aposta;
+  $('convite-saldo').textContent = aposta > saldoMoedas() ? `Você tem só ${saldoMoedas()} 🪙.` : `Você tem ${saldoMoedas()} 🪙.`;
+}
+function abrirContraproposta() {
+  if (!convite || convite.etapa !== 'convite') return;
+  $('convite-botoes').hidden = true;
+  const valores = apostasLigadas() ? VALORES_APOSTA.filter(v => v !== convite.aposta) : [0];   // apostas desligadas na minha turma: só "sem aposta"
+  $('convite-valores').innerHTML = `<small>Jogar valendo quanto?</small><span class="jr-presente-lista">${botoesAposta('data-contra', valores)}</span>`;
+  $('convite-valores').hidden = false;
+}
+// 💬 manda outro valor: o duelo fica em 'contra' esperando quem chamou (o meu lado B já vai pronto, para começar se ele aceitar)
+async function enviarContraproposta(valor) {
+  const cv = convite;
+  if (!cv || cv.etapa !== 'convite' || valor > saldoMoedas()) return;
+  convite = null;
+  $('convite').hidden = true;
+  const base = basePraca();
+  remove(ref(db, `${base}/convites/${sessao.uid}`)).catch(() => {});
+  if (duelo || !ehPraca()) return;
+  if (cv.modo === 'corrida' && petFora()) { avisoPetFora(); try { await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), deConvitePara('recusado')); } catch (_) {} return; }
+  const b = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), vencidos: vencidosMeus(), premio: cv.premio, ...dadosCorrida() };
+  try {
+    const t = await runTransaction(ref(db, `${base}/duelos/${cv.id}`), (cur) => {
+      if (cur === null) return null;   // ainda não está no aparelho: o Firebase busca e repete
+      if (cur.estado !== 'convite') return;
+      return { ...cur, estado: 'contra', b: { ...(cur.b || {}), ...b }, aposta: { valor, de: sessao.uid, etapa: 'contra', ts: agoraServ() } };
+    });
+    if (t.snapshot.val()?.estado !== 'contra') { avisoPet('O convite expirou. Fica para a próxima! ⚔️'); return; }
+  } catch (e) { console.warn('[jogo-revisao] contraproposta', e?.code || e); avisoPet('Não deu para responder agora.'); return; }
+  avisoPet(`💬 Você propôs jogar ${valor ? `valendo ${valor} 🪙` : 'sem aposta'}. Esperando a resposta…`);
+  ouvirDuelo(cv.id, false);
+  const du = duelo;
+  du.timers.push(setTimeout(async () => {   // quem chamou não respondeu: expira
+    if (duelo !== du || du.d?.estado !== 'contra') return;
+    try { await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), deContraPara('expirou')); } catch (_) {}
+  }, (cfgDesafio().convite_expira_s ?? 20) * 1000 + 800));
+}
+// quem chamou recebe a contraproposta: ✅ Aceitar (só com saldo) · ❌ Recusar
+function mostrarContraproposta(d) {
+  const du = duelo, ap = d.aposta || {}, valor = Number(ap.valor) || 0;
+  if (du.contraVista || convite) return;
+  du.contraVista = true;
+  const exp = (cfgDesafio().convite_expira_s ?? 20) * 1000, idade = Math.max(0, agoraServ() - (Number(ap.ts) || agoraServ()));
+  convite = { id: du.id, etapa: 'contra', aposta: valor };
+  $('convite-txt').innerHTML = `<b>${nomeT(d.b.uid, nomeCurto(d.b.uid, d.b.nome))}</b> quer jogar ${valor ? `valendo <b>${valor} 🪙</b>` : '<b>sem aposta</b>'}. 💬`;
+  $('convite-aviso').hidden = true;
+  mostrarBotoesConvite(valor, false);
+  $('convite').hidden = false;
+  tocar('vitoria');
+  barraConvite(du.id, Date.now() + exp - idade, exp, () => responderContraproposta(false, true));
+}
+async function responderContraproposta(aceitar, expirou = false) {
+  const cv = convite, du = duelo;
+  convite = null;
+  $('convite').hidden = true;
+  if (!cv || !du || du.id !== cv.id) return;
+  if (aceitar && cv.aposta > saldoMoedas()) aceitar = false;
+  try { await runTransaction(ref(db, `${basePraca()}/duelos/${cv.id}/estado`), deContraPara(aceitar ? 'aceito' : expirou ? 'expirou' : 'recusado')); } catch (_) {}
+}
+function cliqueConvite(e) {
+  e.stopPropagation();
+  const cv = convite;
+  if (!cv) return;
+  const v = e.target.closest('[data-contra]');
+  if (v) { if (!v.disabled) enviarContraproposta(Number(v.dataset.contra) || 0); return; }
+  if (e.target.closest('#convite-contra')) { abrirContraproposta(); return; }
+  const sim = e.target.closest('#convite-sim'), nao = e.target.closest('#convite-nao');
+  if (!(sim && !sim.disabled) && !nao) return;
+  if (cv.etapa === 'contra') responderContraproposta(!!sim);
+  else responderConvite(!!sim);
 }
 async function responderConvite(aceitar, expirou = false) {
   const cv = convite;
@@ -6664,6 +6909,7 @@ async function responderConvite(aceitar, expirou = false) {
     try { await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), deConvitePara('recusado')); } catch (_) {}
     return;
   }
+  if (cv.aposta > saldoMoedas()) { avisoPet('Você não tem moedas para essa aposta.'); try { await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), deConvitePara('recusado')); } catch (_) {} return; }
   try {
     await update(ref(db, `${base}/duelos/${cv.id}/b`), { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), vencidos: vencidosMeus(), premio: cv.premio, ...dadosCorrida() });
     const t = await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), deConvitePara('aceito'));
@@ -6696,10 +6942,12 @@ function atualizarDuelo(d) {
   du.d = d;
   const outroLado = du.souA ? 'b' : 'a';
   if (!du.comecou && ['recusado', 'expirou', 'ocupado'].includes(d.estado)) {
+    if (convite?.id === du.id) { convite = null; $('convite').hidden = true; }   // a contraproposta aberta expirou
     avisoPet(d.estado === 'ocupado' ? `${nomeCurto(d.b?.uid, d.b?.nome)} está ocupado agora. Fica para a próxima! ⚔️` : 'Fica para a próxima! ⚔️');
     encerrarDueloLocal();
     return;
   }
+  if (!du.comecou && d.estado === 'contra' && du.souA) { mostrarContraproposta(d); return; }   // 💬 o colega propôs outro valor
   if (!du.comecou && (d.estado === 'aceito' || d.estado === 'jogando') && d.a?.pers && d.b?.pers) comecarDuelo(d);   // (lista vazia de vencidos não é gravada: espera o pers)
   if (!du.comecou) return;
   du.outro = d[outroLado];
@@ -6720,6 +6968,8 @@ function comecarDuelo(d) {
   const onRef = ref(db, `${basePraca()}/duelos/${du.id}/on/${sessao.uid}`);
   set(onRef, true).then(() => onDisconnect(onRef).remove()).catch(() => {});
   fecharCartaoColega();
+  if (convite?.id === du.id) { convite = null; $('convite').hidden = true; }
+  apostarNoDuelo(d);
   const pd = cfgPraca().ponto_desafio, meu = pd && (du.souA ? pd.a : pd.b);   // frente a frente: quem desafiou à esquerda
   if (ehPraca() && meu) caminharNaTrilha(meu[0], meu[1], () => { jog.dir = du.souA ? 'direita' : 'esquerda'; desenharJogador(); });
   $('dl-nomeL').textContent = 'Você';
@@ -6768,7 +7018,7 @@ async function finalizarDuelo(wo = null) {
     const t = await runTransaction(ref(db, `${basePraca()}/duelos/${du.id}/fim`), (cur) => (cur ? undefined : fim));
     if (!t.committed) return;
     await set(ref(db, `${basePraca()}/historico/${semanaPesca()}/${du.id}`), { a, b, an: d.a.nome || '', bn: d.b.nome || '', at: d.a.turma || '', bt: d.b.turma || '',
-      vencedor, placar: `${placar[a]}-${placar[b]}`, wo: !!wo, ts: Date.now() });
+      vencedor, placar: `${placar[a]}-${placar[b]}`, wo: !!wo, aposta: Number(d.aposta?.valor) || 0, ts: Date.now() });
   } catch (e) { console.warn('[jogo-revisao] fim do desafio', e?.code || e); }
 }
 // Desconectou no meio: depois de wo_s sem o outro, quem ficou vence por W.O.
@@ -6833,6 +7083,71 @@ function animarTempoDuelo() {
   du.raf = requestAnimationFrame(animarTempoDuelo);
 }
 
+// 💰 Aposta (PROMPT-154): ao começar, cada um tira a aposta do próprio saldo e anota apostas_pendentes/{duelo} = { valor, ts }.
+// No fim, quem vence recebe 2 × a aposta; empate devolve. Sem sinal do fim (fechou o jogo), a pendência se resolve depois.
+function apostarNoDuelo(d) {
+  const valor = Number(d.aposta?.valor) || 0;
+  if (!valor) return;
+  if (!apostaValeMoedas(d)) { avisoPet(`💰 Valendo ${valor} 🪙 (conta de teste: as moedas não mudam).`); return; }
+  if (!carregouProgresso) return;
+  const patch = {};
+  estado.pets.moedas = Math.max(0, saldoMoedas() - valor);
+  patch['pets/moedas'] = estado.pets.moedas;
+  estado.apostasPendentes[duelo.id] = { valor, ts: Date.now() };
+  patch[`apostas_pendentes/${duelo.id}`] = estado.apostasPendentes[duelo.id];
+  gravar(patch);
+  avisoPet(`💰 Aposta: −${valor} 🪙. Quem vencer leva ${2 * valor} 🪙!`);
+}
+// quanto volta para mim de uma aposta: venceu 2 ×, empate 1 ×, perdeu 0
+const retornoAposta = (fim, valor) => (fim.vencedor === sessao.uid ? 2 * valor : fim.vencedor === 'empate' ? valor : 0);
+function pagarAposta(id, fim, patch) {
+  const p = estado.apostasPendentes?.[id];
+  if (!p) return null;
+  const valor = Number(p.valor) || 0, volta = fim ? retornoAposta(fim, valor) : valor;
+  delete estado.apostasPendentes[id];
+  patch[`apostas_pendentes/${id}`] = null;
+  if (volta) {
+    estado.pets.moedas = saldoMoedas() + volta;
+    patch['pets/moedas'] = estado.pets.moedas;
+    if (fim && fim.vencedor === sessao.uid) registrarGanho('aposta', volta, patch);   // devolução (empate) não é ganho
+  }
+  return { valor, volta };
+}
+// texto do fim: "+20 🪙 da aposta" / "−10 🪙 da aposta" / "aposta devolvida"
+const textoFimAposta = (r) => (!r ? '' : r.volta > r.valor ? `💰 +${r.volta} 🪙 da aposta!` : r.volta === r.valor ? `💰 Aposta devolvida (${r.valor} 🪙).` : `💰 −${r.valor} 🪙 da aposta.`);
+function apostaNoFim(d, patch) {
+  const valor = Number(d.aposta?.valor) || 0;
+  if (!valor) return '';
+  if (!estado.apostasPendentes?.[duelo.id]) return apostaValeMoedas(d) ? '' : `💰 Valia ${valor} 🪙 (conta de teste: as moedas não mudam).`;
+  const txt = textoFimAposta(pagarAposta(duelo.id, d.fim, patch));
+  setTimeout(resolverApostasPendentes, 1500);   // aproveita para resolver alguma que tenha ficado para trás
+  return txt;
+}
+// Ao entrar no jogo (e ao terminar um desafio): lê cada duelo pendente. Com resultado, recebe o que for dele;
+// sem resultado e já parado há mais de 10 min, recebe a aposta de volta.
+let resolvendoApostas = false;
+async function resolverApostasPendentes() {
+  if (resolvendoApostas || !carregouProgresso || !estado?.apostasPendentes) return;
+  const ids = Object.keys(estado.apostasPendentes).filter(id => id !== duelo?.id);
+  if (!ids.length) return;
+  resolvendoApostas = true;
+  const patch = {}, textos = [];
+  try {
+    for (const id of ids) {
+      const p = estado.apostasPendentes[id];
+      if (!p) continue;
+      let d = null;
+      try { const s = await get(ref(db, `${basePraca()}/duelos/${id}`)); d = s.exists() ? s.val() : null; } catch (_) { continue; }   // sem internet: tenta na próxima
+      if (duelo?.id === id) continue;
+      if (d?.fim) { const r = pagarAposta(id, d.fim, patch); if (r) textos.push(textoFimAposta(r)); }
+      else if (Date.now() - (Number(p.ts) || 0) > 10 * 60000) { const r = pagarAposta(id, null, patch); if (r) textos.push(`💰 Aposta devolvida (${r.valor} 🪙): o desafio não terminou.`); }
+    }
+  } finally { resolvendoApostas = false; }
+  if (!Object.keys(patch).length) return;
+  gravar(patch);
+  if (textos.length) setTimeout(() => avisoPet(textos.join(' '), true), 1800);
+}
+
 // Fim: cada um grava o próprio prêmio (se valer), as respostas para os relatórios e o ranking da semana
 function aplicarFimDuelo(d) {
   const du = duelo;
@@ -6859,13 +7174,16 @@ function aplicarFimDuelo(d) {
       nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() }).catch(() => {});
     delete mural.cache.desafios;
   }
+  const txtAposta = apostaNoFim(d, patch);
   gravar(patch);
   tocar(res === 'venceu' ? 'vitoria' : res === 'empate' ? 'acerto' : 'erro');
   du.venceu = res === 'venceu';   // ao fechar o resultado, o pet comemora (PROMPT-65)
+  ganharXPJogo(res === 'venceu' ? 15 : 5, 'desafio');   // ⭐ jogou / venceu (PROMPT-156)
   const titulo = res === 'venceu' ? (f.wo ? '🏆 Você venceu por W.O.!' : '🏆 Você venceu!') : res === 'empate' ? '🤝 Empate!' : `${nomeT(outro, nomeCurto(outro, du.outro.nome))} venceu!`;
   $('dl-fim-titulo').innerHTML = titulo;
   $('dl-fim-placar').textContent = `${ganhas} × ${Number(f.placar?.[outro]) || 0}`;
-  $('dl-fim-premio').textContent = !valeu ? 'Sem prêmio (limite do dia) — valeu pela diversão!' : moedas || pontos ? `+${moedas} moeda${moedas === 1 ? '' : 's'} · +${pontos} pontos de Desafio 🏆` : 'Boa partida! Tente de novo.';
+  $('dl-fim-premio').textContent = (!valeu ? 'Sem prêmio (limite do dia) — valeu pela diversão!' : moedas || pontos ? `+${moedas} moeda${moedas === 1 ? '' : 's'} · +${pontos} pontos de Desafio 🏆` : 'Boa partida! Tente de novo.')
+    + (txtAposta ? ` · ${txtAposta}` : '');
   $('dl-fim').hidden = false;
   $('duelo').hidden = false;
   du.timers.forEach(clearTimeout);
@@ -6879,7 +7197,8 @@ function aplicarFimDuelo(d) {
 //  o tabuleiro fica em duelos/{id}/jogo = { tab, vez, semAvanco, n, t (início da vez, relógio do servidor), autos: { a, b },
 //  ultima: { de, caminho, cap, auto, lado } }. Cada jogada é gravada com runTransaction, conferindo a vez, o número da jogada e
 //  se é válida. Quem desafiou é o lado A (vermelho, começa). Relógio: 15 s por jogada; acabou, uma jogada válida aleatória
-//  ("jogada automática"); 3 automáticas seguidas = desistência. Sem moedas; vitórias contra colegas no Mural (aba ♟️ Damas):
+//  ("jogada automática"); 3 automáticas seguidas = desistência. Contra colegas, só a aposta (PROMPT-154); contra o computador,
+//  3 / 6 / 10 🪙 até 5 vitórias por dia (damas_cpu_dia = { data, n }). Vitórias contra colegas no Mural (aba ♟️ Damas):
 //  jogo_revisao_praca/damas/{segunda}/{uid} = { vitorias, nome, turma, pers, ts }.
 // ============================================================
 const MS_JOGADA_DAMAS = 15000;
@@ -6952,7 +7271,17 @@ function cliqueMenuDamas(e) {
   const cpu = e.target.closest('[data-damas-cpu]');
   if (cpu) { $('maquina').hidden = true; abrirDamas({ tipo: 'cpu', nivel: cpu.dataset.damasCpu }); return true; }
   const col = e.target.closest('[data-damas-colega]');
-  if (col) { const c = colegas.get(col.dataset.damasColega); $('maquina').hidden = true; if (c) desafiarColega(c, 'damas'); return true; }
+  if (col) {
+    const c = colegas.get(col.dataset.damasColega);
+    if (!c) { $('maquina').hidden = true; return true; }
+    if (!apostasLigadas()) { $('maquina').hidden = true; desafiarColega(c, 'damas', 0); return true; }
+    $('mq-corpo').innerHTML = `<p class="mq-sub">💰 Valendo quanto? Quem vencer leva as duas apostas. Você tem ${saldoMoedas()} 🪙.</p>
+      <div class="pg-fases">${botoesAposta('data-damas-aposta').replaceAll('<button ', `<button class="jr-btn" data-damas-para="${esc(c.uid)}" `)}</div>`;
+    $('mq-botoes').innerHTML = '<button class="jr-btn jr-btn-sec" data-damas="colega">← Voltar</button>';
+    return true;
+  }
+  const ap = e.target.closest('[data-damas-aposta]');
+  if (ap) { if (ap.disabled) return true; const c = colegas.get(ap.dataset.damasPara); $('maquina').hidden = true; if (c) desafiarColega(c, 'damas', Number(ap.dataset.damasAposta) || 0); return true; }
   return false;
 }
 
@@ -7071,9 +7400,24 @@ function terminarDamas({ vencedor, motivo }) {
   dm.fim = { vencedor, motivo };
   clearInterval(dm.timer);
   if (dm.tipo === 'online') { finalizarDamasOnline(vencedor, motivo); return; }
-  mostrarFimDamas(vencedor === dm.eu ? 'venceu' : vencedor === 'empate' ? 'empate' : 'perdeu', motivo);
+  if (vencedor === dm.eu) ganharXPJogo({ facil: 5, medio: 10, dificil: 15 }[dm.nivel] || 0, 'damas');   // ⭐ (PROMPT-156)
+  mostrarFimDamas(vencedor === dm.eu ? 'venceu' : vencedor === 'empate' ? 'empate' : 'perdeu', motivo, false, vencedor === dm.eu ? moedasDamasCpu(dm.nivel) : '');
 }
-function mostrarFimDamas(res, motivo, wo = false) {
+// 🤖 vencer o computador (PROMPT-154): Fácil 3 · Médio 6 · Difícil 10 🪙 (já com o multiplicador), até 5 vitórias por dia
+const MOEDAS_DAMAS_CPU = { facil: 3, medio: 6, dificil: 10 }, VITORIAS_DAMAS_CPU_DIA = 5;
+function moedasDamasCpu(nivel) {
+  const n = MOEDAS_DAMAS_CPU[nivel] || 0;
+  if (!n || !carregouProgresso || !estado?.pets) return '';
+  const hoje = diaLocal(), dia = estado.damasCpuDia?.data === hoje ? estado.damasCpuDia : { data: hoje, n: 0 };
+  if ((Number(dia.n) || 0) >= VITORIAS_DAMAS_CPU_DIA) return 'Vitória! (as moedas de hoje já foram)';
+  estado.damasCpuDia = { data: hoje, n: (Number(dia.n) || 0) + 1 };
+  estado.pets.moedas = saldoMoedas() + n;
+  const patch = { damas_cpu_dia: estado.damasCpuDia, 'pets/moedas': estado.pets.moedas };
+  registrarGanho('damas', n, patch);
+  gravar(patch);
+  return `+${n} 🪙`;
+}
+function mostrarFimDamas(res, motivo, wo = false, extra = '') {
   const outro = dm.tipo === 'cpu' ? 'O computador' : nomeT(dm.du.outro.uid, nomeCurto(dm.du.outro.uid, dm.du.outro.nome));
   $('dm-fim-titulo').innerHTML = motivo === 'atualizado' ? 'Partida encerrada' : res === 'venceu' ? (wo ? 'Você venceu por W.O.! 🏆' : 'Você venceu! 🏆') : res === 'empate' ? 'Empate! 🤝' : 'Perdeu';
   $('dm-fim-info').innerHTML = { pecas: res === 'venceu' ? 'Você capturou todas as peças.' : `${outro} capturou todas as suas peças.`,
@@ -7081,6 +7425,7 @@ function mostrarFimDamas(res, motivo, wo = false) {
     automaticas: res === 'venceu' ? 'O outro lado ficou 3 jogadas sem jogar.' : '3 jogadas automáticas seguidas contam como desistência.',
     desistiu: res === 'venceu' ? 'O outro lado desistiu.' : 'Você desistiu.', wo: 'O colega saiu do jogo.',
     atualizado: 'A partida foi encerrada: as Damas foram atualizadas.' }[motivo] || '';
+  if (extra) $('dm-fim-info').insertAdjacentHTML('beforeend', `<b class="dm-fim-moedas">${esc(extra)}</b>`);
   $('dm-msg').textContent = '';
   $('dm-sair').textContent = 'Sair';
   $('dm-revanche').hidden = dm.tipo === 'online' && !colegas.has(dm.du.outro.uid);
@@ -7113,9 +7458,9 @@ function revancheDamas() {
   if (!dm) return;
   const d = dm;
   if (d.tipo === 'cpu') { abrirDamas({ tipo: 'cpu', nivel: d.nivel }); return; }
-  const c = colegas.get(d.du.outro.uid);
+  const c = colegas.get(d.du.outro.uid), aposta = Number(d.du.d?.aposta?.valor) || 0;
   fecharDamas();
-  if (c) desafiarColega(c, 'damas');
+  if (c) desafiarColega(c, 'damas', aposta);   // a mesma aposta (sem saldo ou apostas desligadas: sem aposta)
 }
 
 // ── Online (o desafio da praça com modo 'damas') ──
@@ -7190,7 +7535,7 @@ async function gravarFimDamas(d, vencedor, placar, motivo, wo) {
     const t = await runTransaction(ref(db, `${basePraca()}/duelos/${duelo.id}/fim`), (cur) => (cur ? undefined : { vencedor, placar, wo, motivo, ts: serverTimestamp() }));
     if (!t.committed) return;
     await set(ref(db, `${basePraca()}/historico/${semanaPesca()}/${duelo.id}`), { a, b, an: d.a.nome || '', bn: d.b.nome || '', at: d.a.turma || '', bt: d.b.turma || '',
-      vencedor, placar: `${placar[a] ?? 0}-${placar[b] ?? 0}`, wo, modo: 'damas', ts: Date.now() });
+      vencedor, placar: `${placar[a] ?? 0}-${placar[b] ?? 0}`, wo, modo: 'damas', aposta: Number(d.aposta?.valor) || 0, ts: Date.now() });
   } catch (e) { console.warn('[jogo-revisao] fim das damas', e?.code || e); }
 }
 function fimDamasOnline(d) {
@@ -7208,7 +7553,10 @@ function fimDamasOnline(d) {
     delete mural.cache.damas;
   }
   du.venceu = res === 'venceu';   // ao fechar, o pet comemora na praça (PROMPT-65)
-  mostrarFimDamas(res, f.wo ? 'wo' : f.motivo === 'desistiu' && res === 'perdeu' ? 'desistiu' : f.motivo, !!f.wo);
+  if (f.motivo !== 'atualizado') ganharXPJogo(res === 'venceu' ? 15 : 5, 'desafio');   // ⭐ jogou / venceu (PROMPT-156)
+  const patch = {}, txtAposta = apostaNoFim(d, patch);
+  if (Object.keys(patch).length) { gravar(patch); }
+  mostrarFimDamas(res, f.wo ? 'wo' : f.motivo === 'desistiu' && res === 'perdeu' ? 'desistiu' : f.motivo, !!f.wo, txtAposta);
   du.parar?.();
 }
 
@@ -7297,6 +7645,7 @@ function iniciarExposicao(j) {
     for (const p of j.saguao.portas || []) onValue(ref(db, `${noExpo('exposicao_salas')}/${p.n}/grupo`), (s) => {
       const v = s.exists() ? s.val() : null;
       expoGrupos[p.n] = v && typeof v === 'object' ? { turma: String(v.turma || ''), membros: Object.values(v.membros || {}).filter(x => typeof x === 'string') } : null;
+      conferirAprovadosExpo(p.n);   // ⭐ (PROMPT-156)
       if (ehSaguao()) desenharPlacasExpo();
     }, () => {});
     onValue(ref(db, `${noExpo('exposicao_config')}/visitas_abertas`), (s) => {
@@ -7381,7 +7730,7 @@ function prepararCenaExpo(titulo, voltar) {
 // saída por uma faixa embaixo ({ y_min, x: [a, b] }): o ponto do meio, como a descida da vila
 function saidaFaixa(f, entrada, naTrilha) {
   const sx = f?.x ? (f.x[0] + f.x[1]) / 2 : entrada[0], sy = Math.min(H - 4, (Number(f?.y_min) || 752) + 6);
-  return { cfg: [sx, sy], saida: { x: sx, y: sy, trilha: naTrilha(sx, sy) } };
+  return { cfg: [sx, sy], saida: { x: sx, y: sy, trilha: naTrilha(sx, sy), faixa: f?.x ? [f.x[0], f.x[1]] : null } };
 }
 async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (aparece na porta dela)
   if (!EXPO) return;
@@ -7587,9 +7936,12 @@ const seloExpo = (m) => (precisaAprov(catExpo(m.mv)) && veTudoExpo() ? (m.status
 const nomeSalaVisivel = (n) => { const st = estadoSala(n); return String((veTudoExpo(n) && st.nome_pendente) || st.nome || ''); };
 const nomeDaSala = () => nomeSalaVisivel(ex.n);
 const seloNomeExpo = (n) => { const st = estadoSala(n); return !veTudoExpo(n) ? '' : st.nome_pendente ? '⏳' : st.nome_motivo !== undefined && st.nome_motivo !== null ? '❌' : ''; };
+// 📏 tamanhos de um objeto de chão (PROMPT-152): 1 = 100%, o tamanho do catálogo
+const TAMS_EXPO = [0.6, 0.8, 1, 1.3, 1.6];
+const tamValido = (it, t) => (it?.tipo === 'chao' && TAMS_EXPO.includes(Number(t)) ? Number(t) : 1);
 function tamExpo(m) {
   const it = catExpo(m.mv);
-  return tamPelaLargura((Number(it?.largura) || 100) * escalaExpo(), srcExpo(m.mv, it?.vistas?.[0] || 'f'), srcExpo(m.mv, m.vista));
+  return tamPelaLargura((Number(it?.largura) || 100) * escalaExpo() * tamValido(it, m.tam), srcExpo(m.mv, it?.vistas?.[0] || 'f'), srcExpo(m.mv, m.vista));
 }
 const medirItemExpo = (it) => Promise.all(it.vistas.map(v => medirImg(srcExpo(it.id, v))));
 // um item lido do banco (o que não for válido some)
@@ -7597,7 +7949,7 @@ function lerItemExpo(v) {
   const it = catExpo(v?.mv);
   if (!it || !Number.isFinite(Number(v.x)) || !Number.isFinite(Number(v.y))) return null;
   const txt = (s, n) => (typeof s === 'string' ? s.slice(0, n) : '');
-  const m = { mv: it.id, x: Number(v.x), y: Number(v.y), vista: it.vistas.includes(v.vista) ? v.vista : it.vistas[0], espelho: !!v.espelho,
+  const m = { mv: it.id, x: Number(v.x), y: Number(v.y), vista: it.vistas.includes(v.vista) ? v.vista : it.vistas[0], espelho: !!v.espelho, tam: tamValido(it, v.tam),
     cor: clamp(Math.round(Number(v.cor) || 0), 0, Math.max(0, nCoresExpo(it) - 1)), titulo: txt(v.titulo, 40), texto: txt(v.texto, 400),
     foto: typeof v.foto === 'string' ? v.foto : null, fotos: v.fotos && typeof v.fotos === 'object' ? { ...v.fotos } : null,
     por: typeof v.por === 'string' ? v.por : '', ts: Number(v.ts) || 0, mexendo: Number(v.mexendo) || 0, mexendo_por: typeof v.mexendo_por === 'string' ? v.mexendo_por : '',
@@ -7609,6 +7961,7 @@ function lerItemExpo(v) {
 // o que vai para o banco (sem undefined; textos vazios e fotos ausentes não vão)
 function gravavelExpo(m) {
   const o = { mv: m.mv, x: Math.round(m.x), y: Math.round(m.y), vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, por: sessao.uid, ts: Date.now() };
+  if (m.tam && m.tam !== 1) o.tam = m.tam;
   if (m.titulo) o.titulo = m.titulo;
   if (m.texto) o.texto = m.texto;
   if (m.foto) o.foto = m.foto;
@@ -7657,10 +8010,29 @@ function fecharSalaExpo() {
   for (const id of ['ex-cont', 'ex-temas', 'ex-ver']) $(id).hidden = true;
   $('ex-faixa').hidden = $('ex-ferr').hidden = true;
 }
+// ⭐ item que eu mandei e a professora aprovou: +10 XP do jogo, uma vez por item (xp_jogo/expo/{sala}_{item}) (PROMPT-156)
+function xpExpoAprovado(n, id, m) {
+  const x = estado?.xpJogo, k = `${n}_${id}`;
+  if (!x || m.status !== 'aprovado' || (m.env_por || m.por) !== sessao.uid || x.expo[k]) return;
+  x.expo[k] = true;
+  if (xpJogoGrava()) gravar({ [`xp_jogo/expo/${k}`]: true });
+  ganharXPJogo(10, 'exposicao');
+}
+// fora da sala: ao saber que sou do grupo, confere uma vez os itens aprovados enquanto eu não estava lá
+const expoConferida = new Set();
+async function conferirAprovadosExpo(n) {
+  if (expoConferida.has(n) || !souDaSala(n) || !carregouProgresso) return;
+  expoConferida.add(n);
+  try {
+    const s = await get(ref(db, `${noExpo('exposicao_salas')}/${n}/itens`));
+    for (const [id, v] of Object.entries(s.exists() ? s.val() || {} : {})) { const m = v && lerItemExpo(v); if (m) xpExpoAprovado(n, id, m); }
+  } catch (e) { console.warn('[jogo-revisao] itens aprovados da Exposição', e?.code || e); }
+}
 // chegou do banco (ou mudou / saiu) um item
 function itemExpoMudou(id, v) {
   if (!ex) return;
   const m = v ? lerItemExpo(v) : null;
+  if (m) xpExpoAprovado(ex.n, id, m);
   if (ex.arr?.id === id && m) { const a = ex.itens.get(id); if (a) Object.assign(a, { ...m, x: a.x, y: a.y }); return; }   // arrastando: a posição é a minha até soltar
   if (m) ex.itens.set(id, m); else ex.itens.delete(id);
   const it = m && catExpo(m.mv);
@@ -7800,7 +8172,7 @@ async function colocarItemExpo(mv) {
   if (!ex?.editando) return;
   // nasce no centro da parte visível da sala
   const vp = $('cena-vp'), cx = (vp.clientWidth / 2 - cam.tx) / cam.s, S = EXPO.sala;
-  const m = { mv, x: cx, y: 0, vista: it.vistas[0], espelho: false, cor: 0, titulo: '', texto: '', foto: null, fotos: null, por: sessao.uid, ts: Date.now() };
+  const m = { mv, x: cx, y: 0, vista: it.vistas[0], espelho: false, tam: 1, cor: 0, titulo: '', texto: '', foto: null, fotos: null, por: sessao.uid, ts: Date.now() };
   prenderExpo(m, cx, it.tipo === 'parede' ? (S.parede_fundo.y[0] + S.parede_fundo.y[1]) / 2 + tamExpo(m)[1] / 2 : (S.chao.y[0] + S.chao.y[1]) / 2);
   let id;
   try { id = push(refItens()).key; } catch (_) { semConexaoExpo(); return; }
@@ -7831,10 +8203,12 @@ function abrirFerrExpo() {
   const m = ex?.itens.get(ex.sel), it = m && catExpo(m.mv), el = $('ex-ferr');
   if (!it) { el.hidden = true; return; }
   el.querySelector('[data-exf="cor"]').hidden = !nCoresExpo(it);
+  el.querySelector('[data-exf="tam"]').hidden = it.tipo !== 'chao';   // parede e tapete não mudam de tamanho (não cobrem molduras e fotos)
   el.querySelector('[data-exf="conteudo"]').hidden = !it.conteudo;
   const apagar = el.querySelector('[data-exf="apagar"]');
   apagar.textContent = '🗑️'; apagar.classList.remove('confirmar');
   $('ex-cores').hidden = true;
+  $('ex-tam').hidden = true;
   el.hidden = false;
   posicionarFerrExpo();
 }
@@ -7843,7 +8217,7 @@ function posicionarFerrExpo() {
   if (!m || el.hidden) return;
   posicionarNaTela(el, m.x, m.y - tamExpo(m)[1] - 6);
 }
-// mudou vista/espelho/cor: redesenha e grava só esses campos (o status fica como está).
+// mudou vista/espelho/cor/tamanho: redesenha e grava só esses campos (o status fica como está).
 // conteudo = true (foto, título, texto): grava o item inteiro e ele volta a esperar a professora
 function mudouItemExpo(id, conteudo = false) {
   const m = ex.itens.get(id);
@@ -7859,7 +8233,7 @@ function mudouItemExpo(id, conteudo = false) {
   if (ex.editando) { renderCatalogoExpo(); resumoAprovExpo(); }   // o uso (itens e fotos) e o ⏳/❌
   if (ex.ver) renderVisualizador();
   if (conteudo) return salvarExpo(set(refItem(id), gravavelExpo(m)));
-  return salvarExpo(update(refItem(id), { vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, x: Math.round(m.x), y: Math.round(m.y), por: m.por, ts: m.ts }));
+  return salvarExpo(update(refItem(id), { vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, tam: m.tam && m.tam !== 1 ? m.tam : null, x: Math.round(m.x), y: Math.round(m.y), por: m.por, ts: m.ts }));
 }
 // 🔄 girar: a próxima vista que existe; com uma vista só, espelha
 function girarExpo() {
@@ -7890,6 +8264,32 @@ function abrirCoresExpo() {
     `<img src="${srcExpo(m.mv, m.vista)}" alt="" draggable="false" style="${cores[i] ? `filter:${cores[i]}` : ''}"/></button>`).join('');
   el.hidden = false;
   posicionarFerrExpo();
+}
+// 📏 abre ➖ 100% ➕ (como o 🎨 abre as cores)
+function abrirTamExpo() {
+  const el = $('ex-tam');
+  if (!el.hidden) { el.hidden = true; return; }
+  pintarTamExpo();
+  el.hidden = false;
+  posicionarFerrExpo();
+}
+function pintarTamExpo() {
+  const m = ex.itens.get(ex.sel), i = TAMS_EXPO.indexOf(m?.tam ?? 1);
+  $('ex-tam-v').textContent = Math.round((m?.tam ?? 1) * 100) + '%';
+  $('ex-tam').querySelector('[data-ex-tam="-1"]').disabled = i <= 0;
+  $('ex-tam').querySelector('[data-ex-tam="1"]').disabled = i >= TAMS_EXPO.length - 1;
+}
+function tamanhoExpo(passo) {
+  const m = ex.itens.get(ex.sel), it = m && catExpo(m.mv);
+  if (it?.tipo !== 'chao') return;
+  const i = clamp(TAMS_EXPO.indexOf(m.tam ?? 1) + passo, 0, TAMS_EXPO.length - 1);
+  if (TAMS_EXPO[i] === m.tam) return;
+  m.tam = TAMS_EXPO[i];
+  prenderExpo(m, m.x, m.y);   // ampliado, não passa das paredes nem do chão
+  regrudarExpo(ex.sel);
+  pintarTamExpo();
+  mudouItemExpo(ex.sel);      // como a vista e a cor: não volta a esperar aprovação
+  tocar('clique');
 }
 function corExpo(i) {
   const m = ex.itens.get(ex.sel);
@@ -8025,11 +8425,14 @@ function ligarEditorExpo() {
     e.stopPropagation();
     const c = e.target.closest('[data-ex-cor]');
     if (c) { corExpo(Number(c.dataset.exCor)); return; }
+    const t = e.target.closest('[data-ex-tam]');
+    if (t) { tamanhoExpo(Number(t.dataset.exTam)); return; }
     const b = e.target.closest('[data-exf]');
     if (!b || !ex?.sel) return;
     if (b.dataset.exf !== 'cor') $('ex-cores').hidden = true;
+    if (b.dataset.exf !== 'tam') $('ex-tam').hidden = true;
     if (b.dataset.exf !== 'apagar') { const ap = $('ex-ferr').querySelector('[data-exf="apagar"]'); ap.classList.remove('confirmar'); ap.textContent = '🗑️'; }
-    ({ girar: girarExpo, espelhar: espelharExpo, cor: abrirCoresExpo, conteudo: () => abrirConteudoExpo(ex.sel), apagar: () => apagarExpo(b) })[b.dataset.exf]?.();
+    ({ girar: girarExpo, espelhar: espelharExpo, cor: abrirCoresExpo, tam: abrirTamExpo, conteudo: () => abrirConteudoExpo(ex.sel), apagar: () => apagarExpo(b) })[b.dataset.exf]?.();
   });
   $('cena-atores').addEventListener('pointerdown', (e) => {
     if (!ex?.editando) return;
@@ -9815,6 +10218,7 @@ function criarPetDono(p) {
   $('cena-atores').append(sombra, img);
   const seg = new PetSeguidor(img, sombra);
   seg.zCasa = Z_PET_CASA;   // o pet do dono também na frente dos móveis (PROMPT-114)
+  seg.evitar = (x, y) => ladoForaDaPorta(x, y, [jog.x, jog.y]);   // 🐾 nem ele para em cima da porta (PROMPT-155)
   preCarregarPet(forma);
   seg.definir(pet, forma);
   aplicarTinta(img, p.tinta || null, true);
@@ -11632,7 +12036,7 @@ function fecharRevisaoBatalha() {
 // Salva o resultado: desafio do treinador, prêmios (dentro do limite do dia) e as contas, para a professora
 function registrarBatalha(resultado) {
   const { t, d, pet } = bt;
-  if (resultado === 'venceu') missaoProgresso('batalha');
+  if (resultado === 'venceu') { missaoProgresso('batalha'); ganharXPJogo(XP_JOGO.batalha, 'batalha'); }
   const dia = diaBatalhas();
   const c = cuidadosDe(pet);
   const pr = premios(resultado, d, dia, c?.lealdade);
@@ -11804,8 +12208,11 @@ function atualizarIconesPessoas() {
 function pessoaEm(pt) {
   let melhor = null, md = Infinity;
   for (const o of pessoasMapa) {
-    const folga = 8 * escalaAtoresCena();
-    if (Math.abs(pt.x - o.p.x) > o.larg / 2 + folga || pt.y < o.p.y - o.alt - folga || pt.y > o.p.y + folga) continue;
+    const s = escalaAtoresCena(), folga = 8 * s;
+    // o ícone acima da cabeça (⚔️, 😴, !) também vale (PROMPT-155): ~22 px de altura (o "!" grande, ~34) e pelo menos 44 de largura
+    const icone = o.temIcone ? (o.p.destaque ? 36 : 24) * s : 0, noIcone = icone && pt.y < o.p.y - o.alt;
+    const meia = noIcone ? Math.max(o.larg / 2, 22 * s) : o.larg / 2;
+    if (Math.abs(pt.x - o.p.x) > meia + folga || pt.y < o.p.y - o.alt - icone - folga || pt.y > o.p.y + folga) continue;
     const d = Math.abs(pt.x - o.p.x) + Math.abs(pt.y - o.p.y);
     if (d < md) { md = d; melhor = o; }
   }
@@ -11838,6 +12245,14 @@ function reagirSeguidor(tipo, anim, ms = 0) {
   if (seguidor?.comemorar(tipo === 'comemora' ? 'vitoria' : 'carinho')) return;
   seguidor?.reagir(anim, ms);
 }
+// por que o "⚔️ Batalhar" não aparece (podeBatalhar() deu falso e não é descanso, expedição nem fome)
+function motivoSemBatalha() {
+  if (!carregouProgresso) return 'Seu progresso não carregou. Recarregue a página para batalhar.';
+  if (!petsOk || !batalhasProntas()) return 'Os pets ainda estão carregando… Tente de novo daqui a pouco!';
+  if (!estado?.pets?.ativo) return 'Você ainda não tem um pet para batalhar. Escolha um pet primeiro! 🐾';
+  if (petFora()) return 'Seu pet está em expedição. 🧭';
+  return 'Agora não dá para batalhar. Tente de novo daqui a pouco!';
+}
 function falarCom(o, convite = false) {   // convite: tocou no Engrenaldo → pergunta se quer ir para a Ilha dos Robôs
   if (perguntaAberta || transicionando || cena?.tipo !== 'mapa' || !o.img.isConnected) return;
   jog.dir = o.p.x < jog.x ? 'esquerda' : 'direita';
@@ -11868,6 +12283,7 @@ function falarCom(o, convite = false) {   // convite: tocou no Engrenaldo → pe
     else if (petsOk && batalhasProntas() && petFora()) aviso = `<div class="jr-pessoa-descansa">Seu pet está em expedição. 🧭</div>`;
     else if (podeBatalhar() && barrigaDe(estado.pets.ativo) < (cfgBatalha().barriga_minima ?? 25)) { seguidor?.reagir('triste_fome', 2000); aviso = `<div class="jr-pessoa-descansa">${esc(nomePet(estado.pets.ativo))} está com fome. Dê comida antes de batalhar.</div>`; }
     else if (podeBatalhar()) botoes.push(`<button class="jr-btn ${ped ? '' : 'jr-btn-ouro'}" data-acao="batalhar">⚔️ Batalhar</button>`);
+    else aviso = `<div class="jr-pessoa-descansa">${motivoSemBatalha()}</div>`;   // nunca um treinador sem botão e sem motivo (PROMPT-155)
   }
   if (botoes.length) botoes.push('<button class="jr-btn jr-btn-sec" data-acao="nao">Agora não</button>');
   const extra = aviso + (botoes.length ? `<div class="jr-pessoa-botoes">${botoes.join('')}</div>` : '');
@@ -13003,7 +13419,7 @@ function responder(btn) {
     comemorarJogador();
     pg.fila.shift();
     pg.acertos++;
-    if (primeiroAcerto && !treino) ganharMoeda();   // treino: sem moedas (o prêmio é lealdade)
+    if (primeiroAcerto && !treino) { ganharMoeda(); ganharXPJogo(XP_JOGO.pergunta, 'pergunta'); }   // treino: sem moedas (o prêmio é lealdade)
     falar(sortear(D.falas.acerto));
     // 📐 com plano: espera a animação da resposta (no mínimo 1,1 s, no máximo ~3 s)
     const pgAgora = pg, segue = () => { if (!pg || pg !== pgAgora) return; pg.fila.length ? renderPergunta() : vencer(); };
@@ -13071,6 +13487,7 @@ function vencer() {
     if (p === 'lider') darXP(XP_LIDER + (pg.errouIds.size === 0 ? XP_LIDER_PERFEITO : 0));
     else if (p === 'revanche') darXP(XP_REVANCHE);
     else darXP(XP_TREINADOR);
+    ganharXPJogo(p === 'lider' ? XP_JOGO.lider : p === 'revanche' ? XP_JOGO.revanche : XP_JOGO.treinador, p);   // ⭐ (PROMPT-156)
   }
   if (ganhou) { const f = verificarMestre(); if (f) festaPendente = f; }   // a 26ª insígnia (ou a 26ª dourada): festa depois da insígnia voar
   if (ganhou) publicarResumoInsignias();
@@ -13177,8 +13594,11 @@ function abrirEstojo() {
   $('estojo-bandejas').innerHTML = html.join('');
   $('estojo-resumo').textContent = `${conquistadas} de 26 · ${douradas} dourada${douradas === 1 ? '' : 's'}`;
   $('estojo-barra').style.width = (conquistadas / 26 * 100) + '%';
-  $('estojo-nota').innerHTML = `<div class="ins-nota">⭐ Nota do jogo: <b>${formatarNota(notaJogoRevisao(conquistadas, douradas))}</b> / ${NOTA_MAX}</div>` +
-    `<div class="ins-nota-legenda">Insígnias valem ${PESO_INSIGNIAS},0 · Douradas valem mais ${PESO_DOURADAS},0</div>`;
+  const xj = estado.xpJogo || { total: 0 }, hoje = xj.dia?.data === diaLocal() ? Number(xj.dia.n) || 0 : 0, fmt = (n) => n.toLocaleString('pt-BR');
+  $('estojo-nota').innerHTML = `<div class="ins-nota">⭐ Nota do jogo: <b>${formatarNota(notaJogoRevisao(conquistadas, xj.total))}</b> / ${NOTA_MAX}</div>` +
+    `<div class="ins-xp"><div class="ins-xp-top"><span>⭐ Experiência: <b>${fmt(Math.min(xj.total, XP_META))}</b> / ${fmt(XP_META)} → ${formatarNota(Math.round(notaXP(xj.total) * 10) / 10)} de ${PESO_XP},0</span>` +
+    `<small>hoje: ${hoje} / ${XP_DIA}</small></div><div class="ins-xp-barra"><span style="width:${Math.min(100, xj.total / XP_META * 100)}%"></span></div></div>` +
+    `<div class="ins-nota-legenda">Ginásios valem ${PESO_INSIGNIAS},0 · Experiência vale ${PESO_XP},0</div>`;
   pintarEspecialAlbum();
   $('estojo').hidden = false;
   $('estojo').scrollTop = 0;
@@ -13360,6 +13780,7 @@ function venceuFase(f, r) {
   if (r.estrelas === 3 && !p.premio3) { p.premio3 = true; patch[`${base}/premio3`] = true; moedas += comMult(PROG.premios?.tres_estrelas ?? PREMIO_PG.tres_estrelas); }
   if (moedas) { ps.moedas = (Number(ps.moedas) || 0) + moedas; patch['pets/moedas'] = ps.moedas; registrarGanho('programe', moedas, patch); }
   if (nova && ps.ativo && cuidadosDe(ps.ativo)) ganharLealdade(ps.ativo, PROG.premios?.lealdade ?? PREMIO_PG.lealdade, patch);
+  if (nova) ganharXPJogo(XP_JOGO.fase, 'fase');   // ⭐ (PROMPT-156)
   // chefe vencido pela 1ª vez: medalha da região (sem moedas extras)
   const reg = chefeDaFase(f.id), med = (estado.programe.medalhas ||= {});
   const medalhaNova = !!reg && !med[reg.id];
@@ -13448,6 +13869,7 @@ async function abrirBug(id) {
 // ⭐ consertou · ⭐⭐ em até 2 execuções · ⭐⭐⭐ de primeira (contando só as execuções depois de mexer). Prêmio igual ao das fases, uma vez por bug.
 function venceuBug(b, r) {
   const bugs = (estado.programe.bugs ||= {}), p = (bugs[b.id] ||= {}), base = `programe/bugs/${b.id}`, patch = {}, ps = estado.pets;
+  if (!(Number(p.estrelas) > 0)) ganharXPJogo(XP_JOGO.bug, 'bug');   // ⭐ 1º conserto deste bug (PROMPT-156)
   if (!(Number(p.estrelas) > 0) || r.estrelas > p.estrelas) {
     Object.assign(p, { estrelas: r.estrelas, execucoes: r.execs, data: Date.now() });
     for (const k of ['estrelas', 'execucoes', 'data']) patch[`${base}/${k}`] = p[k];
@@ -13503,6 +13925,7 @@ function resultadoOQF(acertou) {
       }
     }
     const md = o.moedas_dia?.data === hoje ? Number(o.moedas_dia.n) || 0 : 0;
+    if (oqf.acertos % 5 === 0) ganharXPJogo(5, 'o_que_faz');   // ⭐ (PROMPT-156)
     if (oqf.acertos % 5 === 0 && md < MOEDAS_OQF_DIA) {
       o.moedas_dia = { data: hoje, n: md + 1 }; patch['programe/o_que_faz/moedas_dia'] = o.moedas_dia;
       const ps = estado.pets, g = comMult(1); ps.moedas = (Number(ps.moedas) || 0) + g; patch['pets/moedas'] = ps.moedas;
@@ -13657,7 +14080,7 @@ async function finalizarCorrida(d, vencedor, placar, wo = false) {
     const t = await runTransaction(ref(db, `${basePraca()}/duelos/${du.id}/fim`), (cur) => (cur ? undefined : { vencedor, placar, wo, ts: serverTimestamp() }));
     if (!t.committed) return;
     await set(ref(db, `${basePraca()}/historico/${semanaPesca()}/${du.id}`), { a, b, an: d.a.nome || '', bn: d.b.nome || '', at: d.a.turma || '', bt: d.b.turma || '',
-      vencedor, placar: `${placar[a]}-${placar[b]}`, wo, modo: 'corrida', ts: Date.now() });
+      vencedor, placar: `${placar[a]}-${placar[b]}`, wo, modo: 'corrida', aposta: Number(d.aposta?.valor) || 0, ts: Date.now() });
   } catch (e) { console.warn('[jogo-revisao] fim da corrida', e?.code || e); }
 }
 // Fim: os dois pets correm na tela; depois o resultado e os prêmios (os mesmos do desafio da praça)
@@ -13698,6 +14121,8 @@ const FONTES_MOEDA = {
   colecao: { nome: 'Coleção' },
   fliperama: { nome: 'Fliperama', limite: () => comMult(FLIPER?.moedas_dia ?? 10) },
   desafio: { nome: 'Desafios na praça' },
+  aposta: { nome: '💰 Apostas nos desafios' },
+  damas: { nome: '♟️ Damas contra o computador', limite: () => VITORIAS_DAMAS_CPU_DIA * MOEDAS_DAMAS_CPU.dificil },
   pesca: { nome: 'Venda de peixes' },
   aovivo: { nome: 'Tabuada ao vivo' },
   missao: { nome: 'Missões do dia' },
@@ -13821,6 +14246,7 @@ function concluirMissao(m, md, patch) {
   if (pr.moedas) { ps.moedas = (Number(ps.moedas) || 0) + pr.moedas; patch['pets/moedas'] = ps.moedas; registrarGanho('missao', pr.moedas, patch); }
   if (pr.lealdade && ps.ativo && cuidadosDe(ps.ativo)) ganharLealdade(ps.ativo, pr.lealdade, patch);
   avisoPet(`📜 Missão cumprida: ${textoMissao(m)}!${pr.moedas ? ` +${pr.moedas} 🪙` : ''}`, true);
+  ganharXPJogo(10, 'missao');   // ⭐ (PROMPT-156)
   moedasVoando(pr.moedas);
   if (md.bonus || !md.lista.every(missaoFeita)) return;
   // as 3 do dia: bônus (fica fora de qualquer teto)
@@ -14304,8 +14730,7 @@ function ligarEventos() {
     if (a) { mural.aba = a.dataset.aba; renderMural(); }
     else if (f) { mural.filtro = f.dataset.filtro; renderMural(); }
   });
-  $('convite-sim').addEventListener('click', (e) => { e.stopPropagation(); responderConvite(true); });
-  $('convite-nao').addEventListener('click', (e) => { e.stopPropagation(); responderConvite(false); });
+  $('convite').addEventListener('click', cliqueConvite);   // ✅ / 💬 / ❌ e os valores da contraproposta (PROMPT-154)
   $('duelo').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('.dl-op'); if (b && !b.disabled) responderDuelo(b.dataset.op); });
   $('dl-ok').addEventListener('click', (e) => { e.stopPropagation(); encerrarDueloLocal(); });
   $('maquina').addEventListener('click', (e) => {
@@ -14419,7 +14844,9 @@ function ligarEventos() {
     const md = e.target.closest('[data-modo]');
     if (md) { confirmarDesafio(cartaoColega.c, md.dataset.modo); return; }
     const dm = e.target.closest('[data-desafiar-mesmo]');
-    if (dm) { desafiarColega(cartaoColega.c, dm.dataset.desafiarMesmo || 'contas'); return; }
+    if (dm) { escolherAposta(cartaoColega.c, dm.dataset.desafiarMesmo || 'contas'); return; }
+    const ap = e.target.closest('[data-aposta]');
+    if (ap) { if (!ap.disabled) desafiarColega(cartaoColega.c, cartaoColega.modo || 'contas', Number(ap.dataset.aposta) || 0); return; }
     const dar = e.target.closest('[data-dar]');
     if (dar) { escolherPresente(cartaoColega.c, 2, dar.dataset.dar); return; }
     const rec = e.target.closest('[data-recado]');

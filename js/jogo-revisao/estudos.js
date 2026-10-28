@@ -2,7 +2,7 @@
 //   abrirQuadroEstudos({ dados, nomeMapa, ginasios })   fecharQuadroEstudos()
 // Painel deitado: abas dos ginásios, menu à esquerda (⭐ Regra · 🎟️ Pensa assim · ✏️ Exemplos · ⚠️ Armadilha · 🎯 Tente você),
 // uma seção por vez. Textos do JSON: **negrito**, [[destaque laranja]], {{verde}} — o resto é escapado.
-// Sem prêmio: o "Tente você" é só treino.
+// Sem moedas: o "Tente você" é treino; o acerto dá 3 XP do jogo (aoAcertarTente, PROMPT-156).
 // Animações do "Pensa assim": fila (PROMPT-90) · caixas, casas e sapo (PROMPT-113), todas com o mesmo ritmo, legendas
 // numeradas e controles; com prefers-reduced-motion, só a etapa final. termometro, sinais, pizza e alinhar (PROMPT-115,
 // mapas 3 e 4): desenhadas em SVG no palco, no mesmo motor. potencia, raiz_quadrado, reta_pulos e arranjos (PROMPT-136,
@@ -33,10 +33,10 @@ let qe = null;   // { dados, G, sec, vistas:Set, ex, tente, anim }
 
 export const quadroEstudosAberto = () => !!qe;
 
-export function abrirQuadroEstudos({ dados, nomeMapa, ginasios = ['A', 'B'] }) {
+export function abrirQuadroEstudos({ dados, nomeMapa, ginasios = ['A', 'B'], aoAcertarTente = null }) {   // aoAcertarTente: ⭐ XP do jogo (PROMPT-156)
   fecharQuadroEstudos();
   const G = ginasios.find(g => dados[g]) || ginasios[0];
-  qe = { dados, ginasios, G, sec: 'regra', vistas: new Set(), ex: 0, tente: null, anim: null };
+  qe = { dados, ginasios, G, sec: 'regra', vistas: new Set(), ex: 0, tente: null, anim: null, aoAcertarTente };
   $('qe-mapa').textContent = nomeMapa || '';
   $('estudos').hidden = false;
   desenharAbas();
@@ -157,6 +157,7 @@ function responderTente(b) {
   if (v === String(t.q.certa)) {
     t.certo = true;
     b.classList.add('certa');
+    qe.aoAcertarTente?.();
     $('qe-resp').innerHTML = `<span class="qe-ok">${marcar(t.q.acerto || 'Isso! 🎉')}</span> <button class="qe-outra" data-qe-outra>Outra ▶</button>`;
   } else {
     b.classList.remove('errada'); void b.offsetWidth; b.classList.add('errada');
@@ -446,7 +447,7 @@ async function tocarTentePlano(e) {
   if (t.alvos) {
     const [X, Y] = item;
     if (x === X && y === Y) {
-      t.feito = true; t.seguidos++; fogo();
+      t.feito = true; t.seguidos++; fogo(); qe.aoAcertarTente?.();
       resp.className = 'qe-tp-resp qe-ok';
       resp.innerHTML = `Acertou! ${esc(par(X, Y))}: ${X ? `${Math.abs(X)} para a ${X > 0 ? 'direita' : 'esquerda'}` : 'não anda para o lado'} e ${Y ? `${Math.abs(Y)} para ${Y > 0 ? 'cima' : 'baixo'}` : 'não sobe'}.`;
       try { await p.mostrarCaminho([0, 0], movAte([0, 0], [X, Y]), { rapido: true }); } catch (_) { return; }
@@ -468,6 +469,7 @@ async function tocarTentePlano(e) {
   const certo = x === fimX && y === fimY;
   if (!certo) { p.xis(x, y); p.rotulo(x, y, par(x, y), COR.verm, -28); }
   t.seguidos = certo ? t.seguidos + 1 : 0; fogo();
+  if (certo) qe.aoAcertarTente?.();
   resp.className = 'qe-tp-resp';
   resp.innerHTML = 'Vamos conferir…';
   try { await p.mostrarCaminho(item.de, item.mov, { rapido: true }); } catch (_) { return; }

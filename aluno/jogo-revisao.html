@@ -156,7 +156,7 @@
     <div id="cs-selo" class="cs-selo" hidden></div>
     <div id="cs-ferr" class="cs-ferr" hidden><div class="cs-cores" id="cs-cores" hidden></div><button class="jr-btn" data-cs="cor">🎨 Cor</button><button class="jr-btn" data-cs="girar">🔄 Girar</button><button class="jr-btn" data-cs="guardar">📦 Guardar</button></div>
     <!-- 🖼️ editor da sala da Exposição (PROMPT-EXPOSICAO-2) -->
-    <div id="ex-ferr" class="cs-ferr ex-ferr" hidden><div class="cs-cores ex-cores" id="ex-cores" hidden></div><button class="jr-btn" data-exf="girar" aria-label="Girar">🔄</button><button class="jr-btn" data-exf="espelhar" aria-label="Espelhar">↔️</button><button class="jr-btn" data-exf="cor" aria-label="Cor">🎨</button><button class="jr-btn" data-exf="conteudo" aria-label="Conteúdo">✏️</button><button class="jr-btn" data-exf="apagar" aria-label="Apagar">🗑️</button></div>
+    <div id="ex-ferr" class="cs-ferr ex-ferr" hidden><div class="cs-cores ex-cores" id="ex-cores" hidden></div><div class="cs-cores ex-tam" id="ex-tam" hidden><button class="jr-btn" data-ex-tam="-1" aria-label="Menor">➖</button><b id="ex-tam-v">100%</b><button class="jr-btn" data-ex-tam="1" aria-label="Maior">➕</button></div><button class="jr-btn" data-exf="girar" aria-label="Girar">🔄</button><button class="jr-btn" data-exf="espelhar" aria-label="Espelhar">↔️</button><button class="jr-btn" data-exf="tam" aria-label="Tamanho">📏</button><button class="jr-btn" data-exf="cor" aria-label="Cor">🎨</button><button class="jr-btn" data-exf="conteudo" aria-label="Conteúdo">✏️</button><button class="jr-btn" data-exf="apagar" aria-label="Apagar">🗑️</button></div>
     <button id="ex-resumo" class="ex-resumo" hidden></button>
     <div id="ex-faixa" class="cs-faixa ex-faixa" hidden>
       <div class="ex-faixa-esq"><div class="ex-abas" id="ex-abas"></div><div class="cs-guardados ex-catalogo" id="ex-catalogo"></div></div>
@@ -767,7 +767,9 @@
       <p id="convite-txt"></p>
       <small id="convite-aviso" hidden>Este desafio não vale prêmio para você hoje (limite do dia).</small>
       <div class="cv-tempo"><i id="convite-tempo"></i></div>
-      <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" id="convite-sim">⚔️ Aceitar</button><button class="jr-btn jr-btn-sec" id="convite-nao">Agora não</button></div>
+      <small id="convite-saldo" class="cv-saldo" hidden></small>
+      <div class="jr-pessoa-botoes" id="convite-botoes"><button class="jr-btn jr-btn-ouro" id="convite-sim">⚔️ Aceitar</button><button class="jr-btn" id="convite-contra" hidden>💬 Contraproposta</button><button class="jr-btn jr-btn-sec" id="convite-nao">Agora não</button></div>
+      <div class="cv-valores jr-presente" id="convite-valores" hidden></div>
     </div>
   </div>
   <!-- Fliperama: painel da máquina, jogo do site por cima (iframe ?embed=1), Tabuada ao vivo e convite da professora -->
