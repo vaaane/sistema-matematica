@@ -5456,6 +5456,7 @@ function tocarNoMapa(e) {
   if (cartaoColega) fecharCartaoColega();
   if (cs?.balaoCama) fecharBalaoCama();
   if (balaoVilaC) fecharBalaoVila();
+  if (ex?.sel && !ex.editando) desselecionarExpo();   // 🖼️ as opções do móvel fecham ao tocar fora
   if (pesca && !tocouPescando(p)) return;   // pescando: o toque puxa a linha (ou levanta, se for longe)
   const caixote = caixoteEm(p);
   if (caixote) { irPescar(caixote); return; }
@@ -5485,8 +5486,8 @@ function tocarNoMapa(e) {
   if (ehVila() && tocarCasaVila(p)) return;        // 🏘️ porta: entra · casa: cor do telhado / visitar / deixar (PROMPT-109)
   if (tocouQuadroEstudos(p)) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'estudos')); return; }
   if (ehSaguao()) { const pt = portaExpoEm(p); if (pt) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'expo:' + pt.n)); return; } }   // 🖼️ placa ou porta
-  if (ex && salaExpo()) {   // ✏️ quem decora: tocar num móvel já abre o editor com ele selecionado · 🖼️ os outros: foto ou texto no painel grande
-    if (podeDecorar(ex.n) && !transicionando) { const id = itemExpoEm(p, true); if (id) { entrarEdicaoExpo(); selecionarExpo(id); return; } }
+  if (ex && salaExpo()) {   // ✏️ quem decora: tocar num móvel abre só as opções dele (sem o modo decorar) · 🖼️ os outros: foto ou texto no painel grande
+    if (podeDecorar(ex.n) && !transicionando) { const id = itemExpoEm(p, true); if (id) { selecionarExpo(id); return; } }
     const id = itemExpoEm(p); if (id) { abrirVisualizador(id); return; }
   }
   if (ehPraca()) { const alvo = alvoPracaEm(p); if (alvo) { irAlvoPraca(alvo); return; } }   // mural / fliperama
@@ -8125,6 +8126,7 @@ function prenderExpo(m, x, y) {
 // ── editor ──
 function entrarEdicaoExpo() {
   if (!ex || ex.editando || !podeDecorar(ex.n) || transicionando) return;
+  desselecionarExpo();
   ex.editando = true; ex.sel = null;
   jog.caminho = []; jog.aoChegar = null; destinoEspecial = null;
   esconderBalao();
@@ -8415,7 +8417,7 @@ function brilhoGrudeExpo([x, y]) {
 }
 // a cada quadro na sala: perto da borda, arrastando, a câmera anda; o contorno de quem está mexendo some sozinho
 function atualizarSalaExpo(dt) {
-  if (!ex.editando) return;
+  if (!ex.editando) { posicionarFerrExpo(); return; }   // fora do modo decorar: as opções do móvel acompanham a câmera
   const vp = $('cena-vp'), vw = vp.clientWidth, LW = larguraCena(), meia = vw / 2 / cam.s;
   if (ex.arr?.moveu) {
     const x = pontoNoJogo(ex.arr.cx, ex.arr.cy).x - (girado() ? 0 : vp.getBoundingClientRect().left), borda = 70;
