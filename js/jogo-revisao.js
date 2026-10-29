@@ -1761,7 +1761,7 @@ function acordarPet() {
 // Volta ao estado de descanso: dormindo (à noite), triste (fome) ou sentado
 function voltarAoNormal() {
   if (!mp) return;
-  mp.ocupado = false; mp.esperaAcao = null;
+  mp.ocupado = false; mp.comendo = false; mp.esperaAcao = null;
   if (deveDormir()) {   // o adulto toca `dormir` em ciclo (respira, fumacinha, Zzz); os outros, a animação dormindo
     mp.estado = 'dormindo';
     if (!mp.anim.sequencia('dormir', null, { ciclo: true })) mp.anim.tocar('dormindo');
@@ -2267,7 +2267,7 @@ function comerDaBolsa(pet, id) {
 }
 const textoNaoCome = (pet, motivo) => ({ cheio: 'Tô cheio! 😵', sem_fome: `Ainda não tô com fome… (comida comum só com a barriga abaixo de ${comumAte(pet)})`, semana: 'Bolo só uma vez por semana!' }[motivo]);
 function darComida(id) {
-  if (!mp || mp.ocupado) return;
+  if (!mp || (mp.ocupado && !mp.comendo)) return;   // comendo: outra comida interrompe a animação e começa de novo
   $('mp-bolsa-painel').hidden = true;
   const pet = mp.pet, r = comerDaBolsa(pet, id);
   if (!r) return;
@@ -2275,7 +2275,7 @@ function darComida(id) {
   if (r.motivo) { falarPet(textoNaoCome(pet, r.motivo)); return; }
   const { item, fav } = r;
   renderMeuPet();
-  mp.estado = 'comendo'; mp.ocupado = true;
+  mp.estado = 'comendo'; mp.ocupado = true; mp.comendo = true;   // até voltarAoNormal (inclui o lamber os beiços)
   mp.acordadoAte = Date.now() + ACORDADO_MS;
   // adulto: carne → `comer_carne` (assa, morde, come no chão, ossos, lambe os beiços); as outras → `comer` (curta)
   const seqComer = item.id === 'carne' && temSequencia(mp.forma, 'comer_carne') ? 'comer_carne' : 'comer';
