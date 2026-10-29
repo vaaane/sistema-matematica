@@ -496,6 +496,14 @@ async function carregarEstado() {
       gravar({ 'pets/moedas': estado.pets.moedas, 'pets/moedas_iniciais': true });
       if (!estado.novo) setTimeout(() => avisoPet(`🎁 Presente de boas-vindas: +${MOEDAS_INICIAIS} 🪙`, true), 2500);
     }
+    if (v.presente_login_dia !== diaLocal()) {   // 🎁 presente diário: +100 moedas na 1ª entrada do dia
+      const patch = { presente_login_dia: diaLocal() };
+      estado.pets.moedas = (Number(estado.pets.moedas) || 0) + MOEDAS_LOGIN_DIA;
+      patch['pets/moedas'] = estado.pets.moedas;
+      registrarGanho('login', MOEDAS_LOGIN_DIA, patch);
+      gravar(patch);
+      if (!estado.novo) setTimeout(() => { avisoPet(`🎁 Presente do dia: +${MOEDAS_LOGIN_DIA} 🪙`, true); moedasVoando(MOEDAS_LOGIN_DIA); }, v.pets?.moedas_iniciais ? 2500 : 5000);
+    }
     gravar({ ultimo_acesso: Date.now() });
     if (!estado.personagem && !estado.novo) { estado.personagem = PERS.padrao; gravar({ personagem: PERS.padrao }); }   // menino_atual saiu do jogo
   } catch (e) {
@@ -1044,6 +1052,7 @@ const PETS_GINASIO = {
 };
 const INICIAIS = ['elefante', 'gato', 'gaviao'];
 const MOEDAS_INICIAIS = 100;
+const MOEDAS_LOGIN_DIA = 100;   // 🎁 presente diário (1ª entrada do dia)
 // pet esperando ao lado do líder: ~70% do líder para um pet de 40, na mesma proporção entre os pets
 const altImagemPetGinasio = (pet) => ALT_LIDER * 0.7 * (altPet(pet) / 40) / sentadoNoQuadro(pet);
 
@@ -5476,7 +5485,10 @@ function tocarNoMapa(e) {
   if (ehVila() && tocarCasaVila(p)) return;        // 🏘️ porta: entra · casa: cor do telhado / visitar / deixar (PROMPT-109)
   if (tocouQuadroEstudos(p)) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'estudos')); return; }
   if (ehSaguao()) { const pt = portaExpoEm(p); if (pt) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'expo:' + pt.n)); return; } }   // 🖼️ placa ou porta
-  if (ex && salaExpo()) { const id = itemExpoEm(p); if (id) { abrirVisualizador(id); return; } }   // 🖼️ foto ou texto: o painel grande   // 📜 anda até a frente do quadro e abre
+  if (ex && salaExpo()) {   // ✏️ quem decora: tocar num móvel já abre o editor com ele selecionado · 🖼️ os outros: foto ou texto no painel grande
+    if (podeDecorar(ex.n) && !transicionando) { const id = itemExpoEm(p, true); if (id) { entrarEdicaoExpo(); selecionarExpo(id); return; } }
+    const id = itemExpoEm(p); if (id) { abrirVisualizador(id); return; }
+  }
   if (ehPraca()) { const alvo = alvoPracaEm(p); if (alvo) { irAlvoPraca(alvo); return; } }   // mural / fliperama
   if (cena.n === 'fliperama') { const a = alvoFliperamaEm(p); if (a) { irAlvoFliperama(a); return; } }    // máquinas e o Téo
   if (ehLoja()) { const c = cantoEm(p); if (c) { irAoCanto(c); return; } }
@@ -7937,7 +7949,7 @@ const nomeSalaVisivel = (n) => { const st = estadoSala(n); return String((veTudo
 const nomeDaSala = () => nomeSalaVisivel(ex.n);
 const seloNomeExpo = (n) => { const st = estadoSala(n); return !veTudoExpo(n) ? '' : st.nome_pendente ? '⏳' : st.nome_motivo !== undefined && st.nome_motivo !== null ? '❌' : ''; };
 // 📏 tamanhos de um objeto de chão (PROMPT-152): 1 = 100%, o tamanho do catálogo
-const TAMS_EXPO = [0.6, 0.8, 1, 1.3, 1.6];
+const TAMS_EXPO = [0.6, 0.8, 1, 1.3, 1.6, 2, 2.5, 3, 3.5, 4];   // até 400%
 const tamValido = (it, t) => (it?.tipo === 'chao' && TAMS_EXPO.includes(Number(t)) ? Number(t) : 1);
 function tamExpo(m) {
   const it = catExpo(m.mv);
@@ -8585,10 +8597,10 @@ function ligarConteudoExpo() {
 // os de fora: só os aprovados (pendente e recusado não abrem e o ◀ ▶ pula)
 const temConteudo = (m) => { const it = catExpo(m.mv); return !!it?.conteudo && it.conteudo !== 'nome_sala' && temAlgoExpo(m) && visivelExpo(m); };
 const listaVisitaExpo = () => [...ex.itens].filter(([, m]) => temConteudo(m)).sort((a, b) => a[1].x - b[1].x).map(([id]) => id);
-function itemExpoEm(p) {
+function itemExpoEm(p, todos = false) {
   let melhor = null, mz = -1;
   for (const [id, m] of ex.itens) {
-    if (!temConteudo(m)) continue;
+    if (!todos && !temConteudo(m)) continue;
     const [w, h] = tamExpo(m), it = catExpo(m.mv), z = it.tipo === 'tapete' ? 1 : it.tipo === 'parede' ? 2 : m.y;
     if (Math.abs(p.x - m.x) <= w / 2 && p.y >= m.y - h && p.y <= m.y + 4 && z > mz) { mz = z; melhor = id; }
   }
@@ -14110,6 +14122,7 @@ async function fimCorrida(d) {
 //  contador) e moedas_semana/{segunda}/{fonte} (painel da professora).
 // ============================================================
 const FONTES_MOEDA = {
+  login: { nome: '🎁 Presente do dia' },
   ginasio: { nome: 'Ginásios (1º acerto de cada pergunta)' },
   expedicao: { nome: 'Expedição do pet' },
   relampago: { nome: 'Desafio relâmpago' },
