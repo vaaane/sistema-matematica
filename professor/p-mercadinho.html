@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Mercadinho (teste) — Sistema de Matemática</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: a loja (palco 1000×560, vista de cima) com o personagem andando à esquerda; à direita, o painel do que está perto (caixa, computador, etiqueta) */
+:root{
+  --bg:#e7edf1; --piso:#f6f2ea; --piso2:#ece4d4; --parede:#c9d6df; --painel:#ffffff; --tinta:#1f2a33; --suave:#5f6f7b;
+  --azul:#2d6cdf; --verde:#1f9d55; --vermelho:#d64545; --ouro:#f2b632; --madeira:#a8703f; --linha:#d6dde3; --nota:#cfe8d0; --frio:#bfe3f7;
+  --sombra:0 2px 0 rgba(31,42,51,.2);
+  --f-titulo:"Baloo 2","Trebuchet MS",system-ui,sans-serif; --f-texto:"Nunito",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12181d; --piso:#252c33; --piso2:#1f262c; --parede:#36444f; --painel:#1b2228; --tinta:#eef3f6; --suave:#a5b3bd;
+  --azul:#6ea0ff; --verde:#4fd08a; --vermelho:#ff7b7b; --ouro:#f5c451; --madeira:#8a5a33; --linha:#33404a; --nota:#2f4a33; --frio:#2c4d61; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12181d; --piso:#252c33; --piso2:#1f262c; --parede:#36444f; --painel:#1b2228; --tinta:#eef3f6; --suave:#a5b3bd;
+  --azul:#6ea0ff; --verde:#4fd08a; --vermelho:#ff7b7b; --ouro:#f5c451; --madeira:#8a5a33; --linha:#33404a; --nota:#2f4a33; --frio:#2c4d61; color-scheme:dark}
+html,body{height:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{background:var(--bg);color:var(--tinta);font-family:var(--f-texto);font-size:14px;margin:0;overflow:hidden;
+  padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));padding-block:4px;box-sizing:border-box;
+  -webkit-user-select:none;user-select:none;touch-action:manipulation}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--azul);outline-offset:2px}
+.app{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);grid-template-rows:auto minmax(0,1fr);gap:6px;height:100%;max-width:1200px;margin:0 auto}
+@media (max-width:640px) and (orientation:portrait){body{overflow:auto}.app{grid-template-columns:1fr;grid-template-rows:auto auto auto;height:auto}}
+.topo{grid-column:1/-1;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+@media (max-width:900px){.topo h1 span{display:none}.topo .btn{padding:4px 8px;font-size:13px}}
+.topo h1{font-family:var(--f-titulo);font-size:18px;margin:0;line-height:1}
+.chip{background:var(--painel);border:1px solid var(--linha);border-radius:999px;padding:1px 9px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip.din{color:var(--verde)}
+.topo .dir{margin-left:auto;display:flex;gap:6px}
+.btn{border:2px solid var(--tinta);background:var(--ouro);color:#1f2a33;border-radius:10px;padding:5px 11px;font-weight:800;box-shadow:var(--sombra)}
+.btn.sec{background:var(--painel);color:var(--tinta)}
+.btn.verde{background:var(--verde);color:#fff}
+.btn:disabled{opacity:.4;cursor:default}
+/* palco */
+.palco-wrap{position:relative;min-height:0;display:flex;align-items:center;justify-content:center}
+.palco{position:relative;aspect-ratio:1000/560;width:100%;max-height:100%;max-width:100%;border:3px solid var(--tinta);border-radius:10px;overflow:hidden;
+  background:repeating-conic-gradient(var(--piso) 0 25%,var(--piso2) 0 50%) 0 0/5% 8.93%}
+.palco>*{position:absolute}
+.parede{left:0;right:0;top:0;height:6%;background:var(--parede);border-bottom:3px solid var(--tinta)}
+.obj{border:2px solid var(--tinta);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;text-align:center}
+.prat{background:var(--madeira);color:#fff;flex-wrap:wrap;align-content:center;gap:0;padding:1px}
+.prat.frio{background:var(--frio);color:var(--tinta)}
+.prat .u{font-size:min(2.2vw,15px);line-height:1;width:16.6%;text-align:center}
+.prat.tranca{background:transparent;border-style:dashed;color:var(--suave);font-size:10px}
+.tag{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);background:#fff;color:#1f2a33;border:1.5px solid #1f2a33;border-radius:4px;padding:0 4px;font-size:10px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tag.sem{background:var(--vermelho);color:#fff}
+.comp{background:#dfe7ee;color:#1f2a33;font-size:18px}
+.balcao{background:#7b8794;color:#fff;font-size:18px}
+.lixo{background:#6b7c63;color:#fff;font-size:16px;border-radius:50%}
+.zona{border:2px dashed var(--suave);border-radius:8px;color:var(--suave);font-size:10px;font-weight:800;padding:2px 4px;display:block}
+.porta{background:var(--azul);border-radius:4px 4px 0 0}
+.caixa-ch{font-size:min(3vw,22px);line-height:1;filter:drop-shadow(0 1px 0 rgba(0,0,0,.3))}
+.suj{font-size:min(3vw,22px);opacity:.85}
+.pessoa{position:absolute;font-size:min(4vw,30px);line-height:1;transform:translate(-50%,-85%);z-index:5;filter:drop-shadow(0 2px 0 rgba(0,0,0,.25));pointer-events:none}
+.pessoa .fala{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--painel);color:var(--tinta);border:2px solid var(--tinta);border-radius:8px;padding:0 5px;font-size:10px;font-weight:800;white-space:nowrap}
+.pessoa .carga{position:absolute;right:-12px;top:-4px;font-size:.6em}
+.pessoa .pac{position:absolute;left:50%;top:-6px;transform:translateX(-50%);height:4px;width:26px;background:#0003;border-radius:2px;overflow:hidden}
+.pessoa .pac i{display:block;height:100%;background:var(--verde)}
+.eu{z-index:6}
+.eu .anel{position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);width:26px;height:8px;border-radius:50%;background:color-mix(in srgb,var(--azul) 45%,transparent)}
+.pop{font-weight:800;color:var(--verde);pointer-events:none;animation:sobe 1.1s ease-out forwards;z-index:9;transform:translateX(-50%);white-space:nowrap;text-shadow:0 1px 0 var(--piso)}
+.pop.erro{color:var(--vermelho)}
+@keyframes sobe{to{translate:0 -30px;opacity:0}}
+.alvo{outline:3px solid var(--ouro);outline-offset:2px}
+/* controles */
+.joy{left:10px;bottom:10px;width:92px;height:92px;border-radius:50%;background:#0002;border:2px solid #0003;z-index:20;touch-action:none}
+.joy i{position:absolute;left:31px;top:31px;width:30px;height:30px;border-radius:50%;background:#fffc;border:2px solid var(--tinta)}
+.acao{right:10px;bottom:10px;z-index:20;min-width:96px;padding:10px 12px;border-radius:999px;border:3px solid var(--tinta);background:var(--ouro);color:#1f2a33;font-weight:800;font-size:14px;box-shadow:var(--sombra);touch-action:none}
+.acao:disabled{opacity:.35}
+@media (hover:hover) and (pointer:fine){.joy{display:none}}
+/* painel */
+.painel{background:var(--painel);border:1px solid var(--linha);border-radius:12px;display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden}
+.corpo{padding:8px 10px;overflow:auto;display:flex;flex-direction:column;gap:6px;min-height:0;flex:1}
+.corpo h2{font-family:var(--f-titulo);font-size:16px;margin:0;line-height:1.1}
+.corpo p{margin:0;color:var(--suave);line-height:1.3}
+.it{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:6px;align-items:center;padding:3px 0;border-top:1px dashed var(--linha)}
+.it .e{font-size:18px;text-align:center}
+.it small{display:block;color:var(--suave);font-variant-numeric:tabular-nums}
+.sobe{color:var(--vermelho);font-weight:800}.desce{color:var(--verde);font-weight:800}
+.esteira{display:flex;flex-wrap:wrap;gap:4px;padding:6px;background:var(--piso2);border-radius:8px;min-height:38px}
+.esteira button{border:2px solid var(--tinta);background:var(--painel);border-radius:8px;font-size:18px;padding:1px 6px}
+.esteira button.ok{opacity:.3}
+.total{display:flex;justify-content:space-between;font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
+.pago{background:var(--nota);border-radius:8px;padding:5px 8px;font-weight:800;font-variant-numeric:tabular-nums}
+.gaveta{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.gaveta button{border:2px solid var(--tinta);border-radius:8px;padding:5px 0;font-weight:800;font-size:12px;font-variant-numeric:tabular-nums}
+.gaveta .nt{background:var(--nota)}
+.gaveta .md{background:#f3e3b5;color:#1f2a33;border-radius:999px}
+.troco{display:flex;justify-content:space-between;align-items:center;gap:6px;font-weight:800;font-variant-numeric:tabular-nums}
+.teclado{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.teclado button{border:2px solid var(--tinta);border-radius:8px;padding:6px 0;font-weight:800;background:var(--painel)}
+.visor{background:#0f2a1a;color:#7dff9f;font-family:ui-monospace,monospace;font-size:20px;text-align:right;border-radius:8px;padding:3px 10px;font-variant-numeric:tabular-nums}
+.ctrl{display:flex;align-items:center;gap:4px;font-weight:800;font-variant-numeric:tabular-nums}
+.ctrl button{width:30px;height:30px;border:2px solid var(--tinta);border-radius:8px;background:var(--painel);font-weight:800}
+.bom{color:var(--verde);font-weight:800}.ruim{color:var(--vermelho);font-weight:800}
+.msg{font-weight:800;padding:4px 8px;border-radius:8px}
+.msg.erro{background:color-mix(in srgb,var(--vermelho) 18%,transparent);color:var(--vermelho)}
+.tarefas li{margin:2px 0}
+.tarefas{margin:0;padding-left:18px;color:var(--suave)}
+kbd{border:1px solid var(--linha);border-bottom-width:2px;border-radius:4px;padding:0 4px;font-size:11px}
+@media (prefers-reduced-motion:reduce){.pop{animation-duration:.01s}}
+.deposito{border:2px solid var(--suave);border-radius:8px;background:color-mix(in srgb,var(--parede) 35%,transparent);color:var(--suave);font-size:10px;font-weight:800;padding:2px 6px}
+.estante{background:#6f7d88;border:2px solid var(--tinta);border-radius:5px;display:grid;grid-template-columns:repeat(4,1fr);align-items:center;justify-items:center;font-size:min(2.6vw,18px);padding:0 2px}
+.estante span{width:100%;text-align:center;border-right:1px dashed #fff5;line-height:1.1}
+.estante span:last-child{border-right:0}
+.movel-sel{outline:3px dashed var(--ouro);outline-offset:3px;opacity:.75}
+.fantasma{border:3px dashed var(--verde);border-radius:6px;background:color-mix(in srgb,var(--verde) 18%,transparent);pointer-events:none;z-index:7}
+.fantasma.ruim{border-color:var(--vermelho);background:color-mix(in srgb,var(--vermelho) 18%,transparent)}
+.construindo .pessoa:not(.eu){opacity:.3}
+.chip.nivel{display:flex;align-items:center;gap:6px}
+.chip.nivel i{display:block;width:46px;height:7px;border-radius:4px;background:var(--linha);overflow:hidden}
+.chip.nivel i b{display:block;height:100%;background:var(--azul)}
+.subiu{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:var(--azul);color:#fff;border:3px solid var(--tinta);border-radius:14px;padding:8px 16px;font-family:var(--f-titulo);font-size:20px;font-weight:800;z-index:30;text-align:center;animation:surge 2.4s ease forwards}
+@keyframes surge{0%{opacity:0;transform:translate(-50%,-40%) scale(.8)}12%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
+.tranc{color:var(--suave);font-size:12px;font-weight:800}
+</style>
+
+<script type="module">
+import { requireProfessor } from "/js/auth.js";
+if (!requireProfessor()) throw new Error("sem sessão de professor");
+document.body.hidden = false;
+</script>
+</head>
+<body hidden>
+<div class="app">
+  <header class="topo">
+    <h1>🛒 <span>Meu Mercadinho</span></h1>
+    <span class="chip din" id="din">R$ 150,00</span>
+    <span class="chip" id="hora">Dia 1 · 08:00</span>
+    <span class="chip" id="estrelas">⭐ 5,0</span>
+    <span class="chip nivel" id="nivel">Nível 1 <i><b style="width:0"></b></i></span>
+    <span class="dir"><button class="btn sec" id="recomecar" title="Apagar o progresso deste teste">↺ Recomeçar</button><button class="btn sec" id="construir">🔨 Construir</button><button class="btn verde" id="abrir">🔓 Abrir a loja</button></span>
+  </header>
+  <div class="palco-wrap"><div class="palco" id="palco" aria-label="Sua loja vista de cima. Ande com as setas ou o joystick e use a ação."></div></div>
+  <section class="painel"><div class="corpo" id="corpo" aria-live="polite"></div></section>
+</div>
+
+<script>
+/* ===== dados ===== */
+const PRODUTOS = {
+  biscoito:{ nome:'Biscoito', e:'🍪', cx:12, custo:1.50, merc:2.50, lic:0, nivel:1 },
+  refri:   { nome:'Refrigerante', e:'🥤', cx:6, custo:3.50, merc:6.00, lic:0, nivel:1 },
+  arroz:   { nome:'Arroz 1 kg', e:'🍚', cx:6, custo:4.00, merc:6.50, lic:0, nivel:1 },
+  banana:  { nome:'Banana', e:'🍌', cx:12, custo:0.75, merc:1.50, lic:0, nivel:1 },
+  pao:     { nome:'Pão de forma', e:'🍞', cx:6, custo:5.00, merc:8.00, lic:60, nivel:2 },
+  chocolate:{nome:'Chocolate', e:'🍫', cx:12, custo:2.50, merc:4.50, lic:80, nivel:3 },
+  leite:   { nome:'Leite', e:'🥛', cx:12, custo:3.00, merc:5.00, lic:70, nivel:4, frio:true },
+  macarrao:{ nome:'Macarrão', e:'🍝', cx:8, custo:3.00, merc:5.50, lic:90, nivel:4 },
+  sorvete: { nome:'Sorvete', e:'🍦', cx:8, custo:6.00, merc:10.00, lic:120, nivel:5, frio:true },
+  queijo:  { nome:'Queijo', e:'🧀', cx:6, custo:8.00, merc:13.00, lic:150, nivel:6, frio:true },
+};
+const NIVEIS = [0, 60, 160, 300, 480, 720, 1000, 1350, 1800];   // XP para chegar em cada nível
+const LOJA_MOVEIS = {
+  prat:    { nome:'Prateleira', e:'🗄️', preco:100, w:200, h:44, nivel:1 },
+  frio:    { nome:'Geladeira', e:'❄️', preco:150, w:180, h:44, nivel:4, frio:true },
+  estante: { nome:'Estante do depósito', e:'🧱', preco:80, w:190, h:30, nivel:2, deposito:true },
+};
+const DINHEIRO = [100,50,20,10,5,2,1,0.5,0.25,0.1,0.05];
+const PESSOAS = ['🧑','👩','👨','👵','👴','🧒','👩‍🦱','👨‍🦱','🧕','👱‍♀️','🧑‍🦳','👨‍🦰'];
+const brl = (n) => 'R$ ' + (Math.round(n*100)/100).toFixed(2).replace('.',',');
+const r2 = (n) => Math.round(n*100)/100;
+const $ = (s) => document.querySelector(s);
+const palco = $('#palco');
+
+/* mapa (palco 1000×560) */
+const DEPOSITO = { x:15, y:62, w:220, h:300 };      // as estantes ficam aqui
+const SALAO = { x:255, y:62, w:735, h:300 };        // prateleiras e geladeiras ficam aqui
+const COMP = { x:250, y:390, w:56, h:40 };
+const BALCAO = { x:690, y:400, w:190, h:44 };
+const LIXO = { x:330, y:480, w:40, h:40 };
+const ZONA = { x:30, y:400, w:200, h:140 };
+const PORTA = { x:470, y:548, w:100, h:12 };
+const ATENDER = { x:785, y:480 };
+const FILA0 = { x:785, y:378 };
+const CORREDOR_Y = 385;                            // corredor livre na frente do balcão
+
+/* ===== estado ===== */
+let idSeq = 1;
+const J = { din:150, dia:1, min:0, aberta:false, est:[5,5,5,5], xp:0, nivel:1, licencas:new Set(['biscoito','refri','arroz','banana']),
+  moveis:[], preco:{}, merc:{}, custo:{}, caixas:[], carrega:null, sujeiras:[], clientes:[], fila:[],
+  atend:null, vendas:0, gasto:0, painel:'inicio', ajudante:false, construindo:false, selMovel:null, novoMovel:null };
+Object.entries(PRODUTOS).forEach(([k,p]) => { J.preco[k] = 0; J.merc[k] = p.merc; J.custo[k] = p.custo; });
+const novoMovel = (tipo, x, y) => ({ id:idSeq++, tipo, x, y, w:LOJA_MOVEIS[tipo].w, h:LOJA_MOVEIS[tipo].h, prod:null, q:0, slots:[null,null,null,null] });
+J.moveis.push(novoMovel('prat',330,120), novoMovel('prat',600,120), novoMovel('prat',330,250), novoMovel('prat',600,250), novoMovel('estante',30,110), novoMovel('estante',30,230));
+const eu = { x:500, y:470, vx:0, vy:0, alvoX:null, alvoY:null };
+function novaCaixa(prod, x, y){ return { id:idSeq++, prod, q:PRODUTOS[prod].cx, x, y, vazia:false }; }
+J.caixas.push(novaCaixa('biscoito', 70, 440), novaCaixa('refri', 140, 440), novaCaixa('banana', 70, 500));
+const ehPrat = (m) => m.tipo==='prat' || m.tipo==='frio';
+const SOLIDOS = () => [...J.moveis, BALCAO, COMP];
+
+/* ===== desenho do cenário ===== */
+const px = (v, t='x') => (t==='x' ? v/10 : v/5.6) + '%';
+function box(el, r){ el.style.left=px(r.x); el.style.top=px(r.y,'y'); el.style.width=px(r.w); el.style.height=px(r.h,'y'); return el; }
+const div = (cls, txt='') => Object.assign(document.createElement('div'), { className:cls, textContent:txt });
+function cenario(){
+  palco.innerHTML = '<div class="parede"></div>';
+  palco.appendChild(box(div('deposito','📦 Depósito'), DEPOSITO));
+  palco.appendChild(box(div('zona','🚚 Entregas'), ZONA));
+  palco.appendChild(box(div('obj comp','💻'), COMP));
+  palco.appendChild(box(div('obj balcao','🧾'), BALCAO));
+  palco.appendChild(box(div('obj lixo','🗑️'), LIXO));
+  palco.appendChild(box(div('porta'), PORTA));
+  const ms = div(''); ms.id='moveis'; ms.style.inset='0'; palco.appendChild(ms);
+  ['caixas','sujs','gente'].forEach(id => { const d=div(''); d.id=id; d.style.inset='0'; d.style.pointerEvents='none'; palco.appendChild(d); });
+  const f = div('fantasma'); f.id='fantasma'; f.hidden=true; palco.appendChild(f);
+  const j = div('joy'); j.id='joy'; j.innerHTML='<i></i>'; palco.appendChild(j);
+  const a = document.createElement('button'); a.className='acao'; a.id='acao'; a.textContent='✋'; palco.appendChild(a);
+  ligarControles();
+}
+function desenharMoveis(){
+  $('#moveis').innerHTML = J.moveis.map(m => {
+    const sel = J.selMovel===m.id ? ' movel-sel' : '', alvo = perto?.m===m ? ' alvo' : '';
+    if (m.tipo==='estante') return `<div class="obj estante${sel}${alvo}" style="position:absolute;left:${m.x/10}%;top:${m.y/5.6}%;width:${m.w/10}%;height:${m.h/5.6}%">${m.slots.map(c=>`<span>${c?(c.vazia?'🗃️':'📦'):''}</span>`).join('')}</div>`;
+    const p = m.prod && PRODUTOS[m.prod];
+    const unidades = p ? Array.from({length:m.q},()=>`<span class="u">${p.e}</span>`).join('') : `<span style="opacity:.7">${m.tipo==='frio'?'❄️ vazia':'vazia'}</span>`;
+    const tag = p ? `<span class="tag${J.preco[m.prod]?'':' sem'}">${J.preco[m.prod]?brl(J.preco[m.prod]):'sem preço'}</span>` : '';
+    return `<div class="obj prat${m.tipo==='frio'?' frio':''}${sel}${alvo}" style="position:absolute;left:${m.x/10}%;top:${m.y/5.6}%;width:${m.w/10}%;height:${m.h/5.6}%">${unidades}${tag}</div>`;
+  }).join('');
+}
+function desenharCaixas(){
+  $('#caixas').innerHTML = J.caixas.map(c => `<div class="caixa-ch" style="position:absolute;left:${c.x/10}%;top:${c.y/5.6}%;transform:translate(-50%,-50%)">${c.vazia?'🗃️':'📦'}<span style="font-size:.5em">${c.vazia?'':PRODUTOS[c.prod].e}</span></div>`).join('');
+  $('#sujs').innerHTML = J.sujeiras.map(s => `<div class="suj" style="position:absolute;left:${s.x/10}%;top:${s.y/5.6}%;transform:translate(-50%,-50%)">🫗</div>`).join('');
+}
+
+/* ===== personagem e pessoas ===== */
+let elEu;
+function desenharGente(){
+  const g = $('#gente');
+  if (!elEu) { elEu = div('pessoa eu'); g.appendChild(elEu); }
+  elEu.style.left = eu.x/10+'%'; elEu.style.top = eu.y/5.6+'%';
+  const carga = J.carrega ? `<span class="carga">${J.carrega.vazia?'🗃️':'📦'}</span>` : '';
+  if (elEu.dataset.k !== carga) { elEu.innerHTML = `<span class="anel"></span>🧑‍💼${carga}`; elEu.dataset.k = carga; }
+  J.clientes.forEach(c => {
+    if (!c.el) { c.el = div('pessoa', c.emo); g.appendChild(c.el); }
+    c.el.style.left = c.x/10+'%'; c.el.style.top = c.y/5.6+'%';
+    let pac = c.el.querySelector('.pac');
+    if (c.estado==='fila') { if (!pac) { pac=document.createElement('span'); pac.className='pac'; pac.innerHTML='<i></i>'; c.el.appendChild(pac); } pac.firstChild.style.width = Math.max(0,c.paciencia)*100+'%'; pac.firstChild.style.background = c.paciencia<.3?'var(--vermelho)':'var(--verde)'; }
+    else if (pac) pac.remove();
+  });
+}
+function bate(x, y){
+  if (x<15 || x>985 || y<60 || y>545) return true;
+  return SOLIDOS().some(r => x>r.x-12 && x<r.x+r.w+12 && y>r.y-6 && y<r.y+r.h+22);
+}
+function moverEu(dt){
+  let vx = eu.vx, vy = eu.vy;
+  if (!vx && !vy && eu.alvoX!=null) { const dx=eu.alvoX-eu.x, dy=eu.alvoY-eu.y, d=Math.hypot(dx,dy); if (d<8) eu.alvoX=null; else { vx=dx/d; vy=dy/d; } }
+  if (!vx && !vy) return;
+  const v = 260*dt, nx = eu.x + vx*v, ny = eu.y + vy*v;
+  const okX = !bate(nx, eu.y), okY = !bate(eu.x, ny);
+  if (okX) eu.x = nx; if (okY) eu.y = ny;
+  if (eu.alvoX!=null && !okX && !okY) eu.alvoX = null;
+}
+
+/* ===== controles ===== */
+const teclas = {}; let joyOn = false;
+function ligarControles(){
+  const joy = $('#joy'), bol = joy.firstChild; let jid = null;
+  const jm = (e) => { joyOn = true; const r=joy.getBoundingClientRect(), dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2), d=Math.hypot(dx,dy), m=Math.min(d,32);
+    eu.vx = d>8 ? dx/d : 0; eu.vy = d>8 ? dy/d : 0; eu.alvoX=null; bol.style.transform=`translate(${d?dx/d*m:0}px,${d?dy/d*m:0}px)`; };
+  joy.addEventListener('pointerdown', e => { jid=e.pointerId; joy.setPointerCapture(jid); jm(e); });
+  joy.addEventListener('pointermove', e => { if (e.pointerId===jid) jm(e); });
+  const solta = () => { jid=null; joyOn=false; eu.vx=eu.vy=0; bol.style.transform=''; };
+  joy.addEventListener('pointerup', solta); joy.addEventListener('pointercancel', solta);
+  const ac = $('#acao'); let rep = null;
+  ac.addEventListener('pointerdown', e => { e.preventDefault(); acao(); clearInterval(rep); rep = setInterval(()=>{ if (perto?.tipo==='prat' && J.carrega) acao(); }, 170); });
+  ['pointerup','pointerleave','pointercancel'].forEach(t => ac.addEventListener(t, () => clearInterval(rep)));
+  palco.addEventListener('pointerdown', e => {
+    if (e.target.closest('#joy,#acao')) return;
+    const r = palco.getBoundingClientRect(), x = (e.clientX-r.left)/r.width*1000, y = (e.clientY-r.top)/r.height*560;
+    if (J.construindo) { toqueConstrucao(x, y); return; }
+    eu.alvoX = x; eu.alvoY = y;
+    const m = J.moveis.find(m => x>m.x && x<m.x+m.w && y>m.y && y<m.y+m.h);
+    if (m) { eu.alvoX = Math.max(m.x+10, Math.min(eu.x, m.x+m.w-10)); eu.alvoY = m.y+m.h+26; }
+    else if (x>BALCAO.x && x<BALCAO.x+BALCAO.w && y>BALCAO.y && y<BALCAO.y+BALCAO.h) { eu.alvoX = ATENDER.x; eu.alvoY = ATENDER.y; }
+    else if (x>COMP.x && x<COMP.x+COMP.w && y>COMP.y && y<COMP.y+COMP.h) { eu.alvoX = COMP.x+COMP.w/2; eu.alvoY = COMP.y+COMP.h+26; }
+  });
+  palco.addEventListener('pointermove', e => { if (!J.construindo || !(J.selMovel || J.novoMovel)) return; const r = palco.getBoundingClientRect(); mostrarFantasma((e.clientX-r.left)/r.width*1000, (e.clientY-r.top)/r.height*560); });
+}
+addEventListener('keydown', e => {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D'].includes(e.key)) { teclas[e.key.toLowerCase()] = true; eu.alvoX=null; e.preventDefault(); }
+  const ehAcao = e.key===' ' || e.key==='e' || e.key==='E';
+  if (ehAcao && !/INPUT|BUTTON/.test(document.activeElement?.tagName)) { e.preventDefault(); if (!e.repeat || (perto?.tipo==='prat' && J.carrega)) acao(); }
+});
+addEventListener('keyup', e => { delete teclas[e.key.toLowerCase()]; });
+function lerTeclas(){
+  const x = (teclas.arrowright||teclas.d?1:0) - (teclas.arrowleft||teclas.a?1:0), y = (teclas.arrowdown||teclas.s?1:0) - (teclas.arrowup||teclas.w?1:0);
+  if (x||y) { const d=Math.hypot(x,y); eu.vx=x/d; eu.vy=y/d; } else if (!joyOn) { eu.vx=0; eu.vy=0; }
+}
+
+/* ===== o que está perto ===== */
+let perto = null;
+function calcPerto(){
+  if (J.construindo) return null;
+  const d = (x,y) => Math.hypot(eu.x-x, eu.y-y);
+  let melhor = null, md = 70;
+  const tenta = (o, dd) => { if (dd < md) { md = dd; melhor = o; } };
+  J.moveis.forEach(m => tenta({ tipo: m.tipo==='estante' ? 'estante' : 'prat', m }, d(Math.max(m.x, Math.min(eu.x, m.x+m.w)), m.y+m.h+18)));
+  if (!J.carrega) J.caixas.forEach(c => tenta({tipo:'caixa', c}, d(c.x,c.y)-14));
+  tenta({tipo:'comp'}, d(COMP.x+COMP.w/2, COMP.y+COMP.h+20));
+  tenta({tipo:'caixa-reg'}, d(ATENDER.x, ATENDER.y)-10);
+  if (J.carrega) tenta({tipo:'lixo'}, d(LIXO.x+20, LIXO.y+20)-10);
+  J.sujeiras.forEach(s => tenta({tipo:'suj', s}, d(s.x,s.y)-20));
+  const ladrao = J.clientes.find(c => c.ladrao && c.estado==='fugindo'); if (ladrao) tenta({tipo:'ladrao', c:ladrao}, d(ladrao.x, ladrao.y)-25);
+  return melhor;
+}
+const slotPerto = (m) => Math.max(0, Math.min(3, Math.floor((eu.x - m.x) / (m.w/4))));
+function rotuloAcao(){
+  const p = perto, a = $('#acao'); let t = '✋';
+  if (J.construindo) t = '✋';
+  else if (!p) t = J.carrega ? '✋ Largar' : '✋';
+  else if (p.tipo==='caixa') t = '📦 Pegar';
+  else if (p.tipo==='estante') { const i = slotPerto(p.m); t = J.carrega ? (p.m.slots.some(s=>!s) ? '🧱 Guardar' : '✋ Estante cheia') : (p.m.slots[i] || p.m.slots.some(Boolean) ? '📦 Pegar' : '✋'); }
+  else if (p.tipo==='prat') t = J.carrega ? (J.carrega.vazia ? '✋ Largar' : '➕ Repor') : (p.m.prod ? '🏷️ Preço' : '✋');
+  else if (p.tipo==='comp') t = '💻 Pedidos';
+  else if (p.tipo==='caixa-reg') t = '🧾 Atender';
+  else if (p.tipo==='lixo') t = '🗑️ Jogar fora';
+  else if (p.tipo==='suj') t = '🧽 Limpar';
+  else if (p.tipo==='ladrao') t = '🚨 Pegar!';
+  if (a.textContent !== t) a.textContent = t;
+  a.disabled = t === '✋' || t === '✋ Estante cheia';
+}
+
+/* ===== ações ===== */
+function pop(t, x, y, erro){ const el=div('pop'+(erro?' erro':''), t); el.style.left=Math.max(12,Math.min(88,x/10))+'%'; el.style.top=y/5.6+'%'; palco.appendChild(el); setTimeout(()=>el.remove(),1150); }
+function acao(){
+  const p = perto;
+  if (J.construindo) return;
+  if (!p) { if (J.carrega) largar(); return; }
+  if (p.tipo==='caixa') { J.carrega = p.c; J.caixas = J.caixas.filter(c=>c!==p.c); desenharCaixas(); return; }
+  if (p.tipo==='estante') {
+    const m = p.m;
+    if (J.carrega) { const i = m.slots.findIndex(s=>!s); if (i<0) return; m.slots[i] = J.carrega; J.carrega = null; desenharMoveis(); return; }
+    let i = slotPerto(m); if (!m.slots[i]) i = m.slots.findIndex(Boolean); if (i<0) return;
+    J.carrega = m.slots[i]; m.slots[i] = null; desenharMoveis(); return;
+  }
+  if (p.tipo==='prat') {
+    const m = p.m;
+    if (!J.carrega) { if (m.prod) abrirPainel('preco', m.prod); return; }
+    const c = J.carrega; if (c.vazia) { largar(); return; }
+    const prod = PRODUTOS[c.prod];
+    if (!!prod.frio !== (m.tipo==='frio')) { pop(prod.frio?'Precisa de geladeira ❄️':'Isso não vai na geladeira', eu.x, eu.y-60, true); return; }
+    if (m.prod && m.prod!==c.prod && m.q) { pop('Outro produto aqui!', eu.x, eu.y-60, true); return; }
+    if (m.q >= 12) { pop('Prateleira cheia', eu.x, eu.y-60, true); return; }
+    m.prod = c.prod; m.q++; c.q--;
+    if (!c.q) { c.vazia = true; pop('Caixa vazia → lixeira 🗑️', eu.x, eu.y-60); }
+    desenharMoveis(); return;
+  }
+  if (p.tipo==='lixo') { if (J.carrega) { if (!J.carrega.vazia) { pop('Ainda tem produto na caixa!', eu.x, eu.y-60, true); return; } J.carrega=null; pop('🗑️', eu.x, eu.y-40); } return; }
+  if (p.tipo==='comp') { abrirPainel('pedidos'); return; }
+  if (p.tipo==='caixa-reg') { abrirPainel('caixa'); return; }
+  if (p.tipo==='suj') { J.sujeiras = J.sujeiras.filter(s=>s!==p.s); J.est.push(5); ganharXP(2); topo(); desenharCaixas(); pop('✨ Limpo!', p.s.x, p.s.y); return; }
+  if (p.tipo==='ladrao') { const c=p.c; c.estado='saindo'; c.ladrao=false; c.dest=[]; falar(c,'Desculpa! 😳'); J.est.push(5); ganharXP(10); topo(); pop('🚨 Pegou! Os produtos voltaram', c.x, c.y-50);
+    c.itens.forEach(it => { const m = J.moveis.find(m=>m.prod===it.prod); if (m) m.q++; }); c.itens=[]; desenharMoveis(); return; }
+}
+function largar(){ const c = J.carrega; if (!c) return; c.x = eu.x+18; c.y = eu.y; J.caixas.push(c); J.carrega=null; desenharCaixas(); }
+
+/* ===== nível da loja ===== */
+function ganharXP(n){
+  J.xp += n;
+  while (J.nivel < NIVEIS.length && J.xp >= NIVEIS[J.nivel]) {
+    J.nivel++;
+    const libera = [...Object.values(PRODUTOS).filter(p=>p.nivel===J.nivel).map(p=>p.e+' '+p.nome), ...Object.values(LOJA_MOVEIS).filter(m=>m.nivel===J.nivel).map(m=>m.e+' '+m.nome)];
+    const el = div('subiu'); el.innerHTML = `⭐ Nível ${J.nivel}!<br><small style="font-family:var(--f-texto);font-size:12px">${libera.length ? 'Liberou: '+libera.join(', ') : 'Sua loja está crescendo!'}</small>`;
+    palco.appendChild(el); setTimeout(()=>el.remove(), 2500);
+  }
+  topo();
+}
+
+/* ===== modo construção ===== */
+$('#construir').addEventListener('click', () => {
+  if (J.aberta) return;
+  J.construindo = !J.construindo; J.selMovel = null; J.novoMovel = null; $('#fantasma').hidden = true;
+  palco.classList.toggle('construindo', J.construindo); topo(); desenharMoveis(); abrirPainel(J.construindo ? 'construir' : 'inicio');
+});
+function areaDe(tipo){ return LOJA_MOVEIS[tipo].deposito ? DEPOSITO : SALAO; }
+function lugarValido(tipo, x, y, ignora){
+  const L = LOJA_MOVEIS[tipo], A = areaDe(tipo), w = L.w, h = L.h;
+  if (x < A.x+4 || y < A.y+4 || x+w > A.x+A.w-4 || y+h > A.y+A.h-4) return false;
+  return !J.moveis.some(m => m.id!==ignora && x < m.x+m.w+8 && x+w+8 > m.x && y < m.y+m.h+56 && y+h+56 > m.y);   // corredor de 56 entre as fileiras
+}
+function posDe(tipo, x, y){ const L = LOJA_MOVEIS[tipo]; return { x: Math.round((x - L.w/2)/10)*10, y: Math.round((y - L.h/2)/10)*10 }; }
+function mostrarFantasma(x, y){
+  const tipo = J.novoMovel || J.moveis.find(m=>m.id===J.selMovel)?.tipo; if (!tipo) return;
+  const L = LOJA_MOVEIS[tipo], p = posDe(tipo, x, y), f = $('#fantasma');
+  box(f, { x:p.x, y:p.y, w:L.w, h:L.h }); f.hidden = false; f.classList.toggle('ruim', !lugarValido(tipo, p.x, p.y, J.selMovel));
+}
+function toqueConstrucao(x, y){
+  if (J.selMovel || J.novoMovel) {
+    const tipo = J.novoMovel || J.moveis.find(m=>m.id===J.selMovel).tipo, p = posDe(tipo, x, y);
+    if (!lugarValido(tipo, p.x, p.y, J.selMovel)) { mostrarFantasma(x, y); pop(LOJA_MOVEIS[tipo].deposito ? 'Só dentro do depósito, com espaço em volta' : 'Só no salão, com corredor em volta', x, y-30, true); return; }
+    if (J.novoMovel) { const L = LOJA_MOVEIS[tipo]; J.din = r2(J.din - L.preco); J.moveis.push(Object.assign(novoMovel(tipo, p.x, p.y))); J.novoMovel = null; pop('🔨 Pronto!', x, y-30); }
+    else { const m = J.moveis.find(m=>m.id===J.selMovel); m.x = p.x; m.y = p.y; J.selMovel = null; }
+    $('#fantasma').hidden = true;
+    if (bate(eu.x, eu.y)) { eu.y = 470; eu.x = 500; }
+    desenharMoveis(); topo(); render(); return;
+  }
+  const m = J.moveis.find(m => x>m.x && x<m.x+m.w && y>m.y && y<m.y+m.h);
+  if (m) { J.selMovel = m.id; desenharMoveis(); mostrarFantasma(x, y); render(); }
+}
+
+/* ===== painel ===== */
+function abrirPainel(qual, extra){ J.painel = qual; J.painelExtra = extra; render(); }
+const dist = (o) => Math.hypot(eu.x-o.x, eu.y-o.y);
+function render(){
+  const c = $('#corpo');
+  if (J.painel==='fim') return;
+  if (J.construindo) { c.innerHTML = rConstruir(); return; }
+  if (J.painel==='pedidos') c.innerHTML = rPedidos();
+  else if (J.painel==='preco') c.innerHTML = rPreco();
+  else if (J.painel==='caixa' && dist(ATENDER) < 70) c.innerHTML = rCaixa();
+  else if (J.painel==='licencas') c.innerHTML = rLicencas();
+  else c.innerHTML = rInicio();
+}
+function rInicio(){
+  const prats = J.moveis.filter(ehPrat), semPreco = prats.some(m=>m.prod && !J.preco[m.prod]), vazias = prats.filter(m=>!m.q).length;
+  const guardadas = J.moveis.filter(m=>m.tipo==='estante').flatMap(m=>m.slots).filter(Boolean).length;
+  const t = [];
+  if (J.carrega && !J.carrega.vazia) t.push('Leve a caixa a uma prateleira e use ➕ Repor (segure para repor rápido), ou guarde numa estante 🧱 do depósito.');
+  if (J.carrega?.vazia) t.push('Jogue a caixa vazia na lixeira 🗑️.');
+  if (!J.carrega && J.caixas.some(c=>!c.vazia)) t.push(`Tem ${J.caixas.filter(c=>!c.vazia).length} caixa(s) na entrega 🚚: guarde nas estantes do depósito ou leve direto para as prateleiras.`);
+  if (semPreco) t.push('Tem produto <b>sem preço</b>: chegue na prateleira e use 🏷️ Preço.');
+  if (vazias && !J.carrega) t.push(guardadas ? `${vazias} prateleira(s) vazia(s): pegue uma caixa nas estantes do depósito.` : `${vazias} prateleira(s) vazia(s): peça mercadorias no computador 💻.`);
+  if (J.fila.length) t.push(`<b>${J.fila.length} cliente(s) na fila</b>: vá ao caixa 🧾.`);
+  if (J.sujeiras.length) t.push('Tem sujeira no chão 🫗: limpe.');
+  if (!J.aberta) t.push('Use 🔨 Construir para mudar a loja de lugar. Quando estiver pronto, 🔓 Abrir a loja.');
+  const prox = NIVEIS[J.nivel] ? `Faltam ${NIVEIS[J.nivel]-J.xp} XP para o nível ${J.nivel+1}.` : 'Nível máximo!';
+  return `<h2>📋 O que fazer</h2><ul class="tarefas">${t.map(x=>`<li>${x}</li>`).join('') || '<li>Tudo em ordem! 👍</li>'}</ul>
+    <p>⭐ ${prox} Vender e atender bem dá XP.</p>
+    <p><kbd>←↑→↓</kbd>/<kbd>WASD</kbd> anda · <kbd>Espaço</kbd>/<kbd>E</kbd> ação · ou toque no chão.</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:auto"><button class="btn sec" data-abre="licencas">📜 Licenças</button>${J.ajudante?'':'<button class="btn sec" data-ajudante>🧑‍🔧 Contratar caixa (R$ 200)</button>'}</div>`;
+}
+function rConstruir(){
+  const sel = J.selMovel || J.novoMovel;
+  const itens = Object.entries(LOJA_MOVEIS).map(([k,L]) => {
+    const tranc = J.nivel < L.nivel;
+    return `<div class="it"><span class="e">${L.e}</span><div><b>${L.nome}</b><small>${L.deposito?'vai no depósito · guarda 4 caixas':L.frio?'para leite, sorvete e queijo':'12 produtos'}</small></div>
+      ${tranc ? `<span class="tranc">🔒 nível ${L.nivel}</span>` : `<button class="btn" data-comprar-movel="${k}" ${J.din<L.preco?'disabled':''}>${brl(L.preco)}</button>`}</div>`;
+  }).join('');
+  return `<h2>🔨 Construir</h2>
+    <p>${sel ? '<b>Toque no chão</b> onde quer colocar. Verde pode, vermelho não.' : 'Toque numa prateleira, geladeira ou estante para <b>mudar de lugar</b>, ou compre um móvel novo.'}</p>
+    ${sel ? '<button class="btn sec" data-cancela>Cancelar</button>' : ''}
+    ${itens}
+    <button class="btn verde" data-sair-construir style="margin-top:auto">✔ Terminar</button>`;
+}
+function rLicencas(){
+  const lista = Object.entries(PRODUTOS).filter(([k])=>!J.licencas.has(k)).sort((a,b)=>a[1].nivel-b[1].nivel).map(([k,p]) => `<div class="it"><span class="e">${p.e}</span><div><b>${p.nome}</b><small>vende a ~${brl(p.merc)}${p.frio?' · precisa de geladeira':''}</small></div>
+    ${J.nivel < p.nivel ? `<span class="tranc">🔒 nível ${p.nivel}</span>` : `<button class="btn" data-lic="${k}" ${J.din<p.lic?'disabled':''}>${brl(p.lic)}</button>`}</div>`).join('');
+  return `<h2>📜 Licenças de produtos</h2><p>Cada produto novo precisa de licença. Algumas só abrem quando a loja sobe de nível.</p>${lista || '<p>Você já tem todas! 🎉</p>'}<button class="btn sec" data-abre="inicio">Fechar</button>`;
+}
+function rPedidos(){
+  const temFrio = J.moveis.some(m=>m.tipo==='frio');
+  const lista = [...J.licencas].map(k => { const p=PRODUTOS[k], tot=r2(J.custo[k]*p.cx), dif=J.custo[k]-p.custo;
+    return `<div class="it"><span class="e">${p.e}</span><div><b>${p.nome}</b><small>${p.cx} un. · ${brl(J.custo[k])} cada ${dif>0.001?'<span class="sobe">▲</span>':dif<-0.001?'<span class="desce">▼</span>':''} · mercado ${brl(J.merc[k])}${p.frio?' · ❄️':''}</small></div>
+      <button class="btn" data-comprar="${k}" ${J.din<tot || (p.frio&&!temFrio)?'disabled':''}>${brl(tot)}</button></div>`; }).join('');
+  const cheio = J.caixas.length >= 8;
+  return `<h2>💻 Pedidos</h2><p>${cheio ? '<b class="ruim">A área de entrega está cheia!</b> Guarde as caixas nas estantes antes de pedir mais.' : 'As caixas chegam na área de entrega 🚚. Os preços mudam todo dia.'}</p>${cheio?'':lista}<button class="btn sec" data-abre="inicio">Fechar</button>`;
+}
+function rPreco(){
+  const k = J.painelExtra, p = PRODUTOS[k]; if (!J.preco[k]) J.preco[k] = J.merc[k];
+  const v = J.preco[k], l = r2(v - J.custo[k]), pct = Math.round(l/J.custo[k]*100), dm = Math.round((v/J.merc[k]-1)*100);
+  return `<h2>🏷️ Etiqueta: ${p.e} ${p.nome}</h2>
+    <div class="it"><span class="e">${p.e}</span><div><small>custo ${brl(J.custo[k])} · mercado ${brl(J.merc[k])}</small><span class="${l>0?'bom':'ruim'}">${l>=0?'lucro':'prejuízo'} ${brl(Math.abs(l))} (${pct}%)</span></div>
+    <div class="ctrl"><button data-pr="-0.25" aria-label="Baixar">−</button><span>${brl(v)}</span><button data-pr="0.25" aria-label="Subir">+</button></div></div>
+    <p>${dm>25?'😬 Muito acima do mercado: quase ninguém compra.':dm>10?'🤔 Acima do mercado: alguns vão achar caro.':dm<-15?'🤑 Bem barato: vende rápido, lucra pouco.':'👍 Perto do preço de mercado.'}</p>
+    <button class="btn sec" data-abre="inicio">Pronto</button>`;
+}
+function rCaixa(){
+  const a = J.atend;
+  if (!a) return `<h2>🧾 Caixa</h2><p>${J.fila.length ? 'Chamando o próximo…' : 'Ninguém na fila agora. Aproveite para repor as prateleiras!'}</p>`;
+  let h = `<h2>${a.emo} Cliente no caixa</h2>${a.etapa==='bipar'?'<p>Toque em cada produto para passar no leitor.</p>':''}
+    <div class="esteira">${a.itens.map((it,i)=>`<button data-bip="${i}" class="${it.ok?'ok':''}" aria-label="Passar ${PRODUTOS[it.prod].nome}">${PRODUTOS[it.prod].e}</button>`).join('')}</div>
+    <div class="total"><span>Total</span><span>${brl(a.total)}</span></div>`;
+  if (a.etapa==='dinheiro') {
+    const soma = r2(a.troco.reduce((x,y)=>x+y,0));
+    h += `<div class="pago">💵 Pagou ${a.notas.map(brl).join(' + ')} = ${brl(a.pago)}</div>
+      <div class="gaveta">${DINHEIRO.map(v=>`<button class="${v>=2?'nt':'md'}" data-din="${v}">${v>=1?'R$ '+v:brl(v).replace('R$ ','')}</button>`).join('')}<button data-desfaz aria-label="Desfazer">↩️</button></div>
+      <div class="troco"><span>Troco: ${brl(soma)}</span><button class="btn verde" data-entregar>Entregar troco</button></div>`;
+  }
+  if (a.etapa==='cartao') h += `<div class="pago">💳 Cartão: digite o total na maquininha.</div><div class="visor">${brl(Number(a.dig||'0')/100)}</div>
+      <div class="teclado">${['1','2','3','⌫','4','5','6','0','7','8','9','OK'].map(k=>`<button data-k="${k}">${k}</button>`).join('')}</div>`;
+  if (a.msg) h += `<div class="msg erro">${a.msg}</div>`;
+  return h;
+}
+$('#corpo').addEventListener('click', (e) => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.abre) { abrirPainel(t.dataset.abre); return; }
+  if (t.dataset.comprar) { const k=t.dataset.comprar, p=PRODUTOS[k], tot=r2(J.custo[k]*p.cx); if (J.din<tot || J.caixas.length>=8) return; J.din=r2(J.din-tot); J.gasto=r2(J.gasto+tot); topo();
+    pop('🚚 Pedido feito', 500, 300); setTimeout(()=>{ const n=J.caixas.length; J.caixas.push(novaCaixa(k, 55+(n%4)*45, 435+Math.floor(n/4)*55)); desenharCaixas(); pop('📦 Chegou!', 130, 420); render(); }, 3000); render(); return; }
+  if (t.dataset.lic) { const p=PRODUTOS[t.dataset.lic]; if (J.din<p.lic) return; J.din=r2(J.din-p.lic); J.licencas.add(t.dataset.lic); topo(); render(); return; }
+  if ('ajudante' in t.dataset) { if (J.din<200) return; J.din=r2(J.din-200); J.ajudante=true; topo(); render(); return; }
+  if (t.dataset.comprarMovel) { J.novoMovel = t.dataset.comprarMovel; J.selMovel = null; render(); return; }
+  if ('cancela' in t.dataset) { J.novoMovel = null; J.selMovel = null; $('#fantasma').hidden = true; desenharMoveis(); render(); return; }
+  if ('sairConstruir' in t.dataset) { $('#construir').click(); return; }
+  if (t.dataset.pr) { const k=J.painelExtra; J.preco[k]=Math.max(0.25, r2(J.preco[k]+Number(t.dataset.pr))); desenharMoveis(); render(); return; }
+  if (t.dataset.bip) { bipar(Number(t.dataset.bip)); return; }
+  if (t.dataset.din) { J.atend.troco.push(Number(t.dataset.din)); J.atend.msg=''; render(); return; }
+  if ('desfaz' in t.dataset) { J.atend.troco.pop(); render(); return; }
+  if ('entregar' in t.dataset) { entregarTroco(); return; }
+  if (t.dataset.k) { teclar(t.dataset.k); return; }
+});
+
+/* ===== caixa ===== */
+function chamarProximo(){
+  if (J.atend || !J.fila.length) return;
+  const c = J.fila.shift(); c.estado = 'atendido';
+  J.atend = { c, emo:c.emo, itens:c.itens.map(x=>({...x, ok:false})), total:0, etapa:'bipar', troco:[] };
+  arrumarFila(); render();
+}
+function bipar(i){
+  const a=J.atend; if (!a || a.etapa!=='bipar' || a.itens[i].ok) return;
+  a.itens[i].ok=true; a.total=r2(a.total + a.itens[i].preco);
+  if (a.itens.every(x=>x.ok)) {
+    if (Math.random()<.6) {
+      const notas=[2,5,10,20,50,100]; let pago=[], soma=0;
+      if (Math.random()<.4 && a.total>6) { const n1 = [...notas].reverse().find(n=>n<a.total) || 5; pago.push(n1); soma=n1; }
+      while (soma <= a.total) { const n = notas.find(n => soma+n > a.total) || 100; pago.push(n); soma += n; }
+      a.notas=pago; a.pago=soma; a.etapa='dinheiro';
+    } else { a.etapa='cartao'; a.dig=''; }
+  }
+  render();
+}
+function entregarTroco(){
+  const a=J.atend, soma=r2(a.troco.reduce((x,y)=>x+y,0)), certo=r2(a.pago-a.total);
+  if (Math.abs(soma-certo)<0.001) { concluir(); return; }
+  a.erros=(a.erros||0)+1; a.msg = soma<certo ? `Faltou ${brl(r2(certo-soma))}.` : `Passou ${brl(r2(soma-certo))}!`; render();
+}
+function teclar(k){
+  const a=J.atend;
+  if (k==='⌫') a.dig=(a.dig||'').slice(0,-1);
+  else if (k==='OK') { if (Number(a.dig||'0')===Math.round(a.total*100)) { concluir(); return; } a.erros=(a.erros||0)+1; a.msg='Valor errado. Confira o total.'; }
+  else if ((a.dig||'').length<6) a.dig=(a.dig||'')+k;
+  render();
+}
+function concluir(){
+  const a=J.atend, est = a.erros ? Math.max(2,5-a.erros) : 5;
+  J.est.push(est); J.din=r2(J.din+a.total); J.vendas=r2(J.vendas+a.total);
+  ganharXP(Math.round(a.total) + (a.erros ? 0 : 3));
+  pop('+'+brl(a.total), 785, 360); falar(a.c, est===5?'Obrigado! 😄':'Hum… 😐');
+  a.c.estado='saindo'; J.atend=null; topo(); render();
+  setTimeout(chamarProximo, 500);
+}
+
+/* ===== clientes ===== */
+function falar(c,t,ms=1500){ if (!c.el) return; const f=document.createElement('span'); f.className='fala'; f.textContent=t; c.el.appendChild(f); setTimeout(()=>f.remove(),ms); }
+const filaPos = (i) => ({ x: FILA0.x - i*46, y: FILA0.y });
+function arrumarFila(){ J.fila.forEach((c,i)=>{ c.dest=[filaPos(i)]; }); }
+function novoCliente(){
+  const temFrio = J.moveis.some(m=>m.tipo==='frio');
+  const produtosLoja = [...J.licencas].filter(k=>!PRODUTOS[k].frio || temFrio);
+  const temNaLoja = [...new Set(J.moveis.filter(m=>ehPrat(m)&&m.prod&&m.q).map(m=>m.prod))];
+  const quer = [], n = 1+Math.floor(Math.random()*4);
+  for (let i=0;i<n;i++) { const base = temNaLoja.length && Math.random()<.75 ? temNaLoja : produtosLoja; quer.push(base[Math.floor(Math.random()*base.length)]); }
+  const c = { emo:PESSOAS[Math.floor(Math.random()*PESSOAS.length)], x:520, y:555, quer, itens:[], estado:'comprando', dest:[], espera:0, paciencia:1, ladrao: Math.random()<.08 };
+  planejar(c); J.clientes.push(c);
+}
+function planejar(c){
+  if (!c.quer.length) { c.estado = c.ladrao && c.itens.length ? 'fugindo' : (c.itens.length ? 'indoFila' : 'saindo'); if (c.estado==='fugindo') falar(c,'😈',1200); if (c.estado==='indoFila') { J.fila.push(c); arrumarFila(); } return; }
+  const k = c.quer[0], m = J.moveis.find(m=>ehPrat(m) && m.prod===k && m.q);
+  if (!m) { c.quer.shift(); falar(c, `Não tem ${PRODUTOS[k].e}? 😕`); c.triste=(c.triste||0)+1; c.espera=0.8; return; }
+  const alvo = { x: m.x+20+Math.random()*(m.w-40), y: m.y+m.h+22 };
+  c.dest = [{x:c.x, y:CORREDOR_Y}, {x:alvo.x, y:CORREDOR_Y}, alvo]; c.alvoMovel = m;
+}
+function passoCliente(c, dt){
+  if (c.espera > 0) { c.espera -= dt; if (c.espera<=0 && c.estado==='comprando' && !c.alvoMovel) planejar(c); return; }
+  if (c.dest.length) {
+    const d = c.dest[0], dx=d.x-c.x, dy=d.y-c.y, dd=Math.hypot(dx,dy), v=(c.estado==='fugindo'?230:120)*dt;
+    if (dd<=v) { c.x=d.x; c.y=d.y; c.dest.shift(); } else { c.x+=dx/dd*v; c.y+=dy/dd*v; }
+    if (c.dest.length) return;
+    if (c.estado==='comprando' && c.alvoMovel) {
+      const m = c.alvoMovel, k = c.quer.shift(); c.alvoMovel = null;
+      if (!m.q || m.prod!==k) { falar(c, `Acabou ${PRODUTOS[k].e}! 😕`); c.triste=(c.triste||0)+1; }
+      else if (!J.preco[k]) { falar(c, 'Sem preço? 🤨'); c.triste=(c.triste||0)+1; }
+      else { const raz = J.preco[k]/J.merc[k], chance = raz<=1.05 ? 1 : Math.max(0, 1-(raz-1.05)*2.5);
+        if (Math.random()>chance) { falar(c,'Tá caro! 😬'); c.triste=(c.triste||0)+1; }
+        else { m.q--; c.itens.push({prod:k, preco:J.preco[k]}); desenharMoveis(); if (Math.random()<.05) { J.sujeiras.push({x:c.x+10,y:c.y+14}); desenharCaixas(); } } }
+      c.espera = 0.9; return;
+    }
+    if ((c.estado==='saindo' || c.estado==='fugindo') && c.y>=540) { if (c.estado==='fugindo') { J.est.push(2); topo(); pop('🏃 Um ladrão fugiu!', 520, 500, true); } if (c.triste) { J.est.push(Math.max(1,4-c.triste)); topo(); } c.fora=true; }
+    return;
+  }
+  if (c.estado==='saindo' || c.estado==='fugindo') { c.dest=[{x:c.x,y:470},{x:520,y:470},{x:520,y:556}]; return; }
+  if (c.estado==='indoFila' || c.estado==='fila') {
+    c.estado='fila'; c.paciencia -= dt/45;
+    if (c.paciencia<=0) { J.fila = J.fila.filter(x=>x!==c); arrumarFila(); falar(c,'Desisto! 😠'); J.est.push(1); topo(); c.itens=[]; c.estado='saindo'; }
+  }
+}
+
+/* ===== laço ===== */
+let ult = performance.now(), acumMin = 0, proxCli = 2, ajudanteT = 0;
+function laco(t){
+  const dt = Math.min(0.05, (t-ult)/1000); ult = t;
+  lerTeclas(); if (!J.construindo) moverEu(dt);
+  const p = calcPerto(); if (p?.tipo!==perto?.tipo || p?.m!==perto?.m || p?.c!==perto?.c || p?.s!==perto?.s) { perto=p; desenharMoveis(); }
+  rotuloAcao();
+  if (J.painel==='caixa' && dist(ATENDER) >= 70) { J.painel='inicio'; render(); }
+  if (J.painel==='caixa' && !J.atend && dist(ATENDER)<70) chamarProximo();
+  if (J.ajudante && !J.atend && J.fila.length && dist(ATENDER)>=70) { ajudanteT += dt; if (ajudanteT>4) { ajudanteT=0; const c=J.fila.shift(); arrumarFila(); c.estado='saindo'; const tot=r2(c.itens.reduce((s,x)=>s+x.preco,0)); J.din=r2(J.din+tot); J.vendas=r2(J.vendas+tot); J.est.push(5); ganharXP(Math.round(tot)); pop('🧑‍🔧 +'+brl(tot), 785, 360); topo(); } }
+  if (J.aberta) {
+    acumMin += dt*4; if (acumMin>=1) { J.min += Math.floor(acumMin); acumMin%=1; topo(); }
+    proxCli -= dt; if (proxCli<=0 && J.min<700) { novoCliente(); proxCli = 4 + Math.random()*6 - Math.min(2, J.nivel*0.25); }
+    if (J.min>=720 && !J.clientes.length) fimDoDia();
+  }
+  J.clientes.forEach(c => passoCliente(c, dt));
+  J.clientes.filter(c=>c.fora).forEach(c=>c.el?.remove()); J.clientes = J.clientes.filter(c=>!c.fora);
+  desenharGente();
+  requestAnimationFrame(laco);
+}
+setInterval(() => { if (J.painel==='inicio' && !J.construindo) render(); }, 700);
+
+/* ===== dia ===== */
+function topo(){
+  if (J.est.length>25) J.est = J.est.slice(-25);
+  $('#din').textContent = brl(J.din);
+  const h=8+Math.floor(J.min/60), m=J.min%60;
+  $('#hora').textContent = `Dia ${J.dia} · ${String(Math.min(h,20)).padStart(2,'0')}:${String(h>=20?0:m).padStart(2,'0')}`;
+  $('#estrelas').textContent = '⭐ ' + (J.est.reduce((a,b)=>a+b,0)/J.est.length).toFixed(1).replace('.',',');
+  const ini = NIVEIS[J.nivel-1], fim = NIVEIS[J.nivel];
+  $('#nivel').innerHTML = `Nível ${J.nivel} <i><b style="width:${fim?Math.min(100,(J.xp-ini)/(fim-ini)*100):100}%"></b></i>`;
+  $('#abrir').textContent = J.aberta ? '🟢 Loja aberta' : '🔓 Abrir a loja';
+  $('#abrir').disabled = J.aberta || J.construindo;
+  $('#construir').disabled = J.aberta;
+  $('#construir').textContent = J.construindo ? '✔ Terminar' : '🔨 Construir';
+}
+$('#abrir').addEventListener('click', () => { if (J.aberta || J.construindo) return; J.aberta=true; J.min=0; J.vendas=0; topo(); });
+function fimDoDia(){
+  J.aberta=false; const salario = J.ajudante ? 25 : 0; J.din = r2(J.din - salario);
+  const lucro = r2(J.vendas - J.gasto - salario);
+  J.painel='fim'; topo();
+  $('#corpo').innerHTML = `<h2>🌙 Fim do dia ${J.dia}</h2>
+    <div class="it"><span class="e">💰</span><div><b>Vendas</b></div><span>${brl(J.vendas)}</span></div>
+    <div class="it"><span class="e">📦</span><div><b>Mercadorias</b></div><span>${brl(J.gasto)}</span></div>
+    ${salario?`<div class="it"><span class="e">🧑‍🔧</span><div><b>Salário do caixa</b></div><span>${brl(salario)}</span></div>`:''}
+    <div class="it"><span class="e">${lucro>=0?'📈':'📉'}</span><div><b>${lucro>=0?'Lucro':'Prejuízo'}</b></div><span class="${lucro>=0?'bom':'ruim'}">${brl(Math.abs(lucro))}</span></div>
+    <p>Amanhã os preços do atacado e do mercado mudam. Confira no 💻!</p>
+    <button class="btn" id="novo-dia">☀️ Começar o dia ${J.dia+1}</button>`;
+  $('#novo-dia').onclick = () => {
+    J.dia++; J.min=0; J.gasto=0; J.vendas=0;
+    Object.entries(PRODUTOS).forEach(([k,p]) => { const f = 0.85 + Math.random()*0.3; J.custo[k]=r2(Math.round(p.custo*f*20)/20); J.merc[k]=r2(Math.round(p.merc*(0.9+Math.random()*0.2)*4)/4); });
+    J.painel='inicio'; topo(); render(); salvar();
+  };
+}
+
+/* ===== salvar no aparelho (teste da professora) ===== */
+const CHAVE = 'mercadinho_teste_v1';
+function salvar(){
+  if (J.aberta) return;
+  const d = { din:J.din, dia:J.dia, est:J.est, xp:J.xp, nivel:J.nivel, licencas:[...J.licencas], preco:J.preco, merc:J.merc, custo:J.custo, ajudante:J.ajudante,
+    moveis:J.moveis.map(m=>({...m})), caixas:J.caixas, sujeiras:J.sujeiras, carrega:J.carrega, idSeq };
+  try { localStorage.setItem(CHAVE, JSON.stringify(d)); } catch(_){}
+}
+function carregar(){
+  let d = null; try { d = JSON.parse(localStorage.getItem(CHAVE) || 'null'); } catch(_){}
+  if (!d) return;
+  Object.assign(J, { din:d.din, dia:d.dia, est:d.est, xp:d.xp, nivel:d.nivel, licencas:new Set(d.licencas), preco:d.preco, merc:d.merc, custo:d.custo, ajudante:d.ajudante,
+    moveis:d.moveis, caixas:d.caixas, sujeiras:d.sujeiras||[], carrega:d.carrega||null });
+  idSeq = d.idSeq || idSeq;
+}
+setInterval(salvar, 4000);
+$('#recomecar').addEventListener('click', (e) => {
+  const b = e.currentTarget;
+  if (!b.dataset.conf) { b.dataset.conf = '1'; b.textContent = 'Tem certeza?'; setTimeout(()=>{ delete b.dataset.conf; b.textContent='↺ Recomeçar'; }, 3000); return; }
+  try { localStorage.removeItem(CHAVE); } catch(_){}
+  location.reload();
+});
+carregar();
+window._eu=eu; window._J=J;
+cenario(); desenharMoveis(); desenharCaixas(); topo(); render(); requestAnimationFrame(laco);
+</script>
+
+</body>
+</html>
