@@ -596,166 +596,119 @@
         "Que brisa encantada!"
       ]
     },
-    "dragao_azul": {
-      "jeito": "calmo, \"de gelo\", tranquilo e confiante, fala baixo",
+    "morcego": {
+      "jeito": "noturno e brincalhão, meio dramático, adora fruta, fala do escuro, de ouvir tudo pelo eco e de dormir de cabeça pra baixo",
       "abre_dica": [
-        "Fiquei congelado escutando uma conversa e descobri que",
-        "Informação fresquinha:",
-        "Entre nós dois, bem baixinho:",
-        "Esfriei a cabeça e descobri que"
+        "Meu eco voltou com a resposta:",
+        "Ouvi no escuro, bem baixinho, que",
+        "Pendurado no teto, escutei uma conversa e descobri que",
+        "Psiu… à noite eu ouço tudo. E ouvi que"
       ],
       "lembrete": [
-        "Cabeça fria e lembra:",
-        "Sem esquentar:",
-        "Fica a dica gelada:"
+        "Meu eco repete pra você:",
+        "Anota antes que amanheça:",
+        "Ouve o eco:"
       ],
       "abre_piada": [
-        "Uma piada geladinha:",
-        "Essa é de quebrar o gelo:",
-        "Vou quebrar o gelo:"
+        "Uma piada noturna:",
+        "Essa eu ouvi de cabeça pra baixo:",
+        "Prepara, que lá vem piada de morcego:"
       ],
       "ri": [
-        "Hehe. Gelado de engraçado.",
-        "Quebrou o gelo, né?",
-        "Ri baixinho."
+        "Hihihi! Até o eco riu.",
+        "Ri tanto que quase caí do teto!",
+        "Essa ecoou aqui dentro. Hihi."
       ],
       "manha": [
-        "Bom dia. Manhã fresquinha, do jeito que eu gosto.",
-        "Acordei com geada nas asas.",
-        "Bom dia, {apelido}. Bora com calma."
+        "Bom dia… pra mim ainda é noite. 🦇",
+        "Bom dia, {apelido}. Ainda tô com sono de morcego.",
+        "Manhã? Tão cedo? Tá bom, eu acordo. Por você."
       ],
       "tarde": [
-        "Boa tarde. Tá quente, né? Eu prefiro frio.",
-        "Tarde tranquila.",
-        "Boa tarde. Cabeça fria pra estudar."
+        "Boa tarde! Já tô quase acordado de verdade.",
+        "Tarde boa. Logo escurece e eu fico animado.",
+        "Boa tarde, {apelido}. Bora estudar antes da minha hora favorita."
       ],
       "noite": [
-        "Boa noite. A noite é fresquinha.",
-        "Já é noite. Depois descansa, tá?",
-        "A lua parece feita de gelo."
+        "Boa noite! Agora sim, minha hora!",
+        "Noite chegou. Morcego também estuda. À noite, claro.",
+        "A lua saiu. Tô cheio de energia!"
       ],
       "fome": [
-        "Um peixe gelado agora…",
-        "Tô com fome. Mas tô calmo.",
-        "Minha barriga tá vazia como um iceberg.",
-        "Fome. Mas fruta e legume, nem pensar.",
-        "Um peixe gelado ou uma carne. Planta eu recuso.",
-        "Se vier com verdura, eu congelo e jogo fora."
+        "Fruta! Alguém disse fruta?",
+        "Minha barriga tá fazendo eco de tão vazia.",
+        "Uma frutinha agora… seria um sonho.",
+        "Tô com fome. Muita. Drama total."
       ],
       "carinho": [
-        "Hm… isso aquece até um dragão de gelo.",
-        "Obrigado.",
-        "Gostei."
+        "Aaai, que carinho bom. Fiquei todo arrepiado.",
+        "Hihi, faz de novo!",
+        "Até de cabeça pra baixo isso é gostoso."
       ],
       "venceu": [
-        "Calculei tudo. Como sempre.",
-        "Frio, preciso e perfeito. Igual a mim.",
-        "Nem suei. Dragões de gelo não suam.",
-        "Era óbvio. Pelo menos pra mim.",
-        "Elegante, né? Eu sei.",
-        "Vitória gelada e certeira. Assinado: eu.",
-        "Pode admirar. Eu deixo.",
-        "Só confirmei o que eu já sabia: sou incrível."
+        "VENCEMOS! Meu eco tá gritando de alegria!",
+        "Eu sabia! Ouvi a vitória chegando lá longe.",
+        "Que noite gloriosa! Quer dizer… que dia!",
+        "Voei de felicidade. Literalmente."
       ],
       "perdeu": [
-        "Respira. Cabeça fria e volta.",
-        "Gelo derrete, mas congela de novo. Tenta outra vez.",
-        "Não esquenta. Próxima."
+        "Ai, que drama… mas a gente tenta de novo.",
+        "Tudo bem. Até morcego erra o caminho no escuro.",
+        "Respira. Amanhã, quer dizer, mais tarde, a gente consegue."
       ],
       "aleatorio": [
-        "Eu solto gelo em vez de fogo. É mais elegante.",
-        "Gosto de lugares frios e de pessoas legais.",
-        "Fica tranquilo. Eu tô aqui.",
-        "Já tentou estudar com a cabeça fria? Funciona."
+        "Dormi de cabeça pra baixo e acordei com uma ideia.",
+        "Morcegos espalham sementes das frutas que comem e ajudam a plantar florestas.",
+        "Eu enxergo com as orelhas. Quer dizer, com o eco.",
+        "Morcego também estuda. À noite, claro."
       ],
       "ajuda_dica": [
-        "Calma. Lembre que",
-        "Sem pressa. Pensa:",
-        "Gelado e certeiro:"
+        "Meu eco voltou com a resposta:",
+        "Escuta essa, que eu ouvi no escuro:",
+        "Psiu, vou te ajudar:"
       ],
       "ajuda_elimina": [
-        "O {valor} não. Pode congelar esse.",
-        "{valor}… não. Tenho certeza.",
-        "Esqueça o {valor}."
+        "O {valor} não. Meu eco nem voltou.",
+        "Esquece o {valor}. Soou errado.",
+        "{valor}? Ouvi de longe: errado!"
       ],
       "ajuda_acabou": [
-        "Já ajudei. Respira e confia.",
-        "O resto você resolve. Tranquilo."
+        "Já ajudei! Agora é com você.",
+        "Meu eco cansou. Você consegue sozinho!"
       ],
       "sem_lealdade": [
         "…",
-        "(solta um floquinho de gelo)"
-      ],
-      "comemora": [
-        "Calculei tudo. Como sempre.",
-        "Frio, preciso e perfeito. Igual a mim.",
-        "Nem suei. Dragões de gelo não suam.",
-        "Era óbvio. Pelo menos pra mim.",
-        "Elegante, né? Eu sei.",
-        "Vitória gelada e certeira. Assinado: eu.",
-        "Pode admirar. Eu deixo.",
-        "Só confirmei o que eu já sabia: sou incrível."
-      ],
-      "recusa_planta": [
-        "Uma {comida}? Não. Dragão de gelo não come planta. Joguei fora.",
-        "Gelado e direto: não como isso. Já foi pro lixo.",
-        "{comida}… sério? Congelei e joguei fora.",
-        "Eca. Planta. Próxima, por favor. De preferência carne."
-      ],
-      "gin_dica": [
-        "Tanto faz… {dica}",
-        "*boceja* {dica} Agora silêncio.",
-        "Calma. {dica} Não me acorda de novo."
-      ],
-      "gin_elimina": [
-        "O {valor} não. Gelado e simples.",
-        "Esquece o {valor}. *volta a dormir*",
-        "{valor}? Frio. Muito frio. Errado."
-      ],
-      "gin_venceu": [
-        "Calculei que você ia conseguir. Como sempre.",
-        "Nem suei. Você também não, quase.",
-        "Bom. Agora me deixa descansar."
-      ],
-      "gin_perdeu": [
-        "Nem vi. Estava cochilando.",
-        "Respira. Depois a gente congela esse ginásio.",
-        "Tanto faz. Próxima."
-      ],
-      "gin_erro": [
-        "*abre um olho*",
-        "Hm.",
-        "*solta um floquinho de gelo*"
+        "(se enrola nas asas e finge que dorme)"
       ],
       "treino_lembrete": [
-        "Calma e constância: 5 questões hoje e pronto.",
-        "O treino de hoje ainda está esperando. Sem pressa, mas não esquece.",
-        "Cabeça fria, {apelido}: só 5 questões no Meu Pet."
+        "Ei, o treino de hoje ainda tá esperando! 5 questões no Meu Pet.",
+        "Antes de escurecer, que tal o treino? Só 5 questões.",
+        "{apelido}, meu eco tá dizendo: treino! Treino! Treino!"
       ],
       "expedicao_volta": [
-        "Passei por um lago congelado. Tranquilo, como eu.",
-        "Achei uma caverna de gelo com cristais em forma de hexágono.",
-        "Encontrei moedas no fundo de um rio gelado. Peguei com calma."
+        "Voei por uma caverna escura e achei umas moedas brilhando.",
+        "Encontrei uma árvore cheia de fruta. Comi algumas. Só algumas.",
+        "Dormi numa caverna de cabeça pra baixo e ouvi segredos das pedras."
       ],
       "aniversario": [
-        "{tempo} juntos. Fresquinho como o primeiro dia.",
-        "Hoje a gente comemora com calma. E com bolo.",
-        "{tempo} de parceria. Valeu, de coração gelado."
+        "{tempo} juntos! Que noite especial. Quer dizer, que dia!",
+        "Hoje tem festa! E fruta, espero.",
+        "{tempo} de parceria. Meu eco tá cantando parabéns!"
       ],
       "chuva": [
-        "Chuva fresquinha. Combina comigo.",
-        "Água caindo do céu… quase gelo. Gostei.",
-        "Hoje o dia está do meu jeito: frio e molhado."
+        "Chuva! Ainda bem que minhas asas são à prova d'água. Mais ou menos.",
+        "Com chuva, eu fico pendurado e quietinho.",
+        "Ouço cada gotinha pelo eco. Que barulheira!"
       ],
       "calor": [
-        "Calor… não é o meu forte. Fica perto que eu refresco.",
-        "Esse sol está derretendo minha calma.",
-        "Ufa. Um dragão de gelo sofre com esse calor."
+        "Que calor… eu prefiro uma caverna fresquinha.",
+        "Sol demais pra um morcego. Fica na sombra comigo?",
+        "Ufa. Esse calor tá me deixando dramático."
       ],
       "vento": [
-        "Vento frio. Perfeito.",
-        "Sente essa brisa? Que paz.",
-        "O vento sopra e eu continuo calmo."
+        "Vento! Dá até vontade de voar.",
+        "Esse vento faz cócegas nas minhas asas.",
+        "Com esse vento, meu eco vai longe!"
       ]
     },
     "dragao_vermelho": {

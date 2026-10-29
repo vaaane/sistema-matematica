@@ -68,7 +68,7 @@ const ALT_JOGADOR_MAPA = 55 * ESCALA_ATORES;   // nos mapas da cidade o personag
 // Altura do pet SENTADO no mapa, em px na escala base (personagem = 55; no mapa tudo × ESCALA_ATORES)
 const ALT_PET = {
   elefante: 36, gato: 30, gaviao: 30, axolote: 30, tigre: 30,
-  unicornio: 40, dragao_azul: 30,   // PROMPT-129: azul −25% (era 40) e vermelho +25% (era 50): o vermelho ≈ 2 × o azul
+  unicornio: 40, morcego: 30,   // PROMPT-159: o morcego (do tamanho do gavião) no lugar do dragão azul; PROMPT-129: vermelho +25% (era 50)
   dragao_vermelho: 62.5,
 };
 // Evolução: cada fase é 15% maior que a anterior (altura do desenho SENTADO, não do quadro). Pet novo que evoluir:
@@ -316,7 +316,7 @@ function marcarForma(img, pet, forma) {
 // Parado, o pet chega a 55% disso; acima de +10 anda 1,3× mais rápido; acima de +62 corre (pets.js).
 const DIST_PET = {
   elefante: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36,
-  unicornio: 55, dragao_azul: 41.25, dragao_vermelho: 68.75,   // PROMPT-129: × 0,75 e × 1,25, com o tamanho
+  unicornio: 55, morcego: 36, dragao_vermelho: 68.75,   // PROMPT-129: vermelho × 1,25, com o tamanho
 };
 // cresce junto com o tamanho (mesma proporção distância/altura do filhote vermelho; distPet ainda × a escala do vermelho)
 DIST_PET.dragao_azul_adulto = DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * ALT_PET.dragao_azul_adulto / ALT_PET.dragao_vermelho;
@@ -967,7 +967,6 @@ export async function iniciarJogo(sess) {
   iniciarAlbum();
   iniciarPet();
   setTimeout(verificarCores, 2500);   // quem já cumpriu as condições ganha as cores (aviso uma vez)
-  setTimeout(avisarCorSoVermelho, 3200);
   setTimeout(bonusMoedasRetroativo, 1800);   // 🎁 PROMPT-133
   setTimeout(xpJogoRetroativo, 6000);       // ⭐ PROMPT-156 (depois dos outros avisos da entrada)
   setTimeout(avisarTrocaPersonagem, 4200);
@@ -1104,7 +1103,7 @@ const PETS_GINASIO = {
   'mapa5-B':  'tigre',            // Torre de Pedra (Montanha das Potências)
   'mapa7-B':  'unicornio',        // Supermercado (Mercado Central)
   'mapa9-B':  'dragao_vermelho',  // Torre do Mago (Floresta das Balanças)
-  // PROMPT-146: o dragão azul deixou de ser prêmio (quem já tem continua com ele); o mapa11-B não dá mais pet
+  'mapa11-B': 'morcego',          // Escritório (PROMPT-159: o morcego no lugar do dragão azul)
 };
 const INICIAIS = ['elefante', 'gato', 'gaviao'];
 const MOEDAS_INICIAIS = 100;
@@ -1127,7 +1126,7 @@ function lerPets(v) {
   }
   return { ativo, conquistados, migrou, moedas: Number(v.pets?.moedas) || 0, iscas: Number(v.pets?.iscas) || 0, itens: { ...(v.pets?.itens || {}) },
     bolsa: { ...(v.pets?.bolsa || {}) }, tintas: { ...(v.pets?.tintas || {}) }, efeitos: { ...(v.pets?.efeitos || {}) }, cuidadosV2: !!v.pets?.cuidados_v2,
-    expedicoesDia: v.pets?.expedicoes_dia || null };   // 🧭 { data, n } (PROMPT-92)
+    expedicoesDia: v.pets?.expedicoes_dia || null, migrouMorcego: !!v.pets?.migrou_morcego };   // 🧭 { data, n } (PROMPT-92)
 }
 
 const temPet = (p) => !!(p && estado.pets.conquistados[p]);
@@ -1150,6 +1149,7 @@ function iniciarPet() {
   // pet que não existe no sprites.json (ex.: cachorro, porco de testes antigos) é ignorado
   const ps = estado.pets;
   migrarCapivara(ps);
+  migrarMorcego(ps);
   for (const p of Object.keys(ps.conquistados)) if (!petValido(p)) delete ps.conquistados[p];
   liberarPetsProfessora(ps);
   if (!temPet(ps.ativo)) ps.ativo = Object.keys(ps.conquistados)[0] || null;
@@ -1189,6 +1189,30 @@ function migrarCapivara(ps) {
   if (av?.capivara) {
     if (!av.elefante) { av.elefante = av.capivara; patch['avisos_pet/elefante'] = av.elefante; }
     delete av.capivara; patch['avisos_pet/capivara'] = null;
+  }
+  gravar(patch);
+}
+
+// O dragão azul virou morcego (PROMPT-159): quem tinha o azul fica com o morcego, com o nome, a lealdade, a barriga, a amizade,
+// a tinta, o efeito, a data e a origem; o que era só do dragão (adulto, truques) fica para trás. Se era o ativo, o morcego passa
+// a ser. Uma vez só (pets/migrou_morcego); o aviso aparece só para quem tinha o azul.
+function migrarMorcego(ps) {
+  if (ps.migrouMorcego) return;
+  ps.migrouMorcego = true;
+  const c = ps.conquistados.dragao_azul, patch = { 'pets/migrou_morcego': true };
+  if (c) {
+    if (!ps.conquistados.morcego) {
+      const { evoluido, mostrar_filhote, truques_vistos, ...resto } = c;
+      ps.conquistados.morcego = resto; patch['pets/conquistados/morcego'] = resto;
+    }
+    delete ps.conquistados.dragao_azul; patch['pets/conquistados/dragao_azul'] = null;
+    setTimeout(() => avisoPet('Seu dragão azul virou um morcego! 🦇 Ele continua com você, com o mesmo nome e os mesmos cuidados.', true), 3500);
+  }
+  if (/^dragao_azul/.test(ps.ativo || '')) { ps.ativo = 'morcego'; patch['pets/ativo'] = 'morcego'; }
+  const av = estado.avisosPet;
+  if (av?.dragao_azul) {
+    if (!av.morcego) { av.morcego = av.dragao_azul; patch['avisos_pet/morcego'] = av.morcego; }
+    delete av.dragao_azul; patch['avisos_pet/dragao_azul'] = null;
   }
   gravar(patch);
 }
@@ -2427,9 +2451,7 @@ function aplicarForma(pet) {
 // 🐉 Cores do dragão (só quando o pet é dragão): Normal + as cores do sprites.json; bloqueada = cinza com 🔒 e o que fazer
 function renderCores() {
   const pet = mp.pet, temCores = Object.keys(coresDragao()).length > 0, ok = aceitaCor(pet) && temCores;
-  const azul = !ok && temCores && pet === 'dragao_azul';   // PROMPT-129: só o vermelho tem cores; no azul, só o aviso
-  $('mp-cores-bloco').hidden = !ok && !azul;
-  if (azul) { $('mp-visual-cores').innerHTML = ''; $('mp-cor-msg').textContent = '✨ Cores especiais: só no dragão vermelho 🐉'; }
+  $('mp-cores-bloco').hidden = !ok;   // PROMPT-129: só o vermelho tem cores
   if (!ok) return;
   const base = formaBase(pet), atual = corAtiva(pet);
   const mini = (forma) => `<img src="${quadrosDe(forma, 'sentado_girando')[0]}" alt="" draggable="false"${attrForma(pet, forma)}/>`;
@@ -2496,14 +2518,6 @@ function bonusMoedasRetroativo() {
   }
   gravar(patch);
   if (n > 0) { avisoPet(`🎁 Você recebeu ${n} moedas: agora as moedas valem mais, e você ganhou a diferença pelo que já conquistou!`, true); }
-}
-// PROMPT-129: as cores especiais agora são só do dragão vermelho. Quem tinha cor (pet_cor) e está com o azul: aviso uma vez.
-// A cor escolhida não é apagada (continua valendo para o vermelho); o azul aparece na cor normal (corAtiva).
-function avisarCorSoVermelho() {
-  if (!carregouProgresso || !estado?.petCor || estado.pets?.ativo !== 'dragao_azul' || estado.avisos?.cor_so_vermelho) return;
-  (estado.avisos ||= {}).cor_so_vermelho = true;
-  gravar({ 'avisos/cor_so_vermelho': true });
-  avisoPet('As cores especiais agora são só do dragão vermelho 🐉', true);
 }
 function escolherVisual(e) {
   const bc = e.target.closest('[data-cor]');
@@ -3198,7 +3212,7 @@ function definirPersColega(c, id, cores) {
   preCarregarQuadros(id, cores);
 }
 
-const petAtual = (pet) => (pet === 'capivara' ? 'elefante' : pet);   // registros antigos (antes do elefante)
+const petAtual = (pet) => (pet === 'capivara' ? 'elefante' : /^dragao_azul(_adulto)?$/.test(pet || '') ? 'morcego' : pet);   // registros antigos (antes do elefante e do morcego)
 function definirPetColega(c, pet, forma) {
   pet = petAtual(pet);
   pet = petValido(pet) ? pet : null;
@@ -3303,7 +3317,7 @@ function abrirCartaoColega(c) {
   pararFalaPet();   // o balão do meu pet não fica por cima do cartão
   const r = c.reg || {}, el = $('colega-cartao');
   const nome = rotuloColega(c.uid, r), turma = nomeVisivel(r.turma);
-  const pet = petValido(r.pet) ? r.pet : null;
+  const pet = petValido(petAtual(r.pet)) ? petAtual(r.pet) : null;
   el.innerHTML = `
     ${bustoHtml(urlQuadro('frente', -1, c.pers || PERS.padrao, c.cores), `jr-busto-colega${temBrilho(c.uid, c.reg) ? ' jr-brilho' : ''}`, BUSTO_PERS)}
     <span class="jr-colega-info">
@@ -11538,7 +11552,7 @@ function ligarEdicaoMato(n) {
 //  (regras puras em js/jogo-revisao/batalha.js; aqui a lista, a luta e os prêmios)
 // ============================================================
 const ELEM_PET = { elefante: ['💧', '🥜'], gato: ['🐾', '✦'], gaviao: ['🪶', '💨'], unicornio: ['🌈', '✨', '💖'], axolote: ['🫧', '💧'],
-  tigre: ['⚡', '🐾'], dragao_vermelho: ['🔥', '💥'], dragao_azul: ['❄️', '💎'], fogo: ['🔥', '💥'] };   // fogo: ataque_fogo dos adultos
+  tigre: ['⚡', '🐾'], dragao_vermelho: ['🔥', '💥'], morcego: ['🦇', '🌙'], fogo: ['🔥', '💥'] };   // fogo: ataque_fogo dos adultos
 const FALAS_VOLTOU_FORTE = ['Treinei muito desde a última vez!', 'Voltei mais forte. Preparado?', 'Andei treinando… agora é sério!'];
 let bt = null;            // batalha em andamento
 let btSel = null, btTimerLista = 0;   // treinador selecionado na lista

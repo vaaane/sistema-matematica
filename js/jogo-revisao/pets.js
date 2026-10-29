@@ -3,10 +3,10 @@
 // é sempre lido do JSON (varia de 1 a 4). Nem todo pet tem todas as animações:
 // a que faltar usa `reserva` do JSON e, se ainda faltar, sentado_girando.
 
-export const PETS = ['elefante', 'gato', 'gaviao', 'axolote', 'tigre', 'dragao_azul', 'unicornio', 'dragao_vermelho'];
+export const PETS = ['elefante', 'gato', 'gaviao', 'axolote', 'tigre', 'morcego', 'unicornio', 'dragao_vermelho'];   // PROMPT-159: o morcego no lugar do dragão azul
 export const NOME_PET = {
   elefante: 'Elefante', gato: 'Gato', gaviao: 'Gavião',
-  axolote: 'Axolote', tigre: 'Tigre', dragao_azul: 'Dragão Azul', unicornio: 'Unicórnio', dragao_vermelho: 'Dragão Vermelho',
+  axolote: 'Axolote', tigre: 'Tigre', morcego: 'Morcego', unicornio: 'Unicórnio', dragao_vermelho: 'Dragão Vermelho',
 };
 
 const BASE = '/img/jogo/';
@@ -178,6 +178,7 @@ function ritmo(anim, n, forma = '') {
   if (n === 1 && EMOCOES.has(anim)) return { ms: MS_EMOCAO, loop: false };
   switch (anim) {
     case 'correndo': return { ms: 90, loop: true };
+    case 'voando': return { ms: 110, loop: true };   // 🦇 o morcego batendo as asas (1 → 2 → 3 → 4)
     case 'costas_parado': return { ms: 250, loop: true };
     case 'sentado_girando': return { ms: 400, loop: true };
     case 'sentado_2': return { ms: n === 1 ? 2000 : 300, loop: false };   // adulto: 1 quadro (sentado de lado), segura ~2 s
@@ -383,7 +384,7 @@ export class PetSeguidor {
     if (!this.reacao) {
       this.espelhar = false;
       if (andando) {
-        if (longe) { this.trocar('correndo'); this.espelhar = dx < 0; }   // correndo é virado para a direita
+        if (longe) { this.trocar(temAnim(this.forma, 'voando') ? 'voando' : 'correndo'); this.espelhar = dx < 0; }   // correndo (e o voando do morcego) é virado para a direita
         else if (Math.abs(dx) >= Math.abs(dy)) this.trocar(dx > 0 ? 'andar_direita' : 'andar_esquerda');
         else this.trocar(this.andarVertical(dy > 0 ? 'andar_frente' : 'andar_costas'));
         this.proxOcioso = 6000 + Math.random() * 1000;   // parado há mais de ~6 s: a 1ª variação

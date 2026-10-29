@@ -4,8 +4,8 @@
   "esvazia_horas_uteis": 16,
   "fome_abaixo": 40,
   "comum_ate": 60,
-  "alimentar_abaixo": { "dragao_azul": 80, "dragao_vermelho": 80 },
-  "nao_come": { "dragao_azul": ["fruta", "maca", "banana", "cenoura", "milho", "batata"], "dragao_vermelho": ["fruta", "maca", "banana", "cenoura", "milho", "batata"] },
+  "alimentar_abaixo": { "dragao_vermelho": 80 },
+  "nao_come": { "dragao_vermelho": ["fruta", "maca", "banana", "cenoura", "milho", "batata"] },
   "cada_comida_enche": 20,
   "cheia": 100,
   "especiais_cheio_dia": 3
@@ -133,7 +133,7 @@
   "axolote": "biscoito",
   "tigre": "petisco",
   "unicornio": "fruta",
-  "dragao_azul": ["peixe", "carne"],
+  "morcego": "fruta",
   "dragao_vermelho": ["bolo", "carne"],
   "elefante": "fruta"
  },

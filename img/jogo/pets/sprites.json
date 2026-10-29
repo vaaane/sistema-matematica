@@ -640,6 +640,97 @@
     "pets/gaviao/triste_fome_3.webp"
    ]
   },
+  "morcego": {
+   "andar_costas": [
+    "pets/morcego/andar_costas_1.webp",
+    "pets/morcego/andar_costas_2.webp",
+    "pets/morcego/andar_costas_3.webp",
+    "pets/morcego/andar_costas_4.webp"
+   ],
+   "andar_direita": [
+    "pets/morcego/andar_direita_1.webp",
+    "pets/morcego/andar_direita_2.webp",
+    "pets/morcego/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/morcego/andar_esquerda_1.webp",
+    "pets/morcego/andar_esquerda_2.webp",
+    "pets/morcego/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/morcego/andar_frente_1.webp",
+    "pets/morcego/andar_frente_2.webp"
+   ],
+   "bocejo": [
+    "pets/morcego/bocejo_1.webp"
+   ],
+   "bravo": [
+    "pets/morcego/bravo_1.webp"
+   ],
+   "brincando": [
+    "pets/morcego/brincando_1.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/morcego/busto_sorrindo_1.webp"
+   ],
+   "carinho": [
+    "pets/morcego/carinho_1.webp"
+   ],
+   "comendo": [
+    "pets/morcego/comendo_1.webp",
+    "pets/morcego/comendo_2.webp",
+    "pets/morcego/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/morcego/correndo_1.webp",
+    "pets/morcego/correndo_2.webp",
+    "pets/morcego/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/morcego/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/morcego/dormindo_1.webp",
+    "pets/morcego/dormindo_2.webp",
+    "pets/morcego/dormindo_3.webp"
+   ],
+   "enrolado": [
+    "pets/morcego/enrolado_1.webp"
+   ],
+   "feliz": [
+    "pets/morcego/feliz_1.webp",
+    "pets/morcego/feliz_2.webp",
+    "pets/morcego/feliz_3.webp"
+   ],
+   "lamber_beicos": [
+    "pets/morcego/lamber_beicos_1.webp"
+   ],
+   "lamber_pata": [
+    "pets/morcego/lamber_pata_1.webp",
+    "pets/morcego/lamber_pata_2.webp"
+   ],
+   "sentado_2": [
+    "pets/morcego/sentado_2_1.webp",
+    "pets/morcego/sentado_2_2.webp",
+    "pets/morcego/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/morcego/sentado_girando_1.webp",
+    "pets/morcego/sentado_girando_2.webp",
+    "pets/morcego/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/morcego/triste_fome_1.webp",
+    "pets/morcego/triste_fome_2.webp",
+    "pets/morcego/triste_fome_3.webp"
+   ],
+   "voando": [
+    "pets/morcego/voando_1.webp",
+    "pets/morcego/voando_2.webp",
+    "pets/morcego/voando_3.webp",
+    "pets/morcego/voando_4.webp"
+   ]
+  },
   "dragao_azul_adulto": {
    "sentado_girando": [
     "pets/dragao_azul_adulto/sentado_girando_1.webp"
@@ -2418,6 +2509,33 @@
   "carinho": "feliz"
  },
  "sequencias": {
+  "morcego": {
+   "lamber_pata": [
+    ["sentado_girando", 1, 600],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["sentado_girando", 1, 600]
+   ],
+   "descansar": [
+    ["sentado_girando", 1, 600],
+    ["bocejo", 1, 1600],
+    ["sentado_girando", 1, 800]
+   ],
+   "carinho": [
+    ["carinho", 1, 900],
+    ["sentado_girando", 1, 300],
+    ["carinho", 1, 900],
+    ["sentado_girando", 1, 400]
+   ]
+  },
   "dragao_azul_adulto": {
    "cheirar": [
     ["sentado_reto", 1, 700],
