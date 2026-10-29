@@ -154,7 +154,7 @@
     <!-- PROMPT-107: ❤️ na casinha do colega · selo dos corações na minha -->
     <button id="cs-curtir" class="jr-btn cs-btn-arrumar cs-curtir" hidden aria-pressed="false">❤️ Curtir casinha</button>
     <div id="cs-selo" class="cs-selo" hidden></div>
-    <div id="cs-ferr" class="cs-ferr" hidden><div class="cs-cores" id="cs-cores" hidden></div><button class="jr-btn" data-cs="cor">🎨 Cor</button><button class="jr-btn" data-cs="girar">🔄 Girar</button><button class="jr-btn" data-cs="guardar">📦 Guardar</button></div>
+    <div id="cs-ferr" class="cs-ferr" hidden><div class="cs-cores" id="cs-cores" hidden></div><div class="cs-cores ex-tam" id="cs-tam" hidden><button class="jr-btn" data-cs-tam="-1" aria-label="Menor">➖</button><b id="cs-tam-v">100%</b><button class="jr-btn" data-cs-tam="1" aria-label="Maior">➕</button></div><button class="jr-btn" data-cs="cor">🎨 Cor</button><button class="jr-btn" data-cs="tam">📏 Tamanho</button><button class="jr-btn" data-cs="girar">🔄 Girar</button><button class="jr-btn" data-cs="guardar">📦 Guardar</button></div>
     <!-- 🖼️ editor da sala da Exposição (PROMPT-EXPOSICAO-2) -->
     <div id="ex-ferr" class="cs-ferr ex-ferr" hidden><div class="cs-cores ex-cores" id="ex-cores" hidden></div><div class="cs-cores ex-tam" id="ex-tam" hidden><button class="jr-btn" data-ex-tam="-1" aria-label="Menor">➖</button><b id="ex-tam-v">100%</b><button class="jr-btn" data-ex-tam="1" aria-label="Maior">➕</button></div><button class="jr-btn" data-exf="girar" aria-label="Girar">🔄</button><button class="jr-btn" data-exf="espelhar" aria-label="Espelhar">↔️</button><button class="jr-btn" data-exf="tam" aria-label="Tamanho">📏</button><button class="jr-btn" data-exf="cor" aria-label="Cor">🎨</button><button class="jr-btn" data-exf="conteudo" aria-label="Conteúdo">✏️</button><button class="jr-btn" data-exf="apagar" aria-label="Apagar">🗑️</button></div>
     <button id="ex-resumo" class="ex-resumo" hidden></button>
@@ -559,7 +559,10 @@
           <div class="jr-pers-sombra"></div>
           <img id="pers-img" alt="" draggable="false"/>
         </div>
-        <div class="jr-pers-grade" id="pers-grade"></div>
+        <div class="jr-pers-lado">
+          <div class="jr-pers-grade" id="pers-grade"></div>
+          <div class="jr-pers-cores" id="pers-cores"></div>
+        </div>
       </div>
       <div class="jr-mp-botoes">
         <button class="jr-btn" id="pers-confirmar">Confirmar</button>

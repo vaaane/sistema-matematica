@@ -972,6 +972,36 @@ html.jr-deitado .jr-pers-cartao { font-size: 11px; padding: 3px; }
 html.jr-deitado .jr-pers-caixa .jr-mp-botoes .jr-btn { min-height: 36px; padding: 4px 10px; font-size: 15px; }
 /* em pé no celular: personagem em cima, grade embaixo */
 @media (max-width: 600px) { html:not(.jr-deitado) .jr-pers-corpo { flex-direction: column; } html:not(.jr-deitado) .jr-pers-palco { flex-basis: 34%; } }
+/* 🎨 cores do personagem (PROMPT-158): embaixo da grade, cabelo e blusa em bolinhas */
+.jr-pers-caixa { height: min(560px, 100%); }
+.jr-pers-lado { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+.jr-pers-lado .jr-pers-grade { flex: 1; min-height: 0; }
+.jr-pers-cores { flex: none; display: flex; flex-direction: column; gap: 6px; }
+.jr-pers-cores-linha { display: flex; align-items: center; gap: 8px; }
+.jr-pers-cores-linha > b { flex: 0 0 58px; font: 700 15px 'Rajdhani', sans-serif; color: var(--jr-ouro); }
+.jr-pers-cores-linha > div { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.jr-pers-cor { position: relative; width: 28px; height: 28px; padding: 0; border-radius: 50%; cursor: pointer; background: var(--c, transparent);
+  border: 2px solid rgba(255,255,255,.35); box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
+.jr-pers-cor.orig { background: repeating-linear-gradient(45deg, rgba(255,255,255,.18) 0 4px, rgba(255,255,255,.05) 4px 8px); }
+.jr-pers-cor.sel { border-color: var(--jr-ouro); box-shadow: 0 0 0 2px rgba(255,215,0,.45), inset 0 -3px 0 rgba(0,0,0,.25); }
+.jr-pers-cor i { position: absolute; right: -5px; bottom: -5px; font-size: 12px; font-style: normal; line-height: 1; }
+.jr-pers-compra { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 6px 10px; border-radius: 12px; background: rgba(255,215,0,.08); border: 1px solid rgba(255,215,0,.35); }
+.jr-pers-compra span { flex: 1 1 160px; font-size: 14px; color: #fff; }
+.jr-pers-compra .jr-btn, .jr-pers-compra .lj-comprar { min-height: 32px; padding: 3px 12px; font-size: 14px; grid-column: auto; }
+html.jr-deitado .jr-pers-cor { width: 22px; height: 22px; }
+html.jr-deitado .jr-pers-cores-linha > b { flex-basis: 50px; font-size: 13px; }
+@media (max-width: 600px) { html:not(.jr-deitado) .jr-pers-cor { width: 24px; height: 24px; } }
+
+/* ✨ brilho dourado de quem tem as 26 insígnias (PROMPT-158) */
+.jr-brilho { animation: jrAura 2.4s ease-in-out infinite; }
+@keyframes jrAura {
+  0%,100% { filter: drop-shadow(0 0 4px #ffe27a) drop-shadow(0 0 10px #f2b632); }
+  50%     { filter: drop-shadow(0 0 8px #fff1a8) drop-shadow(0 0 20px #f2b632); }
+}
+@media (prefers-reduced-motion: reduce) { .jr-brilho { animation: none; filter: drop-shadow(0 0 8px #f2b632); } }
+.jr-estrela-mestre { position: absolute; pointer-events: none; color: #ffe27a; text-shadow: 0 0 4px #f2b632; transform: translate(-50%, -50%) scale(0);
+  animation: jr-estrela-mestre 1.2s ease-out forwards; }
+@keyframes jr-estrela-mestre { 35% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -110%) scale(.4); opacity: 0; } }
 
 /* ── Pets conquistados nos ginásios ── */
 /* pet esperando ao lado do líder: tocável, suavizado (sem pixelated) */

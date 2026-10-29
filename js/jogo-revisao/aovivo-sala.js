@@ -55,7 +55,7 @@ export async function entrarNaSala(base, codigo, j) {
   const online = Object.values(sala.jogadores || {}).filter(x => x?.on).length;
   if (!ja && online >= MAX_JOGADORES) return { erro: `A sala está cheia (${MAX_JOGADORES} jogadores).` };
   const r = ref(db, `${base}/salas/${codigo}/jogadores/${j.uid}`);
-  await update(r, { nome: j.nome, turma: j.turma || '', pers: j.pers || null, on: true, ...(ja ? {} : { pontos: 0, seq: 0, entrou: serverTimestamp() }) });
+  await update(r, { nome: j.nome, turma: j.turma || '', pers: j.pers || null, cores: j.cores || null, on: true, ...(ja ? {} : { pontos: 0, seq: 0, entrou: serverTimestamp() }) });
   await onDisconnect(ref(db, `${base}/salas/${codigo}/jogadores/${j.uid}/on`)).set(false);
   return { sala };
 }

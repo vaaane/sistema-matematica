@@ -90,6 +90,7 @@
 import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
 import { TEMPO_RODADA_MS, MIN_JOGADORES } from "/js/jogo-revisao/aovivo.js";
 import { baseAoVivo, criarSala, convidarTurma, Anfitriao, placar, agoraServ } from "/js/jogo-revisao/aovivo-sala.js";
+import { urlSprite } from "/js/jogo-revisao/cores-pers.js";
 
 const sess = requireProfessor("/index.html");
 if (sess) renderSidebarProfessor("sidebar", "jogo_revisao");
@@ -139,8 +140,8 @@ $("btn-proxima").addEventListener("click", () => host?.proxima());
 $("btn-encerrar").addEventListener("click", () => { if (confirm("Encerrar a Tabuada ao vivo agora?")) host?.encerrar(); });
 $("btn-cheia").addEventListener("click", () => { const p = $("projecao"); document.fullscreenElement ? document.exitFullscreen() : p.requestFullscreen?.(); });
 
-function bustoHtml(pers) {
-  return pers ? `<div class="pj-busto"><img src="/img/jogo/personagens-principais/${esc(pers)}/frente-parado.webp" alt="" onerror="this.remove()"/></div>` : `<div class="pj-busto">🙂</div>`;
+function bustoHtml(pers, cores) {   // 🎨 com as cores do aluno (PROMPT-158)
+  return pers ? `<div class="pj-busto"><img src="${esc(urlSprite("/img/jogo/personagens-principais", pers, "frente-parado", cores))}" alt="" onerror="this.remove()"/></div>` : `<div class="pj-busto">🙂</div>`;
 }
 function top5(pl) {
   return `<ol class="pj-top">${pl.slice(0, 5).map(j => { const d = j.pos_ant ? j.pos_ant - j.pos : 0;
@@ -182,7 +183,7 @@ function render(s) {
   if (s.estado === "fim") {
     const todos = placar(s.jogadores);
     pj.innerHTML = `${topo}<div class="pj-info" style="font-size:clamp(24px,4vw,48px);color:var(--gold)">🏁 Pódio</div>
-      <div class="pj-podio">${[1, 0, 2].map(k => todos[k] ? `<div class="p${k + 1}">${bustoHtml(todos[k].pers)}<b>${["🥇", "🥈", "🥉"][k]} ${esc(nomeCurto(todos[k].nome))}</b><small>${todos[k].pontos} pts</small><i></i></div>` : "").join("")}</div>
+      <div class="pj-podio">${[1, 0, 2].map(k => todos[k] ? `<div class="p${k + 1}">${bustoHtml(todos[k].pers, todos[k].cores)}<b>${["🥇", "🥈", "🥉"][k]} ${esc(nomeCurto(todos[k].nome))}</b><small>${todos[k].pontos} pts</small><i></i></div>` : "").join("")}</div>
       ${top5(todos.slice(3))}`;   // do 4º em diante (a posição vem do placar)
     host?.desligar();
   }

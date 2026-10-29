@@ -6,6 +6,7 @@ import { isModoTeste, getSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, get, update, push, set, remove, increment, onValue, onChildAdded, onChildChanged, onChildRemoved, runTransaction, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { prepararFoto, analisarMoldura } from '/js/jogo-revisao/exposicao-img.js';
+import { urlSprite as spriteComCor, coresValidas, semCor, CORES_CABELO, CORES_BLUSA, CORES_DIVERTIDAS, PRECO_COR_DIVERTIDA, NOME_COR } from '/js/jogo-revisao/cores-pers.js';
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE, ALUNOS_POR_TURMA, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
 import { gerarQuestoes, gerarUma, assuntoDe } from '/js/jogo-revisao/geradores.js';
@@ -483,6 +484,9 @@ async function carregarEstado() {
     estado.avisos = v.avisos && typeof v.avisos === 'object' ? { ...v.avisos } : {};   // { pesca_{ponto}: true, tutorial_pesca: true } — avisos que não se repetem   // { data, n } — peixes pescados hoje (os 3 pontos juntos)   // { data, moedas, pessoas: { npc: n } } — zera quando muda o dia   // { data, moedas, lealdade, xp } — zera quando muda o dia
     estado.avisosPet = v.avisos_pet && typeof v.avisos_pet === 'object' ? { ...v.avisos_pet } : {};   // { pet: { conversa, ajuda }, toques_sem_lealdade }
     estado.personagem = persValido(v.personagem) ? v.personagem : null;   // sem campo: usa o padrão
+    estado.coresCompradas = Object.fromEntries(CORES_DIVERTIDAS.filter(c => v.cores_compradas?.[c] === true).map(c => [c, true]));   // 🎨 { azul: true } — para sempre
+    estado.cores = coresValidas(v.cores);
+    if (!corLiberada(estado.cores.cabelo)) estado.cores.cabelo = 'original';
     // aluno novo = nada salvo ainda (sem ginásio, insígnia, pet nem dia jogado)
     estado.novo = !v.ginasios && !v.insignias && !v.pet && !v.pets && !v.sequencia;
     carregouProgresso = true;
@@ -947,7 +951,7 @@ export async function iniciarJogo(sess) {
     abrirFase: (id) => abrirFasePrograme(id), abrirDia: () => abrirDesafioDia(), abrirFantasma: () => abrirFantasma('mapa'),
     aoSair: () => sairDaIlha(),   // ✕ da Ilha: volta para onde ela foi aberta (PROMPT-132)
   }, MAPA_PG);
-  preCarregarQuadros(meuPersonagem());
+  preCarregarQuadros(meuPersonagem(), minhasCores());
   ligarEventos();
   atualizarContador();
   requestAnimationFrame(loop);
@@ -987,16 +991,24 @@ function definirPersonagens(j) {
 }
 const persValido = (id) => !!id && PERS.lista.some(p => p.id === id);
 const meuPersonagem = () => estado?.personagem || PERS.padrao;
+// 🎨 cores do personagem (PROMPT-158): { cabelo, blusa } — null quando as duas são a original (não vai para o banco)
+const urlSprite = (id, quadro, cores) => spriteComCor(PERS.pasta, id, quadro, cores);
+const minhasCores = () => (estado?.cores && !semCor(estado.cores) ? { ...estado.cores } : null);
+const corLiberada = (cor) => !CORES_DIVERTIDAS.includes(cor) || !!estado?.coresCompradas?.[cor];
+// brilho dourado de quem tem as 26 insígnias (Mestre ou Lenda)
+const temBrilho = (uid = sessao?.uid, r = null) => (uid === sessao?.uid ? meuTitulo() : tituloDe(uid, r)) >= 1;
 
-const pers = { primeira: false, sel: null, giro: 0, timer: 0, andarAte: 0, quadro: 0 };
+const pers = { primeira: false, sel: null, cores: null, compra: null, giro: 0, timer: 0, andarAte: 0, quadro: 0 };
 
 function abrirEscolhaPersonagem(primeira = false) {
   pers.primeira = primeira;
   pers.sel = meuPersonagem();
+  pers.cores = coresValidas(estado?.cores); pers.compra = null;   // 🎨 provando: só grava no Confirmar
   $('pers-grade').innerHTML = PERS.lista.map((p, i) => `
     <button class="jr-pers-cartao" data-pers="${esc(p.id)}" aria-label="Personagem ${i + 1}">
-      <img src="${urlQuadro('frente', -1, p.id)}" alt="" draggable="false"/>
+      <img src="${urlQuadro('frente', -1, p.id, pers.cores)}" alt="" draggable="false"/>
     </button>`).join('');
+  $('pers-img').classList.toggle('jr-brilho', temBrilho());
   $('pers-cancelar').hidden = primeira;
   $('pers-escolha').hidden = false;
   selecionarPersonagem(pers.sel);
@@ -1007,29 +1019,73 @@ function abrirEscolhaPersonagem(primeira = false) {
   pers.timer = setInterval(() => {
     if ($('pers-escolha').hidden) { clearInterval(pers.timer); return; }
     const dir = ['frente', 'direita', 'costas', 'esquerda'][pers.giro % 4];
-    if (performance.now() < pers.andarAte) { pers.quadro++; $('pers-img').src = urlQuadro(dir, pers.quadro, pers.sel); return; }
+    if (performance.now() < pers.andarAte) { pers.quadro++; $('pers-img').src = urlQuadro(dir, pers.quadro, pers.sel, pers.cores); return; }
     if ((t += 100) >= 800) { t = 0; pers.giro++; }
-    $('pers-img').src = urlQuadro(['frente', 'direita', 'costas', 'esquerda'][pers.giro % 4], -1, pers.sel);
+    $('pers-img').src = urlQuadro(['frente', 'direita', 'costas', 'esquerda'][pers.giro % 4], -1, pers.sel, pers.cores);
   }, 100);
 }
 
 function selecionarPersonagem(id) {
   if (!persValido(id)) return;
   pers.sel = id;
-  preCarregarQuadros(id);
+  preCarregarQuadros(id, pers.cores);
   for (const c of $('pers-grade').children) c.classList.toggle('atual', c.dataset.pers === id);
-  $('pers-img').src = urlQuadro(['frente', 'direita', 'costas', 'esquerda'][pers.giro % 4], -1, id);
+  $('pers-img').src = urlQuadro(['frente', 'direita', 'costas', 'esquerda'][pers.giro % 4], -1, id, pers.cores);
+  renderCoresPers();   // no menino de boné a linha vira "Boné"; na menina de tranças, "Jaqueta"
+}
+
+// 🎨 as duas linhas de bolinhas (PROMPT-158): cabelo (as divertidas com 🔒 até comprar) e blusa
+function renderCoresPers() {
+  const c = pers.cores, moedas = Number(estado?.pets?.moedas) || 0;
+  const bolinha = (parte, id, cor, tranca) => `<button class="jr-pers-cor${c[parte] === id ? ' sel' : ''}${id === 'original' ? ' orig' : ''}" data-pers-cor="${parte}:${id}"
+      title="${esc(NOME_COR[id])}" aria-label="${parte === 'cabelo' ? 'Cabelo' : 'Blusa'} ${esc(NOME_COR[id])}${tranca ? ` (${PRECO_COR_DIVERTIDA} moedas)` : ''}"${cor ? ` style="--c:${cor}"` : ''}>${tranca ? '<i>🔒</i>' : ''}</button>`;
+  const linha = (titulo, parte, ids, cor) => `<div class="jr-pers-cores-linha"><b>${titulo}</b><div>${ids.map(id => bolinha(parte, id, cor(id), !corLiberada(id) && parte === 'cabelo')).join('')}</div></div>`;
+  const k = pers.compra, falta = Math.max(0, PRECO_COR_DIVERTIDA - moedas);
+  $('pers-cores').innerHTML = linha(pers.sel === 'menino_bone' ? 'Boné' : 'Cabelo', 'cabelo', ['original', ...Object.keys(CORES_CABELO)], id => CORES_CABELO[id]?.[1]) +
+    linha(pers.sel === 'menina_trancas' ? 'Jaqueta' : 'Blusa', 'blusa', ['original', ...Object.keys(CORES_BLUSA)], id => CORES_BLUSA[id]) +
+    (k ? `<div class="jr-pers-compra"><span>Comprar ${pers.sel === 'menino_bone' ? 'boné' : 'cabelo'} ${esc(NOME_COR[k])} por ${PRECO_COR_DIVERTIDA} 🪙?</span>
+      ${falta ? `<button class="lj-comprar" disabled>Faltam ${falta}</button>` : '<button class="jr-btn" data-pers-comprar>Comprar</button>'}<button class="jr-btn jr-btn-sec" data-pers-nao>Agora não</button></div>` : '');
+}
+// prova a cor na hora (o personagem grande e os cartões); a divertida ainda não comprada pergunta antes
+function escolherCorPers(parte, id) {
+  if (parte === 'cabelo' ? !(id === 'original' || CORES_CABELO[id]) : !(id === 'original' || CORES_BLUSA[id])) return;
+  if (parte === 'cabelo' && !corLiberada(id)) { pers.compra = id; renderCoresPers(); tocar('clique'); return; }
+  pers.compra = null;
+  pers.cores = { ...pers.cores, [parte]: id };
+  pintarProvaPers();
+  tocar('clique');
+}
+function pintarProvaPers() {
+  preCarregarQuadros(pers.sel, pers.cores);
+  $('pers-img').src = urlQuadro(['frente', 'direita', 'costas', 'esquerda'][pers.giro % 4], -1, pers.sel, pers.cores);
+  for (const b of $('pers-grade').children) b.querySelector('img').src = urlQuadro('frente', -1, b.dataset.pers, pers.cores);
+  renderCoresPers();
+}
+// compra na hora (desconta e grava no mesmo update); fica liberada para sempre, em todos os personagens
+function comprarCorPers() {
+  const cor = pers.compra, ps = estado?.pets, moedas = Number(ps?.moedas) || 0;
+  if (!cor || !CORES_DIVERTIDAS.includes(cor) || corLiberada(cor) || moedas < PRECO_COR_DIVERTIDA) return;
+  ps.moedas = moedas - PRECO_COR_DIVERTIDA;
+  estado.coresCompradas = { ...estado.coresCompradas, [cor]: true };
+  gravar({ 'pets/moedas': ps.moedas, [`cores_compradas/${cor}`]: true });
+  pers.compra = null;
+  pers.cores = { ...pers.cores, cabelo: cor };
+  pintarProvaPers();
+  tocar('vitoria');
 }
 
 function confirmarPersonagem() {
-  const id = pers.sel;
+  const id = pers.sel, cores = coresValidas(pers.cores);
   $('pers-escolha').hidden = true;
   clearInterval(pers.timer);
   if (!persValido(id)) return;
-  if (id !== estado.personagem) {
+  if (!corLiberada(cores.cabelo)) cores.cabelo = 'original';
+  if (id !== estado.personagem || JSON.stringify(cores) !== JSON.stringify(coresValidas(estado.cores))) {
     estado.personagem = id;
-    gravar({ personagem: id });
-    enviarOnline({ personagem: id });
+    estado.cores = cores;
+    gravar({ personagem: id, cores: minhasCores() });
+    enviarOnline({ personagem: id, cores: minhasCores() });
+    preCarregarQuadros(id, minhasCores());
     desenharJogador();
     if (!$('pergunta').hidden) $('perg-jog').src = urlQuadro('direita', -1);
   }
@@ -1958,8 +2014,22 @@ function soltarParticula(tipo, seg, st) {
   setTimeout(tirar, 2200);
   $('cena-atores').appendChild(s);
 }
+// ✦ estrelinhas douradas em volta de mim (Mestre/Lenda): uma a cada ~0,5 s, só no mapa
+let estrelaT = 0;
+function estrelinhasMestre(agora) {
+  const el = $('jogador');
+  if (!temBrilho() || semMovimento() || agora - estrelaT < 500 || el.style.visibility === 'hidden') return;
+  estrelaT = agora;
+  const alt = PERS.altura * escalaSpriteCena(), s = document.createElement('span');
+  s.className = 'jr-estrela-mestre'; s.textContent = '✦';
+  Object.assign(s.style, { left: jog.x + (Math.random() - 0.5) * alt * 0.55 + 'px', top: jog.y - alt * (0.15 + Math.random() * 0.75) + 'px',
+    fontSize: alt * (0.08 + Math.random() * 0.05) + 'px', zIndex: Math.round(jog.y) + 1 });
+  $('cena-atores').appendChild(s);
+  setTimeout(() => s.remove(), 1300);
+}
 function efeitosDoMapa() {
   const agora = performance.now(), pet = estado?.pets?.ativo, c = pet && cuidadosDe(pet);
+  estrelinhasMestre(agora);
   if (seguidor && c && !$('pet').hidden) emitirEfeito(seguidor, c.efeito, nivelPet(pet) >= 3, agora);
   for (const cg of colegas.values()) if (!cg.el.hidden && cg.pet) emitirEfeito(cg.seg, cg.reg?.pet_efeito, Number(cg.reg?.pet_nivel) >= 3, agora);
 }
@@ -2600,7 +2670,7 @@ function sentarPesca(ponto) {
   jog.x = ponto.x; jog.y = ponto.y;   // o pet vem sentar ao lado
   $('jogador').style.visibility = 'hidden';
   const img = document.createElement('img');
-  img.className = 'jr-pesca-img'; img.alt = ''; img.draggable = false;
+  img.className = `jr-pesca-img${temBrilho() ? ' jr-brilho' : ''}`; img.alt = ''; img.draggable = false;
   const larg = sp.largura * s, alt = sp.altura * s;
   Object.assign(img.style, { left: (ponto.x - (dir > 0 ? sp.ancora[0] : sp.largura - sp.ancora[0]) * s) + 'px', top: (ponto.y - sp.ancora[1] * s) + 'px',
     width: larg + 'px', height: alt + 'px', zIndex: Math.round(ponto.y) + 1, transform: dir < 0 ? 'scaleX(-1)' : '' });
@@ -2632,7 +2702,7 @@ function pescaPose(pose) {
   if (!pesca) return;
   pesca.pose = pose;
   atualizarBotaoPuxar();
-  const src = `${PERS.pasta}/${meuPersonagem()}/pesca-${pose}.webp`;
+  const src = urlSprite(meuPersonagem(), `pesca-${pose}`, minhasCores());
   if (pesca.img.getAttribute('src') !== src) pesca.img.src = src;
   desenharLinhaPesca();
 }
@@ -2827,14 +2897,14 @@ const medalhaPesca = (uid) => (premiosPesca[uid] ? ' ' + premiosPesca[uid] : '')
 async function somarPontosPesca(pts) {
   if (!pts || !carregouProgresso || !entraNoRanking()) return;
   try {
-    await update(ref(db, `${basePesca()}/${semanaPesca()}/${sessao.uid}`), { pontos: increment(pts), nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() });
+    await update(ref(db, `${basePesca()}/${semanaPesca()}/${sessao.uid}`), { pontos: increment(pts), nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), ts: Date.now() });
   } catch (e) { console.warn('[jogo-revisao] ranking de pesca indisponível', e?.code || e); }
 }
 async function lerRankingPesca(semana) {
   const s = await get(ref(db, `${basePesca()}/${semana}`));
   const v = s.exists() ? s.val() || {} : {};
   return Object.entries(v).filter(([uid, r]) => visivelNoRanking(uid, r))
-    .map(([uid, r]) => ({ uid, nome: nomeVisivel(r.nome) || 'Aluno', turma: r.turma || '', pers: r.pers || null, pontos: Number(r.pontos) || 0, ts: Number(r.ts) || 0 }))
+    .map(([uid, r]) => ({ uid, nome: nomeVisivel(r.nome) || 'Aluno', turma: r.turma || '', pers: r.pers || null, cores: r.cores || null, pontos: Number(r.pontos) || 0, ts: Number(r.ts) || 0 }))
     .filter(r => r.pontos > 0).sort((a, b) => b.pontos - a.pontos || a.ts - b.ts);
 }
 // Ao entrar no jogo: medalhas da semana anterior (e o aviso para quem ganhou, uma vez)
@@ -3057,7 +3127,7 @@ async function entrarOnline() {
     if (s.exists() && s.val()) { apelido = String(s.val()); apelidoAluno = apelido; }
   } catch (_) {}
   await iniciarOnline({ uid: sessao.uid, teste, dados: {
-    apelido, turma: sessao.turma || '', pet: estado.pets?.ativo || null, ...(estado.pets?.ativo ? visualOnline(estado.pets.ativo) : {}), personagem: meuPersonagem(), mapa: 'geral', local: 'geral', x: 0, y: 0, dir: 'frente', titulo: meuTitulo(), sem_convites: estado.semConvites || null,
+    apelido, turma: sessao.turma || '', pet: estado.pets?.ativo || null, ...(estado.pets?.ativo ? visualOnline(estado.pets.ativo) : {}), personagem: meuPersonagem(), cores: minhasCores(), mapa: 'geral', local: 'geral', x: 0, y: 0, dir: 'frente', titulo: meuTitulo(), sem_convites: estado.semConvites || null,
   } });
   if (!$('tela-geral').hidden) ouvirGeral();
   else if (ehPraca()) entrarNoMapaOnline('praca');   // o jogo começou na Praça antes do online ficar pronto
@@ -3114,17 +3184,18 @@ function criarColega(uid, r) {
   sombra.hidden = petImg.hidden = true;
   colegas.set(uid, c);
   definirPetColega(c, r.pet_fora ? null : r.pet, r.pet_forma);
-  definirPersColega(c, r.personagem);
+  definirPersColega(c, r.personagem, r.cores);
   c.seg.colocar(c.x, c.y);
   return c;
 }
 
 // Colega sem o campo (ou com um id desconhecido) aparece com o personagem padrão
-function definirPersColega(c, id) {
+function definirPersColega(c, id, cores) {
   id = persValido(id) ? id : PERS.padrao;
-  if (c.pers === id) return;
-  c.pers = id;
-  preCarregarQuadros(id);
+  cores = semCor(cores) ? null : coresValidas(cores);
+  if (c.pers === id && JSON.stringify(c.cores) === JSON.stringify(cores)) return;
+  c.pers = id; c.cores = cores;
+  preCarregarQuadros(id, cores);
 }
 
 const petAtual = (pet) => (pet === 'capivara' ? 'elefante' : pet);   // registros antigos (antes do elefante)
@@ -3144,7 +3215,7 @@ function atualizarColega(c, r) {
   pintarNomeColega(c.nome, c.uid, r, Number(r.pet_nivel) >= 2 ? ` ❤️${Number(r.pet_nivel)}` : '');
   definirPetColega(c, r.pet_fora ? null : r.pet, r.pet_forma);
   aplicarTinta(c.petImg, r.pet_tinta, true);
-  definirPersColega(c, r.personagem);
+  definirPersColega(c, r.personagem, r.cores);
   if (r.dir) c.dir = r.dir;
   const nx = Number(r.x) || 0, ny = Number(r.y) || 0;
   if (Math.hypot(nx - c.x, ny - c.y) > 300) { c.x = nx; c.y = ny; c.alvo = null; c.seg.colocar(nx, ny); }   // entrou agora / pulou: sem deslizar
@@ -3175,8 +3246,10 @@ function atualizarColegas(dt) {
       c.tQuadro += dt * 1000;
       if (c.tQuadro >= T_QUADRO) { c.tQuadro = 0; c.quadro = (c.quadro + 1) % (QUADROS_PERSONAGEM[c.dir] || 4); }
     } else c.quadro = -1;   // colega parado: pernas juntas
-    const src = urlQuadro(DIRECOES.includes(c.dir) ? c.dir : 'frente', c.quadro, c.pers);
+    const src = urlQuadro(DIRECOES.includes(c.dir) ? c.dir : 'frente', c.quadro, c.pers, c.cores);
     if (c.el.dataset.src !== src) { c.el.src = src; c.el.dataset.src = src; }
+    const brilho = temBrilho(c.uid, c.reg);
+    c.el.classList.toggle('jr-brilho', brilho);
     c.el.hidden = c.nome.hidden = false;
     Object.assign(c.el.style, { left: c.x + 'px', top: c.y + 'px', height: PERS.altura * esp + 'px', zIndex: Math.round(c.y) });
     // colega cavando ou arrancando mato: a pose no lugar da imagem de andar (quadros 2..6 em loop enquanto durar)
@@ -3184,7 +3257,8 @@ function atualizarColegas(dt) {
     const cavando = !!sp;
     if (cavando) {
       if (!c.cavarEl) { c.cavarEl = document.createElement('img'); c.cavarEl.className = 'jr-cavar-pose jr-colega'; c.cavarEl.alt = ''; c.cavarEl.draggable = false; $('cena-palco').appendChild(c.cavarEl); }
-      poseAcao(sp, c.reg.acao, c.cavarEl, c.pers, c.x, c.y, 2 + Math.floor(agora / (c.reg.acao === 'mato' ? 250 : MS_CAVAR)) % 5, !!c.reg.acao_esq, esp);
+      poseAcao(sp, c.reg.acao, c.cavarEl, c.pers, c.x, c.y, 2 + Math.floor(agora / (c.reg.acao === 'mato' ? 250 : MS_CAVAR)) % 5, !!c.reg.acao_esq, esp, c.cores);
+      c.cavarEl.classList.toggle('jr-brilho', brilho);
     } else if (c.cavarEl) { c.cavarEl.remove(); c.cavarEl = null; }
     c.el.style.visibility = cavando ? 'hidden' : '';
     // etiqueta com o apelido: 11 px na tela, qualquer que seja o zoom da câmera
@@ -3231,7 +3305,7 @@ function abrirCartaoColega(c) {
   const nome = rotuloColega(c.uid, r), turma = nomeVisivel(r.turma);
   const pet = petValido(r.pet) ? r.pet : null;
   el.innerHTML = `
-    ${bustoHtml(urlQuadro('frente', -1, c.pers || PERS.padrao), 'jr-busto-colega', BUSTO_PERS)}
+    ${bustoHtml(urlQuadro('frente', -1, c.pers || PERS.padrao, c.cores), `jr-busto-colega${temBrilho(c.uid, c.reg) ? ' jr-brilho' : ''}`, BUSTO_PERS)}
     <span class="jr-colega-info">
       <b>${nomeT(c.uid, nome, r)}${turma ? ` <small>· ${esc(turma)}</small>` : ''}</b>
       ${tituloDe(c.uid, r) ? `<span class="jr-titulo-mestre ${tituloDe(c.uid, r) === 2 ? 'lenda' : ''}">${NOME_TITULO[tituloDe(c.uid, r)]}</span>` : ''}
@@ -3767,16 +3841,18 @@ function atualizarBotaoCalado() {   // 💬/🤐 ao lado do nome do pet, na tela
   b.classList.toggle('desligado', petCalado);
 }
 
-const quadrosCarregados = new Set();   // personagens já pré-carregados
-function preCarregarQuadros(id) {
-  if (quadrosCarregados.has(id)) return;
-  quadrosCarregados.add(id);
-  for (const d of DIRECOES) for (let i = -1; i < QUADROS_PERSONAGEM[d]; i++) { const im = new Image(); im.src = urlQuadro(d, i, id); }   // parado + quadros de andar
+const quadrosCarregados = new Set();   // personagens (com as cores) já pré-carregados
+function preCarregarQuadros(id, cores = null) {
+  const k = `${id}|${JSON.stringify(coresValidas(cores))}`;
+  if (quadrosCarregados.has(k)) return;
+  quadrosCarregados.add(k);
+  for (const d of DIRECOES) for (let i = -1; i < QUADROS_PERSONAGEM[d]; i++) { const im = new Image(); im.src = urlQuadro(d, i, id, cores); }   // parado + quadros de andar (com cor: já pinta)
   { const im = new Image(); im.onerror = () => semComemorando.add(id); im.src = `${PERS.pasta}/${id}/comemorando.webp`; }   // pose de acerto (se já existir)
 }
 // quadro −1 = parado (pernas juntas); 0..N−1 = ciclo de andar (o % cobre a troca de direção no meio do passo)
-const urlQuadro = (dir, q, id = meuPersonagem()) =>
-  `${PERS.pasta}/${id}/${dir}-${q < 0 ? 'parado' : q % (QUADROS_PERSONAGEM[dir] || 1) + 1}.webp`;
+// sem id: o meu personagem com as minhas cores; com id: as cores passadas (colega, registro, guarda-roupa)
+const urlQuadro = (dir, q, id = null, cores = null) =>
+  urlSprite(id || meuPersonagem(), `${dir}-${q < 0 ? 'parado' : q % (QUADROS_PERSONAGEM[dir] || 1) + 1}`, id ? cores : minhasCores());
 
 function mostrarTela(id) {
   for (const t of document.querySelectorAll('.jr-tela')) t.hidden = t.id !== id;
@@ -4890,6 +4966,7 @@ function desenharJogador() {
   const el = $('jogador');
   const src = urlQuadro(jog.dir, jog.quadro);
   if (el.dataset.src !== src) { el.src = src; el.dataset.src = src; }
+  el.classList.toggle('jr-brilho', temBrilho());
   el.style.left = jog.x + 'px';
   el.style.top = jog.y + 'px';
   el.style.height = PERS.altura * escalaSpriteCena() + 'px';
@@ -6344,7 +6421,7 @@ const visivelNoMural = (uid, r) => !!r && !ALUNOS_TESTE.includes(uid) && !/PROFE
 const lerNo = async (caminho) => { const s = await get(ref(db, caminho)); return s.exists() ? s.val() || {} : {}; };
 async function carregarAbaMural(aba) {
   const lista = [];
-  const poe = (uid, r, valor, rotulo, extra = {}) => { if (valor > 0) lista.push({ uid, nome: nomeVisivel(r.nome) || 'Aluno', turma: r.turma || '', valor, rotulo, pers: r.pers || null, ...extra }); };
+  const poe = (uid, r, valor, rotulo, extra = {}) => { if (valor > 0) lista.push({ uid, nome: nomeVisivel(r.nome) || 'Aluno', turma: r.turma || '', valor, rotulo, pers: r.pers || null, cores: r.cores || null, ...extra }); };
   const bim = bimestreJogos();
   if (aba === 'insignias') {
     const todos = await lerNo(`${basePraca()}/insignias`);
@@ -6360,7 +6437,7 @@ async function carregarAbaMural(aba) {
   if (aba === 'programe') {   // desafio do dia: menos blocos; empate: menos tempo para montar
     for (const [uid, r] of Object.entries(await lerNo(`${basePraca()}/programe/dia/${diaLocal()}`))) if (teste || visivelNoMural(uid, r)) {
       const b = Number(r.blocos) || 0, t = Math.min(999, Number(r.tempo_s) || 0);
-      if (b > 0) lista.push({ uid, nome: nomeVisivel(r.nome) || 'Aluno', turma: r.turma || '', valor: 100000 - b * 1000 - t, rotulo: `${b} blocos · ${t} s`, pers: r.pers || null });
+      if (b > 0) lista.push({ uid, nome: nomeVisivel(r.nome) || 'Aluno', turma: r.turma || '', valor: 100000 - b * 1000 - t, rotulo: `${b} blocos · ${t} s`, pers: r.pers || null, cores: r.cores || null });
     }
     return ordenarRanking(lista);
   }
@@ -6422,13 +6499,13 @@ async function renderMural() {
   try { [, lista] = await Promise.all([dadosMural('insignias').catch(() => []), dadosMural(aba)]); }   // insígnias: rostinho de cada um
   catch (e) { console.warn('[jogo-revisao] mural', aba, e?.code || e); if (mural.aba === aba) $('mural-lista').innerHTML = '<li class="ml-vazio">Não deu para carregar agora.</li>'; return; }
   if (mural.aba !== aba || $('mural').hidden) return;
-  const persDe = Object.fromEntries((mural.cache.insignias?.lista || []).map(r => [r.uid, r.pers]));
+  const persDe = Object.fromEntries((mural.cache.insignias?.lista || []).map(r => [r.uid, r])), coresR = (r) => (r.pers ? r.cores : persDe[r.uid]?.cores);
   const filtrada = mural.filtro === 'turma' ? ordenarRanking(lista.filter(r => r.turma === sessao.turma), (a, b) => (b.d ?? b.vitorias ?? b.partidas ?? 0) - (a.d ?? a.vitorias ?? a.partidas ?? 0)) : lista;
   const medalha = (pos) => ['🥇', '🥈', '🥉'][pos - 1] || `${pos}º`;
   $('mural-lista').innerHTML = filtrada.slice(0, 10).map(r => {
-    const pers = r.pers || persDe[r.uid];
+    const pers = r.pers || persDe[r.uid]?.pers;
     return `<li class="${r.uid === sessao.uid ? 'eu' : ''}"><span class="ml-pos">${medalha(r.pos)}</span>
-      ${pers && persValido(pers) ? bustoHtml(urlQuadro('frente', -1, pers), 'ml-rosto', BUSTO_PERS) : '<span class="ml-rosto ml-sem">🙂</span>'}
+      ${pers && persValido(pers) ? bustoHtml(urlQuadro('frente', -1, pers, coresR(r)), `ml-rosto${temBrilho(r.uid, r) ? ' jr-brilho' : ''}`, BUSTO_PERS) : '<span class="ml-rosto ml-sem">🙂</span>'}
       <span class="ml-nome">${nomeT(r.uid, r.nome)}${esc(medalhaPesca(r.uid))} <small>${esc(r.turma)}</small></span><b>${esc(r.rotulo)}</b></li>`;
   }).join('') || '<li class="ml-vazio">Ninguém pontuou aqui ainda.</li>';
   const eu = filtrada.find(r => r.uid === sessao.uid);
@@ -6439,7 +6516,7 @@ async function renderMural() {
 async function publicarResumoInsignias() {
   if (!carregouProgresso || !entraNoRanking()) return;
   const { conquistadas, douradas } = contarInsignias();
-  try { await set(ref(db, `${basePraca()}/insignias/${sessao.uid}`), { n: conquistadas, d: douradas, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now(),
+  try { await set(ref(db, `${basePraca()}/insignias/${sessao.uid}`), { n: conquistadas, d: douradas, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), ts: Date.now(),
     m: estado.mestre?.data || null, l: estado.lenda?.data || null }); }
   catch (e) { console.warn('[jogo-revisao] resumo do mural indisponível', e?.code || e); }
 }
@@ -6774,7 +6851,7 @@ async function desafiarColega(c, modo = 'contas', aposta = 0) {
   aposta = apostasLigadas() && VALORES_APOSTA.includes(Number(aposta)) && Number(aposta) <= saldoMoedas() ? Number(aposta) : 0;
   const C = cfgDesafio(), base = basePraca();
   const id = push(ref(db, `${base}/duelos`)).key;
-  const eu = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), vencidos: vencidosMeus(), premio: vale(estado.desafiosDia, diaLocal(), c.uid), ...dadosCorrida() };
+  const eu = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), vencidos: vencidosMeus(), premio: vale(estado.desafiosDia, diaLocal(), c.uid), ...dadosCorrida() };
   const nomeOutro = nomeCurto(c.uid, c.reg?.apelido);
   try {
     const m = modo === 'corrida' || modo === 'damas' ? modo : 'contas';
@@ -6853,7 +6930,7 @@ async function enviarContraproposta(valor) {
   remove(ref(db, `${base}/convites/${sessao.uid}`)).catch(() => {});
   if (duelo || !ehPraca()) return;
   if (cv.modo === 'corrida' && petFora()) { avisoPetFora(); try { await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), deConvitePara('recusado')); } catch (_) {} return; }
-  const b = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), vencidos: vencidosMeus(), premio: cv.premio, ...dadosCorrida() };
+  const b = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), vencidos: vencidosMeus(), premio: cv.premio, ...dadosCorrida() };
   try {
     const t = await runTransaction(ref(db, `${base}/duelos/${cv.id}`), (cur) => {
       if (cur === null) return null;   // ainda não está no aparelho: o Firebase busca e repete
@@ -6924,7 +7001,7 @@ async function responderConvite(aceitar, expirou = false) {
   }
   if (cv.aposta > saldoMoedas()) { avisoPet('Você não tem moedas para essa aposta.'); try { await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), deConvitePara('recusado')); } catch (_) {} return; }
   try {
-    await update(ref(db, `${base}/duelos/${cv.id}/b`), { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), vencidos: vencidosMeus(), premio: cv.premio, ...dadosCorrida() });
+    await update(ref(db, `${base}/duelos/${cv.id}/b`), { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), vencidos: vencidosMeus(), premio: cv.premio, ...dadosCorrida() });
     const t = await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), deConvitePara('aceito'));
     if (t.snapshot.val() !== 'aceito') { avisoPet('O convite expirou. Fica para a próxima! ⚔️'); return; }
   } catch (e) { console.warn('[jogo-revisao] aceitar desafio', e?.code || e); avisoPet('Não deu para aceitar agora.'); return; }
@@ -6987,8 +7064,8 @@ function comecarDuelo(d) {
   if (ehPraca() && meu) caminharNaTrilha(meu[0], meu[1], () => { jog.dir = du.souA ? 'direita' : 'esquerda'; desenharJogador(); });
   $('dl-nomeL').textContent = 'Você';
   $('dl-nomeR').innerHTML = nomeT(du.outro.uid, nomeCurto(du.outro.uid, du.outro.nome));
-  $('dl-bustoL').innerHTML = bustoHtml(urlQuadro('direita', -1, persValido(du.eu.pers) ? du.eu.pers : PERS.padrao), 'dl-busto-img', BUSTO_PERS);
-  $('dl-bustoR').innerHTML = bustoHtml(urlQuadro('esquerda', -1, persValido(du.outro.pers) ? du.outro.pers : PERS.padrao), 'dl-busto-img', BUSTO_PERS);
+  $('dl-bustoL').innerHTML = bustoHtml(urlQuadro('direita', -1, persValido(du.eu.pers) ? du.eu.pers : PERS.padrao, du.eu.cores), `dl-busto-img${temBrilho() ? ' jr-brilho' : ''}`, BUSTO_PERS);
+  $('dl-bustoR').innerHTML = bustoHtml(urlQuadro('esquerda', -1, persValido(du.outro.pers) ? du.outro.pers : PERS.padrao, du.outro.cores), `dl-busto-img${temBrilho(du.outro.uid, du.outro) ? ' jr-brilho' : ''}`, BUSTO_PERS);
   $('dl-conta').textContent = 'Prepare-se…';
   $('dl-ops').innerHTML = '';
   $('dl-msg').textContent = du.eu.premio ? '' : 'Este desafio não vale prêmio para você hoje (limite do dia).';
@@ -7184,7 +7261,7 @@ function aplicarFimDuelo(d) {
     patch.desafios_dia = estado.desafiosDia;
     if (moedas) { estado.pets.moedas = (Number(estado.pets.moedas) || 0) + moedas; patch['pets/moedas'] = estado.pets.moedas; registrarGanho('desafio', moedas, patch); }
     if (pontos && entraNoRanking()) update(ref(db, `${basePraca()}/desafios/${semanaPesca()}/${eu}`), { pontos: increment(pontos), vitorias: increment(res === 'venceu' ? 1 : 0),
-      nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() }).catch(() => {});
+      nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), ts: Date.now() }).catch(() => {});
     delete mural.cache.desafios;
   }
   const txtAposta = apostaNoFim(d, patch);
@@ -7561,7 +7638,7 @@ function fimDamasOnline(d) {
   dm.fim = { vencedor: f.vencedor, motivo: f.motivo };
   clearInterval(dm.timer);
   if (res === 'venceu' && (entraNoRanking() || teste)) {
-    update(ref(db, `${basePraca()}/damas/${semanaPesca()}/${eu}`), { vitorias: increment(1), nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() })
+    update(ref(db, `${basePraca()}/damas/${semanaPesca()}/${eu}`), { vitorias: increment(1), nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), ts: Date.now() })
       .catch(e => console.warn('[jogo-revisao] ranking de damas', e?.code || e));
     delete mural.cache.damas;
   }
@@ -8738,10 +8815,10 @@ async function abrirMaquina(m) {
   $('maquina').hidden = false;
   const [rec, top] = await Promise.all([lerRecorde(m.id), top3DaTurma(m.id).catch(() => [])]);
   if ($('maquina').hidden) return;
-  const pers = (r) => r.pers || (mural.cache.insignias?.lista || []).find(x => x.uid === r.uid)?.pers;
+  const doMural = (r) => (r.pers ? r : (mural.cache.insignias?.lista || []).find(x => x.uid === r.uid) || {}), pers = (r) => doMural(r).pers;
   $('mq-corpo').innerHTML = `<p class="mq-rec">Seu recorde: <b>${rec ? `Nível ${rec}` : '—'}</b></p>
     <p class="mq-sub">🏆 Top 3 ${TURMAS_PLACAR.includes(sessao.turma) ? `da ${esc(sessao.turma)}` : 'da escola'}</p>
-    <ol class="mq-top">${top.map(r => `<li><span>${['🥇', '🥈', '🥉'][r.pos - 1] || r.pos + 'º'}</span>${persValido(pers(r)) ? bustoHtml(urlQuadro('frente', -1, pers(r)), 'ml-rosto', BUSTO_PERS) : '<span class="ml-rosto ml-sem">🙂</span>'}<b>${esc(r.nome)}</b><em>${esc(r.rotulo)}</em></li>`).join('') || '<li class="mq-vazio">Ninguém jogou ainda.</li>'}</ol>
+    <ol class="mq-top">${top.map(r => `<li><span>${['🥇', '🥈', '🥉'][r.pos - 1] || r.pos + 'º'}</span>${persValido(pers(r)) ? bustoHtml(urlQuadro('frente', -1, pers(r), doMural(r).cores), 'ml-rosto', BUSTO_PERS) : '<span class="ml-rosto ml-sem">🙂</span>'}<b>${esc(r.nome)}</b><em>${esc(r.rotulo)}</em></li>`).join('') || '<li class="mq-vazio">Ninguém jogou ainda.</li>'}</ol>
     <p class="mq-nota">${taxaFliperama()} (até ${comMult(FLIPER.moedas_dia ?? 10)} por dia no fliperama)</p>`;
 }
 
@@ -8899,7 +8976,7 @@ async function entrarAoVivo(codigo, souHost = false) {
   codigo = String(codigo || '').trim().toUpperCase();
   if (!codigoValido(codigo)) { erroAV('O código tem 4 letras/números.'); return; }
   let r;
-  try { r = await entrarNaSala(baseAV(), codigo, { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem() }); }
+  try { r = await entrarNaSala(baseAV(), codigo, { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores() }); }
   catch (e) { console.warn('[jogo-revisao] entrar na sala', e?.code || e); erroAV('Não deu para entrar agora.'); return; }
   if (r.erro) { erroAV(r.erro); return; }
   av = { codigo, host: souHost ? new Anfitriao(baseAV(), codigo, { auto: true }) : null, sala: r.sala, vista: -1, respondi: -1, registradas: new Set(), premio: false };
@@ -8951,7 +9028,7 @@ function renderAoVivo() {
   if (s.estado === 'fim') {
     const todos = placar(s.jogadores), meu = todos.find(j => j.uid === eu);
     aplicarPremioAV(s, meu);
-    avTela(`<div class="av-fim"><h3>🏁 Fim da Tabuada ao vivo!</h3><div class="av-podio">${[1, 0, 2].map(k => todos[k] ? `<div class="p${k + 1}">${persValido(todos[k].pers) ? bustoHtml(urlQuadro('frente', -1, todos[k].pers), 'av-busto', BUSTO_PERS) : '<span class="av-busto ml-sem">🙂</span>'}
+    avTela(`<div class="av-fim"><h3>🏁 Fim da Tabuada ao vivo!</h3><div class="av-podio">${[1, 0, 2].map(k => todos[k] ? `<div class="p${k + 1}">${persValido(todos[k].pers) ? bustoHtml(urlQuadro('frente', -1, todos[k].pers, todos[k].cores), `av-busto${temBrilho(todos[k].uid, todos[k]) ? ' jr-brilho' : ''}`, BUSTO_PERS) : '<span class="av-busto ml-sem">🙂</span>'}
         <b>${['🥇', '🥈', '🥉'][k]} ${nomeT(todos[k].uid, nomeCurto(todos[k].uid, todos[k].nome))}</b><small>${todos[k].pontos} pts</small><i></i></div>` : '').join('')}</div>
       <p class="av-eu">${meu ? `Você ficou em ${meu.pos}º de ${todos.length} · ${meu.pontos} pts${premioDoPodio(meu.pos) ? ` · +${comMult(premioDoPodio(meu.pos))} 🪙` : ''}` : ''}</p>
       <div class="av-linha"><button class="jr-btn jr-btn-ouro" data-av="sair">OK</button></div></div>`);
@@ -9146,7 +9223,7 @@ function lerCasinha(v) {
   const c = v && typeof v === 'object' ? v : {};
   const moveis = (Array.isArray(c.moveis) ? c.moveis : Object.values(c.moveis || {}))
     .filter(m => m && typeof m.id === 'string' && Number.isFinite(Number(m.x)) && Number.isFinite(Number(m.y)))
-    .map(m => ({ id: m.id, x: Number(m.x), y: Number(m.y), vista: String(m.vista || ''), espelho: !!m.espelho, cor: typeof m.cor === 'string' ? m.cor : '' }));
+    .map(m => ({ id: m.id, x: Number(m.x), y: Number(m.y), vista: String(m.vista || ''), espelho: !!m.espelho, cor: typeof m.cor === 'string' ? m.cor : '', tam: Number(m.tam) || 1 }));
   const guardados = {};
   for (const [id, n] of Object.entries(c.guardados || {})) if (Number(n) > 0) guardados[id] = Number(n);
   return { guardados, moveis, cama_gratis: !!c.cama_gratis, kit: !!c.kit, quadros: !!c.quadros, publicada: !!c.publicada,   // quadros: os 1ºs quadrinhos já foram pendurados
@@ -9162,8 +9239,10 @@ const qtdCasa = (id) => Object.entries(estado.casinha?.guardados || {}).reduce((
 // tamanho do móvel na vista dele (px lógicos)
 function tamMovel(m) {
   const it = itemCasa(m.id);
-  return tamPelaLargura(Number(it.largura) || 100, imgMovel(m.id, vistaBase(it)), imgMovel(m.id, m.vista));
+  return tamPelaLargura((Number(it.largura) || 100) * tamValidoCasa(it, m.tam), imgMovel(m.id, vistaBase(it)), imgMovel(m.id, m.vista));
 }
+// 📏 os de chão e os tapetes mudam de tamanho (mesmos passos da Exposição); os de parede não (quadros e quadrinhos)
+const tamValidoCasa = (it, t) => (it && it.tipo !== 'parede' && TAMS_EXPO.includes(Number(t)) ? Number(t) : 1);
 // base retangular de um móvel de chão (o personagem e o pet desviam dela)
 function baseMovel(m) {
   if (itemCasa(m.id)?.tipo !== 'chao') return null;
@@ -9280,7 +9359,7 @@ function irParaCasa() {
   else transicao(() => abrirCasinha(null, volta));
 }
 const mapaComCasa = () => cena?.tipo === 'mapa' && (Number(cena.n) > 0 || cena.n === 'praca');   // mapas 1–13 e Praça
-const limparMovel = (m) => ({ id: m.id, x: Math.round(m.x), y: Math.round(m.y), vista: m.vista, espelho: !!m.espelho, ...(m.cor ? { cor: m.cor } : {}) });   // 🎨 vai também na cópia pública
+const limparMovel = (m) => ({ id: m.id, x: Math.round(m.x), y: Math.round(m.y), vista: m.vista, espelho: !!m.espelho, ...(m.cor ? { cor: m.cor } : {}), ...(m.tam && m.tam !== 1 ? { tam: m.tam } : {}) });   // 🎨 📏 vão também na cópia pública
 // saiu da casinha (outra cena): o pet volta ao normal
 function fecharCasinha() {
   if (!cs) return;
@@ -10093,6 +10172,32 @@ function trocarCorMovel(cor) {
   for (const b of $('cs-cores').children) b.classList.toggle('sel', b.dataset.cor === (m.cor || ''));
   tocar('clique');
 }
+// 📏 abre ➖ 100% ➕ (como o 🎨 abre as cores); muda na hora e grava no ✔ Pronto
+function abrirTamMovel() {
+  const el = $('cs-tam');
+  if (!el.hidden) { el.hidden = true; return; }
+  pintarTamMovel();
+  el.hidden = false;
+  posicionarFerrCasa();
+}
+function pintarTamMovel() {
+  const m = cs?.sel, t = m ? tamValidoCasa(itemCasa(m.id), m.tam) : 1, i = TAMS_EXPO.indexOf(t);
+  $('cs-tam-v').textContent = Math.round(t * 100) + '%';
+  $('cs-tam').querySelector('[data-cs-tam="-1"]').disabled = i <= 0;
+  $('cs-tam').querySelector('[data-cs-tam="1"]').disabled = i >= TAMS_EXPO.length - 1;
+}
+function tamanhoMovel(passo) {
+  const m = cs?.sel, it = itemCasa(m?.id);
+  if (!m || !it || it.tipo === 'parede') return;
+  const i = clamp(TAMS_EXPO.indexOf(tamValidoCasa(it, m.tam)) + passo, 0, TAMS_EXPO.length - 1);
+  if (TAMS_EXPO[i] === tamValidoCasa(it, m.tam)) return;
+  m.tam = TAMS_EXPO[i];
+  prenderNaArea(m, m.x, m.y);   // ampliado, não passa das paredes nem do chão
+  desenharMoveis();              // o brilho do abajur e das luzes acompanha o tamanho
+  pintarTamMovel();
+  posicionarFerrCasa();
+  tocar('clique');
+}
 function guardarMovel() {
   const m = cs?.sel;
   if (!m) return;
@@ -10110,7 +10215,8 @@ function abrirFerrCasa() {
   if (!m) return;
   el.querySelector('[data-cs="girar"]').hidden = ciclosVista(itemCasa(m.id), m).length < 2;
   el.querySelector('[data-cs="cor"]').hidden = !coresDe(itemCasa(m.id));   // 🎨 só nos que têm cor (PROMPT-118)
-  $('cs-cores').hidden = true;
+  el.querySelector('[data-cs="tam"]').hidden = itemCasa(m.id)?.tipo === 'parede';
+  $('cs-cores').hidden = $('cs-tam').hidden = true;
   el.hidden = false;
   posicionarFerrCasa();
 }
@@ -10152,8 +10258,11 @@ function ligarCasinha() {
     const b = e.target.closest('[data-cs]');
     const bc = e.target.closest('[data-cor]');
     if (bc) { trocarCorMovel(bc.dataset.cor); return; }
-    if (b?.dataset.cs === 'cor') { abrirCoresMovel(); return; }
-    $('cs-cores').hidden = true;
+    const bt = e.target.closest('[data-cs-tam]');
+    if (bt) { tamanhoMovel(Number(bt.dataset.csTam)); return; }
+    if (b?.dataset.cs === 'cor') { $('cs-tam').hidden = true; abrirCoresMovel(); return; }
+    if (b?.dataset.cs === 'tam') { $('cs-cores').hidden = true; abrirTamMovel(); return; }
+    $('cs-cores').hidden = $('cs-tam').hidden = true;
     if (b?.dataset.cs === 'girar') girarMovel();
     else if (b?.dataset.cs === 'guardar') guardarMovel();
   });
@@ -11061,7 +11170,7 @@ function montarCavar(n) {
   cena.matos = doMapa.map(m => ({ ...m, chave: `${n}-${m.i}`, mexido: agora - (Number(estado.matoMexido?.[`${n}-${m.i}`]) || 0) < rebrota }));
   cena.cavar = lugaresDoDia(n);   // montinhos e tesouro: longe dos matos que aparecem hoje
   for (const [tem, nome] of [[temPoseCavar, 'cavar'], [temPoseMato, 'mato']])   // pré-carrega as poses do meu personagem
-    if (tem(meuPersonagem())) for (const q of [2, 3, 4, 5, 6]) { const im = new Image(); im.src = `${PERS.pasta}/${meuPersonagem()}/${nome}-${q}.webp`; }
+    if (tem(meuPersonagem())) for (const q of [2, 3, 4, 5, 6]) { const im = new Image(); im.src = urlSprite(meuPersonagem(), `${nome}-${q}`, minhasCores()); }
   let html = '';
   for (const l of cena.cavar) {
     if (l.tesouro) continue;   // o tesouro não tem desenho nenhum
@@ -11158,9 +11267,10 @@ function usarAcaoMapa() {
 const SEQ_CAVAR = [2, 3, 4, 5, 6, 2, 3, 4, 5, 6], MS_CAVAR = 110;   // o quadro 1 fica só de reserva (a picareta "pula" no 6 → 1)
 const temPoseCavar = (pers) => !!(CAVAR_SP?.tamanho && CAVAR_SP.personagens?.[pers]);
 const poseCavar = (img, pers, x, y, q, esq, s) => poseAcao(CAVAR_SP, 'cavar', img, pers, x, y, q, esq, s);
-function poseAcao(sp, nome, img, pers, x, y, q, esq, s) {
+// cores: as do colega (sem passar: as minhas)
+function poseAcao(sp, nome, img, pers, x, y, q, esq, s, cores = minhasCores()) {
   const [w, h] = sp.tamanho, [ax, ay] = sp.personagens[pers].ancora;
-  const src = `${PERS.pasta}/${pers}/${nome}-${q}.webp`;
+  const src = urlSprite(pers, `${nome}-${q}`, cores);
   if (img.dataset.src !== src) { img.src = src; img.dataset.src = src; }
   Object.assign(img.style, { width: w * s + 'px', height: h * s + 'px', left: x - (esq ? w - ax : ax) * s + 'px', top: y - ay * s + 'px',
     transform: esq ? 'scaleX(-1)' : '', zIndex: Math.round(y) });
@@ -11200,7 +11310,7 @@ function cavar(l) {
     return;
   }
   const img = document.createElement('img');
-  img.className = 'jr-cavar-pose'; img.alt = ''; img.draggable = false;
+  img.className = `jr-cavar-pose${temBrilho() ? ' jr-brilho' : ''}`; img.alt = ''; img.draggable = false;
   $('cena-atores').appendChild(img);
   $('jogador').style.visibility = 'hidden';
   enviarOnline({ acao: 'cavar', acao_esq: esq });   // os colegas veem a animação
@@ -11280,7 +11390,7 @@ function mexerMato(m) {
     if (cena?.n !== n) { acaoOcupada = false; return; }
     jog.dir = esq ? 'esquerda' : 'direita';
     const img = document.createElement('img');
-    img.className = 'jr-cavar-pose'; img.alt = ''; img.draggable = false;
+    img.className = `jr-cavar-pose${temBrilho() ? ' jr-brilho' : ''}`; img.alt = ''; img.draggable = false;
     $('cena-atores').appendChild(img);
     $('jogador').style.visibility = 'hidden';
     enviarOnline({ acao: 'mato', acao_esq: esq });   // os colegas veem a animação
@@ -11560,7 +11670,7 @@ function iniciarBatalha(id, origem = 'lista') {
   aplicarVisualPet($('bt-imgL'), bt.pet);
   aplicarTinta($('bt-imgR'), t.tinta);   // pet do adversário: só se o treinador tiver tinta no batalhas.json
   $('bt-nomeR').innerHTML = `<small>${NOME_PET[t.pet]} ·</small>${esc(t.nome)}`;
-  $('bt-bustoL').outerHTML = bustoHtml(urlQuadro('direita', -1), 'bt-busto L', BUSTO_PERS, false, 'bt-bustoL');
+  $('bt-bustoL').outerHTML = bustoHtml(urlQuadro('direita', -1), `bt-busto L${temBrilho() ? ' jr-brilho' : ''}`, BUSTO_PERS, false, 'bt-bustoL');
   $('bt-bustoR').outerHTML = bustoHtml(`${IMG}/npcs/${t.id}.webp`, 'bt-busto R', BUSTO_NPC, true, 'bt-bustoR');
   if (NPCS.find(p => p.id === t.id)?.piscar) {   // o busto do treinador pisca como a pessoa no mapa
     bt.pisca = { p: { id: t.id }, img: $('bt-bustoR').querySelector('img'), timer: 0 };
@@ -12838,11 +12948,11 @@ function desenharBolinhas() {
 // Acerto: pet feliz e adversário treme; erro: pet confuso (quem não tem `confuso`: triste) uma vez
 // Acertou: o personagem troca para comemorando.webp (~1,2 s, com pulinho) e volta. Sem a imagem: pulinho + ✨ no quadro atual.
 const semComemorando = new Set();
-const urlComemorando = (id = meuPersonagem()) => `${PERS.pasta}/${id}/comemorando.webp`;
+const urlComemorando = (id = null, cores = null) => urlSprite(id || meuPersonagem(), 'comemorando', id ? cores : minhasCores());
 function comemorarJogador() {
   const img = $('perg-jog');
   if (!img || $('pergunta').hidden) return;
-  const id = meuPersonagem(), volta = img.getAttribute('src'), com = urlComemorando(id);
+  const id = meuPersonagem(), volta = img.getAttribute('src'), com = urlComemorando();
   clearTimeout(comemorarJogador.t);
   const pular = (brilho) => {
     if (!semMovimento()) img.animate([{ translate: '0 0' }, { translate: '0 -12%' }, { translate: '0 0' }, { translate: '0 -5%' }, { translate: '0 0' }], { duration: 750, easing: 'ease-out' });
@@ -13835,7 +13945,7 @@ function publicarResumoPrograme() {
   if (!entraNoRanking() && !teste) return;
   const fs = Object.values(estado.programe.fases || {}).filter(p => Number(p?.estrelas) > 0);
   set(ref(db, `${basePraca()}/programe/resumo/${sessao.uid}`), { estrelas: fs.reduce((t, p) => t + Number(p.estrelas), 0), fases: fs.length,
-    nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() }).catch(e => console.warn('[jogo-revisao] resumo do Programe o pet', e?.code || e));
+    nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), ts: Date.now() }).catch(e => console.warn('[jogo-revisao] resumo do Programe o pet', e?.code || e));
   delete mural.cache.programe_estrelas;
 }
 
@@ -13933,7 +14043,7 @@ function resultadoOQF(acertou) {
     if (oqf.acertos > (Number(o.recorde) || 0)) {
       o.recorde = oqf.acertos; patch['programe/o_que_faz/recorde'] = o.recorde;
       if (entraNoRanking() || teste) {
-        set(ref(db, `${basePraca()}/programe/o_que_faz/${sessao.uid}`), { recorde: o.recorde, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() })
+        set(ref(db, `${basePraca()}/programe/o_que_faz/${sessao.uid}`), { recorde: o.recorde, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), ts: Date.now() })
           .catch(e => console.warn('[jogo-revisao] recorde do O que o pet vai fazer?', e?.code || e));
         delete mural.cache.o_que_faz;
       }
@@ -13976,7 +14086,7 @@ function venceuDia(hoje, r) {
   estado.programe.dia = { data: hoje, blocos: r.blocos, tempo_s: r.tempo_s, xml: r.xml };
   gravar({ 'programe/dia': estado.programe.dia });
   if (!entraNoRanking() && !teste) return;
-  set(ref(db, `${basePraca()}/programe/dia/${hoje}/${sessao.uid}`), { blocos: r.blocos, tempo_s: r.tempo_s, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() })
+  set(ref(db, `${basePraca()}/programe/dia/${hoje}/${sessao.uid}`), { blocos: r.blocos, tempo_s: r.tempo_s, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), ts: Date.now() })
     .catch(e => console.warn('[jogo-revisao] ranking do Programe o pet', e?.code || e));
   delete mural.cache.programe;
 }
@@ -14033,7 +14143,7 @@ async function correrFantasma(hoje, f, prog, g) {
 }
 function contarVitoriaCorrida() {
   if (!entraNoRanking() && !teste) return;
-  update(ref(db, `${basePraca()}/programe/corridas/${semanaPesca()}/${sessao.uid}`), { vitorias: increment(1), nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() })
+  update(ref(db, `${basePraca()}/programe/corridas/${semanaPesca()}/${sessao.uid}`), { vitorias: increment(1), nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), ts: Date.now() })
     .catch(e => console.warn('[jogo-revisao] ranking de corridas', e?.code || e));
   delete mural.cache.corridas;
 }
@@ -14659,6 +14769,12 @@ function ligarEventos() {
   $('pet-opcoes').addEventListener('click', (e) => { const b = e.target.closest('[data-pet]'); if (b) escolherPet(b.dataset.pet); });
   $('btn-trocar-pet').addEventListener('click', () => { $('estojo').hidden = true; abrirColecao(); });
   $('pers-grade').addEventListener('click', (e) => { const b = e.target.closest('[data-pers]'); if (b) selecionarPersonagem(b.dataset.pers); });
+  $('pers-cores').addEventListener('click', (e) => {
+    if (e.target.closest('[data-pers-comprar]')) { comprarCorPers(); return; }
+    if (e.target.closest('[data-pers-nao]')) { pers.compra = null; renderCoresPers(); return; }
+    const b = e.target.closest('[data-pers-cor]');
+    if (b) { const [parte, id] = b.dataset.persCor.split(':'); escolherCorPers(parte, id); }
+  });
   $('pers-palco').addEventListener('click', () => { pers.andarAte = performance.now() + 1600; });   // tocar = anda no lugar
   $('pers-confirmar').addEventListener('click', confirmarPersonagem);
   $('pers-cancelar').addEventListener('click', () => { $('pers-escolha').hidden = true; clearInterval(pers.timer); });

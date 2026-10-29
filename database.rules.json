@@ -60,7 +60,7 @@
         "mv":     { ".validate": "newData.isString() && newData.val().length <= 40" },
         "x":      { ".validate": "newData.isNumber()" },
         "y":      { ".validate": "newData.isNumber()" },
-        "tam":    { ".validate": "newData.isNumber() && newData.val() >= 0.6 && newData.val() <= 1.6" },
+        "tam":    { ".validate": "newData.isNumber() && newData.val() >= 0.6 && newData.val() <= 4" },
         "titulo": { ".validate": "newData.isString() && newData.val().length <= 40" },
         "texto":  { ".validate": "newData.isString() && newData.val().length <= 400" } } } } },
     "exposicao_imagens":           { ".read": true, ".write": true, "$id": { "dados": { ".validate": "newData.isString() && newData.val().length <= 400000" } } },
@@ -78,7 +78,7 @@
         "mv":     { ".validate": "newData.isString() && newData.val().length <= 40" },
         "x":      { ".validate": "newData.isNumber()" },
         "y":      { ".validate": "newData.isNumber()" },
-        "tam":    { ".validate": "newData.isNumber() && newData.val() >= 0.6 && newData.val() <= 1.6" },
+        "tam":    { ".validate": "newData.isNumber() && newData.val() >= 0.6 && newData.val() <= 4" },
         "titulo": { ".validate": "newData.isString() && newData.val().length <= 40" },
         "texto":  { ".validate": "newData.isString() && newData.val().length <= 400" } } } } },
 
