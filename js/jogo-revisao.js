@@ -67,7 +67,7 @@ const ALT_JOGADOR_MAPA = 55 * ESCALA_ATORES;   // nos mapas da cidade o personag
 // Não depende do tamanho do arquivo: trocar a resolução das imagens não muda o tamanho na tela.
 // Altura do pet SENTADO no mapa, em px na escala base (personagem = 55; no mapa tudo × ESCALA_ATORES)
 const ALT_PET = {
-  elefante: 36, gato: 30, gaviao: 30, axolote: 30, tigre: 30, capivara: 30,   // PROMPT-164: a capivara do tamanho do tigre
+  elefante: 36, gato: 30, gaviao: 30, axolote: 30, tigre: 30, capivara: 36,   // capivara: 20% maior que o tigre (30 × TAM_VISUAL)
   unicornio: 40, morcego: 46,   // PROMPT-161: o morcego entre o gavião (30) e o dragão vermelho filhote (62,5); PROMPT-159: no lugar do dragão azul; PROMPT-129: vermelho +25% (era 50)
   dragao_vermelho: 62.5,
 };
@@ -95,7 +95,10 @@ const altPet = (pet) => (ALT_PET[pet] ?? ALT_PET[formaDeTamanho(pet)] ?? ALT_PET
 const altImagemPet = (pet) => altPet(pet) / sentadoNoQuadro(pet);
 // Telas em que o pet tem tamanho relativo ao filhote (batalha, Meu Pet, duelo do ginásio, evolução): quanto a IMAGEM da forma
 // é maior que a do filhote. O desenho sentado fica ADULTO_ANTES × escala maior (o mesmo de antes no azul; +40% no vermelho).
-const fatorForma = (pet, forma) => (ehFormaAdulta(forma) ? ADULTO_ANTES * escalaPet(forma) * sentadoNoQuadro(pet) / sentadoNoQuadro(forma) : 1);
+// Filhote maior que os outros nessas telas (no mapa é o ALT_PET/DIST_PET): a capivara 20% maior em tudo.
+const TAM_VISUAL = { capivara: 1.2 };
+const tamVisual = (forma) => TAM_VISUAL[forma] || 1;
+const fatorForma = (pet, forma) => (ehFormaAdulta(forma) ? ADULTO_ANTES * escalaPet(forma) * sentadoNoQuadro(pet) / sentadoNoQuadro(forma) : tamVisual(forma));
 // Revisão da semana (PROMPT-80): o dragão adulto ~30% maior (o vermelho continua 1,75 / 0,75 × o azul), até 58% da arena no CSS.
 const DUELO_ADULTO = 1.3;
 const fatorDuelo = (pet, forma) => fatorForma(pet, forma) * (ehFormaAdulta(forma) ? DUELO_ADULTO : 1);
@@ -315,7 +318,7 @@ function marcarForma(img, pet, forma) {
 // Distância normal do pet atrás do personagem (ao longo do rastro), em px na escala base (× ESCALA_ATORES no mapa).
 // Parado, o pet chega a 55% disso; acima de +10 anda 1,3× mais rápido; acima de +62 corre (pets.js).
 const DIST_PET = {
-  elefante: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36, capivara: 36,
+  elefante: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36, capivara: 43.2,
   unicornio: 55, morcego: 52, dragao_vermelho: 68.75,   // PROMPT-161: morcego entre o gavião e o vermelho; PROMPT-129: vermelho × 1,25, com o tamanho
 };
 // cresce junto com o tamanho (mesma proporção distância/altura do filhote vermelho; distPet ainda × a escala do vermelho)
@@ -1714,6 +1717,8 @@ function medirMeuPet() {
     // o desenho sentado (do pé, a 10% do palco, até o chifre) não passa do topo do palco (o vermelho é 1,75 / 0,75 × o azul, PROMPT-86/129)
     // (sentado_altura + ~1% de folga embaixo do pé, em fração do quadro)
     h = Math.min(h, palco.clientHeight * 0.88 / (sentadoNoQuadro(forma) + 0.01));
+  } else if (tamVisual(forma) !== 1) {
+    h = Math.min(h * tamVisual(forma), palco.clientHeight * 0.94);   // capivara: 20% maior, sem passar do palco
   }
   $('mp-img').style.height = h + 'px';
   $('mp-palco').classList.toggle('largo', ehFormaAdulta(forma));   // adulto: asas, comida e fogo podem passar da borda do palco
@@ -11682,6 +11687,7 @@ function iniciarBatalha(id, origem = 'lista') {
   fL.querySelector('.jr-fala-vitoria')?.remove();   // balão da comemoração da batalha anterior
   const fR = $('bt-R'), formaR = t.pet, [qwR, qhR] = tamanhoQuadro(formaR);   // o pet do treinador (hoje sempre filhote; adulto teria o mesmo cuidado)
   fR.style.setProperty('--pet-quadro', `${qwR} / ${qhR}`);
+  fR.style.setProperty('--cresce', ehFormaAdulta(formaR) ? 1 : tamVisual(formaR));   // a capivara do treinador também maior
   fR.classList.toggle('adulto', ehFormaAdulta(formaR));
   $('batalha').hidden = false;
   $('bt-nomeL').innerHTML = `${esc(nomeAluno())}<small>· ${esc(nomePet(bt.pet))}</small>`;
