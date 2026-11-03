@@ -935,6 +935,28 @@ html.jr-deitado #pet-escolha-cancelar { min-height: 32px; padding: 3px 16px; }
   display: flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1;
   background: #1a1d2e; border: 1px solid rgba(255,255,255,.3); filter: grayscale(1); opacity: .7; }
 .jr-mp-marca.ok { filter: none; opacity: 1; border-color: var(--jr-ouro); }
+/* 🍖 PROMPT-174: tocar num marcador mostra o que ele libera (área de toque maior que o círculo) */
+.jr-mp-marca { cursor: pointer; }
+.jr-mp-marca::before { content: ''; position: absolute; inset: -9px; }
+.mp-marca-balao { position: absolute; z-index: 7; bottom: calc(100% + 8px); width: max-content; max-width: 100%; padding: 5px 10px; border-radius: 10px;
+  background: #fff; color: #1a1d2e; font: 700 12.5px/1.25 'Inter', sans-serif; box-shadow: 0 4px 14px rgba(0,0,0,.5); pointer-events: none; }
+.mp-marca-balao[hidden] { display: none; }
+/* 🍖 Alimentar ao lado da barra da barriga e a linha "Come: … · Favorita: …" */
+.mp-barriga-linha { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+.mp-barriga-linha .jr-mp-trilho { flex: 1; margin-top: 0; }
+.mp-alimentar { flex: none; min-height: 30px; padding: 3px 10px; font-size: 13.5px; white-space: nowrap; }
+.mp-come { display: flex; align-items: center; flex-wrap: wrap; gap: 3px; margin-top: 3px; font: 600 12px 'Inter', sans-serif; color: #c9cde0; }
+.mp-come:empty { display: none; }
+.mp-come span { display: inline-flex; }
+.mp-come .mp-come-ic { width: 20px; height: 20px; object-fit: contain; font-size: 16px; line-height: 20px; }
+html.jr-deitado .mp-alimentar { min-height: 26px; padding: 2px 8px; font-size: 12.5px; }
+html.jr-deitado .mp-come { font-size: 11px; margin-top: 1px; }
+html.jr-deitado .mp-come .mp-come-ic { width: 17px; height: 17px; font-size: 14px; line-height: 17px; }
+/* comida que o pet não come: cinza com 🚫 (bolsa e pote da casinha) */
+.mp-bolsa-item.nao-come, .cs-comida-item.nao-come { opacity: .6; }
+.mp-bolsa-item.nao-come .jr-item-img, .mp-bolsa-item.nao-come .jr-item-bolsa, .cs-comida-item.nao-come .jr-item-bolsa { filter: grayscale(1); }
+.mp-bolsa-emoji, .cs-comida-item > span:first-child { position: relative; }
+.mp-nao-come { position: absolute; right: -4px; bottom: -4px; font-style: normal; font-size: 15px; line-height: 1; }
 /* ✨ evolução (PROMPT-173): marcador no 100 ("vira adulto") e o selo embaixo do nome */
 .jr-mp-marca.evo { filter: none; opacity: 1; border-color: var(--jr-ouro); background: #3a2d0a; box-shadow: 0 0 6px rgba(255,215,0,.55); }
 .mp-evo { display: flex; align-items: center; gap: 8px; align-self: flex-start; margin: 2px 0 4px; padding: 4px 12px 4px 6px; border-radius: 999px;
@@ -1982,10 +2004,6 @@ html.jr-deitado #jr-app img.jr-item-bolsa { height: 40px; }
 .jr-mp-info-balao[hidden] { display: none; }
 .jr-mp-info-balao b { display: block; margin-top: 4px; color: #6c3fe0; font-weight: 800; }
 .jr-mp-info-balao b:first-child { margin-top: 0; }
-/* três botões iguais */
-#meu-pet .jr-mp-principais { flex-wrap: nowrap; }
-#meu-pet .jr-mp-botoes.jr-mp-principais .jr-btn { flex: 1 1 0; min-width: 0; white-space: nowrap; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
-html.jr-deitado #meu-pet .jr-mp-botoes.jr-mp-principais .jr-btn { font-size: 14px; padding: 4px 6px; min-height: 40px; }
 /* interruptor "Falas do pet" (no Visual) */
 .mp-chave { align-self: flex-start; display: inline-flex; align-items: center; gap: 10px; padding: 4px 12px 4px 6px; border-radius: 999px; cursor: pointer;
   background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.18); color: #fff; font: 700 13px 'Inter', sans-serif; }
@@ -2836,7 +2854,10 @@ html.jr-deitado .lj-comprar { min-height: 32px; }
 .mp-tq small { font: 700 10px 'Inter', sans-serif; line-height: 1.1; white-space: nowrap; max-width: 52px; overflow: hidden; text-overflow: ellipsis; }
 .mp-tq:not(.bloqueado):not(:disabled):active .mp-tq-ic { transform: scale(.92); }
 .mp-tq.bloqueado .mp-tq-ic { filter: grayscale(1); background: rgba(13,15,26,.6); border-style: dashed; border-color: rgba(255,255,255,.3); font-size: 14px; }
-.mp-tq.bloqueado .mp-tq-ic b { font: 800 12px 'Orbitron', sans-serif; color: #c9cde0; }
+.mp-tq.bloqueado .mp-tq-ic { flex-direction: column; gap: 0; }
+.mp-tq.bloqueado .mp-tq-ic i { font-style: normal; font-size: 13px; line-height: 1; }
+.mp-tq.bloqueado .mp-tq-ic b { display: flex; flex-direction: column; align-items: center; font: 800 11px/1 'Orbitron', sans-serif; color: #c9cde0; }
+.mp-tq.bloqueado .mp-tq-ic em { font: 700 7.5px/1.1 'Inter', sans-serif; font-style: normal; letter-spacing: -.1px; }
 .mp-tq.bloqueado small { color: #8a8aa8; }
 .mp-tq-fila.ocupado .mp-tq { opacity: .4; cursor: default; }
 
@@ -2865,11 +2886,15 @@ html.jr-deitado .lj-comprar { min-height: 32px; }
 .mp-tq-fila::after { content: ''; flex: 0 0 6px; }   /* folga no fim: o último botão não fica cortado */
 .mp-tq img, .mp-tq-ic { pointer-events: none; }
 
-/* ── PROMPT-80: balão do Meu Pet ao lado do pet (na coluna de informações, embaixo do nome), sem cobrir o dragão ── */
-.jr-mp-info > .jr-mp-balao { position: relative; left: auto; top: auto; transform: none; max-width: none; margin: 0 0 0 8px; text-align: left; flex: none; }
+/* ── PROMPT-174: balão do Meu Pet sai da boca do pet e flutua POR CIMA da coluna da direita (posição no JS), sem empurrar nada ── */
+.jr-mp-info > .jr-mp-balao { position: absolute; z-index: 8; transform: none; width: max-content; max-width: 340px; margin: 0; padding: 8px 13px; text-align: left; flex: none;
+  font: 600 15px/1.3 'Inter', sans-serif; pointer-events: auto; cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,.55), 0 0 0 2px rgba(124,92,252,.55);
+  animation: mp-balao-entra .18s ease-out; }
 .jr-mp-info > .jr-mp-balao[hidden] { display: none; }
-.jr-mp-info > .jr-mp-balao::after { left: -6px; top: 50%; bottom: auto; margin: -6px 0 0; border: 6px solid transparent; border-left: 0; border-right-color: #fff; }
-.mp-balao-txt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+.jr-mp-info > .jr-mp-balao::after { left: -9px; top: var(--rabo-y, 50%); bottom: auto; margin: -8px 0 0; border: 8px solid transparent; border-left: 0; border-right: 10px solid #fff; }
+@keyframes mp-balao-entra { from { opacity: 0; translate: -6px 0; } to { opacity: 1; translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .jr-mp-info > .jr-mp-balao { animation: none; } }
+html.jr-deitado .jr-mp-info > .jr-mp-balao { font-size: 13.5px; padding: 6px 11px; }
 .jr-mp-info > .jr-mp-balao:has(img) { text-align: center; }   /* o busto de fogo do Rugido de campeão */
 
 /* ── PROMPT-80: dica "⬆ Entrar" na zona da porta ── */
@@ -3237,7 +3262,6 @@ html.jr-deitado .al-cartao { padding: 10px 8px; gap: 8px; }
 html.jr-deitado .al-ci-texto { font-size: 16px; }
 @media (max-width: 520px) { .al-cartao { grid-template-columns: auto 1fr auto; } .al-cartao-carta { display: none; } }
 /* o Visual do Meu Pet ganhou a chave da letra: pode rolar se não couber */
-#mp-visual-painel { overflow-y: auto; }
 
 /* curiosidade do pet: balão um pouco mais largo */
 .jr-pet-fala.largo { max-width: min(300px, 80vw); }
@@ -3873,6 +3897,7 @@ html.jr-deitado #jr-app .pf-ins img { width: 26px; height: 26px; }
 .tut-comida { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 4px; }
 #jr-app .tut-comida .tut-pet-cena { height: 128px; width: auto; }
 #jr-app .tut-item { height: 52px; width: auto; margin-bottom: 8px; }
+#jr-app .tut-item-emoji { font-size: 42px; line-height: 52px; }   /* a carne: só emoji (PROMPT-174) */
 .tut-coracoes { position: absolute; left: 50%; top: 0; display: flex; gap: 6px; transform: translateX(-60%); }
 .tut-coracoes i { font-style: normal; font-size: 18px; animation: tutCoracao 1.6s ease-in-out infinite; }
 .tut-coracoes i:nth-child(2) { animation-delay: .4s; } .tut-coracoes i:nth-child(3) { animation-delay: .8s; }
@@ -3944,3 +3969,80 @@ html.jr-deitado .tut-extra { font-size: 11px; padding: 2px 6px; }
 #jr-app .tut-carta img { height: 13cqw; width: auto; max-width: 100%; object-fit: contain; }
 .tut-carta b { font: 700 max(10px, 2.3cqw) 'Inter', sans-serif; color: #e6e8f5; }
 .tut-carta small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 max(9px, 1.9cqw) 'Inter', sans-serif; color: var(--jr-ouro); }
+
+/* ============================================================
+   🐾 PROMPT-175: topo (❓ ⚙️ e as moedas) e o Meu Pet em abas
+   ============================================================ */
+/* topo: ❓ e ⚙️ no lugar de 🔊 e 🎵 (no mapa geral, na mesma coluna embaixo do Sair); as moedas antes do estojo */
+/* no mapa geral, na fileira do topo à direita (a coluna embaixo do Sair fica atrás da faixa da meta da turma) */
+#tela-geral .jr-hud-topo > .jr-btn-ajuda, #tela-geral .jr-hud-topo > .jr-btn-config,
+html.jr-deitado #tela-geral .jr-hud-topo > .jr-btn-ajuda, html.jr-deitado #tela-geral .jr-hud-topo > .jr-btn-config { position: relative; left: auto; top: auto; }
+.jr-btn-ajuda + .jr-btn-config { margin-left: 4px; }
+.jr-moedas-topo { margin-left: 6px; cursor: pointer; font-size: 14px; padding: 4px 10px; background: rgba(13,15,26,.72); }
+.jr-moedas-topo + .jr-btn-estojo { margin-left: 6px; }
+html.jr-deitado .jr-moedas-topo { font-size: 12.5px; padding: 3px 8px; margin-left: 4px; }
+#jr-app.jr-sem-moedas-topo .jr-moedas-topo { visibility: hidden; }   /* durante a pergunta e a batalha */
+.jr-moeda-mais.menos { color: #ff8a8a; }
+
+/* Meu Pet: a coluna da direita fica com o topo fixo e a aba embaixo (só a aba rola, se precisar) */
+.jr-mp-caixa { height: min(460px, 100%); }
+#meu-pet .jr-mp-info { justify-content: flex-start; gap: 6px; min-height: 0; }
+.mp-cab-dir { display: flex; align-items: center; gap: 6px; flex: none; }
+.mp-bolsa-ic { position: relative; flex: none; width: 34px; height: 34px; padding: 3px; border-radius: 10px; cursor: pointer;
+  background: rgba(124,92,252,.22); border: 1px solid rgba(124,92,252,.6); display: grid; place-items: center; }
+.mp-bolsa-ic img { width: 24px; height: 24px; object-fit: contain; }
+.mp-bolsa-ic b { position: absolute; right: -5px; top: -5px; min-width: 16px; padding: 0 3px; border-radius: 8px; background: var(--jr-roxo); color: #fff;
+  font: 700 10px/16px 'Inter', sans-serif; text-align: center; }
+.mp-bolsa-ic b:empty { display: none; }
+.mp-bolsa-ic:disabled { opacity: .5; cursor: default; }
+.mp-abas { display: flex; gap: 6px; flex: none; }
+.mp-abas button { flex: 1 1 0; min-width: 0; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; cursor: pointer;
+  border-radius: 12px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #c9cde0; font: 700 15px 'Rajdhani', sans-serif; font-size: 17px; }
+.mp-abas button span { font-size: 15px; }
+.mp-abas button.ativa { color: #2a1a00; background: linear-gradient(135deg, #ffb300, var(--jr-ouro)); border-color: #c48a00; box-shadow: 0 2px 10px rgba(255,215,0,.3); }
+.mp-aba { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 7px; padding: 2px 2px 4px; scrollbar-width: thin; }
+.mp-aba[hidden] { display: none; }
+.mp-aba > .mp-tq-fila { padding-top: 2px; }
+/* humor no canto do palco, ◀ ▶ nas bordas e "2 / 9" embaixo */
+.mp-humor { position: absolute; left: 8px; top: 8px; z-index: 3; padding: 3px 9px; border-radius: 999px; background: rgba(13,15,26,.72);
+  border: 1px solid rgba(255,255,255,.2); font: 700 12.5px 'Inter', sans-serif; color: #fff; pointer-events: none; }
+.mp-seta { position: absolute; top: 50%; z-index: 3; width: 34px; height: 48px; margin-top: -24px; border: 0; border-radius: 10px; cursor: pointer;
+  background: rgba(13,15,26,.45); color: #fff; font-size: 18px; line-height: 1; }
+.mp-seta[hidden] { display: none; }
+.mp-seta.ant { left: 4px; } .mp-seta.prox { right: 4px; }
+.mp-seta:hover { background: rgba(124,92,252,.5); }
+.mp-pos { flex: none; text-align: center; font: 700 13px 'Orbitron', sans-serif; color: #c9cde0; min-height: 16px; }
+#jr-app #mp-palco { touch-action: pan-y; }
+/* ✅ Hoje com {nome} */
+.mp-hoje { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font: 600 12.5px 'Inter', sans-serif; color: #e4dcff; }
+.mp-hoje-tit { font-weight: 800; }
+.mp-hoje-itens { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; min-width: 0; }
+.mp-hoje-itens span { padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.05); color: #8a8fa8; border: 1px solid rgba(255,255,255,.1); white-space: nowrap; }
+.mp-hoje-itens span.feito { color: #b8ffd5; background: rgba(0,230,118,.12); border-color: rgba(0,230,118,.45); }
+.mp-carinho-mini { flex: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 1px solid rgba(124,92,252,.6); background: rgba(124,92,252,.2); font-size: 16px; }
+.mp-carinho-mini:disabled { opacity: .5; }
+/* 🏅 medalhas do pet */
+.mp-medalhas { display: flex; flex-wrap: wrap; gap: 6px; }
+.mp-medalha { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; font-size: 19px;
+  background: rgba(13,15,26,.6); border: 2px dashed rgba(255,255,255,.25); }
+.mp-medalha span { filter: grayscale(1); opacity: .45; }
+.mp-medalha.ok { background: radial-gradient(circle at 35% 30%, #ffe27a, #c48a00); border: 2px solid #ffd700; box-shadow: 0 2px 8px rgba(255,215,0,.35); }
+.mp-medalha.ok span { filter: none; opacity: 1; }
+.mp-medalha.sel { outline: 2px solid #fff; outline-offset: 2px; }
+.mp-medalha-info { font: 600 12.5px 'Inter', sans-serif; color: #c9cde0; min-height: 18px; }
+.mp-medalha-info b { color: #fff; }
+/* 📖 ficha do pet */
+.mp-ficha { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+.mp-ficha div { display: flex; flex-direction: column; padding: 5px 8px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); }
+.mp-ficha span { font: 600 11px 'Inter', sans-serif; color: #9aa0c0; }
+.mp-ficha b { display: inline-flex; align-items: center; gap: 4px; font: 700 13.5px 'Inter', sans-serif; color: #fff; }
+.mp-ficha .jr-item-img, .mp-ficha .jr-item-emoji { width: 20px; height: 20px; object-fit: contain; font-size: 16px; line-height: 20px; flex: none; }
+.mp-aba { overflow-x: hidden; }
+html.jr-deitado .mp-abas button { min-height: 34px; font-size: 15px; }
+html.jr-deitado .mp-abas button span { font-size: 13.5px; }
+html.jr-deitado .mp-aba { gap: 5px; }
+html.jr-deitado .mp-humor { font-size: 11px; padding: 2px 7px; }
+html.jr-deitado .mp-pos { font-size: 11px; min-height: 13px; }
+html.jr-deitado .mp-medalha { width: 34px; height: 34px; font-size: 16px; }
+html.jr-deitado .mp-hoje { font-size: 11.5px; }
+html.jr-deitado .mp-bolsa-ic { width: 30px; height: 30px; }

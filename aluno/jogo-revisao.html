@@ -36,9 +36,10 @@
       <div class="jr-hud-titulo">Jogo de Revisão</div>
       <span class="jr-selo-online" id="selo-online" hidden>🟢 0 online</span>
       <button class="jr-selo-seq apagado" id="selo-seq" aria-label="Sequência de dias">🔥 0</button>
-      <button class="jr-btn-som" data-som aria-label="Desligar o som">🔊</button>
-      <button class="jr-btn-som jr-btn-musica mudo" data-musica aria-label="Ligar a música">🎵</button>
+      <!-- PROMPT-175: o som e a música ficam só na ⚙️ Configuração; no lugar, ❓ Como jogar e ⚙️; as moedas sempre no topo -->
+      <button class="jr-btn-som jr-btn-ajuda" data-ajuda aria-label="Como jogar" title="Como jogar">❓</button>
       <button class="jr-btn-som jr-btn-config" data-config aria-label="Configuração" title="Configuração">⚙️</button>
+      <span class="jr-moedas jr-moedas-topo" data-moedas-topo aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span data-moedas-n>0</span></span>
       <button class="jr-btn-estojo" id="btn-insignias" aria-label="Minhas insígnias">
         <img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>
         <span class="jr-estojo-estrela" hidden>★</span>
@@ -94,9 +95,9 @@
       <button class="jr-btn-hud jr-btn-missoes" id="btn-missoes" hidden aria-label="Missões do dia">📜<span id="missoes-cont">0/3</span></button>
       <button class="jr-btn-pet" id="btn-pet" hidden aria-label="Meus pets"><img alt="" draggable="false"/></button>
       <button class="jr-btn-hud jr-btn-batalhar" id="btn-batalhar" hidden aria-label="Treinadores">⚔️<span>Treinadores</span></button>
-      <button class="jr-btn-som" data-som aria-label="Desligar o som">🔊</button>
-      <button class="jr-btn-som jr-btn-musica mudo" data-musica aria-label="Ligar a música">🎵</button>
+      <button class="jr-btn-som jr-btn-ajuda" id="btn-ajuda" data-ajuda aria-label="Como jogar" title="Como jogar">❓</button>
       <button class="jr-btn-som jr-btn-config" id="btn-config" data-config aria-label="Configuração" title="Configuração">⚙️</button>
+      <span class="jr-moedas jr-moedas-topo" data-moedas-topo aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span data-moedas-n>0</span></span>
       <button class="jr-btn-estojo" id="btn-insignias-2" aria-label="Minhas insígnias">
         <img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>
         <span class="jr-estojo-estrela" hidden>★</span>
@@ -933,41 +934,81 @@
         <div class="mp-exp-fora" id="mp-exp-fora" hidden><b id="mp-exp-fora-tit"></b><span id="mp-exp-fora-hora"></span>
           <div class="mp-exp-trilho"><div class="mp-exp-fill" id="mp-exp-fora-barra"></div></div>
           <button class="jr-btn jr-btn-sec mp-exp-chamar" id="mp-exp-chamar">↩️ Chamar de volta</button></div>
+        <!-- 😊 humor no canto e ◀ ▶ para trocar de pet (também deslizando o dedo) — PROMPT-175 -->
+        <span class="mp-humor" id="mp-humor"></span>
+        <button class="mp-seta ant" id="mp-ant" aria-label="Pet anterior">◀</button>
+        <button class="mp-seta prox" id="mp-prox" aria-label="Próximo pet">▶</button>
       </div>
-      <!-- ✨ truques: botões redondos embaixo do pet (PROMPT-75) -->
-      <div class="mp-tq-fila" id="mp-tq-fila" role="group" aria-label="Truques" hidden></div>
+      <div class="mp-pos" id="mp-pos"></div>
       </div>
       <div class="jr-mp-info">
         <div class="jr-mp-cab">
           <div class="jr-mp-cab-nome"><div class="jr-mp-nome"><span id="mp-nome"></span><button class="jr-mp-editar" id="mp-editar" title="Dar um nome" aria-label="Dar um nome">✏️</button><button class="jr-mp-falas" id="mp-falas" title="Falas do pet: ligadas" aria-label="Falas do pet: ligadas">💬</button><button class="jr-mp-meuspets" id="mp-trocar" aria-label="Meus pets: ver e trocar"><span>🐾 Meus pets (<span id="mp-npets">1</span>)</span><span class="jr-mp-carinhas" id="mp-carinhas"></span></button></div></div>
-          <div class="jr-moedas jr-mp-moedas" aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span id="mp-moedas">0</span></div>
+          <div class="mp-cab-dir"><div class="jr-moedas jr-mp-moedas" aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span id="mp-moedas" data-moedas-n>0</span></div>
+            <button class="mp-bolsa-ic" id="mp-bolsa" aria-label="Bolsa" title="Bolsa"><img class="jr-item-img" data-icone="bolsa" alt="🎒" draggable="false"/><b id="mp-bolsa-n"></b></button></div>
           <button class="bt-lista-x jr-mp-x" id="mp-fechar" aria-label="Fechar">✕</button>
         </div>
         <!-- ✨ evolução (PROMPT-173): "Com lealdade 100, {nome} vira adulto!" com o adulto em silhueta; depois, "✨ Adulto" -->
         <div class="mp-evo" id="mp-evo" hidden></div>
         <div class="jr-mp-balao" id="mp-balao" hidden></div>
-        <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Barriga</span><span id="mp-barriga-rot"></span></div><div class="jr-mp-trilho"><div class="jr-mp-fill" id="mp-barriga-fill"></div></div></div>
-        <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Lealdade</span><span id="mp-lealdade-rot"></span></div>
-          <div class="jr-mp-trilho-marcado">
-            <div class="jr-mp-trilho"><div class="jr-mp-fill lealdade" id="mp-lealdade-fill"></div></div>
-            <span class="jr-mp-marca" id="mp-marca-conversa" title="Conversa">💬</span>
-            <span class="jr-mp-marca" id="mp-marca-ajuda" title="Dica nos ginásios">💡</span>
-            <span class="jr-mp-marca" id="mp-marca-elimina" title="Elimina uma opção">❌</span>
-            <span class="jr-mp-marca evo" id="mp-marca-adulto" title="Vira adulto" hidden>✨</span>
+        <!-- 🐾 PROMPT-175: três abas, uma de cada vez -->
+        <div class="mp-abas" id="mp-abas" role="tablist">
+          <button role="tab" data-mpaba="cuidar" class="ativa" aria-selected="true">🍖<span>Cuidar</span></button>
+          <button role="tab" data-mpaba="truques" aria-selected="false">✨<span>Truques</span></button>
+          <button role="tab" data-mpaba="visual" aria-selected="false">🎨<span>Visual</span></button>
+        </div>
+        <div class="mp-aba" id="mp-aba-cuidar" role="tabpanel">
+          <!-- 🍖 PROMPT-174: Alimentar ao lado da barra e a linha "Come: … · Favorita: …" embaixo -->
+          <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Barriga</span><span id="mp-barriga-rot"></span></div>
+            <div class="mp-barriga-linha"><div class="jr-mp-trilho"><div class="jr-mp-fill" id="mp-barriga-fill"></div></div><button class="jr-btn mp-alimentar" id="mp-alimentar">🍖 Alimentar</button></div>
+            <div class="mp-come" id="mp-come"></div></div>
+          <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Lealdade</span><span id="mp-lealdade-rot"></span></div>
+            <div class="jr-mp-trilho-marcado">
+              <div class="jr-mp-trilho"><div class="jr-mp-fill lealdade" id="mp-lealdade-fill"></div></div>
+              <span class="jr-mp-marca" id="mp-marca-conversa" title="Conversa">💬</span>
+              <span class="jr-mp-marca" id="mp-marca-ajuda" title="Dica nos ginásios">💡</span>
+              <span class="jr-mp-marca" id="mp-marca-elimina" title="Elimina uma opção">❌</span>
+              <span class="jr-mp-marca evo" id="mp-marca-adulto" title="Vira adulto" hidden>✨</span>
+              <div class="mp-marca-balao" id="mp-marca-balao" hidden></div>
+            </div>
+            <div class="jr-mp-marco"><span id="mp-marco"></span><button class="jr-mp-info-btn" id="mp-info" title="Como a lealdade funciona" aria-label="Como a lealdade funciona">ⓘ</button>
+              <div class="jr-mp-info-balao" id="mp-info-balao" hidden></div></div>
           </div>
-          <div class="jr-mp-marco"><span id="mp-marco"></span><button class="jr-mp-info-btn" id="mp-info" title="Como a lealdade funciona" aria-label="Como a lealdade funciona">ⓘ</button>
-            <div class="jr-mp-info-balao" id="mp-info-balao" hidden></div></div>
+          <!-- ✅ Hoje com {nome}: alimentou · carinho n/3 · treino n/5 (o 💜 também dá carinho, para quem não descobrir) -->
+          <div class="mp-hoje"><span class="mp-hoje-tit" id="mp-hoje-tit">Hoje</span><span class="mp-hoje-itens" id="mp-hoje"></span>
+            <button class="mp-carinho-mini" id="mp-carinho" aria-label="Fazer carinho" title="Fazer carinho">💜</button></div>
+          <!-- 🎯 Treino do pet (PROMPT-91): 5 questões por dia, puxadas dos próprios erros -->
+          <!-- 🧭 Expedição do pet (PROMPT-92): 1 h ou 2 h fora, volta com moedas -->
+          <div class="mp-extras">
+            <button class="jr-btn mp-treino" id="mp-treino">🎯 Treino de hoje</button>
+            <button class="jr-btn mp-exp-btn" id="mp-exp">🧭 Expedição</button>
+          </div>
         </div>
-        <!-- 🎯 Treino do pet (PROMPT-91): 5 questões por dia, puxadas dos próprios erros -->
-        <!-- 🧭 Expedição do pet (PROMPT-92): 1 h ou 2 h fora, volta com moedas -->
-        <div class="mp-extras">
-          <button class="jr-btn mp-treino" id="mp-treino">🎯 Treino de hoje</button>
-          <button class="jr-btn mp-exp-btn" id="mp-exp">🧭 Expedição</button>
+        <div class="mp-aba" id="mp-aba-truques" role="tabpanel" hidden>
+          <!-- ✨ truques: botões redondos (PROMPT-75) -->
+          <div class="mp-tq-fila" id="mp-tq-fila" role="group" aria-label="Truques" hidden></div>
+          <div class="mp-visual-rot">🏅 Conquistas</div>
+          <div class="mp-medalhas" id="mp-medalhas"></div>
+          <div class="mp-medalha-info" id="mp-medalha-info">Toque numa medalha.</div>
         </div>
-        <div class="jr-mp-botoes jr-mp-principais">
-          <button class="jr-btn" id="mp-bolsa"><img class="jr-item-img jr-ic-btn" data-icone="bolsa" alt="🎒" draggable="false"/> Bolsa</button>
-          <button class="jr-btn" id="mp-carinho">💜 Carinho</button>
-          <button class="jr-btn" id="mp-visual">🎨 Visual</button>
+        <div class="mp-aba" id="mp-aba-visual" role="tabpanel" hidden>
+          <div id="mp-cores-bloco" hidden>
+            <div class="mp-visual-rot" id="mp-cores-rot">🐉 Cores do dragão</div><div class="mp-chips" id="mp-visual-cores"></div>
+            <div class="mp-visual-dica" id="mp-cor-msg"></div>
+          </div>
+          <div id="mp-forma-bloco" hidden>
+            <div class="mp-visual-rot">Forma</div>
+            <button class="mp-chave" id="mp-filhote" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-filhote-txt">Mostrar como filhote</span></button>
+          </div>
+          <div class="mp-visual-rot">Tinta</div><div class="mp-chips" id="mp-visual-tintas"></div>
+          <div class="mp-visual-rot">Efeito ao andar</div><div class="mp-chips" id="mp-visual-efeitos"></div>
+          <div class="mp-visual-dica" id="mp-visual-dica"></div>
+          <div class="mp-visual-rot">Convites</div>
+          <button class="mp-chave" id="mp-sem-convites" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-sem-convites-txt">Não receber convites: desligado</span></button>
+          <div class="mp-visual-rot">Letra</div>
+          <button class="mp-chave" id="mp-letra" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-letra-txt">Aa Letra grande: desligado</span></button>
+          <div class="mp-visual-rot">📖 Ficha do pet</div>
+          <div class="mp-ficha" id="mp-ficha"></div>
         </div>
       </div>
       <!-- 🧭 Expedição: 1 h ou 2 h -->
@@ -986,26 +1027,6 @@
         <div class="mp-sub-topo"><b><img class="jr-item-img jr-ic-titulo" data-icone="bolsa" alt="🎒" draggable="false"/> Bolsa</b><span>Toque numa comida para dar ao seu pet</span><button class="bt-lista-x" id="mp-bolsa-fechar" aria-label="Fechar">✕</button></div>
         <div class="mp-bolsa-abas" id="mp-bolsa-abas"><button data-baba="comidas" class="ativa">🍎 Comidas</button><button data-baba="itens">🧰 Itens</button><button data-baba="colecao">📖 Coleção</button></div>
         <div class="mp-bolsa-itens" id="mp-bolsa-itens"></div>
-      </div>
-      <!-- Tinta e efeito do pet ativo -->
-
-      <div class="mp-sub" id="mp-visual-painel" hidden>
-        <div class="mp-sub-topo"><b>🎨 Visual</b><span>Tinta e efeito deste pet</span><button class="bt-lista-x" id="mp-visual-fechar" aria-label="Fechar">✕</button></div>
-        <div id="mp-cores-bloco" hidden>
-          <div class="mp-visual-rot" id="mp-cores-rot">🐉 Cores do dragão</div><div class="mp-chips" id="mp-visual-cores"></div>
-          <div class="mp-visual-dica" id="mp-cor-msg"></div>
-        </div>
-        <div class="mp-visual-rot">Tinta</div><div class="mp-chips" id="mp-visual-tintas"></div>
-        <div class="mp-visual-rot">Efeito ao andar</div><div class="mp-chips" id="mp-visual-efeitos"></div>
-        <div class="mp-visual-dica" id="mp-visual-dica"></div>
-        <div id="mp-forma-bloco" hidden>
-          <div class="mp-visual-rot">Forma</div>
-          <button class="mp-chave" id="mp-filhote" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-filhote-txt">Mostrar como filhote</span></button>
-        </div>
-        <div class="mp-visual-rot">Convites</div>
-        <button class="mp-chave" id="mp-sem-convites" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-sem-convites-txt">Não receber convites: desligado</span></button>
-        <div class="mp-visual-rot">Letra</div>
-        <button class="mp-chave" id="mp-letra" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-letra-txt">Aa Letra grande: desligado</span></button>
       </div>
       <!-- Nome do pet -->
       <div class="mp-sub mp-nomear" id="mp-nomear" hidden>

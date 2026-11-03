@@ -587,22 +587,19 @@
     "pets/gaviao/andar_frente_3.webp",
     "pets/gaviao/andar_frente_4.webp"
    ],
-   "busto_sorrindo": [
-    "pets/gaviao/busto_sorrindo_1.webp"
-   ],
-   "comendo": [
-    "pets/gaviao/comendo_1.webp",
-    "pets/gaviao/comendo_2.webp",
-    "pets/gaviao/comendo_3.webp"
-   ],
-   "correndo": [
-    "pets/gaviao/correndo_1.webp",
-    "pets/gaviao/correndo_2.webp",
-    "pets/gaviao/correndo_3.webp"
-   ],
    "costas_parado": [
     "pets/gaviao/costas_parado_1.webp",
     "pets/gaviao/costas_parado_2.webp"
+   ],
+   "sentado_girando": [
+    "pets/gaviao/sentado_girando_1.webp",
+    "pets/gaviao/sentado_girando_2.webp",
+    "pets/gaviao/sentado_girando_3.webp"
+   ],
+   "sentado_2": [
+    "pets/gaviao/sentado_2_1.webp",
+    "pets/gaviao/sentado_2_2.webp",
+    "pets/gaviao/sentado_2_3.webp"
    ],
    "dormindo": [
     "pets/gaviao/dormindo_1.webp",
@@ -614,46 +611,30 @@
     "pets/gaviao/feliz_2.webp",
     "pets/gaviao/feliz_3.webp"
    ],
+   "busto_sorrindo": [
+    "pets/gaviao/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gaviao/comendo_1.webp",
+    "pets/gaviao/comendo_2.webp",
+    "pets/gaviao/comendo_3.webp",
+    "pets/gaviao/comendo_4.webp"
+   ],
+   "lamber_beicos": [
+    "pets/gaviao/lamber_beicos_1.webp"
+   ],
    "pulo_cambalhota": [
     "pets/gaviao/pulo_cambalhota_1.webp",
     "pets/gaviao/pulo_cambalhota_2.webp",
     "pets/gaviao/pulo_cambalhota_3.webp"
    ],
    "salto_pouso": [
-    "pets/gaviao/salto_pouso_1.webp",
-    "pets/gaviao/salto_pouso_2.webp"
+    "pets/gaviao/salto_pouso_1.webp"
    ],
-   "sentado_2": [
-    "pets/gaviao/sentado_2_1.webp",
-    "pets/gaviao/sentado_2_2.webp",
-    "pets/gaviao/sentado_2_3.webp"
-   ],
-   "sentado_girando": [
-    "pets/gaviao/sentado_girando_1.webp",
-    "pets/gaviao/sentado_girando_2.webp",
-    "pets/gaviao/sentado_girando_3.webp"
-   ],
-   "triste_fome": [
-    "pets/gaviao/triste_fome_1.webp",
-    "pets/gaviao/triste_fome_2.webp",
-    "pets/gaviao/triste_fome_3.webp"
-   ],
-   "galho": [
-    "pets/gaviao/galho_1.webp"
-   ],
-   "cacar": [
-    "pets/gaviao/cacar_1.webp",
-    "pets/gaviao/cacar_2.webp",
-    "pets/gaviao/cacar_3.webp"
-   ],
-   "banana": [
-    "pets/gaviao/banana_1.webp"
-   ],
-   "uva": [
-    "pets/gaviao/uva_1.webp"
-   ],
-   "parado_frente": [
-    "pets/gaviao/parado_frente_1.webp"
+   "correndo": [
+    "pets/gaviao/pulo_cambalhota_1.webp",
+    "pets/gaviao/pulo_cambalhota_2.webp",
+    "pets/gaviao/pulo_cambalhota_3.webp"
    ]
   },
   "capivara": {

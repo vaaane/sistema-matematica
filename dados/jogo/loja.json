@@ -5,7 +5,30 @@
   "fome_abaixo": 40,
   "comum_ate": 60,
   "alimentar_abaixo": { "dragao_vermelho": 80 },
-  "nao_come": { "dragao_vermelho": ["fruta", "maca", "banana", "cenoura", "milho", "batata"] },
+  "_nota_come": "PROMPT-174: o que cada pet come, como na vida real. come = o que ele aceita (a linha 'Come:' do Meu Pet e o 🍖 Alimentar); nao_come = o que ele recusa (a comida não é gasta). 'peixe' = qualquer peixe (pescado ou o peixe fresco). Guloseimas (guloseima: true) todos comem e enchem menos. A isca é comida só para quem tem 'isca' no come. As formas adultas e as cores seguem o pet de base.",
+  "come": {
+   "elefante": ["fruta", "maca", "banana", "cenoura", "milho", "batata", "racao"],
+   "gato": ["peixe", "carne", "racao"],
+   "gaviao": ["carne", "peixe"],
+   "axolote": ["isca", "peixe", "carne"],
+   "capivara": ["fruta", "maca", "banana", "cenoura", "milho", "batata", "racao"],
+   "tigre": ["carne", "peixe"],
+   "unicornio": ["maca", "cenoura", "fruta", "milho", "banana"],
+   "morcego": ["fruta", "banana", "maca"],
+   "dragao_vermelho": ["carne", "peixe"]
+  },
+  "nao_come": {
+   "elefante": ["carne", "peixe"],
+   "gato": ["fruta", "maca", "banana", "cenoura", "milho", "batata"],
+   "gaviao": ["fruta", "maca", "banana", "cenoura", "milho", "batata", "racao"],
+   "axolote": ["fruta", "maca", "banana", "cenoura", "milho", "batata"],
+   "capivara": ["carne", "peixe"],
+   "tigre": ["fruta", "maca", "banana", "cenoura", "milho", "batata", "racao"],
+   "unicornio": ["carne", "peixe"],
+   "morcego": ["carne", "peixe", "cenoura", "milho", "batata"],
+   "dragao_vermelho": ["fruta", "maca", "banana", "cenoura", "milho", "batata"]
+  },
+  "isca_comida": { "nome": "Isca (minhoca)", "lealdade": 2 },
   "cada_comida_enche": 20,
   "cheia": 100,
   "especiais_cheio_dia": 3
@@ -36,6 +59,8 @@
    "preco": 18,
    "lealdade": 3,
    "especial": false,
+   "guloseima": true,
+   "enche": 10,
    "imagem": "img/jogo/itens/biscoito.webp"
   },
   {
@@ -45,6 +70,8 @@
    "preco": 30,
    "lealdade": 5,
    "especial": true,
+   "guloseima": true,
+   "enche": 10,
    "imagem": "img/jogo/itens/petisco.webp"
   },
   {
@@ -59,7 +86,7 @@
   {
    "id": "carne",
    "nome": "Carne",
-   "emoji": "🍖",
+   "emoji": "🥩",
    "preco": 20,
    "lealdade": 2,
    "enche": 15,
@@ -74,6 +101,8 @@
    "lealdade": 10,
    "especial": true,
    "limite_semana": 1,
+   "guloseima": true,
+   "enche": 10,
    "imagem": "img/jogo/itens/bolo.webp"
   },
   {
@@ -129,14 +158,14 @@
  ],
  "favoritas": {
   "gato": "peixe",
-  "gaviao": "peixe",
-  "axolote": "biscoito",
-  "tigre": "petisco",
-  "unicornio": "fruta",
-  "morcego": "fruta",
-  "capivara": "maca",
-  "dragao_vermelho": ["bolo", "carne"],
-  "elefante": "fruta"
+  "gaviao": "carne",
+  "axolote": "isca",
+  "tigre": "carne",
+  "unicornio": "maca",
+  "morcego": "banana",
+  "capivara": "milho",
+  "dragao_vermelho": "carne",
+  "elefante": "banana"
  },
  "bonus_favorita": 1,
  "tintas": [

@@ -24,9 +24,14 @@ export const tintaAnimada = (t) => /^animado/.test(String(t?.filtro || ''));
 export const icone = (nome) => L?.icones?.[nome] || null;
 export const efeito = (id) => efeitos().find(e => e.id === id) || null;
 
-// Itens da bolsa: comidas da loja pelo id; peixes pescados como "pesca_{id}" (comida especial)
+// Itens da bolsa: comidas da loja pelo id; peixes pescados como "pesca_{id}" (comida especial); "isca" = a minhoca da pesca
+// (estado.pets.iscas), comida só para quem tem "isca" em barriga.come (o axolote, PROMPT-174)
 export const idDoPeixe = (id) => `pesca_${id}`;
 export function itemDaBolsa(id) {
+  if (id === 'isca') {
+    const u = (L?.itens_uso || []).find(x => x.id === 'isca') || {}, c = L?.isca_comida || {};
+    return { id, nome: c.nome || u.nome || 'Isca', emoji: u.emoji || '🪱', imagem: u.imagem || null, lealdade: Number(c.lealdade) || 2, especial: false, isca: true };
+  }
   if (String(id).startsWith('pesca_')) {
     const f = PEIXES[id.slice(6)];
     return f ? { id, nome: f.nome, emoji: f.raro ? '🐠' : '🐟', imagem: f.imagem || null, filtro: f.filtro || null,
@@ -38,10 +43,14 @@ export function itemDaBolsa(id) {
 
 // Favorita: o id da comida, ou "peixe" = qualquer peixe (pescado ou o peixe fresco da loja)
 // favoritas: { pet: id } ou { pet: [ids] } ("peixe" = qualquer peixe). O adulto usa a do filhote (mesmo pet).
+// um id das listas (favoritas, come, nao_come) vale para este item? "peixe" = qualquer peixe
+const casaComida = (x, item) => x === item.id || (x === 'peixe' && (item.peixe || /peixe/.test(item.id)));
 export function ehFavorita(pet, item) {
   const f = L?.favoritas?.[pet] ?? L?.favoritas?.[String(pet || '').replace(/_adulto$/, '')];
-  return !!item && [].concat(f || []).some(x => x === item.id || (x === 'peixe' && (item.peixe || /peixe/.test(item.id))));
+  return !!item && [].concat(f || []).some(x => casaComida(x, item));
 }
+// Guloseimas (biscoito, petisco, bolo): todos comem, e enchem menos (loja.json → guloseima: true, enche)
+export const ehGuloseima = (item) => !!item?.guloseima;
 
 // Semana do ano (ISO), para o limite por semana (bolo)
 export function semanaDe(d = new Date()) {
@@ -61,7 +70,14 @@ export function listaNaoCome(pet) {
   const n = { ...(L?.nao_come || {}), ...(L?.barriga?.nao_come || {}) }, l = n[pet] ?? n[petDaLista(pet)];
   return Array.isArray(l) ? l : [];
 }
-export const naoCome = (pet, item) => !!item && listaNaoCome(pet).includes(item.id);
+// O que ele aceita (PROMPT-174, barriga.come): a linha "Come:" do Meu Pet e o 🍖 Alimentar (sem as guloseimas)
+export function listaCome(pet) {
+  const n = L?.barriga?.come || {}, l = n[pet] ?? n[petDaLista(pet)];
+  return Array.isArray(l) ? l : [];
+}
+export const comeEste = (pet, item) => !!item && listaCome(pet).some(x => casaComida(x, item));
+// Recusa: o que está em nao_come (guloseima nunca); a isca, para quem não tem "isca" no come
+export const naoCome = (pet, item) => !!item && !ehGuloseima(item) && (item.isca ? !listaCome(pet).includes('isca') : listaNaoCome(pet).some(x => casaComida(x, item)));
 // Comida comum só com a barriga abaixo deste limite: por pet em barriga.alimentar_abaixo (os dragões, filhote e adulto: 80),
 // senão barriga.comum_ate (60)
 export function comumAte(pet) {

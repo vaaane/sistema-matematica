@@ -14,7 +14,7 @@ import { tocar, somLigado, alternarSom, tocarArquivo, pararEfeitos, musicaPara, 
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comMult, multMoedas, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
-  motivoNaoCome, comumAte, naoCome, listaNaoCome, enche, barrigaCheia, somarLealdade, nivelAmizade, validarNomePet, temPalavraProibida } from '/js/jogo-revisao/loja.js';
+  motivoNaoCome, comumAte, naoCome, listaNaoCome, listaCome, comeEste, ehGuloseima, enche, barrigaCheia, somarLealdade, nivelAmizade, validarNomePet, temPalavraProibida } from '/js/jogo-revisao/loja.js';
 import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre,
   semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha, peixeEhRaro } from '/js/jogo-revisao/pesca.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado,
@@ -1660,7 +1660,7 @@ function tentarEvolucao() {
 function mostrarEvolucao(pet) {
   const c = cuidadosDe(pet), adulto = formaComCor(formaAdulta(pet), corAtiva(pet));   // a cor especial continua no adulto
   c.evoluido = true;
-  gravar({ [`pets/conquistados/${pet}/evoluido`]: true });
+  { const patch = { [`pets/conquistados/${pet}/evoluido`]: true }; conquistaPet(pet, 'adulto', patch); gravar(patch); }
   preCarregarPet(adulto);
   pararFalaPet();
   soltarJoystick();
@@ -1758,7 +1758,7 @@ const semMovimento = () => matchMedia('(prefers-reduced-motion: reduce)').matche
 
 let mp = null;   // { pet, anim (PetParado), estado, corpoAnim, timerBalao }
 
-function abrirMeuPet() {
+function abrirMeuPet(aba = 'cuidar') {
   const pet = estado.pets.ativo;
   if (!pet) return;
   preCarregarPet(pet);
@@ -1770,11 +1770,42 @@ function abrirMeuPet() {
   img.dataset.src = '';
   mp.anim.definir(forma);
   medirMeuPet();
-  for (const id of ['mp-bolsa-painel', 'mp-visual-painel', 'mp-nomear', 'mp-exp-painel', 'mp-exp-confirma']) $(id).hidden = true;
+  for (const id of ['mp-bolsa-painel', 'mp-nomear', 'mp-exp-painel', 'mp-exp-confirma']) $(id).hidden = true;
   atualizarVisualPet();
   atualizarBotaoBatalhar();
-  renderMeuPet();
+  mostrarAbaMp(aba);
   voltarAoNormal();
+}
+// 🐾 PROMPT-175: as três abas do Meu Pet (Cuidar, Truques, Visual), uma de cada vez
+let mpAba = 'cuidar';
+function mostrarAbaMp(aba) {
+  mpAba = ['cuidar', 'truques', 'visual'].includes(aba) ? aba : 'cuidar';
+  for (const b of $('mp-abas').children) { const on = b.dataset.mpaba === mpAba; b.classList.toggle('ativa', on); b.setAttribute('aria-selected', String(on)); }
+  for (const a of ['cuidar', 'truques', 'visual']) $('mp-aba-' + a).hidden = a !== mpAba;
+  if (!mp) return;
+  if (mpAba === 'visual') renderVisual();
+  renderMeuPet();
+}
+// ◀ ▶ (ou deslizar o dedo no pet): troca entre os pets que o aluno tem; a aba continua a mesma
+const meusPetsMp = () => PETS.filter(p => temPet(p) && petValido(p));
+function trocarPetMp(dir) {
+  const l = meusPetsMp();
+  if (!mp || l.length < 2 || (mp.ocupado && !mp.comendo)) return;
+  const novo = l[(l.indexOf(mp.pet) + dir + l.length) % l.length], aba = mpAba;
+  fecharMeuPet();
+  trocarPetAtivo(novo);
+  abrirMeuPet(aba);
+}
+const arrastoMp = { x0: 0, y0: 0, ativo: false, andou: false };
+function ligarArrastoMeuPet() {
+  const palco = $('mp-palco');
+  palco.addEventListener('pointerdown', (e) => { Object.assign(arrastoMp, { ativo: true, andou: false, x0: e.clientX, y0: e.clientY }); });
+  addEventListener('pointerup', (e) => {
+    if (!arrastoMp.ativo) return;
+    arrastoMp.ativo = false;
+    const { x, y } = deltaNoJogo(e.clientX - arrastoMp.x0, e.clientY - arrastoMp.y0);   // celular em pé: o jogo está girado
+    if (Math.abs(x) > 50 && Math.abs(x) > Math.abs(y) * 1.5) { arrastoMp.andou = true; trocarPetMp(x < 0 ? 1 : -1); }
+  });
 }
 
 // pet grande: o filhote tem a imagem com até ~78% da altura do palco, no máximo 352 px na tela (o tamanho de antes
@@ -1821,13 +1852,14 @@ function renderMeuPet() {
   $('mp-moedas').textContent = Number(estado.pets.moedas) || 0;
   $('mp-barriga-fill').style.width = b + '%';
   $('mp-barriga-fill').dataset.cor = fb.cor;
-  $('mp-barriga-rot').textContent = fb.rotulo;
+  $('mp-barriga-rot').textContent = textoFome(b);
   $('mp-lealdade-fill').style.width = l + '%';
   $('mp-lealdade-rot').textContent = `${rotuloLealdade(l)} · ${l}` + (l >= 100 ? ` · amizade ❤️ ${nivel} (${Math.floor((Number(c.amizade) || 0) % pp)}/${pp})` : '');
   const lc = configFalas().lealdade_minima ?? 25, ld = configAjuda().lealdade_dica ?? 80, le = configAjuda().lealdade_eliminar ?? 95;
-  for (const [id, v] of [['conversa', lc], ['ajuda', ld], ['elimina', le]]) {
+  for (const [id, v, txt] of [['conversa', lc, '💬 {v} — começa a conversar'], ['ajuda', ld, '💡 {v} — dá dicas nos ginásios'], ['elimina', le, '❌ {v} — elimina uma opção nos ginásios']]) {
     $('mp-marca-' + id).style.left = v + '%';
     $('mp-marca-' + id).classList.toggle('ok', l >= v);
+    $('mp-marca-' + id).dataset.dica = txt.replace('{v}', v);   // tocar no marcador: o que ele libera (PROMPT-174)
   }
   // uma linha só: o próximo marco ainda não alcançado (os números são os do jogo: falas, dica, eliminar, cambalhota, amizade)
   // (dois marcos no mesmo número: vale o primeiro; o outro está no ⓘ)
@@ -1848,14 +1880,122 @@ function renderMeuPet() {
   $('mp-marca-adulto').hidden = !adulto || evoluiu;
   $('mp-marca-adulto').style.left = LEALDADE_EVOLUCAO + '%';
   $('mp-marca-adulto').classList.toggle('ok', l >= LEALDADE_EVOLUCAO);
+  $('mp-marca-adulto').dataset.dica = `✨ ${LEALDADE_EVOLUCAO} — vira adulto`;
   $('mp-evo').hidden = !adulto;
   $('mp-evo').classList.toggle('adulto', evoluiu);
   if (adulto) $('mp-evo').innerHTML = evoluiu ? '✨ Adulto'
     : `<img src="${quadrosDe(adulto, 'sentado_girando')[0]}" alt="" draggable="false"/><span>✨ Com lealdade 100, <b>${esc(nomePet(pet))}</b> vira adulto!</span>`;
+  renderComeMeuPet(pet);
   atualizarBotaoTreino();
   pintarExpMeuPet();
   pintarChapeuMeuPet();
-  $('mp-bolsa').innerHTML = `${imgItem(icone('bolsa'), '🎒', 'jr-ic-btn')} Bolsa (${Object.values(estado.pets.bolsa || {}).reduce((a, n) => a + (Number(n) || 0), 0)})`;
+  $('mp-bolsa-n').textContent = Object.values(estado.pets.bolsa || {}).reduce((a, n) => a + (Number(n) || 0), 0) || '';
+  const h = humorPet(pet), l2 = meusPetsMp();
+  $('mp-humor').textContent = h; $('mp-humor').title = h;
+  $('mp-pos').textContent = l2.length > 1 ? `${l2.indexOf(pet) + 1} / ${l2.length}` : '';
+  $('mp-ant').hidden = $('mp-prox').hidden = l2.length < 2;
+  marcarConquistasPet(pet);
+  if (mpAba === 'cuidar') renderHojeMp(pet);
+  if (mpAba === 'truques') renderMedalhas(pet);
+  if (mpAba === 'visual') renderFicha(pet);
+}
+
+// ── PROMPT-175: humor, "Hoje com…", conquistas e ficha do pet ──
+// estatísticas de cada pet em pets/conquistados/{pet}/stats: refeicoes, comeu_dia, vitorias, seq { dia, n, max } e as datas
+// das conquistas (carinho1, refeicoes10, vit1, vit10, truque1, leal50, leal100, adulto, dias7). Data 1 = conquistada antes de existir a data.
+let petAnimadoAte = 0;   // 🤩 logo depois de carinho ou vitória
+const statsDe = (pet) => (cuidadosDe(pet).stats ||= {});
+function humorPet(pet) {
+  if (deveDormir()) return '😴 com sono';
+  if (barrigaDe(pet) < fomeAbaixo()) return '😋 com fome';
+  if (petAnimadoAte > Date.now()) return '🤩 animado';
+  return '😊 feliz';
+}
+function textoFome(b) {
+  const f = fomeAbaixo();
+  if (b < f) return 'Com fome agora!';
+  const h = (b - f) * (cfgLoja().barriga?.esvazia_horas_uteis ?? 16) / 100;   // horas de jogo (horas úteis), como a barriga esvazia
+  return h < 1 ? 'Fica com fome em menos de 1 h' : `Fica com fome em ~${Math.round(h)} h`;
+}
+// grava a conquista (a data) uma vez
+function conquistaPet(pet, k, patch, quando = Date.now()) {
+  const st = statsDe(pet);
+  if (st[k]) return;
+  st[k] = quando;
+  patch[`pets/conquistados/${pet}/stats/${k}`] = quando;
+}
+// 📅 dias seguidos cuidando (comida ou carinho): conta uma vez por dia
+function cuidouHoje(pet, patch) {
+  const st = statsDe(pet), hoje = diaLocal(), q = st.seq || {};
+  if (q.dia === hoje) return;
+  const n = q.dia && Math.round((paraData(hoje) - paraData(q.dia)) / 864e5) === 1 ? (Number(q.n) || 0) + 1 : 1;
+  st.seq = { dia: hoje, n, max: Math.max(n, Number(q.max) || 0) };
+  patch[`pets/conquistados/${pet}/stats/seq`] = st.seq;
+  if (st.seq.max >= 7) conquistaPet(pet, 'dias7', patch);
+}
+// vitórias de batalha deste pet: o contador (a 1ª vez: as batalhas já gravadas em respostas/batalha-*)
+function vitoriasDe(pet) {
+  const st = statsDe(pet);
+  if (st.vitorias == null) {
+    const v = Object.values(estado.respostas || {}).filter(r => r?.tipo === 'batalha' && r.pet === pet && r.resultado === 'venceu').sort((a, b) => (a.data || 0) - (b.data || 0));
+    st.vitorias = v.length;
+    const patch = { [`pets/conquistados/${pet}/stats/vitorias`]: v.length };
+    if (v[0]) conquistaPet(pet, 'vit1', patch, v[0].data || 1);
+    if (v[9]) conquistaPet(pet, 'vit10', patch, v[9].data || 1);
+    gravar(patch);
+  }
+  return Number(st.vitorias) || 0;
+}
+// o que dá para conferir na hora (lealdade, evolução, carinho de antes): marca quando o Meu Pet abre
+function marcarConquistasPet(pet) {
+  const c = cuidadosDe(pet), patch = {}, l = Number(c.lealdade) || 0;
+  vitoriasDe(pet);
+  if (l >= 50 || c.amizade > 0) conquistaPet(pet, 'leal50', patch);
+  if (l >= 100 || c.amizade > 0) conquistaPet(pet, 'leal100', patch);
+  if (c.evoluido && formaAdulta(pet)) conquistaPet(pet, 'adulto', patch, 1);
+  if (c.carinhos_dia) conquistaPet(pet, 'carinho1', patch, 1);
+  if (Object.keys(patch).length) gravar(patch);
+}
+function renderHojeMp(pet) {
+  const c = cuidadosDe(pet), hoje = diaLocal(), st = statsDe(pet), car = doDia(c.carinhos_dia, hoje), tr = situacaoTreino();
+  const item = (feito, txt) => `<span class="${feito ? 'feito' : ''}">${txt}</span>`;
+  const treino = tr.bloqueado ? item(false, '🎯 treino 🔒') : tr.feito || tr.vazio ? item(true, '✅ treino') : item(false, `🎯 treino ${tr.feitas}/${tr.total}`);
+  $('mp-hoje-tit').textContent = `Hoje com ${nomePet(pet)}:`;
+  $('mp-hoje').innerHTML = item(st.comeu_dia === hoje, st.comeu_dia === hoje ? '✅ alimentou' : '🍖 alimentou') +
+    item(car >= CARINHOS_POR_DIA, `${car >= CARINHOS_POR_DIA ? '✅' : '💜'} carinho ${car}/${CARINHOS_POR_DIA}`) + treino;
+}
+const MEDALHAS_PET = [
+  ['carinho1', '💜', 'Primeiro carinho'], ['refeicoes10', '🍽️', '10 refeições'], ['vit1', '⚔️', 'Primeira batalha vencida'],
+  ['vit10', '🏆', '10 batalhas vencidas'], ['truque1', '✨', 'Primeiro truque'], ['leal50', '💛', 'Lealdade 50'], ['leal100', '❤️', 'Lealdade 100'],
+  ['adulto', '🐉', 'Virou adulto'], ['dias7', '📅', '7 dias seguidos cuidando'],
+];
+const dataMedalha = (t) => (Number(t) > 1 ? new Date(Number(t)).toLocaleDateString('pt-BR') : '');
+function renderMedalhas(pet) {
+  const st = statsDe(pet);
+  $('mp-medalhas').innerHTML = MEDALHAS_PET.filter(([k]) => k !== 'adulto' || formaAdulta(pet)).map(([k, ic, nome]) =>
+    `<button class="mp-medalha${st[k] ? ' ok' : ''}" data-medalha="${k}" aria-label="${esc(nome)}" title="${esc(nome)}"><span>${ic}</span></button>`).join('');
+}
+function mostrarMedalha(k) {
+  const m = MEDALHAS_PET.find(x => x[0] === k), t = mp && statsDe(mp.pet)[k];
+  if (!m) return;
+  $('mp-medalha-info').innerHTML = `${m[1]} <b>${esc(m[2])}</b> — ${t ? (dataMedalha(t) ? `conquistada em ${dataMedalha(t)}` : 'conquistada') : 'ainda não'}`;
+  for (const b of $('mp-medalhas').children) b.classList.toggle('sel', b.dataset.medalha === k);
+}
+function renderFicha(pet) {
+  const c = cuidadosDe(pet), st = statsDe(pet), d = Number(c.data) || 0;
+  const onde = c.origem === 'inicial' ? 'Escolhido no começo' : c.origem === 'professora' ? 'Presente da professora'
+    : /^mapa\d+-[AB]$/.test(c.origem || '') ? `Ginásio ${nomeDoLugar(c.origem)}` : '—';
+  const tq = truquesDe(pet) || [], fav = itemDaLista([cfgLoja().favoritas?.[pet]].flat()[0]);
+  const linhas = [
+    ['🗓️', 'Dias juntos', d ? Math.max(1, Math.floor((Date.now() - d) / 864e5) + 1) : '—'],
+    ['🎂', 'Aniversário', d ? new Date(d).toLocaleDateString('pt-BR') : '—'],
+    ['📍', 'Onde ganhou', onde],
+    ['⚔️', 'Batalhas vencidas', vitoriasDe(pet)],
+    ['🍽️', 'Refeições', Number(st.refeicoes) || 0],
+    ['✨', 'Truques aprendidos', tq.length ? `${tq.filter(t => truqueLiberado(t.id, pet)).length} de ${tq.length}` : '—'],
+    ['❤️', 'Comida favorita', fav ? `${imgItem(fav.imagem, fav.emoji, 'mp-come-ic', fav.filtro)} ${esc(fav.nome)}` : '—'],
+  ];
+  $('mp-ficha').innerHTML = linhas.map(([ic, k, v]) => `<div><span>${ic} ${k}</span><b>${typeof v === 'string' && v.startsWith('<') ? v : esc(String(v))}</b></div>`).join('');
 }
 
 // "🐾 Meus pets (N)" + até 3 carinhas (o ativo primeiro; "+N" se tiver mais)
@@ -1980,11 +2120,33 @@ function comemorar(anim, pular = true) {
 }
 
 function falarPet(texto) {
+  mostrarBalaoMp(`<span class="mp-balao-txt">${esc(texto)}</span>`, Math.min(5000, Math.max(3000, tempoLeitura(texto))));
+}
+// 💬 PROMPT-174: o balão sai da boca do pet (o rabinho aponta para ele) e flutua por cima da coluna da direita, sem empurrar
+// nada; some sozinho (~3 s, um pouco mais se a fala for longa) ou ao tocar. A posição vem dos offsets (não muda com o
+// celular em pé, em que o jogo inteiro está girado)
+function mostrarBalaoMp(html, ms) {
   const b = $('mp-balao');
-  b.innerHTML = `<span class="mp-balao-txt">${esc(texto)}</span>`;   // no máximo 3 linhas (o corte fica no texto: o rabinho aparece)
+  b.innerHTML = html;
   b.hidden = false;
+  posicionarBalaoMp();
   clearTimeout(mp.timerBalao);
-  mp.timerBalao = setTimeout(() => { b.hidden = true; }, tempoLeitura(texto));   // tempo de leitura (PROMPT-137)
+  mp.timerBalao = setTimeout(() => { b.hidden = true; }, ms);
+}
+function offsetDentro(el, anc) {
+  let x = 0, y = 0;
+  for (let e = el; e && e !== anc; e = e.offsetParent) { x += e.offsetLeft; y += e.offsetTop; }
+  return { x, y };
+}
+function posicionarBalaoMp() {
+  const b = $('mp-balao'), caixa = b.closest('.jr-mp-caixa'), img = $('mp-img');
+  if (!caixa || !img.offsetWidth) return;
+  const o = offsetDentro(img, caixa), bx = o.x + img.offsetWidth * 0.64, by = o.y + img.offsetHeight * 0.34;   // ~ a boca, no quadro do pet
+  b.style.left = Math.round(bx + 10) + 'px';
+  b.style.maxWidth = Math.max(160, caixa.clientWidth - bx - 22) + 'px';
+  const top = Math.max(6, Math.min(by - b.offsetHeight / 2, caixa.clientHeight - b.offsetHeight - 6));
+  b.style.top = Math.round(top) + 'px';
+  b.style.setProperty('--rabo-y', Math.round(Math.max(10, Math.min(by - top, b.offsetHeight - 10))) + 'px');
 }
 
 function particulas(simbolos, n) {   // símbolo: texto (emoji) ou HTML de imagem (começa com "<")
@@ -2006,16 +2168,21 @@ function carinhoPet() {
   if (mp.estado === 'dormindo') { acordarPet(); return; }   // tocar no pet dormindo: acorda
   missaoProgresso('carinho');
   const pet = mp.pet, c = cuidadosDe(pet), hoje = diaLocal();
-  if (doDia(c.carinhos_dia, hoje) < CARINHOS_POR_DIA) {
+  petAnimadoAte = Date.now() + 60e3;
+  if (doDia(c.carinhos_dia, hoje) < CARINHOS_POR_DIA && Date.now() - (mp.ultimoCarinho || 0) >= 5000) {   // conta 1 a cada 5 s (PROMPT-175)
+    mp.ultimoCarinho = Date.now();
     c.carinhos_dia = { dia: hoje, n: doDia(c.carinhos_dia, hoje) + 1 };
-    const base = `pets/conquistados/${pet}`;
-    gravar(ganharLealdade(pet, 1, { [`${base}/carinhos_dia`]: c.carinhos_dia }));
-    renderMeuPet();
+    const base = `pets/conquistados/${pet}`, patch = { [`${base}/carinhos_dia`]: c.carinhos_dia };
+    conquistaPet(pet, 'carinho1', patch);
+    cuidouHoje(pet, patch);
+    gravar(ganharLealdade(pet, 1, patch));
     verificarMarcosLealdade(pet);
   }
+  renderMeuPet();
   particulas(['💜', '💛', '💜', '💛'], 5);
   const fc = barrigaDe(pet) >= fomeAbaixo() && falasProntas() && c.lealdade >= (configFalas().lealdade_minima ?? 25) ? montarFala(contextoFalaDe(pet), 'carinho') : null;
-  falarPet(barrigaDe(pet) < fomeAbaixo() ? 'Obrigado… mas tô com fome' : fc?.baloes[0]?.texto || 'Gostei!');
+  if (barrigaDe(pet) < fomeAbaixo()) falarPet('Obrigado… mas tô com fome');
+  else if (Math.random() < 0.4) falarPet(fc?.baloes[0]?.texto || 'Gostei!');   // a fala vem de vez em quando
   // o adulto ri de lado (sequência "carinho"); os outros ficam felizes ou dão cambalhota
   if (temSequencia(mp.forma, 'carinho')) { mp.estado = 'carinho'; mp.ocupado = true; movimentoCorpo(null); mp.anim.sequencia('carinho', voltarAoNormal); }
   else comemorar(c.lealdade >= LEALDADE_CAMBALHOTA ? 'pulo_cambalhota' : 'feliz');
@@ -2470,21 +2637,27 @@ function comprar(id) {
 }
 
 // ── Bolsa (no "Meu Pet"): dar comida ao pet ativo ──────────
-// Dragão com planta (loja.json → barriga.nao_come): a comida sai da bolsa, não enche nem dá lealdade; ele fica bravo e bufa (`recusa`)
+// Comida que o pet não come (loja.json → barriga.nao_come, PROMPT-174): a comida NÃO é gasta; aparece o aviso com o que ele
+// come e ele fica bravo (o dragão bufa, sequência `recusa`)
+const nomeComida = (id) => (id === 'peixe' ? 'peixe' : id === 'isca' ? 'minhoca' : String(itemDaBolsa(id)?.nome || id).toLowerCase());
+const juntarE = (l) => (l.length > 1 ? `${l.slice(0, -1).join(', ')} e ${l.at(-1)}` : l[0] || '');
+const textoRecusa = (pet, item) => {
+  const fav = [cfgLoja().favoritas?.[pet]].flat()[0], l = [...new Set([fav, ...listaCome(pet)].filter(x => listaCome(pet).includes(x)))];   // a favorita primeiro
+  return `${nomePet(pet)} não come ${String(item.nome || '').toLowerCase()}${item.emoji ? ' ' + item.emoji : ''}.` + (l.length ? ` Ele gosta de ${juntarE(l.slice(0, 3).map(nomeComida))}!` : '');
+};
 const animBravo = (forma) => ['bravo', 'confuso', 'triste_fome'].find(a => temAnim(forma, a)) || 'sentado_girando';
 // a bufada (PROMPT-110): no passo `bufando` da sequência `recusa`; sem a sequência (filhote), na hora
 const somRecusa = (forma) => (temSequencia(forma, 'recusa') ? somNaSequencia('dragao_bufando', forma, 'recusa', 'bufando', 'bravo') : tocarArquivo('dragao_bufando'));
-function recusarComida(pet, item, n) {
-  estado.pets.bolsa[item.id] = n - 1;
-  gravar({ [`pets/bolsa/${item.id}`]: n - 1 || null });
+function recusarComida(pet, item) {
   mp.acordadoAte = Date.now() + ACORDADO_MS;
   mp.estado = 'recusa'; mp.ocupado = true;
   movimentoCorpo(null);
-  if (!mp.anim.sequencia('recusa', voltarAoNormal)) mp.anim.tocar(animBravo(mp.forma), voltarAoNormal);
-  particulas(['🗑️', '💨', '🗑️'], 3);
+  const dragao = temSequencia(mp.forma, 'recusa');
+  if (!mp.anim.sequencia('recusa', voltarAoNormal)) { mp.anim.tocar(animBravo(mp.forma)); setTimeout(() => { if (mp?.estado === 'recusa') voltarAoNormal(); }, 1200); }   // reação curta
+  particulas(['🚫', '💨'], 2);
   tocar('erro');
-  somRecusa(mp.forma);
-  falarPet(fraseDe(pet, 'recusa_planta', { pet: nomePet(pet), comida: String(item.nome || '').toLowerCase() }) || 'Isso eu não como!');
+  if (dragao) somRecusa(mp.forma);
+  falarPet(textoRecusa(pet, item));
   renderMeuPet();
 }
 // Dragão com fome abrindo a bolsa ou a loja de comida: uma frase de fome que reclama de planta (uma vez por abertura)
@@ -2502,16 +2675,23 @@ function abrirBolsa() {
   $('mp-bolsa-painel').hidden = false;
 }
 let bolsaSel = null, bolsaAba = 'comidas';   // peixe tocado na bolsa: mostra as opções
+// as comidas da bolsa, com a isca para quem come isca (o axolote); recusa: aparece em cinza com 🚫 (PROMPT-174)
+function comidasNaBolsa(pet) {
+  const l = Object.entries(estado.pets.bolsa || {}).filter(([, n]) => Number(n) > 0).map(([id, n]) => ({ ...itemDaBolsa(id), n: Number(n) })).filter(x => x.id);
+  if (iscas() > 0 && listaCome(pet).includes('isca')) l.push({ ...itemDaBolsa('isca'), n: iscas() });
+  return l.map(x => ({ ...x, recusa: naoCome(pet, x) }));
+}
+const qtdNaBolsa = (id) => (id === 'isca' ? iscas() : Number(estado.pets.bolsa?.[id]) || 0);
 function renderBolsa() {
   for (const b of $('mp-bolsa-abas').children) b.classList.toggle('ativa', b.dataset.baba === bolsaAba);
   if (bolsaAba === 'itens') { $('mp-bolsa-itens').innerHTML = itensHtml(); return; }
   if (bolsaAba === 'colecao') { $('mp-bolsa-itens').innerHTML = CAVAR ? albumHtml() : '<div class="mp-bolsa-vazia">Coleção indisponível agora.</div>'; return; }
-  const pet = mp.pet, itens = Object.entries(estado.pets.bolsa || {}).filter(([, n]) => Number(n) > 0).map(([id, n]) => ({ ...itemDaBolsa(id), n })).filter(x => x.id);
+  const pet = mp.pet, itens = comidasNaBolsa(pet);
   $('mp-bolsa-itens').innerHTML = (itens.length ? itens.map(x => `
-    <button class="mp-bolsa-item${bolsaSel === x.id ? ' sel' : ''}" data-comida="${esc(x.id)}">
-      <span class="mp-bolsa-emoji">${imgItem(x.imagem, x.emoji, 'jr-item-bolsa' + (x.raro ? ' raro' : ''), x.filtro)}</span>
-      <b>${esc(x.nome)}</b><span>× ${x.n} · +${x.lealdade} lealdade${ehFavorita(pet, x) ? ' ❤️' : ''}</span>
-      ${x.especial ? '<em>come sem fome</em>' : ''}
+    <button class="mp-bolsa-item${bolsaSel === x.id ? ' sel' : ''}${x.recusa ? ' nao-come' : ''}" data-comida="${esc(x.id)}"${x.recusa ? ` title="${esc(nomePet(pet))} não come"` : ''}>
+      <span class="mp-bolsa-emoji">${imgItem(x.imagem, x.emoji, 'jr-item-bolsa' + (x.raro ? ' raro' : ''), x.filtro)}${x.recusa ? '<i class="mp-nao-come">🚫</i>' : ''}</span>
+      <b>${esc(x.nome)}</b><span>× ${x.n} · ${x.recusa ? 'não come' : `+${x.lealdade} lealdade${ehFavorita(pet, x) ? ' ❤️' : ''}`}</span>
+      ${x.especial && !x.recusa ? '<em>come sem fome</em>' : ''}
     </button>${bolsaSel === x.id ? `<div class="mp-bolsa-acoes"><button class="jr-btn jr-btn-ouro" data-dar-pet="${esc(x.id)}">🍽️ Dar ao pet</button>
       <span>💰 Vender: loja da Dona Cida (aba Pesca) · 🎁 Presentear: toque num colega no mapa</span></div>` : ''}`).join('')
     : `<div class="mp-bolsa-vazia">A bolsa está vazia. Compre comida na loja da Dona Cida (${esc(ondeDonaCida())}) 🛒 ou pesque peixes 🎣.</div>`);
@@ -2519,7 +2699,7 @@ function renderBolsa() {
 // Núcleo do alimentar (Meu Pet e o 🥣 pote da casinha, PROMPT-106): confere, tira da bolsa, enche a barriga e dá a lealdade.
 // → null (nada a fazer) · { recusa, item, n } (dragão + planta) · { motivo, item } (não come agora) · { item, fav } (comeu)
 function comerDaBolsa(pet, id) {
-  const c = cuidadosDe(pet), item = itemDaBolsa(id), n = Number(estado.pets.bolsa?.[id]) || 0;
+  const c = cuidadosDe(pet), item = itemDaBolsa(id), n = qtdNaBolsa(id);
   if (!c || !item || n <= 0) return null;
   const b = barrigaDe(pet), cfg = cfgLoja().barriga || {}, hoje = diaLocal();
   if (naoCome(pet, item)) return { recusa: true, item, n };
@@ -2527,8 +2707,9 @@ function comerDaBolsa(pet, id) {
   if (motivo) return { motivo, item };
   const agora = Date.now(), base = `pets/conquistados/${pet}`;
   c.barriga = Math.min(cfg.cheia ?? 100, b + (Number(item.enche) || enche())); c.barriga_t = agora;   // a carne enche menos (loja.json → enche)
-  estado.pets.bolsa[id] = n - 1;
-  const patch = { [`${base}/barriga`]: Math.round(c.barriga * 10) / 10, [`${base}/barriga_t`]: agora, [`pets/bolsa/${id}`]: n - 1 || null };
+  const patch = { [`${base}/barriga`]: Math.round(c.barriga * 10) / 10, [`${base}/barriga_t`]: agora };
+  if (item.isca) { estado.pets.iscas = n - 1; patch['pets/iscas'] = n - 1; }   // 🪱 o axolote come a isca da pesca
+  else { estado.pets.bolsa[id] = n - 1; patch[`pets/bolsa/${id}`] = n - 1 || null; }
   if (barrigaCheia(b)) {   // especial comida de barriga cheia: conta no limite do dia
     c.especiais_cheio_dia = { dia: hoje, n: doDia(c.especiais_cheio_dia, hoje) + 1 };
     patch[`${base}/especiais_cheio_dia`] = c.especiais_cheio_dia;
@@ -2538,6 +2719,11 @@ function comerDaBolsa(pet, id) {
     c.semana = { ...(c.semana || {}), [id]: { semana: sem, n: (s?.semana === sem ? Number(s.n) || 0 : 0) + 1 } };
     patch[`${base}/semana/${id}`] = c.semana[id];
   }
+  const st = statsDe(pet);   // 🍽️ PROMPT-175: refeições e "alimentou hoje"
+  st.refeicoes = (Number(st.refeicoes) || 0) + 1; st.comeu_dia = hoje;
+  patch[`${base}/stats/refeicoes`] = st.refeicoes; patch[`${base}/stats/comeu_dia`] = hoje;
+  if (st.refeicoes >= 10) conquistaPet(pet, 'refeicoes10', patch);
+  cuidouHoje(pet, patch);
   const fav = ehFavorita(pet, item);
   ganharLealdade(pet, item.lealdade + (fav ? cfgLoja().bonus_favorita ?? 0 : 0), patch);
   gravar(patch);
@@ -2551,7 +2737,7 @@ function darComida(id) {
   $('mp-bolsa-painel').hidden = true;
   const pet = mp.pet, r = comerDaBolsa(pet, id);
   if (!r) return;
-  if (r.recusa) { recusarComida(pet, r.item, r.n); return; }   // dragão + planta: joga fora (sem aviso antes, PROMPT-73)
+  if (r.recusa) { recusarComida(pet, r.item); return; }   // não come: a comida continua na bolsa (PROMPT-174)
   if (r.motivo) { falarPet(textoNaoCome(pet, r.motivo)); return; }
   const { item, fav } = r;
   renderMeuPet();
@@ -2574,6 +2760,46 @@ function darComida(id) {
   verificarMarcosLealdade(pet);
   xpPorComida();
 }
+// 🍖 PROMPT-174: "Come: … · Favorita: …" embaixo da barriga (o que ele aceita, sem as guloseimas)
+const itemDaLista = (id) => (id === 'peixe' ? { ...itemDaBolsa('peixe_fresco'), nome: 'Peixe' } : itemDaBolsa(id));   // "peixe" = qualquer peixe
+function renderComeMeuPet(pet) {
+  const ic = (x) => (x ? `<span title="${esc(x.nome)}">${imgItem(x.imagem, x.emoji, 'mp-come-ic', x.filtro)}</span>` : '');
+  const come = listaCome(pet).map(itemDaLista).filter(Boolean), fav = itemDaLista([cfgLoja().favoritas?.[pet]].flat()[0]);
+  $('mp-come').innerHTML = come.length ? `Come: ${come.map(ic).join('')}${fav ? ` · Favorita: ${ic(fav)}` : ''}` : '';
+}
+// 🍖 Alimentar: a favorita, se tiver na bolsa; senão a melhor que ele aceita (a comida certa antes das guloseimas, a que pode
+// comer agora antes, mais lealdade antes); sem nenhuma que ele aceita: vai à loja da Dona Cida, na aba Comidas
+function alimentarRapido() {
+  if (!mp || petFora(mp.pet) || (mp.ocupado && !mp.comendo)) return;
+  const pet = mp.pet, ok = comidasNaBolsa(pet).filter(x => !x.recusa);
+  if (!ok.length) { irComprarComida(pet); return; }
+  const fav = ok.find(x => ehFavorita(pet, x));
+  if (fav) { darComida(fav.id); return; }
+  const c = cuidadosDe(pet), b = barrigaDe(pet), hoje = diaLocal();
+  const grupo = (x) => (comeEste(pet, x) ? 0 : ehGuloseima(x) ? 2 : 1);
+  const ordem = [...ok].sort((x, y) => grupo(x) - grupo(y) || y.lealdade - x.lealdade);
+  const agora = ordem.find(x => !motivoNaoCome(x, b, c, new Date(), doDia(c.especiais_cheio_dia, hoje), pet));
+  darComida((agora || ordem[0]).id);   // nenhuma cabe agora: a 1ª, que mostra o motivo ("Ainda não tô com fome…")
+}
+function irComprarComida(pet) {
+  avisoPet(`🛒 Não tem comida que ${nomePet(pet)} come na bolsa. Vamos à loja da Dona Cida!`);
+  fecharMeuPet();
+  if (cena?.n === 'loja') { abrirLoja('comidas'); return; }
+  transicao(async () => { await abrirLojaInterior({ tipo: 'praca' }); abrirLoja('comidas'); });
+}
+// tocar num marcador da lealdade: um balãozinho com o que ele libera e em quantos pontos
+function mostrarDicaMarca(el) {
+  const bl = $('mp-marca-balao');
+  if (!el?.dataset.dica || (!bl.hidden && bl.dataset.de === el.id)) { bl.hidden = true; return; }
+  bl.textContent = el.dataset.dica;
+  bl.dataset.de = el.id;
+  bl.hidden = false;
+  const x = parseFloat(el.style.left) || 0, w = bl.parentElement.clientWidth || 1;
+  bl.style.left = Math.max(0, Math.min(w - bl.offsetWidth, w * x / 100 - bl.offsetWidth / 2)) + 'px';
+  clearTimeout(bl.timer);
+  bl.timer = setTimeout(() => { bl.hidden = true; }, 3000);
+}
+
 // ⭐ alimentar o pet: 2 XP, até 5 vezes por dia (PROMPT-156)
 function xpPorComida() {
   const x = estado.xpJogo, hoje = diaLocal();
@@ -2587,9 +2813,7 @@ function xpPorComida() {
 
 // ── Tinta e efeito do pet ativo (entre os comprados) ───────
 function abrirVisual() {
-  if (!mp) return;
-  renderVisual();
-  $('mp-visual-painel').hidden = false;
+  if (mp) mostrarAbaMp('visual');   // PROMPT-175: o Visual é uma aba do Meu Pet
 }
 function renderVisual() {
   const c = cuidadosDe(mp.pet), src = quadrosDe(mp.forma, 'sentado_girando')[0];
@@ -9935,15 +10159,15 @@ function brincarNaCaixa() {
 }
 // 🥣 pote: escolhe a comida da bolsa (o mesmo alimentar do Meu Pet) e o pet vai comer ali
 function abrirPote(m) {
-  const itens = Object.entries(estado.pets.bolsa || {}).filter(([, n]) => Number(n) > 0).map(([id, n]) => ({ ...itemDaBolsa(id), n: Number(n) })).filter(x => x.id);
-  $('cs-comida-lista').innerHTML = itens.length ? itens.map(x => `<button class="cs-comida-item" data-comer="${esc(x.id)}">
-      <span>${imgItem(x.imagem, x.emoji, 'jr-item-bolsa' + (x.raro ? ' raro' : ''), x.filtro)}</span><b>${esc(x.nome)}</b><small>× ${x.n} · +${x.lealdade} lealdade${ehFavorita(seguidor.pet, x) ? ' ❤️' : ''}</small></button>`).join('')
+  const itens = comidasNaBolsa(seguidor.pet);
+  $('cs-comida-lista').innerHTML = itens.length ? itens.map(x => `<button class="cs-comida-item${x.recusa ? ' nao-come' : ''}" data-comer="${esc(x.id)}">
+      <span>${imgItem(x.imagem, x.emoji, 'jr-item-bolsa' + (x.raro ? ' raro' : ''), x.filtro)}${x.recusa ? '<i class="mp-nao-come">🚫</i>' : ''}</span><b>${esc(x.nome)}</b><small>× ${x.n} · ${x.recusa ? 'não come' : `+${x.lealdade} lealdade${ehFavorita(seguidor.pet, x) ? ' ❤️' : ''}`}</small></button>`).join('')
     : `<p class="cs-vazio">A bolsa está vazia. Compre comida na loja da Dona Cida (${esc(ondeDonaCida())}) 🛒 ou pesque peixes 🎣.</p>`;
   $('cs-comida').dataset.i = String(cs.moveis.indexOf(m));
   $('cs-comida').hidden = false;
 }
 // PROMPT-110: o pet vai até o pote e come ali, do lado dele e virado para ele; a comida aparece dentro do pote enquanto come.
-// Dragão + planta: a comida sai da bolsa (como no Meu Pet); ele vai até o pote, cheira, fica bravo e bufa; depois volta a passear.
+// Comida que ele não come: não é gasta (PROMPT-174); ele vai até o pote, cheira, fica bravo (o dragão bufa) e vem o aviso; depois volta a passear.
 function comerNoPote(id) {
   const m = cs?.moveis[Number($('cs-comida').dataset.i)];
   $('cs-comida').hidden = true;
@@ -9955,8 +10179,6 @@ function comerNoPote(id) {
   let vez = null;
   const aqui = () => cs && !cs.arrumando && (cs.ida ? cs.ida === vez : !vez);   // ainda é esta comida (não foi chamado para outra coisa)
   if (r.recusa) {
-    estado.pets.bolsa[r.item.id] = r.n - 1;
-    gravar({ [`pets/bolsa/${r.item.id}`]: r.n - 1 || null });
     const cheira = temAnim(forma, 'farejar') ? 1000 : 0, bravo = temSequencia(forma, 'recusa') ? msAtePasso(forma, 'recusa', () => false) : 2000;
     const recusar = () => {
       virarParaPote(lado);
@@ -9965,11 +10187,11 @@ function comerNoPote(id) {
       setTimeout(() => {
         if (!aqui()) return;
         // a fala antes: o 1º balão faz a reação rápida (`carinho`), que a recusa substitui
-        mostrarFalaPet([{ texto: fraseDe(pet, 'recusa_planta', { pet: nomePet(pet), comida: String(r.item.nome || '').toLowerCase() }) || 'Isso eu não como!', espera: 0, fixo: 2500 }]);
-        if (!seguidor.comemorar('recusa')) seguidor.reagir(animBravo(forma), bravo);   // …e fica bravo, bufando
-        somRecusa(forma);
+        mostrarFalaPet([{ texto: textoRecusa(pet, r.item), espera: 0, fixo: 3000 }]);   // (as falas recusa_planta diziam "joguei fora")
+        const dragao = temSequencia(forma, 'recusa');
+        if (!seguidor.comemorar('recusa')) seguidor.reagir(animBravo(forma), dragao ? bravo : 1200);   // …e fica bravo (o dragão bufando)
+        if (dragao) { somRecusa(forma); fumacinha(); }
         tocar('erro');
-        fumacinha();
       }, cheira);
       setTimeout(() => { if (aqui()) tirarComidaPote(); }, cheira + bravo);
     };
@@ -12411,6 +12633,13 @@ function registrarBatalha(resultado) {
   (estado.batalhas ||= {})[t.id] = novo;
   dia.moedas += pr.moedas; dia.lealdade += pr.lealdade; dia.xp += pr.xp;
   const patch = { [`batalhas/${t.id}`]: novo, batalhas_dia: { ...dia } };
+  if (resultado === 'venceu' && cuidadosDe(pet)) {   // 🏅 vitórias deste pet (PROMPT-175)
+    const n = vitoriasDe(pet) + 1;
+    statsDe(pet).vitorias = n; patch[`pets/conquistados/${pet}/stats/vitorias`] = n;
+    if (n >= 1) conquistaPet(pet, 'vit1', patch);
+    if (n >= 10) conquistaPet(pet, 'vit10', patch);
+    petAnimadoAte = Date.now() + 5 * 60e3;
+  }
   if (pr.moedas || pr.bonusPrimeira) {
     estado.pets.moedas = (Number(estado.pets.moedas) || 0) + pr.moedas + pr.bonusPrimeira;
     patch['pets/moedas'] = estado.pets.moedas;
@@ -13866,6 +14095,7 @@ function vencer() {
   }
   registrarDiaJogado();
   tocar('vitoria');
+  petAnimadoAte = Date.now() + 5 * 60e3;   // 🤩 no Meu Pet (PROMPT-175)
   vitoriaNemAi();
   // XP só na primeira vitória de cada personagem (conferido no estado carregado do Firebase)
   if (primeiraVez) {
@@ -14746,7 +14976,7 @@ function renderTruques() {
   fila.innerHTML = lista.map(t => {
     const ok = l >= t.lealdade;
     return `<button class="mp-tq${ok ? '' : ' bloqueado'}" data-truque="${esc(t.id)}"${ocupado ? ' disabled' : ''} aria-label="${esc(t.nome)}${ok ? '' : ` (libera com ${t.lealdade} de lealdade)`}" title="${esc(t.nome)}">
-      <span class="mp-tq-ic">${ok ? t.emoji : `🔒<b>${t.lealdade}</b>`}</span><small>${esc(t.curto || t.nome)}</small></button>`;
+      <span class="mp-tq-ic">${ok ? t.emoji : `<i>🔒</i><b><em>lealdade</em>${t.lealdade}</b>`}</span><small>${esc(t.curto || t.nome)}</small></button>`;
   }).join('');
 }
 // Arrastar a fileira (dedo e mouse) mexendo no scrollLeft. Feito à mão porque, com o celular em pé, o jogo inteiro está girado
@@ -14787,6 +15017,7 @@ function fazerTruque(id) {
   const t = truquesDe(mp?.pet)?.find(x => x.id === id);
   if (!mp || !t || mp.ocupado || !truqueLiberado(id, mp.pet)) return;
   mp.estado = 'truque'; mp.ocupado = true; mp.acordadoAte = Date.now() + ACORDADO_MS;
+  { const patch = {}; conquistaPet(mp.pet, 'truque1', patch); if (Object.keys(patch).length) gravar(patch); }   // 🏅 primeiro truque
   renderTruques();   // apaga os botões enquanto o truque toca (tocar no pet também não interrompe: ocupado)
   movimentoCorpo(null);
   mp.som?.parar(0); mp.som = null;
@@ -14803,10 +15034,7 @@ function fazerTruque(id) {
     if (i >= anims.length) { voltarAoNormal(); return; }
     const a = anims[i++];
     if (/^busto_/.test(a)) {   // o busto no balão do pet (busto_fogo do dragão, busto_sorrindo do morcego)
-      const b = $('mp-balao');
-      b.innerHTML = `<img class="mp-balao-busto" src="${quadrosDe(mp.forma, a)[0]}" alt="" draggable="false"/>${esc(nomePet(mp.pet))}!`;
-      b.hidden = false;
-      clearTimeout(mp.timerBalao); mp.timerBalao = setTimeout(() => { b.hidden = true; }, 2200);
+      mostrarBalaoMp(`<img class="mp-balao-busto" src="${quadrosDe(mp.forma, a)[0]}" alt="" draggable="false"/>${esc(nomePet(mp.pet))}!`, 2200);
       guarda = setTimeout(proximo, 1600);
       return;
     }
@@ -14989,8 +15217,29 @@ const nomesColegasVisiveis = () => estado?.config?.nomes !== false;
 const aplicarNomesColegas = () => $('jr-app').classList.toggle('sem-nomes', !nomesColegasVisiveis());
 const podeConfig = () => !cena || (cena.tipo === 'mapa' && !pesca);
 function atualizarBotaoConfig() {
-  const b = $('btn-config');
-  if (b) b.hidden = !podeConfig();
+  for (const id of ['btn-config', 'btn-ajuda']) { const b = $(id); if (b) b.hidden = !podeConfig(); }
+}
+// 🪙 PROMPT-175: as moedas no topo em todo o jogo (e no Meu Pet, o mesmo número). Conferido 4× por segundo: qualquer
+// ganho ou gasto aparece na hora, com um pulinho e +N / −N. Escondidas durante a pergunta do ginásio e a batalha.
+let moedasMostradas = null;
+function pintarMoedasTopo() {
+  if (!estado?.pets) return;
+  $('jr-app').classList.toggle('jr-sem-moedas-topo', !!(perguntaAberta || bt));
+  const n = saldoMoedas();
+  if (n === moedasMostradas) return;
+  const d = moedasMostradas == null ? 0 : n - moedasMostradas;
+  moedasMostradas = n;
+  for (const el of document.querySelectorAll('[data-moedas-n]')) el.textContent = n;
+  if (!d) return;
+  for (const box of document.querySelectorAll('.jr-moedas-topo, .jr-mp-moedas')) {
+    if (!box.offsetParent) continue;
+    box.classList.remove('pulsa'); void box.offsetWidth; box.classList.add('pulsa');
+    const mais = document.createElement('span');
+    mais.className = 'jr-moeda-mais' + (d < 0 ? ' menos' : '');
+    mais.textContent = d > 0 ? `+${d}` : `−${-d}`;
+    box.appendChild(mais);
+    setTimeout(() => mais.remove(), 1100);
+  }
 }
 function abrirConfig() {
   if (!estado) return;
@@ -15106,7 +15355,7 @@ const GUIA_TUT = 'gato';   // quem apresenta antes de o aluno ter pet (PROMPT-17
 // dos outros pets mudam de pose). Sem esse quadro, só respira (.tut-respira). Forma colorida = a do pet de base.
 const PISCA_TUT = { morcego: ['carinho', 0], gaviao: ['sentado_girando', 1], gato: ['feliz', 0] };
 // 🍽️ comendo com a mesma comida da favorita (conferido nos quadros): os outros aparecem no feliz, sem nada na mão
-const COMENDO_FAVORITA = ['capivara', 'elefante'];
+const COMENDO_FAVORITA = ['gaviao'];   // PROMPT-174: o gavião rasga a carne (a favorita); a maçã do elefante e da capivara não é mais a favorita
 class PiscaTut {
   constructor(img, forma) {
     const p = PISCA_TUT[petDaCor(forma) || forma];
@@ -15219,8 +15468,7 @@ function telasTutorial(guia) {
   const todos = [...INICIAIS.filter(petValido).map(p => ({ p, etapa: 'Começo', inicial: true })),
     ...Object.entries(PETS_GINASIO).filter(([, p]) => p !== 'inicial' && petValido(p)).map(([k, p]) => ({ p, etapa: curto(k), gin: nomeGin(k) }))];
   const semPet = !Object.keys(estado.pets?.conquistados || {}).some(petValido);
-  const fav = [cfgLoja().favoritas?.[pet]].flat()[0];
-  const comida = comidas().find(c => c.imagem && (c.id === fav || c.id.startsWith(fav + '_'))) || comidas().find(c => c.imagem && ehFavorita(pet, c));
+  const comida = itemDaLista([cfgLoja().favoritas?.[pet]].flat()[0]);   // a favorita (a carne só tem emoji)
   const poseComida = COMENDO_FAVORITA.includes(base) && temAnim(forma, 'comendo') ? ['comendo', 1] : ['feliz', 0];
   const praca = cfgPraca(), estudo = estudosDoMapa(1)?.mural, pontoPesca = pontosDoMapa(2)[0];
   const sp = spritePesca(), EP = ESCALA_SPRITE;
@@ -15271,7 +15519,7 @@ function telasTutorial(guia) {
         : 'Estes são todos os pets. Os que você ainda não tem aparecem no ginásio indicado!' },
     { id: 'comida', tit: '🍎 Comida e lealdade', emoji: '🍎',
       cena: cenaLisa(`<div class="tut-comida">${petTut(forma, { pose: poseComida })}
-        ${comida?.imagem ? `<img class="tut-item" src="/${comida.imagem.replace(/^\//, '')}" alt="" draggable="false"/>` : ''}<span class="tut-coracoes"><i>❤️</i><i>❤️</i><i>❤️</i></span></div>
+        ${comida ? (comida.imagem ? `<img class="tut-item" src="/${comida.imagem.replace(/^\//, '')}" alt="" draggable="false"/>` : `<span class="tut-item tut-item-emoji">${comida.emoji}</span>`) : ''}<span class="tut-coracoes"><i>❤️</i><i>❤️</i><i>❤️</i></span></div>
         <div class="tut-leal"><span>Lealdade</span><i><b style="width:62%"></b></i></div>`),
       fala: guia ? 'Dê comida ao seu pet pelo Meu Pet: a favorita dele rende mais! Cuidando dele, a lealdade sobe e ele aprende a conversar, dar dicas nos ginásios, dar cambalhota e fazer truques.'
         : 'Me dê comida pelo Meu Pet: a minha favorita rende mais! Cuidando de mim, a lealdade sobe e eu aprendo a conversar, dar dicas nos ginásios, dar cambalhota e fazer truques.' },
@@ -15608,7 +15856,14 @@ function ligarEventos() {
   $('mp-fechar').addEventListener('click', fecharMeuPet);
   $('mp-trocar').addEventListener('click', () => { fecharMeuPet(); colecaoDoMeuPet = true; abrirColecao(); });
   $('mp-bolsa').addEventListener('click', abrirBolsa);
-  $('mp-visual').addEventListener('click', abrirVisual);
+  $('mp-abas').addEventListener('click', (e) => { const b = e.target.closest('[data-mpaba]'); if (b) { mostrarAbaMp(b.dataset.mpaba); tocar('clique'); } });
+  $('mp-ant').addEventListener('click', (e) => { e.stopPropagation(); trocarPetMp(-1); });
+  $('mp-prox').addEventListener('click', (e) => { e.stopPropagation(); trocarPetMp(1); });
+  $('mp-medalhas').addEventListener('click', (e) => { const b = e.target.closest('[data-medalha]'); if (b) mostrarMedalha(b.dataset.medalha); });
+  ligarArrastoMeuPet();
+  $('mp-alimentar').addEventListener('click', (e) => { e.stopPropagation(); alimentarRapido(); });
+  $('mp-balao').addEventListener('click', (e) => { e.stopPropagation(); $('mp-balao').hidden = true; });
+  for (const el of document.querySelectorAll('#meu-pet .jr-mp-marca')) el.addEventListener('click', (e) => { e.stopPropagation(); mostrarDicaMarca(el); });
   $('mp-editar').addEventListener('click', abrirNomear);
   $('mp-bolsa-itens').addEventListener('click', (e) => {
     const d = e.target.closest('[data-dar-pet]');
@@ -15619,10 +15874,10 @@ function ligarEventos() {
     if (itemDaBolsa(id)?.peixe) { bolsaSel = bolsaSel === id ? null : id; renderBolsa(); return; }   // peixe: abre as opções
     darComida(id);
   });
-  $('mp-visual-painel').addEventListener('click', escolherVisual);
+  $('mp-aba-visual').addEventListener('click', escolherVisual);
   $('mp-tq-fila').addEventListener('click', tocarTruque);
   ligarArrastoTruques();
-  for (const id of ['mp-bolsa-fechar', 'mp-visual-fechar', 'mp-nome-cancelar']) $(id).addEventListener('click', (e) => { e.stopPropagation(); e.target.closest('.mp-sub').hidden = true; });
+  for (const id of ['mp-bolsa-fechar', 'mp-nome-cancelar']) $(id).addEventListener('click', (e) => { e.stopPropagation(); e.target.closest('.mp-sub').hidden = true; });
   $('mp-nome-salvar').addEventListener('click', () => salvarNomePet());
   $('mp-nome-padrao').addEventListener('click', () => salvarNomePet(true));
   $('mp-nome-input').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') salvarNomePet(); if (e.key === 'Escape') $('mp-nomear').hidden = true; });
@@ -15759,7 +16014,7 @@ function ligarEventos() {
     else if (b) responderPerguntaPet(b);
   });
   atualizarBotaoCalado();
-  $('mp-palco').addEventListener('click', carinhoPet);   // tocar no pet = carinho
+  $('mp-palco').addEventListener('click', (e) => { if (e.target.closest('.mp-seta')) return; if (arrastoMp.andou) { arrastoMp.andou = false; return; } carinhoPet(); });   // tocar no pet = carinho (deslizar troca de pet)
   $('colecao-opcoes').addEventListener('click', (e) => {
     const s = e.target.closest('[data-silhueta]');
     if (s) { abrirSilhueta(s.dataset.silhueta); return; }
@@ -15893,6 +16148,8 @@ function ligarEventos() {
   $('exp-volta-ok').addEventListener('click', (e) => { e.stopPropagation(); fecharVoltaExp(); });
   $('pres-ok').addEventListener('click', (e) => { e.stopPropagation(); $('pres-card').hidden = true; });
   document.querySelectorAll('[data-config]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); abrirConfig(); }));
+  document.querySelectorAll('[data-ajuda]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); if (estado) abrirTutorial(true); }));   // ❓ Como jogar (PROMPT-175)
+  setInterval(pintarMoedasTopo, 250);
   $('cfg-lista').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-cfg]'); if (b) acaoConfig(b.dataset.cfg); });
   $('cfg-voltar').addEventListener('click', (e) => { e.stopPropagation(); voltarConfig(); });
   $('cfg-presentes').addEventListener('click', (e) => {   // 🧪 zerar ginásio (só a professora vê)
