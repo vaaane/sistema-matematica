@@ -3,10 +3,10 @@
 // é sempre lido do JSON (varia de 1 a 4). Nem todo pet tem todas as animações:
 // a que faltar usa `reserva` do JSON e, se ainda faltar, sentado_girando.
 
-export const PETS = ['elefante', 'gato', 'gaviao', 'axolote', 'tigre', 'morcego', 'unicornio', 'dragao_vermelho'];   // PROMPT-159: o morcego no lugar do dragão azul
+export const PETS = ['elefante', 'gato', 'gaviao', 'axolote', 'capivara', 'tigre', 'morcego', 'unicornio', 'dragao_vermelho'];   // PROMPT-159: o morcego no lugar do dragão azul; PROMPT-164: a capivara (4 B)
 export const NOME_PET = {
   elefante: 'Elefante', gato: 'Gato', gaviao: 'Gavião',
-  axolote: 'Axolote', tigre: 'Tigre', morcego: 'Morcego', unicornio: 'Unicórnio', dragao_vermelho: 'Dragão Vermelho',
+  axolote: 'Axolote', capivara: 'Capivara', tigre: 'Tigre', morcego: 'Morcego', unicornio: 'Unicórnio', dragao_vermelho: 'Dragão Vermelho',
 };
 
 const BASE = '/img/jogo/';

@@ -67,7 +67,7 @@ const ALT_JOGADOR_MAPA = 55 * ESCALA_ATORES;   // nos mapas da cidade o personag
 // Não depende do tamanho do arquivo: trocar a resolução das imagens não muda o tamanho na tela.
 // Altura do pet SENTADO no mapa, em px na escala base (personagem = 55; no mapa tudo × ESCALA_ATORES)
 const ALT_PET = {
-  elefante: 36, gato: 30, gaviao: 30, axolote: 30, tigre: 30,
+  elefante: 36, gato: 30, gaviao: 30, axolote: 30, tigre: 30, capivara: 30,   // PROMPT-164: a capivara do tamanho do tigre
   unicornio: 40, morcego: 46,   // PROMPT-161: o morcego entre o gavião (30) e o dragão vermelho filhote (62,5); PROMPT-159: no lugar do dragão azul; PROMPT-129: vermelho +25% (era 50)
   dragao_vermelho: 62.5,
 };
@@ -315,7 +315,7 @@ function marcarForma(img, pet, forma) {
 // Distância normal do pet atrás do personagem (ao longo do rastro), em px na escala base (× ESCALA_ATORES no mapa).
 // Parado, o pet chega a 55% disso; acima de +10 anda 1,3× mais rápido; acima de +62 corre (pets.js).
 const DIST_PET = {
-  elefante: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36,
+  elefante: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36, capivara: 36,
   unicornio: 55, morcego: 52, dragao_vermelho: 68.75,   // PROMPT-161: morcego entre o gavião e o vermelho; PROMPT-129: vermelho × 1,25, com o tamanho
 };
 // cresce junto com o tamanho (mesma proporção distância/altura do filhote vermelho; distPet ainda × a escala do vermelho)
@@ -1100,6 +1100,7 @@ const PETS_GINASIO = {
   'mapa1-B':  'inicial',          // Prefeitura (Vila Inicial)
   'mapa2-B':  'inicial',          // Farol (Porto das Dezenas)
   'mapa3-B':  'axolote',          // Cabana da Neve (Ilha Gelada)
+  'mapa4-B':  'capivara',         // PROMPT-164
   'mapa5-B':  'tigre',            // Torre de Pedra (Montanha das Potências)
   'mapa7-B':  'unicornio',        // Supermercado (Mercado Central)
   'mapa9-B':  'morcego',          // Torre do Mago (Floresta das Balanças) — PROMPT-161: trocou com o 11 B
@@ -1126,7 +1127,7 @@ function lerPets(v) {
   }
   return { ativo, conquistados, migrou, moedas: Number(v.pets?.moedas) || 0, iscas: Number(v.pets?.iscas) || 0, itens: { ...(v.pets?.itens || {}) },
     bolsa: { ...(v.pets?.bolsa || {}) }, tintas: { ...(v.pets?.tintas || {}) }, efeitos: { ...(v.pets?.efeitos || {}) }, cuidadosV2: !!v.pets?.cuidados_v2,
-    expedicoesDia: v.pets?.expedicoes_dia || null, migrouMorcego: !!v.pets?.migrou_morcego };   // 🧭 { data, n } (PROMPT-92)
+    expedicoesDia: v.pets?.expedicoes_dia || null, migrouMorcego: !!v.pets?.migrou_morcego, migrouCapivara: !!v.pets?.migrou_capivara };   // 🧭 { data, n } (PROMPT-92)
 }
 
 const temPet = (p) => !!(p && estado.pets.conquistados[p]);
@@ -1177,11 +1178,14 @@ function liberarPetsProfessora(ps) {
 }
 
 // A capivara virou elefante (PROMPT-20): quem tinha capivara fica com o elefante, com tudo o que era dela
-// (lealdade, barriga, amizade, nome, tinta, efeito, origem) e, se era o ativo, o elefante passa a ser. Uma vez só.
+// (lealdade, barriga, amizade, nome, tinta, efeito, origem) e, se era o ativo, o elefante passa a ser. Uma vez só
+// (pets/migrou_capivara, PROMPT-164): depois disso a capivara é o pet novo do 4 B e não pode mais virar elefante.
 function migrarCapivara(ps) {
+  if (ps.migrouCapivara) return;
+  ps.migrouCapivara = true;
   const c = ps.conquistados.capivara;
-  if (!c) return;
-  const patch = { 'pets/conquistados/capivara': null };
+  if (!c) { gravar({ 'pets/migrou_capivara': true }); return; }
+  const patch = { 'pets/conquistados/capivara': null, 'pets/migrou_capivara': true };
   if (!ps.conquistados.elefante) { ps.conquistados.elefante = c; patch['pets/conquistados/elefante'] = c; }
   delete ps.conquistados.capivara;
   if (ps.ativo === 'capivara') { ps.ativo = 'elefante'; patch['pets/ativo'] = 'elefante'; }
@@ -3212,7 +3216,7 @@ function definirPersColega(c, id, cores) {
   preCarregarQuadros(id, cores);
 }
 
-const petAtual = (pet) => (pet === 'capivara' ? 'elefante' : /^dragao_azul(_adulto)?$/.test(pet || '') ? 'morcego' : pet);   // registros antigos (antes do elefante e do morcego)
+const petAtual = (pet) => (/^dragao_azul(_adulto)?$/.test(pet || '') ? 'morcego' : pet);   // registros antigos (antes do morcego); a capivara voltou como pet do 4 B (PROMPT-164)
 function definirPetColega(c, pet, forma) {
   pet = petAtual(pet);
   pet = petValido(pet) ? pet : null;
@@ -11552,7 +11556,7 @@ function ligarEdicaoMato(n) {
 //  (regras puras em js/jogo-revisao/batalha.js; aqui a lista, a luta e os prêmios)
 // ============================================================
 const ELEM_PET = { elefante: ['💧', '🥜'], gato: ['🐾', '✦'], gaviao: ['🪶', '💨'], unicornio: ['🌈', '✨', '💖'], axolote: ['🫧', '💧'],
-  tigre: ['⚡', '🐾'], dragao_vermelho: ['🔥', '💥'], morcego: ['🦇', '🌙'], fogo: ['🔥', '💥'] };   // fogo: ataque_fogo dos adultos
+  tigre: ['⚡', '🐾'], dragao_vermelho: ['🔥', '💥'], morcego: ['🦇', '🌙'], capivara: ['🍃', '💧'], fogo: ['🔥', '💥'] };   // fogo: ataque_fogo dos adultos
 const FALAS_VOLTOU_FORTE = ['Treinei muito desde a última vez!', 'Voltei mais forte. Preparado?', 'Andei treinando… agora é sério!'];
 let bt = null;            // batalha em andamento
 let btSel = null, btTimerLista = 0;   // treinador selecionado na lista

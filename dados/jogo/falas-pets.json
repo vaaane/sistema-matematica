@@ -1004,6 +1004,119 @@
         "Vento forte… segura firme.",
         "As folhas voando me lembram um passeio antigo."
       ]
+    },
+    "capivara": {
+      "jeito": "calma, tranquila, amiga de todo mundo, fala devagar, adora água, sombra, maçã e um cochilo",
+      "abre_dica": [
+        "Calma… respira… a resposta vem. Olha só:",
+        "Pensei com calma, boiando no rio, e lembrei que",
+        "Devagarinho a gente chega lá. Repara que",
+        "Fiquei boiando no rio e tive uma ideia:"
+      ],
+      "lembrete": [
+        "Sem pressa, mas não esquece:",
+        "Guarda isso com carinho:",
+        "Bem devagar, repete comigo:"
+      ],
+      "abre_piada": [
+        "Uma piadinha tranquila pra relaxar:",
+        "Hora de rir sem pressa:",
+        "Pausa na sombra… e uma piada:"
+      ],
+      "ri": [
+        "Hihi… essa foi boa, viu?",
+        "Ri tanto que quase caí no rio!",
+        "Hehe… gostei dessa."
+      ],
+      "manha": [
+        "Bom dia… acordei devagarinho. E você?",
+        "Manhã boa pra um banho de rio e umas questões.",
+        "Bom dia, {apelido}! Sem pressa, mas vamos?"
+      ],
+      "tarde": [
+        "Boa tarde… tá uma sombra gostosa aqui.",
+        "Tarde tranquila é ótima pra estudar.",
+        "Bora, {apelido}? Uma questão de cada vez."
+      ],
+      "noite": [
+        "Boa noite… já tá na hora de um cochilo.",
+        "A lua tá bonita no rio hoje.",
+        "Mais uma questão e cama, combinado?"
+      ],
+      "fome": [
+        "Uma maçã cairia tão bem agora…",
+        "Minha barriga tá roncando bem devagarinho.",
+        "Tô com fominha… tem maçã?"
+      ],
+      "carinho": [
+        "Hmmm… que gostoso.",
+        "Todo mundo gosta de capivara. É fato.",
+        "Fiquei até com sono de tão bom."
+      ],
+      "venceu": [
+        "Viu? Com calma a gente vence.",
+        "Que vitória tranquila! Mereceu.",
+        "Ganhamos! Agora um cochilo de comemoração."
+      ],
+      "perdeu": [
+        "Tudo bem… respira. A gente tenta de novo.",
+        "Perder faz parte. Bora com calma.",
+        "Nem esquenta. Na próxima vai."
+      ],
+      "aleatorio": [
+        "A capivara é o maior roedor do mundo e nada muito bem.",
+        "Hora de um cochilo? Só depois da questão.",
+        "Sabia que eu fico amiga até de passarinho?",
+        "Uma sombra, uma maçã e um rio. Precisa de mais?"
+      ],
+      "ajuda_dica": [
+        "Calma… respira… lembra que",
+        "Sem pressa. Pensa assim:",
+        "Devagarinho: repara que"
+      ],
+      "ajuda_elimina": [
+        "O {valor}? Hmm… esse não é, não.",
+        "Pode tirar o {valor}, com calma.",
+        "{valor}? Esse a gente deixa boiando no rio."
+      ],
+      "ajuda_acabou": [
+        "Agora é com você… respira e vai.",
+        "Já te ajudei. Com calma, você consegue."
+      ],
+      "sem_lealdade": [
+        "…",
+        "(te olha devagar, mastigando um matinho)"
+      ],
+      "treino_lembrete": [
+        "Só 5 questões… bem tranquilo. Vamos?",
+        "Ainda não treinou hoje? Dá tempo, sem pressa.",
+        "Treino rapidinho e depois um cochilo. Topa?"
+      ],
+      "expedicao_volta": [
+        "Nadei o rio inteiro e fiz amizade com um jacaré!",
+        "Achei a sombra mais gostosa do mundo e cochilei lá.",
+        "Um passarinho viajou nas minhas costas o caminho todo!"
+      ],
+      "aniversario": [
+        "{tempo} juntos… que tranquilidade boa.",
+        "Aniversário de amizade! Vamos comemorar com maçã?",
+        "{tempo} e eu gosto cada vez mais de você."
+      ],
+      "chuva": [
+        "Chuva! Adoro ficar molhadinha.",
+        "Água caindo do céu… perfeito pra mim.",
+        "Bora pular nas poças? Bem devagar."
+      ],
+      "calor": [
+        "Que calor… cadê um rio pra eu boiar?",
+        "Vou procurar uma sombra bem fresquinha.",
+        "Calor bom pra um banho demorado."
+      ],
+      "vento": [
+        "Esse ventinho faz um sono…",
+        "O vento tá balançando a grama. Que calma.",
+        "Segura meu matinho, vento!"
+      ]
     }
   },
   "dicas": {

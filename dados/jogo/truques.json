@@ -16,6 +16,14 @@
   { "id": "brincar", "nome": "Brincar", "curto": "Brincar", "emoji": "🐾", "lealdade": 65, "anims": ["brincando", "feliz"], "sequencia": "brincar" },
   { "id": "voo_campeao", "nome": "Voo de campeão", "curto": "Campeão", "emoji": "🏆", "lealdade": 95, "anims": ["voando", "busto_sorrindo"] }
  ],
+ "capivara": [
+  { "id": "acenar", "nome": "Acenar", "curto": "Oi", "emoji": "👋", "lealdade": 0, "anims": ["acenando"], "sequencia": "acenar" },
+  { "id": "dormir", "nome": "Dormir", "curto": "Dormir", "emoji": "💤", "lealdade": 20, "anims": ["dormindo"], "sequencia": "dormir" },
+  { "id": "flor", "nome": "Cheirar a flor", "curto": "Flor", "emoji": "🌼", "lealdade": 35, "anims": ["cheirar_flor"], "sequencia": "flor" },
+  { "id": "cambalhota", "nome": "Cambalhota", "curto": "Rolar", "emoji": "🤸", "lealdade": 50, "anims": ["pulo_cambalhota"], "sequencia": "cambalhota" },
+  { "id": "borboleta", "nome": "Brincar com a borboleta", "curto": "Borboleta", "emoji": "🦋", "lealdade": 65, "anims": ["borboleta"], "sequencia": "borboleta" },
+  { "id": "pendurada", "nome": "De cabeça pra baixo", "curto": "Pendurar", "emoji": "🙃", "lealdade": 95, "anims": ["pendurado", "busto_sorrindo"] }
+ ],
  "dragao_vermelho_adulto": "dragao_azul_adulto",
  "dragao_sombra_adulto": "dragao_azul_adulto",
  "dragao_branco_adulto": "dragao_azul_adulto",
