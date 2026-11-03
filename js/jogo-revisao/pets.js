@@ -445,17 +445,23 @@ export class PetSeguidor {
 
 // Pet parado num lugar (o que espera ao lado do líder): só anima, não segue ninguém
 export class PetParado {
-  constructor(img) { this.img = img; this.pet = null; this.anim = ''; this.q = 0; this.t = 0; this.lista = []; this.aoAcabar = null; this.ciclos = 0; this.vez = 1; this.emSeq = false; }
+  constructor(img) { this.img = img; this.pet = null; this.anim = ''; this.q = 0; this.t = 0; this.lista = []; this.aoAcabar = null; this.ciclos = 0; this.vez = 1; this.emSeq = false; this.repouso = null; }
 
-  definir(pet) { this.pet = pet; this.tocar('sentado_girando'); }
+  // repouso: pose de espera no lugar do sentado_girando, em loop, { anim, ms } (o morcego no duelo voa parado: PROMPT-162)
+  get parado() { return this.repouso?.anim || 'sentado_girando'; }
+
+  definir(pet) { this.pet = pet; this.tocar(this.parado); }
 
   // Animação sem loop volta para sentado_girando no fim (e chama aoAcabar)
   tocar(anim, aoAcabar = null) {
     pararSequencia(this.img); this.emSeq = false;   // interrompe a sequência que estiver tocando
     this.anim = anim; this.q = 0; this.t = 0; this.aoAcabar = aoAcabar; this.ciclos = 0; this.vez = 1;
     this.lista = quadrosDe(this.pet, anim);
+    this.voo(anim);
     this.desenhar();
   }
+  // voando (a espera e o ataque): um pouco acima do chão, flutuando (CSS .pet-voando)
+  voo(anim) { this.img.classList.toggle('pet-voando', !!this.repouso && (anim === this.repouso.anim || anim === 'seq:ataque_batalha')); }
 
   // Sequência com tempo (sprites.json → sequencias). false = o pet não tem (quem chamou usa tocar()).
   // No fim volta para sentado_girando e chama aoAcabar; interrompida (tocar/outra sequência), não chama.
@@ -463,10 +469,11 @@ export class PetParado {
   sequencia(nome, aoAcabar = null, { ciclo = false } = {}) {
     if (!temSequencia(this.pet, nome)) return false;
     const anim = this.anim = 'seq:' + nome; this.emSeq = true; this.aoAcabar = null;
+    this.voo(anim);
     const rodar = () => tocarSequencia(this.img, this.pet, nome).then(fim => {
       if (!fim) return;
       if (ciclo && this.anim === anim) { rodar(); return; }
-      this.tocar('sentado_girando'); aoAcabar?.();
+      this.tocar(this.parado); aoAcabar?.();
     });
     rodar();
     return true;
@@ -474,7 +481,7 @@ export class PetParado {
 
   atualizar(dt) {
     if (this.emSeq || !this.lista.length) return;
-    const r = ritmo(this.anim, this.lista.length, this.pet);
+    const r = this.repouso && this.anim === this.repouso.anim ? { ms: this.repouso.ms, loop: true } : ritmo(this.anim, this.lista.length, this.pet);
     const ultimo = this.q === this.lista.length - 1;
     this.t += dt * 1000;
     if (this.t < (ultimo && r.ultimo ? r.ultimo : r.ms)) return;
@@ -482,7 +489,7 @@ export class PetParado {
     if (!ultimo) this.q++;
     else if (r.loop) { this.q = 0; this.ciclos++; }   // ciclos completos da animação em loop
     else if (this.vez < (r.vezes || 1)) { this.vez++; this.q = 0; }
-    else { const f = this.aoAcabar; this.tocar('sentado_girando'); f?.(); return; }
+    else { const f = this.aoAcabar; this.tocar(this.parado); f?.(); return; }
     this.desenhar();
   }
 

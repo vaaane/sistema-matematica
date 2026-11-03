@@ -3705,3 +3705,8 @@ html.jr-girado .ex-ver-foto img { max-height: 52dvw; }
 
 /* ♟️ moedas da vitória contra o computador e resultado da aposta no fim das Damas (PROMPT-154) */
 .dm-fim-moedas { display: block; margin-top: 4px; color: var(--jr-ouro); }
+
+/* 🦇 PROMPT-162: o morcego voando parado no duelo e na batalha — um pouco acima do chão, flutuando de leve */
+#jr-app img.pet-voando { animation: jrVooParado 1.6s ease-in-out infinite; }
+@keyframes jrVooParado { 0%, 100% { translate: 0 -12%; } 50% { translate: 0 -18%; } }
+@media (prefers-reduced-motion: reduce) { #jr-app img.pet-voando { animation: none; translate: 0 -14%; } }

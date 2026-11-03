@@ -2510,6 +2510,77 @@
  },
  "sequencias": {
   "morcego": {
+   "voar": [
+    ["sentado_girando", 1, 600],
+    ["voando", 1, 130],
+    ["voando", 2, 130],
+    ["voando", 3, 130],
+    ["voando", 4, 130],
+    ["voando", 1, 130],
+    ["voando", 2, 130],
+    ["voando", 3, 130],
+    ["voando", 4, 130],
+    ["voando", 1, 130],
+    ["voando", 2, 130],
+    ["voando", 3, 130],
+    ["voando", 4, 130],
+    ["voando", 1, 130],
+    ["voando", 2, 130],
+    ["voando", 3, 130],
+    ["voando", 4, 130],
+    ["feliz", 1, 900],
+    ["sentado_girando", 1, 600]
+   ],
+   "dormir": [
+    ["sentado_girando", 1, 600],
+    ["bocejo", 1, 1200],
+    ["dormindo", 2, 1200],
+    ["dormindo", 1, 1400],
+    ["dormindo", 3, 1400],
+    ["dormindo", 1, 1400],
+    ["dormindo", 3, 1400],
+    ["sentado_girando", 2, 900],
+    ["sentado_girando", 1, 600]
+   ],
+   "banho": [
+    ["sentado_2", 1, 700],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_beicos", 1, 1200],
+    ["carinho", 1, 1500],
+    ["sentado_2", 1, 700]
+   ],
+   "bolinha": [
+    ["sentado_2", 1, 800],
+    ["enrolado", 1, 3000],
+    ["sentado_girando", 2, 900],
+    ["sentado_girando", 1, 600]
+   ],
+   "brincar": [
+    ["sentado_girando", 1, 600],
+    ["brincando", 1, 1200],
+    ["sentado_2", 2, 400],
+    ["brincando", 1, 1200],
+    ["feliz", 2, 1000],
+    ["sentado_girando", 1, 600]
+   ],
+   "ataque_batalha": [
+    ["voando", 1, 90],
+    ["voando", 2, 90],
+    ["voando", 3, 90],
+    ["voando", 4, 90],
+    ["voando", 1, 90],
+    ["voando", 2, 90],
+    ["voando", 3, 90],
+    ["voando", 4, 90],
+    ["feliz", 2, 600]
+   ],
    "lamber_pata": [
     ["sentado_girando", 1, 600],
     ["lamber_pata", 1, 450],

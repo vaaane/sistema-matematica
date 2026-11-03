@@ -68,7 +68,7 @@ const ALT_JOGADOR_MAPA = 55 * ESCALA_ATORES;   // nos mapas da cidade o personag
 // Altura do pet SENTADO no mapa, em px na escala base (personagem = 55; no mapa tudo × ESCALA_ATORES)
 const ALT_PET = {
   elefante: 36, gato: 30, gaviao: 30, axolote: 30, tigre: 30,
-  unicornio: 40, morcego: 30,   // PROMPT-159: o morcego (do tamanho do gavião) no lugar do dragão azul; PROMPT-129: vermelho +25% (era 50)
+  unicornio: 40, morcego: 46,   // PROMPT-161: o morcego entre o gavião (30) e o dragão vermelho filhote (62,5); PROMPT-159: no lugar do dragão azul; PROMPT-129: vermelho +25% (era 50)
   dragao_vermelho: 62.5,
 };
 // Evolução: cada fase é 15% maior que a anterior (altura do desenho SENTADO, não do quadro). Pet novo que evoluir:
@@ -316,7 +316,7 @@ function marcarForma(img, pet, forma) {
 // Parado, o pet chega a 55% disso; acima de +10 anda 1,3× mais rápido; acima de +62 corre (pets.js).
 const DIST_PET = {
   elefante: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36,
-  unicornio: 55, morcego: 36, dragao_vermelho: 68.75,   // PROMPT-129: vermelho × 1,25, com o tamanho
+  unicornio: 55, morcego: 52, dragao_vermelho: 68.75,   // PROMPT-161: morcego entre o gavião e o vermelho; PROMPT-129: vermelho × 1,25, com o tamanho
 };
 // cresce junto com o tamanho (mesma proporção distância/altura do filhote vermelho; distPet ainda × a escala do vermelho)
 DIST_PET.dragao_azul_adulto = DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * ALT_PET.dragao_azul_adulto / ALT_PET.dragao_vermelho;
@@ -1102,8 +1102,8 @@ const PETS_GINASIO = {
   'mapa3-B':  'axolote',          // Cabana da Neve (Ilha Gelada)
   'mapa5-B':  'tigre',            // Torre de Pedra (Montanha das Potências)
   'mapa7-B':  'unicornio',        // Supermercado (Mercado Central)
-  'mapa9-B':  'dragao_vermelho',  // Torre do Mago (Floresta das Balanças)
-  'mapa11-B': 'morcego',          // Escritório (PROMPT-159: o morcego no lugar do dragão azul)
+  'mapa9-B':  'morcego',          // Torre do Mago (Floresta das Balanças) — PROMPT-161: trocou com o 11 B
+  'mapa11-B': 'dragao_vermelho',  // Escritório (Canteiro de Obras), o último pet
 };
 const INICIAIS = ['elefante', 'gato', 'gaviao'];
 const MOEDAS_INICIAIS = 100;
@@ -1844,7 +1844,7 @@ function voltarAoNormal() {
   mp.ocupado = false; mp.comendo = false; mp.esperaAcao = null;
   if (deveDormir()) {   // o adulto toca `dormir` em ciclo (respira, fumacinha, Zzz); os outros, a animação dormindo
     mp.estado = 'dormindo';
-    if (!mp.anim.sequencia('dormir', null, { ciclo: true })) mp.anim.tocar('dormindo');
+    if (!(ehFormaAdulta(mp.forma) && mp.anim.sequencia('dormir', null, { ciclo: true }))) mp.anim.tocar('dormindo');   // o morcego tem `dormir` só de truque
     movimentoCorpo('respira');
   } else if (barrigaDe(mp.pet) < fomeAbaixo()) { mp.estado = 'triste'; mp.anim.tocar('triste_fome'); movimentoCorpo('triste'); }
   else { mp.estado = 'parado'; mp.anim.tocar('sentado_girando'); movimentoCorpo('respira'); }
@@ -11741,6 +11741,7 @@ function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
   pararSequencia(img);
   if (!loop && fs.length === 1 && EMOCOES.has(nomeReal)) ms = Math.max(ms, MS_EMOCAO);   // emoção de 1 quadro: 1,5 s
   el.style.transform = lado === 'R' && nomeReal !== 'andar_esquerda' ? 'scaleX(-1)' : '';
+  img.classList.toggle('pet-voando', nomeReal === 'voando');
   let i = 0;
   const passo = () => {
     if (!bt) return;
@@ -11772,7 +11773,8 @@ function somNaSequencia(nome, forma, seq, de, ate, { fade = 200, deFrente = true
 }
 const btSom = (som) => { if (bt) (bt.sons ||= []).push(som); return som; };   // sons da batalha: param ao sair dela
 
-const btParado = (lado) => btTocar(lado, 'andar_direita', { ms: 420 });
+// o morcego espera voando no lugar (PROMPT-162); os outros, andando parado
+const btParado = (lado) => (bt && temAnim(btForma(lado), 'voando') ? btTocar(lado, 'voando', { ms: 130 }) : btTocar(lado, 'andar_direita', { ms: 420 }));
 const btForma = (lado) => (lado === 'L' ? bt.forma : bt.t.pet);
 const adultoNaBatalha = () => !!bt && ehFormaAdulta(bt.forma) && temAnim(bt.forma, 'rugido');
 // abertura do adulto: ruge
@@ -12077,7 +12079,12 @@ async function btFechar() {
     const fogo = temAnim(btForma(l), 'ataque_fogo');   // dragão adulto: sempre prepara e solta fogo pela boca ("Cuspir fogo" é só um truque do Meu Pet)
     if (fogo) await btAtaqueFogo(l, o, critico, especial);
     else {
-      btTocar(l, 'correndo', { loop: false, ms: 110 });
+      if (temSequencia(btForma(l), 'ataque_batalha')) {   // 🦇 o morcego bate as asas rápido no bote (sem fogo)
+        clearTimeout(bt.anim[l]);
+        $('bt-' + l).style.transform = l === 'R' ? 'scaleX(-1)' : '';
+        $('bt-img' + l).classList.add('pet-voando');
+        tocarSequencia($('bt-img' + l), btForma(l), 'ataque_batalha', { deFrente: false });
+      } else btTocar(l, 'correndo', { loop: false, ms: 110 });
       btSom(somAtaque(pet));   // som de ataque do pet, no bote
       await btBote(l);
       await btProjetil(l, o, pet, critico, especial);
@@ -12930,7 +12937,11 @@ function montarArena() {
   const arena = $('perg-arena'), adultoDuelo = !rev && ehFormaAdulta(forma);
   arena.classList.toggle('pet-adulto', adultoDuelo);
   arena.style.setProperty('--rel', adultoDuelo ? relDuelo(forma) : 1);
-  if (pet) { pgPet = new PetParado($('perg-pet')); pgPet.definir(forma); }
+  if (pet) {
+    pgPet = new PetParado($('perg-pet'));
+    if (temAnim(forma, 'voando')) pgPet.repouso = { anim: 'voando', ms: 130 };   // 🦇 espera voando (PROMPT-162)
+    pgPet.definir(forma);
+  } else $('perg-pet').classList.remove('pet-voando');
   pg.na = null;
   ladoNemAi();   // dragão adulto: sentado de lado, sem dar bola (PROMPT-71)
   aplicarVisualPet($('perg-pet'), pet, true);   // o pet do duelo tem drop-shadow no CSS
@@ -13000,6 +13011,11 @@ function ataqueArena() {
   if (!pgPet || semAdversario() || !temSequencia(pgPet.pet, 'ataque_batalha')) return false;
   const forma = pgPet.pet;
   pgPet.sequencia('ataque_batalha');
+  if (!temAnim(forma, 'ataque_fogo')) {   // 🦇 o morcego: bate as asas rápido e o adversário treme, sem fogo
+    if (!semMovimento()) setTimeout(() => { if (!$('pergunta').hidden) $('perg-adv').animate([{ transform: 'translateX(-50%)' }, { transform: 'translateX(calc(-50% - 6px))' }, { transform: 'translateX(calc(-50% + 6px))' }, { transform: 'translateX(-50%)' }],
+      { duration: 320, easing: 'ease-in-out' }); }, 400);
+    return true;
+  }
   pgSom?.parar(0); pgSom = somNaSequencia('dragao_fogo', forma, 'ataque_batalha', 'ataque_fogo', 'ufa', { fade: 200 });
   const [t1, t2] = msCuspidas(forma);
   const sacudir = () => {
@@ -13039,7 +13055,7 @@ function fogoArena() {
 // Só os pets com a sequência `dormir` (os dragões adultos) e só nos ginásios (não na revisão). pg.na = { estado, prox, parado }
 const ACOES_NEM_AI = ['descansar', 'lamber_pata', 'cheirar'];
 let pgSom = null;   // som do fogo no duelo do ginásio (para ao fechar a pergunta)
-const nemAi = () => !!pgPet && !!pg && !semAdversario() && temSequencia(pgPet.pet, 'dormir');
+const nemAi = () => !!pgPet && !!pg && !semAdversario() && ehFormaAdulta(pgPet.pet) && temSequencia(pgPet.pet, 'dormir');   // o morcego tem `dormir` só de truque
 function ladoNemAi(zerar = true) {
   if (!nemAi()) return;
   pg.na = { estado: 'lado', prox: 5 + Math.random() * 4, parado: zerar ? 0 : pg.na?.parado || 0 };
@@ -13113,7 +13129,7 @@ function reagirArena(certo) {
     if (certo) pgPet.tocar(temAnim(pgPet.pet, 'animado') && Math.random() < 0.5 ? 'animado' : 'feliz');
     else if (pgPet.sequencia('apanhou')) tocarArquivo('dragao_bufando');   // dragão adulto: bravo e bufando
     else if (temAnim(pgPet.pet, 'confuso')) pgPet.tocar('confuso');
-    else { pgPet.tocar('triste_fome'); setTimeout(() => { if (pgPet?.anim === 'triste_fome') pgPet.tocar('sentado_girando'); }, 1400); }
+    else { pgPet.tocar('triste_fome'); setTimeout(() => { if (pgPet?.anim === 'triste_fome') pgPet.tocar(pgPet.parado); }, 1400); }
   }
   if (certo && !semAdversario() && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     $('perg-adv').animate([{ transform: 'translateX(-50%)' }, { transform: 'translateX(calc(-50% - 6px))' }, { transform: 'translateX(calc(-50% + 6px))' }, { transform: 'translateX(-50%)' }],
@@ -14548,16 +14564,16 @@ function fazerTruque(id) {
     return;
   }
   if (t.id === 'rugido_campeao') mp.som = somRugido(mp.pet);   // Rugido de campeão: o rugido da cor
-  const anims = t.anims.filter(a => a === 'busto_fogo' || temAnim(mp.forma, a));
+  const anims = t.anims.filter(a => /^busto_/.test(a) || temAnim(mp.forma, a));
   let i = 0, guarda = 0;
   const proximo = () => {
     clearTimeout(guarda);
     if (!mp || mp.estado !== 'truque') return;
     if (i >= anims.length) { voltarAoNormal(); return; }
     const a = anims[i++];
-    if (a === 'busto_fogo') {   // o busto de fogo no balão do pet
+    if (/^busto_/.test(a)) {   // o busto no balão do pet (busto_fogo do dragão, busto_sorrindo do morcego)
       const b = $('mp-balao');
-      b.innerHTML = `<img class="mp-balao-busto" src="${quadrosDe(mp.forma, 'busto_fogo')[0]}" alt="" draggable="false"/>${esc(nomePet(mp.pet))}!`;
+      b.innerHTML = `<img class="mp-balao-busto" src="${quadrosDe(mp.forma, a)[0]}" alt="" draggable="false"/>${esc(nomePet(mp.pet))}!`;
       b.hidden = false;
       clearTimeout(mp.timerBalao); mp.timerBalao = setTimeout(() => { b.hidden = true; }, 2200);
       guarda = setTimeout(proximo, 1600);
