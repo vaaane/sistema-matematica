@@ -20,7 +20,7 @@ import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVa
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado,
   temAnim, formaAdulta, formaValida, sentadoNoQuadro, escalaPet, escalaMax, quadrosSeq, sortearOcioso, temSequencia, tocarSequencia, pararSequencia, msAtePasso,
   sortearAcaoParado, EMOCOES, MS_EMOCAO, coresDragao, aceitaCor, ehFormaAdulta, formaComCor, definirNoite,
-  NOME_COR_PET, petDaCor, coresDoPet } from '/js/jogo-revisao/pets.js';
+  NOME_COR_PET, NOME_ORIGINAL_PET, petDaCor, coresDoPet } from '/js/jogo-revisao/pets.js';
 import { lerTodos, lerRegistro, iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, limiteMoedasPedidos, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
 import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, tiposDeConta, gerarConta, vidaExtraLealdade, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
@@ -2151,23 +2151,23 @@ const petsComCores = () => PETS.filter(p => temPet(p) && coresDoPet(p).length);
 // axolote rosa) continua com a tinta, que ainda aparece para ele no Meu Pet. Arco-íris, Esmeralda e Cristal continuam tintas.
 const TINTA_VIROU_COR = { azul: 'azul', rosa: 'rosa', verde: 'verde', roxo: 'roxo', dourado: 'dourado', noite: 'preto', laranja: 'marrom' };
 const tintaVirouCor = (tintaId, pet) => { const cor = TINTA_VIROU_COR[tintaId]; return !!cor && coresDoPet(pet).includes(cor); };
+// A troca tinta → cor do pet roda a cada entrada (só muda quem ainda usa uma dessas tintas e agora tem a cor: o morcego,
+// que ganhou cores no PROMPT-163, também troca); cores_todas e o aviso, uma vez só.
 function migrarTintas(ps) {
-  if (ps.migrouTintas) return;
-  ps.migrouTintas = true;
-  const patch = { 'pets/migrou_tintas': true }, ganhou = new Set();
-  for (const [t, cor] of Object.entries(TINTA_VIROU_COR)) if (ps.tintas?.[t]) ganhou.add(cor);
+  const primeira = !ps.migrouTintas, patch = {}, ganhou = new Set();
+  if (primeira) { ps.migrouTintas = true; patch['pets/migrou_tintas'] = true; for (const [t, cor] of Object.entries(TINTA_VIROU_COR)) if (ps.tintas?.[t]) ganhou.add(cor); }
   for (const [pet, c] of Object.entries(ps.conquistados)) {
     const cor = TINTA_VIROU_COR[c?.tinta];
     if (!cor) continue;
-    ganhou.add(cor);
+    if (!ps.coresTodas[cor]) ganhou.add(cor);
     if (!coresDoPet(pet).includes(cor)) continue;
     c.tinta = null; c.cor = cor;
     patch[`pets/conquistados/${pet}/tinta`] = null;
     patch[`pets/conquistados/${pet}/cor`] = cor;
   }
   for (const cor of ganhou) { ps.coresTodas[cor] = true; patch[`pets/cores_todas/${cor}`] = true; }
-  gravar(patch);
-  if (ganhou.size) setTimeout(avisarTintasViraramCores, 4000);
+  if (Object.keys(patch).length) gravar(patch);
+  if (primeira && ganhou.size) setTimeout(avisarTintasViraramCores, 4000);
 }
 function avisarTintasViraramCores() {   // depois do tutorial (e do cartão de pet entregue)
   const tutorialVem = !estado.avisos?.tutorial && petValido(estado.pets?.ativo);
@@ -2209,7 +2209,7 @@ function renderCoresPet(pet, cores) {
   const base = formaBase(pet), atual = corAtiva(pet);
   const mini = (forma) => `<img src="${quadrosDe(forma, 'sentado_girando')[0]}" alt="" draggable="false"${attrForma(pet, forma)}/>`;
   $('mp-cores-rot').textContent = '🎨 Cores';
-  $('mp-visual-cores').innerHTML = `<button class="mp-chip${!atual ? ' sel' : ''}" data-cor="">${mini(base)}Original</button>` +
+  $('mp-visual-cores').innerHTML = `<button class="mp-chip${!atual ? ' sel' : ''}" data-cor="">${mini(base)}${NOME_ORIGINAL_PET[pet] || 'Original'}</button>` +
     cores.map(cor => {
       const tem = temCorPet(pet, cor);
       return `<button class="mp-chip${atual === cor ? ' sel' : ''}${tem ? '' : ' trancada'}" data-cor="${cor}">${mini(formaComCor(base, cor))}${esc(NOME_COR_PET[cor])}${tem ? '' : ` 🔒 ${moedaHtml()} ${precoCorPet(cor)}`}</button>`;
@@ -2585,7 +2585,7 @@ function renderVisual() {
   const comCor = !!corAtiva(mp.pet);   // com cor especial a tinta não vale (continua guardada)
   $('mp-visual-tintas').innerHTML = chip('tinta', '', 'Nenhuma', !c.tinta) +
     ts.map(t => chip('tinta', t.id, `<img src="${src}" alt="" draggable="false" data-previa="${t.id}"${attrForma(mp.pet, mp.forma)}/>${esc(t.nome)}`, c.tinta === t.id)).join('') +
-    (comCor ? `<span class="mp-cor-aviso">${aceitaCor(mp.pet) ? 'Tire a cor especial para usar tinta' : 'Escolha Original nas cores para usar tinta'}</span>` : '');
+    (comCor ? `<span class="mp-cor-aviso">${aceitaCor(mp.pet) ? 'Tire a cor especial para usar tinta' : `Escolha ${NOME_ORIGINAL_PET[mp.pet] || 'Original'} nas cores para usar tinta`}</span>` : '');
   $('mp-visual-tintas').classList.toggle('apagado', comCor);
   for (const b of $('mp-visual-tintas').querySelectorAll('[data-tinta]')) b.disabled = comCor;
   renderCores();
@@ -5316,6 +5316,7 @@ function loop(t) {
   atualizarMeuPet(dt);
   pgPet?.atualizar(dt);
   tut?.pet.atualizar(dt);
+  for (const a of tut?.cena || []) a.atualizar(dt);
   petEntregue?.anim.atualizar(dt);
   atualizarBotaoConfig();
   tickNemAi(dt);
@@ -15040,59 +15041,144 @@ const SAUDACAO_TUT = {
   unicornio: 'Oiê, {apelido}! ✨', morcego: 'Psiu… oi, {apelido}!', dragao_vermelho: 'Saudações, {apelido}!',
   elefante: 'Oi, {apelido}! Lembra de mim?', capivara: 'Oi… {apelido}. Com calma:',
 };
+// ── Cenas do tutorial: montadas por código com as imagens do jogo, num quadro 16:9 (em %). Coordenadas de mapa na escala
+// 1376 × 768 (as imagens de fundo têm o dobro); recorte = [x, y, largura] do pedaço do fundo que aparece.
+const CENA_W = 1376, CENA_H = 768;
+const pctMapa = (x, y, [cx, cy, cw]) => [(x - cx) / cw * 100, (y - cy) / (cw * 9 / 16) * 100];
+function cenaTut(fundo, recorte, corpo) {
+  const [cx, cy, cw] = recorte || [0, 0, CENA_W];
+  return `<div class="tut-cena"><img class="tut-fundo" data-fundo src="${fundo}" alt="" draggable="false"
+    style="width:${CENA_W / cw * 100}%;left:${-cx / cw * 100}%;top:${-cy / (cw * 9 / 16) * 100}%"/>${corpo}</div>`;
+}
+const cenaLisa = (corpo) => `<div class="tut-cena lisa">${corpo}</div>`;
+// ator em pé no chão da cena: centro em l%, pé em b% (de baixo), altura h% da cena; reserva = outra imagem se esta faltar
+const ator = (src, { l, b, h, flip = false, reserva = '' }) => `<img class="tut-ator" src="${src}" alt="" draggable="false"${reserva ? ` data-reserva="${reserva}"` : ''}
+  style="left:${l}%;bottom:${b}%;height:${h}%;transform:translateX(-50%)${flip ? ' scaleX(-1)' : ''}"/>`;
+// objeto do mapa (âncora embaixo, no meio, como no jogo: .jr-estudos-quadro)
+const noMapa = (src, x, y, largura, r) => { const [l, t] = pctMapa(x, y, r);
+  return `<img class="tut-ator" src="${src}" alt="" draggable="false" style="left:${l}%;top:${t}%;width:${largura / r[2] * 100}%;transform:translate(-50%,-100%)"/>`; };
+// pet animado: o quadro inteiro (com a folga de cima); sem l/b/h fica no fluxo (coleção, comida). meu: com a tinta do pet ativo
+const petTut = (forma, anim, { l, b, h, flip = false, meu = true }) => `<img class="tut-ator tut-pet-cena${l == null ? ' solto' : ''}" src="${quadrosDe(forma, 'sentado_girando')[0]}" alt=""
+  draggable="false" data-forma="${forma}" data-anim="${anim}"${meu ? ' data-meu' : ''}${l == null ? '' : ` style="left:${l}%;bottom:${b}%;height:${h}%;transform:translateX(-50%)${flip ? ' scaleX(-1)' : ''}"`}/>`;
+// destaque: círculo amarelo pulsando e a seta em cima (x, y em % da cena; dentro = no meio de um botão)
+const alvoTut = (x, y, dentro = false) => `<span class="tut-alvo${dentro ? ' dentro' : ''}" style="left:${x}%;top:${y}%"><i></i><b>⬇</b></span>`;
+// depois de pôr a cena: os pets animam, imagem que falta some (o fundo que falta vira o emoji da tela)
+function animarCenaTut(t) {
+  const raiz = $('tut-img');
+  tut.cena = [];
+  for (const img of raiz.querySelectorAll('img.tut-pet-cena')) {
+    const a = new PetParado(img), anim = img.dataset.anim;
+    if (anim !== 'sentado_girando' && anim !== 'feliz' && temAnim(img.dataset.forma, anim)) a.repouso = { anim, ms: 220 };
+    a.definir(img.dataset.forma);
+    if (anim === 'feliz' && temAnim(img.dataset.forma, 'feliz')) a.tocar('feliz');
+    if ('meu' in img.dataset) aplicarVisualPet(img, estado.pets.ativo);
+    tut.cena.push(a);
+  }
+  const falhou = (img) => {
+    if ('fundo' in img.dataset) { raiz.innerHTML = `<span class="tut-emoji">${t.emoji}</span>`; tut.cena = []; return; }
+    if (img.dataset.reserva) { img.src = img.dataset.reserva; delete img.dataset.reserva; return; }
+    img.remove();
+  };
+  for (const img of raiz.querySelectorAll('img')) {
+    if (img.complete && !img.naturalWidth && img.getAttribute('src')) falhou(img);
+    else img.addEventListener('error', () => falhou(img), { once: true });
+  }
+}
 function telasTutorial() {
   const pet = estado.pets.ativo, nome = nomePet(pet) || 'seu pet';
   const ap = apelidoAluno || String(sessao?.nome || '').split(' ')[0] || '';
   const sd = SAUDACAO_TUT[pet] || 'Oi, {apelido}!', oi = ap ? sd.replace('{apelido}', ap) : sd.replace(/,?\s*\{apelido\}/, '');
-  const foto = (src, cls = '') => `<img class="tut-foto${cls ? ' ' + cls : ''}" src="${src}" alt="" draggable="false"/>`;
-  const emo = (e) => `<span class="tut-emoji">${e}</span>`;
   const nIns = NUM_MAPAS * 2, peso = formatarNota(Math.round(PESO_INSIGNIAS / nIns * 10) / 10);
   const curto = (k) => k.replace('mapa', '').replace('-', '');   // 'mapa3-B' → '3B'
-  const ginPets = Object.keys(PETS_GINASIO).map(curto).join(', ');
-  const petsFoto = Object.values(PETS_GINASIO).filter(p => p !== 'inicial' && petValido(p)).slice(0, 4)
-    .map(p => `<img class="tut-mini" src="${quadrosDe(p, 'sentado_girando')[0]}" alt="" draggable="false"/>`).join('');
-  const ins = `${IMG}/insignias/insignia-mapa1-A.webp`;
+  const ginPets = Object.keys(PETS_GINASIO).filter(k => PETS_GINASIO[k] !== 'inicial').map(curto).join(', ');
   const extras = [['📋', 'Missões do dia', 1], ['🎯', 'Treino do dia', 1], ['🤖', 'Programe o Pet', 1], ['🖼️', 'Exposição', 1],
     ['📚', 'Quadros de estudos', 1], ...(desafiosLigados() ? [['⚡', 'Relâmpago', 1]] : []), ['📅', 'Revisão da semana', 0],
     ['🕹️', 'Fliperama', 0], ['🏠', 'Casinha', 0], ['📒', 'Álbum de figurinhas', 0], ['🎒', 'Expedições do pet', 0]];
+  // ── as cenas (só imagens do jogo): fundo recortado + atores em % de um quadro 16:9; o pet anima (PetParado) ──
+  const forma = formaDe(pet), meu = meuPersonagem(), cores = minhasCores();
+  const sprite = (q) => urlSprite(meu, q, cores);
+  const ins = (k, cls = '') => `<img class="tut-ins${cls ? ' ' + cls : ''}" src="${IMG}/insignias/insignia-${k}.webp" alt="" draggable="false"/>`;
+  const prox = proximoGinasio(), nProx = prox ? Number(prox.replace('mapa', '').split('-')[0]) : 1;
+  const regProx = D.geral?.regioes?.find(r => r.mapa === nProx);
+  const rival = ['tigre', 'gato', 'axolote', 'gaviao'].find(p => p !== pet && petValido(p));
+  const outros = PETS.filter(p => p !== pet && petValido(p) && !temPet(p)).slice(0, 4);
+  const fav = [cfgLoja().favoritas?.[pet]].flat()[0];
+  const comida = comidas().find(c => c.imagem && (c.id === fav || c.id.startsWith(fav + '_'))) || comidas().find(c => c.id === 'maca');
+  const praca = cfgPraca(), estudo = estudosDoMapa(1)?.mural, pontoPesca = pontosDoMapa(2)[0];
+  const sp = spritePesca(), EP = ESCALA_SPRITE;
   const telas = [
-    { id: 'boas_vindas', tit: '👋 Boas-vindas', img: foto(urlQuadro('frente', -1), 'pers'),
+    { id: 'boas_vindas', tit: '👋 Boas-vindas', emoji: '👋',
+      cena: cenaTut(`${IMG}/mapas/mapa1.webp`, [520, 330, 460], ator(sprite('frente-parado'), { l: 40, b: 8, h: 62 }) + petTut(forma, 'feliz', { l: 62, b: 6, h: 46 })),
       fala: `${oi} Eu sou ${nome}! Este jogo é a revisão do ano. Vamos andar pelos mapas, vencer ginásios e cuidar de mim!` },
-    { id: 'mapa', tit: '🗺️ Mapa geral', img: foto(`${IMG}/mapa-geral/mapa-geral.webp`, 'largo'),
+    { id: 'mapa', tit: '🗺️ Mapa geral', emoji: '🗺️',
+      cena: cenaTut(`${IMG}/mapa-geral/mapa-geral.webp`, null, regProx ? alvoTut(regProx.x / CENA_W * 100, regProx.y / CENA_H * 100) : ''),
       fala: `São ${NUM_MAPAS} mapas, cada um com 2 ginásios (A e B): ${nIns} ao todo. Eles abrem em ordem (1A, 1B, 2A…): vencendo o líder de um, abre o próximo.` },
-    { id: 'nota', tit: '🏅 A nota', img: foto(ins),
+    { id: 'nota', tit: '🏅 A nota', emoji: '🏅',
+      cena: cenaLisa(`<div class="tut-linha">${ins('mapa1-A')}${ins('mapa1-B')}${ins('mapa2-A')}</div>
+        <div class="tut-nota"><span class="tut-nota-ins" style="flex:${PESO_INSIGNIAS}">${PESO_INSIGNIAS} pelas insígnias</span><span class="tut-nota-xp" style="flex:${PESO_XP}">${PESO_XP} XP</span></div>
+        <div class="tut-nota-total">${PESO_INSIGNIAS} + ${PESO_XP} = <b>${NOTA_MAX}</b></div>`),
       fala: `O jogo vale ${NOTA_MAX} pontos: ${PESO_INSIGNIAS} pelas ${nIns} insígnias (cada uma ≈ ${peso}) e ${PESO_XP} pela experiência (⭐ XP) de tudo o que você faz, até ${XP_META} XP. Vale no máximo ${XP_DIA} XP por dia.` },
-    { id: 'onde_ver', tit: '📈 Onde ver', img: foto('/img/jogo/ui/botao-insignias.webp'),
+    { id: 'onde_ver', tit: '📈 Onde ver', emoji: '📈',
+      cena: cenaLisa(`<div class="tut-onde"><span class="tut-botao-topo"><img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>${alvoTut(50, 50, true)}</span>
+        <span class="tut-seta-lado">➜</span>
+        <span class="tut-estojo"><img src="/img/jogo/ui/bandeja-insignias.webp" alt="" draggable="false"/><span class="tut-estojo-ins">${ins('mapa1-A')}${ins('mapa1-B')}${ins('mapa2-A', 'dourada')}</span></span></div>`),
       fala: 'No estojo de insígnias (o botão lá em cima) você vê as insígnias e a sua nota. No site, ela aparece também na sua ficha.' },
-    { id: 'ginasios', tit: '🏟️ Ginásios', img: foto(`${IMG}/interiores/mapa1-A.webp`, 'largo'),
+    { id: 'ginasios', tit: '🏟️ Ginásios', emoji: '🏟️',
+      cena: cenaTut(`${IMG}/interiores/mapa1-A.webp`, [280, 230, 820], ator(sprite('direita-parado'), { l: 34, b: 10, h: 46 }) + ator(`${IMG}/personagens/mapa1-A-lider.webp`, { l: 64, b: 10, h: 50, flip: true })
+        + `<div class="jr-perg-bolinhas tut-bolinhas-perg"><span class="jr-bolinha certa"></span><span class="jr-bolinha certa"></span><span class="jr-bolinha errada"></span><span class="jr-bolinha atual"></span><span class="jr-bolinha"></span></div>`),
       fala: `Em cada ginásio há ${PERSONAGENS.length - 1} treinadores e o líder, com 5 perguntas cada. Errou? A pergunta volta com outros números até você acertar.` },
-    { id: 'insignias', tit: '🥇 Insígnias', img: foto(ins) + foto(ins, 'dourada'),
+    { id: 'insignias', tit: '🥇 Insígnias', emoji: '🥇',
+      cena: cenaLisa(`<div class="tut-linha tut-grande"><figure>${ins('mapa1-A')}<figcaption>Insígnia</figcaption></figure><figure>${ins('mapa1-A', 'dourada')}<figcaption>Dourada ✨</figcaption></figure></div>`),
       fala: 'Venceu o líder, ganhou a insígnia! Depois vem a revanche, mais difícil, que deixa a insígnia dourada e dá mais XP.' },
-    { id: 'estudos', tit: '📚 Quadros de Estudos', img: foto(`${IMG}/mapas/objetos/mural-estudos.webp`),
+    { id: 'estudos', tit: '📚 Quadros de Estudos', emoji: '📚',
+      cena: estudo ? (() => { const r = [estudo.x - 230, estudo.y - 190, 460];
+        return cenaTut(`${IMG}/mapas/mapa1.webp`, r, noMapa(`${IMG}/mapas/objetos/mural-estudos.webp`, estudo.x, estudo.y, Number(estudo.largura) || 100, r)
+          + alvoTut(...pctMapa(estudo.x, estudo.y - (Number(estudo.largura) || 100) * 0.55, r))); })() : null,
       fala: 'Nos mapas há quadros que explicam o conteúdo de cada ginásio. Leia antes de enfrentar o líder!' },
-    { id: 'mural', tit: '📋 Mural da Escola', img: emo('📋'),
+    { id: 'mural', tit: '📋 Mural da Escola', emoji: '📋',
+      cena: praca?.mural ? (() => { const m = praca.mural, r = [m.x - 230, m.y - 120, 460]; return cenaTut(`${IMG}/mapas/praca.webp`, r, alvoTut(...pctMapa(m.x, m.y - 20, r))); })() : null,
       fala: 'Na Praça, o mural mostra os rankings da escola e da turma: insígnias, pesca, desafios, damas e mais.' },
-    { id: 'pets', tit: '🐾 Pets', img: `<span class="tut-pets">${petsFoto}</span>`,
+    { id: 'pets', tit: '🐾 Pets', emoji: '🐾',
+      cena: cenaLisa(`<div class="tut-colecao"><span class="tut-carta meu">${petTut(forma, 'sentado_girando', {})}<b>${esc(nome)}</b></span>${outros.map(p =>
+        `<span class="tut-carta"><img class="tut-silhueta" src="${quadrosDe(p, 'sentado_girando')[0]}" alt="" draggable="false"/><b>???</b></span>`).join('')}</div>`),
       fala: `Você começou comigo, e vencendo ginásios ganha outros pets (${ginPets}).` },
-    { id: 'comida', tit: '🍎 Comida e lealdade', img: foto(`${IMG}/itens/maca.webp`, 'item'),
+    { id: 'comida', tit: '🍎 Comida e lealdade', emoji: '🍎',
+      cena: cenaLisa(`<div class="tut-comida">${petTut(forma, temAnim(forma, 'comendo') ? 'comendo' : 'feliz', {})}
+        ${comida?.imagem ? `<img class="tut-item" src="/${comida.imagem.replace(/^\//, '')}" alt="" draggable="false"/>` : ''}<span class="tut-coracoes"><i>❤️</i><i>❤️</i><i>❤️</i></span></div>
+        <div class="tut-leal"><span>Lealdade</span><i><b style="width:62%"></b></i></div>`),
       fala: 'Me dê comida pelo Meu Pet: a minha favorita rende mais! Cuidando de mim, a lealdade sobe e eu aprendo a conversar, dar dicas nos ginásios, dar cambalhota e fazer truques.' },
     ...(desafiosLigados() ? [
-      { id: 'batalha', tit: '⚔️ Batalha de pets', img: foto(`${IMG}/batalha/arena.webp`, 'largo'),
+      { id: 'batalha', tit: '⚔️ Batalha de pets', emoji: '⚔️',
+        cena: cenaTut(`${IMG}/batalha/arena.webp`, null, petTut(forma, 'sentado_girando', { l: 28, b: 14, h: 46 }) + (rival ? petTut(rival, 'sentado_girando', { l: 72, b: 14, h: 46, flip: true, meu: false }) : '')
+          + '<span class="tut-vida esq"><b style="width:80%"></b></span><span class="tut-vida dir"><b style="width:45%"></b></span>'),
         fala: 'Nas batalhas, eu luto e você responde às contas: quanto mais rápido, mais dano. Preciso estar alimentado para lutar.' },
-      { id: 'duelos', tit: '🤝 Duelos e damas', img: foto(`${IMG}/praca/mesa-damas.webp`),
+      { id: 'duelos', tit: '🤝 Duelos e damas', emoji: '🤝',
+        cena: cenaLisa(`<div class="tut-duelo"><span class="tut-cartao"><img src="${urlQuadro('frente', -1, 'menina_trancas', null)}" alt="" draggable="false"/><b>Colega</b>
+          <span class="tut-cartao-bts"><i>⚔️</i><i>♟️</i><i>🎁</i><i>🏠</i></span></span><img class="tut-damas" src="${IMG}/praca/mesa-damas.webp" alt="" draggable="false"/></div>`),
         fala: `Toque num colega para chamar para um duelo ou para as damas.${apostasLigadas() ? ' Dá para apostar moedas!' : ''} Damas contra o computador também dão moedas, até ${VITORIAS_DAMAS_CPU_DIA} vitórias por dia.` },
     ] : []),
-    { id: 'loja', tit: '🛒 Loja', img: foto(`${IMG}/npcs/dona_cida.webp`, 'npc'),
-      fala: 'Na loja da Dona Cida você compra comida, tintas, efeitos, iscas e móveis para a casinha com as moedas que ganha.' },
-    { id: 'pesca', tit: '🎣 Pesca', img: foto(`${IMG}/itens/isca.webp`, 'item') + foto(`${IMG}/itens/lambari.webp`, 'item'),
+    { id: 'loja', tit: '🛒 Loja', emoji: '🛒',
+      cena: cenaTut(`${IMG}/interiores/loja.webp`, null, ator(`${IMG}/npcs/dona_cida.webp`, { l: 50, b: 34, h: 40 }) + alvoTut(50, 22)
+        + `<span class="tut-itens">${['maca', 'isca', 'tinta', 'bolo'].map(i => `<img src="${IMG}/itens/${i}.webp" alt="" draggable="false"/>`).join('')}</span>`),
+      fala: 'Na loja da Dona Cida você compra comida, cores e tintas, efeitos, iscas e móveis para a casinha com as moedas que ganha.' },
+    { id: 'pesca', tit: '🎣 Pesca', emoji: '🎣',
+      cena: pontoPesca && sp.largura ? (() => { const p = pontoPesca, r = [p.x - 120, p.y - 95, 210], esq = p.lado === 'esq';
+        const w = sp.largura * EP, h = sp.altura * EP, x0 = p.x - (esq ? sp.largura - sp.ancora[0] : sp.ancora[0]) * EP, y0 = p.y - sp.ancora[1] * EP;
+        return cenaTut(`${IMG}/mapas/mapa2.webp`, r, `<img class="tut-ator" src="${sprite('pesca-esperando')}" alt="" draggable="false" style="left:${(x0 - r[0]) / r[2] * 100}%;top:${(y0 - r[1]) / (r[2] * 9 / 16) * 100}%;width:${w / r[2] * 100}%;${esq ? 'transform:scaleX(-1)' : ''}"/>`
+          + `<img class="tut-peixe" src="${IMG}/itens/lambari.webp" alt="" draggable="false"/>`); })() : null,
       fala: 'Com isca, pesque no rio: espere beliscar e puxe na hora certa. Cada peixe vai para a sua coleção e dá XP.' },
-    { id: 'cavar', tit: '⛏️ Cavar e 🌿 capinar', img: foto(`${IMG}/itens/montinho.webp`, 'item') + foto(`${IMG}/mato/mato-1.webp`, 'item'),
+    { id: 'cavar', tit: '⛏️ Cavar e 🌿 capinar', emoji: '⛏️',
+      cena: cenaTut(`${IMG}/mapas/mapa1.webp`, [520, 330, 460], ator(sprite('cavar-3'), { l: 34, b: 8, h: 60 }) + ator(`${IMG}/itens/montinho.webp`, { l: 52, b: 8, h: 20 })
+        + ator(`${IMG}/mato/mato-1.webp`, { l: 76, b: 8, h: 24 })),
       fala: 'Nos mapas há montinhos para cavar (saem moedas e tesouros) e mato para arrancar (sai fruta e verdura). O mato cresce de novo em 6 horas!' },
-    { id: 'extras', tit: '✨ Atividades extras', img: `<ul class="tut-extras">${extras.map(([e, n, xp]) => `<li>${e} ${n}${xp ? ' <b>⭐</b>' : ''}</li>`).join('')}</ul>`,
+    { id: 'extras', tit: '✨ Atividades extras', emoji: '✨',
+      cena: cenaLisa(`<div class="tut-extras">${extras.map(([e, n, xp]) => `<span class="tut-extra"><i>${e}</i>${n}${xp ? ' <b>⭐</b>' : ''}</span>`).join('')}</div>`),
       fala: 'E tem muito mais para fazer! As com ⭐ dão XP para a sua nota.' },
-    { id: 'pronto', tit: '🏁 Pronto!', img: `<img class="tut-foto pers" src="${urlComemorando()}" onerror="this.onerror=null;this.src='${urlQuadro('frente', -1)}'" alt="" draggable="false"/>`,
+    { id: 'pronto', tit: '🏁 Pronto!', emoji: '🏁',
+      cena: cenaTut(`${IMG}/mapas/mapa1.webp`, [520, 330, 460], ator(urlComemorando(), { l: 40, b: 8, h: 62, reserva: sprite('frente-parado') }) + petTut(forma, 'feliz', { l: 62, b: 6, h: 46 })),
       fala: `Agora é com você${ap ? ', ' + ap : ''}! Se esquecer de algo, toque em ⚙️ e em ❓ Como jogar para me ver explicar de novo.` },
   ];
+  for (const t of telas) t.img = t.cena || `<span class="tut-emoji">${t.emoji}</span>`;   // sem a imagem: o emoji grande da tela
   return telas;
 }
 // Abre sozinho: progresso carregado, com pet (o inicial vem ao entrar num mapa) e sem outra janela por cima
@@ -15120,6 +15206,7 @@ function renderTutorial() {
   $('tut-cont').textContent = `${tut.i + 1} / ${n}`;
   $('tut-bolinhas').innerHTML = tut.telas.map((_, k) => `<span class="${k === tut.i ? 'atual' : k < tut.i ? 'feita' : ''}"></span>`).join('');
   $('tut-img').innerHTML = t.img;
+  animarCenaTut(t);
   $('tut-fala').textContent = t.fala;
   $('tut-ant').disabled = tut.i === 0;
   $('tut-prox').textContent = tut.i === n - 1 ? 'Vamos jogar! 🎮' : 'Próximo ▶';

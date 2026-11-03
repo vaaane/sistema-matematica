@@ -3824,3 +3824,83 @@ html.jr-deitado #jr-app .pf-ins img { width: 26px; height: 26px; }
 .lj-cor-seta:active { transform: scale(.94); }
 .mp-chip.trancada { opacity: .72; }
 .mp-chip.trancada .jr-ic-moeda { width: 14px; height: 14px; vertical-align: -2px; }
+
+/* 📖 PROMPT-166 (revisão): cenas do tutorial montadas com as imagens do jogo, num quadro 16:9; destaque = círculo pulsando + seta */
+.tut-cena { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 12px; border: 2px solid rgba(255,255,255,.12);
+  background: radial-gradient(ellipse at 50% 70%, #2a2350, #141629); }
+#jr-app .tut-cena img { image-rendering: auto; user-select: none; -webkit-user-drag: none; }
+#jr-app .tut-fundo { position: absolute; max-width: none; height: auto; }
+#jr-app .tut-ator { position: absolute; width: auto; max-width: none; }
+#jr-app .tut-ator.solto { position: static; }
+.tut-cena.lisa { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 8px; }
+.tut-alvo { position: absolute; width: 0; height: 0; z-index: 5; pointer-events: none; }
+.tut-alvo i { position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--jr-ouro);
+  box-shadow: 0 0 10px 2px rgba(255,215,0,.7); animation: tutPulsa 1.2s ease-out infinite; }
+.tut-alvo b { position: absolute; left: -12px; top: -58px; width: 24px; text-align: center; font-size: 24px; line-height: 1; color: var(--jr-ouro);
+  text-shadow: 0 2px 4px rgba(0,0,0,.7); animation: tutSeta .8s ease-in-out infinite alternate; }
+.tut-alvo.dentro b { top: -62px; }
+@keyframes tutPulsa { 0% { transform: scale(.75); opacity: 1; } 100% { transform: scale(1.35); opacity: .25; } }
+@keyframes tutSeta { from { transform: translateY(0); } to { transform: translateY(7px); } }
+.tut-linha { display: flex; align-items: flex-end; justify-content: center; gap: 10px; }
+#jr-app .tut-ins { height: 62px; width: auto; }
+.tut-grande figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.tut-grande figcaption { font: 700 13px 'Inter', sans-serif; color: #e6e8f5; }
+#jr-app .tut-grande .tut-ins { height: 112px; }
+.tut-nota { display: flex; width: 86%; height: 26px; border-radius: 8px; overflow: hidden; font: 800 12.5px 'Inter', sans-serif; color: #10121f; }
+.tut-nota span { min-width: 46px; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+.tut-nota-ins { background: var(--jr-ouro); }
+.tut-nota-xp { background: var(--jr-ciano, #00d4ff); }
+.tut-nota-total { font: 700 15px 'Orbitron', sans-serif; color: #e6e8f5; }
+.tut-nota-total b { color: var(--jr-ouro); font-size: 20px; }
+.tut-onde { display: flex; align-items: center; gap: 12px; }
+.tut-botao-topo { position: relative; padding: 8px; border-radius: 12px; background: rgba(0,0,0,.35); }
+#jr-app .tut-botao-topo img { display: block; width: 58px; height: 58px; }
+.tut-seta-lado { font-size: 26px; color: var(--jr-ouro); }
+.tut-estojo { position: relative; width: 52%; }
+#jr-app .tut-estojo > img { display: block; width: 100%; height: auto; }
+.tut-estojo-ins { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 6%; }
+#jr-app .tut-estojo-ins .tut-ins { height: 42%; }
+.tut-bolinhas-perg { position: absolute; left: 50%; top: 6%; transform: translateX(-50%); padding: 5px 9px; border-radius: 99px; background: rgba(10,11,24,.75); }
+.tut-colecao { display: flex; align-items: flex-end; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.tut-carta { display: flex; flex-direction: column; align-items: center; padding: 4px 6px 6px; border-radius: 10px; background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12); font: 700 11.5px 'Inter', sans-serif; color: #c9cce0; }
+.tut-carta.meu { border-color: var(--jr-ouro); color: var(--jr-ouro); }
+#jr-app .tut-carta img { height: 70px; width: auto; }
+#jr-app .tut-carta.meu img { height: 92px; }
+#jr-app img.tut-silhueta { filter: brightness(0) opacity(.45); }
+.tut-comida { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 4px; }
+#jr-app .tut-comida .tut-pet-cena { height: 128px; width: auto; }
+#jr-app .tut-item { height: 52px; width: auto; margin-bottom: 8px; }
+.tut-coracoes { position: absolute; left: 50%; top: 0; display: flex; gap: 6px; transform: translateX(-60%); }
+.tut-coracoes i { font-style: normal; font-size: 18px; animation: tutCoracao 1.6s ease-in-out infinite; }
+.tut-coracoes i:nth-child(2) { animation-delay: .4s; } .tut-coracoes i:nth-child(3) { animation-delay: .8s; }
+@keyframes tutCoracao { 0%, 100% { transform: translateY(0); opacity: .3; } 50% { transform: translateY(-10px); opacity: 1; } }
+.tut-leal { display: flex; align-items: center; gap: 8px; width: 80%; font: 700 12px 'Inter', sans-serif; color: #e6e8f5; }
+.tut-leal i { flex: 1; height: 10px; border-radius: 99px; background: rgba(255,255,255,.15); overflow: hidden; }
+.tut-leal b { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--jr-roxo), #c9a7ff); }
+.tut-vida { position: absolute; top: 8%; width: 30%; height: 8px; border-radius: 99px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.4); overflow: hidden; }
+.tut-vida.esq { left: 8%; } .tut-vida.dir { right: 8%; }
+.tut-vida b { display: block; height: 100%; background: var(--jr-verde, #00e676); }
+.tut-vida.dir b { background: #ff7b2e; margin-left: auto; }
+.tut-duelo { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }
+.tut-cartao { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 12px; background: #1c1f38;
+  border: 1px solid rgba(255,255,255,.18); font: 700 13px 'Inter', sans-serif; color: #e6e8f5; }
+#jr-app .tut-cartao img { height: 72px; width: auto; }
+.tut-cartao-bts { display: flex; gap: 4px; }
+.tut-cartao-bts i { font-style: normal; font-size: 16px; padding: 3px 5px; border-radius: 8px; background: var(--jr-roxo); }
+#jr-app .tut-damas { width: 46%; height: auto; }
+.tut-itens { position: absolute; left: 50%; bottom: 6%; transform: translateX(-50%); display: flex; gap: 8px; padding: 4px 8px; border-radius: 10px; background: rgba(10,11,24,.6); }
+#jr-app .tut-itens img { height: 34px; width: auto; }
+#jr-app .tut-peixe { position: absolute; right: 16%; bottom: 22%; height: 18%; width: auto; animation: tutPeixe 1.4s ease-in-out infinite; }
+@keyframes tutPeixe { 0%, 100% { transform: translateY(0) rotate(-12deg); } 50% { transform: translateY(-14px) rotate(14deg); } }
+.tut-extras { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+.tut-extra { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 10px; background: rgba(124,92,252,.22); border: 1px solid rgba(124,92,252,.5);
+  font: 600 12.5px 'Inter', sans-serif; color: #e6e8f5; }
+.tut-extra i { font-style: normal; font-size: 16px; }
+.tut-extra b { color: var(--jr-ouro); }
+/* deitado: a cena cabe na altura do jogo */
+html.jr-deitado .tut-cena { width: min(100%, calc(var(--jr-alt, 100dvh) * .42 * 16 / 9)); margin: 0 auto; }
+html.jr-deitado #jr-app .tut-grande .tut-ins { height: calc(var(--jr-alt, 100dvh) * .2); }
+html.jr-deitado #jr-app .tut-carta img { height: calc(var(--jr-alt, 100dvh) * .13); }
+html.jr-deitado #jr-app .tut-carta.meu img, html.jr-deitado #jr-app .tut-comida .tut-pet-cena { height: calc(var(--jr-alt, 100dvh) * .18); }
+html.jr-deitado .tut-extra { font-size: 11px; padding: 2px 6px; }

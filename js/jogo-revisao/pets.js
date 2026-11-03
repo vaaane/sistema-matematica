@@ -28,14 +28,16 @@ export async function carregarSprites() {
 
 // 🎨 Cores dos pets (PROMPT-170, sprites-pets-cores.json): a forma {pet}_{cor} é só visual (mesmos nomes de arquivo, já
 // pintados); o pet continua o mesmo (falas, comidas, truques, lealdade) e o tamanho, a distância, as sequências e as ações
-// são os do pet de base. Uma cor só vale se a forma existir no JSON (o morcego entra aqui quando chegarem as imagens dele).
+// são os do pet de base. Uma cor só vale se a forma existir no JSON. O morcego (PROMPT-163) tem cores próprias; o original dele é o preto.
 const CORES_TODAS = ['marrom', 'cinza', 'branco', 'roxo', 'azul', 'rosa', 'verde', 'dourado', 'preto'];
 export const CORES_PET = {
   elefante: CORES_TODAS, gato: CORES_TODAS, tigre: CORES_TODAS, unicornio: CORES_TODAS, capivara: CORES_TODAS,
   gaviao: CORES_TODAS.filter(c => c !== 'cinza'),
   axolote: CORES_TODAS.filter(c => c !== 'rosa'),
+  morcego: ['marrom', 'cinza', 'branco', 'roxo', 'azul', 'vermelho', 'dourado'],
 };
-export const NOME_COR_PET = { marrom: 'Marrom', cinza: 'Cinza', branco: 'Branco', roxo: 'Roxo', azul: 'Azul', rosa: 'Rosa', verde: 'Verde', dourado: 'Dourado', preto: 'Preto' };
+export const NOME_COR_PET = { marrom: 'Marrom', cinza: 'Cinza', branco: 'Branco', roxo: 'Roxo', azul: 'Azul', rosa: 'Rosa', verde: 'Verde', dourado: 'Dourado', preto: 'Preto', vermelho: 'Vermelho' };
+export const NOME_ORIGINAL_PET = { morcego: 'Preto' };   // o chip sem cor (o resto: Original)
 // gato_azul → 'gato'; o resto (gato, dragao_azul, dragao_vermelho_sombra…) → null
 export const petDaCor = (forma) => { const m = /^([a-z]+)_([a-z]+)$/.exec(forma || ''); return m && CORES_PET[m[1]]?.includes(m[2]) ? m[1] : null; };
 export const coresDoPet = (pet) => (CORES_PET[pet] || []).filter(c => SPR?.pets?.[`${pet}_${c}`]);
