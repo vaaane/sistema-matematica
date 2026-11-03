@@ -6,7 +6,7 @@
 export const PETS = ['elefante', 'gato', 'gaviao', 'axolote', 'capivara', 'tigre', 'morcego', 'unicornio', 'dragao_vermelho'];   // PROMPT-159: o morcego no lugar do dragão azul; PROMPT-164: a capivara (4 B)
 export const NOME_PET = {
   elefante: 'Elefante', gato: 'Gato', gaviao: 'Gavião',
-  axolote: 'Axolote', capivara: 'Capivara', tigre: 'Tigre', morcego: 'Morcego', unicornio: 'Unicórnio', dragao_vermelho: 'Dragão Vermelho',
+  axolote: 'Axolote', capivara: 'Capivara', tigre: 'Tigre', morcego: 'Morcego', unicornio: 'Unicórnio', dragao_vermelho: 'Dragão',
 };
 
 const BASE = '/img/jogo/';

@@ -2140,7 +2140,9 @@ function efeitosDoMapa() {
 // Imagens pintadas (sprites-pets-cores.json, pets.js → CORES_PET): a forma {pet}_{cor} é só visual. Compra por pet
 // (pets/cores_pet/{pet}/{cor}); uma cor em pets/cores_todas (das tintas antigas) vale em qualquer pet que tenha essa cor.
 // A cor escolhida fica em pets/conquistados/{pet}/cor; com cor, a tinta não é aplicada (continua guardada).
-const temCorPet = (pet, cor) => !!(estado?.pets?.coresPet?.[pet]?.[cor] || estado?.pets?.coresTodas?.[cor]) && coresDoPet(pet).includes(cor);
+// Professora, modo teste e alunos de teste: todas as cores, sem comprar (como as cores do dragão).
+const todasAsCoresPet = () => ehProfessora() || teste || ALUNOS_TESTE.includes(sessao?.uid);
+const temCorPet = (pet, cor) => !!(todasAsCoresPet() || estado?.pets?.coresPet?.[pet]?.[cor] || estado?.pets?.coresTodas?.[cor]) && coresDoPet(pet).includes(cor);
 const corDoPet = (pet) => { const c = estado?.pets?.conquistados?.[pet]?.cor; return c && temCorPet(pet, c) ? c : null; };
 const precoCorPet = (cor) => Number(cfgLoja().cores_pet?.preco_cor?.[cor] ?? cfgLoja().cores_pet?.preco ?? 80);
 const petsComCores = () => PETS.filter(p => temPet(p) && coresDoPet(p).length);
@@ -2672,7 +2674,7 @@ function verificarCores() {
     gravar({ [`cores_liberadas/${cor}`]: true });
     const c = coresDragao()[cor], ativo = estado.pets.ativo;
     if (aceitaCor(ativo)) avisoPet(`🎨 Cor nova para o dragão: ${c.nome}! Escolha no Meu Pet → Visual.`, true, srcIcone(formaComCor(formaBase(ativo), cor)));
-    else avisoPet(`🎨 Liberou a cor ${c.nome} para o dragão vermelho! ${c.emoji || ''}`, true);
+    else avisoPet(`🎨 Liberou a cor ${c.nome} para o dragão! ${c.emoji || ''}`, true);
   }
 }
 // 🎁 PROMPT-133: uma vez por aluno, a diferença do multiplicador de moedas (PROMPT-126) sobre o que ele já conquistou nos
