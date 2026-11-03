@@ -3812,3 +3812,7 @@ html.jr-deitado .cfg-linha { padding: 6px 10px; font-size: 13.5px; }
 html.jr-deitado .pf-caixa { max-width: 560px; }
 html.jr-deitado .pf-busto { width: 56px; height: 64px; }
 html.jr-deitado #jr-app .pf-ins img { width: 26px; height: 26px; }
+
+/* 🎁 PROMPT-169: o cartão de pet novo para o pet entregue direto (o pet inteiro, animado, e a frase do ginásio) */
+#pet-levar.entregue .jr-pet-levar-nome { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; line-height: 1.4; color: #e6e8f5; }
+#pet-levar.entregue .jr-pet-levar-nome b { color: var(--jr-ouro); }

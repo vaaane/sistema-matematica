@@ -441,6 +441,11 @@ async function carregarEstado() {
       g.dourada = !!ins.dourada;
       g.dataInsignia = ins.data || null;
       g.insAcertos = Number(ins.acertos_primeira) || 0; g.insTotal = Number(ins.total) || 0;   // 🏆 placa de vencedores (PROMPT-113)
+      // 🩹 insígnia sem o líder gravado (PROMPT-169): a insígnia vale como líder (e treinadores) vencidos; conserta o banco
+      for (const p of ['treinador1', 'treinador2', 'treinador3', 'lider']) if (!g[p].vencido) {
+        g[p] = { vencido: true, acertosPrimeira: 0, total: 0, data: ins.data || null };
+        (estado.consertos ||= {})[`ginasios/${chave}/${p}`] = { vencido: true, acertos_primeira: 0, total: 0, data: ins.data || null };
+      }
     }
     estado.sequencia = v.sequencia || null;
     { const u = estado.sequencia?.ultimo_dia; conversa.voltou = !!u && u !== diaLocal() && (paraData(diaLocal()) - paraData(u)) / 86400000 >= 3; }
@@ -494,6 +499,7 @@ async function carregarEstado() {
     // aluno novo = nada salvo ainda (sem ginásio, insígnia, pet nem dia jogado)
     estado.novo = !v.ginasios && !v.insignias && !v.pet && !v.pets && !v.sequencia;
     carregouProgresso = true;
+    if (estado.consertos) { gravar(estado.consertos); delete estado.consertos; }   // 🩹 PROMPT-169
     if (!estado.pescaEspecies) {   // 🐠 1ª vez: os peixes que já estão na bolsa entram no registro do aquário (PROMPT-106)
       estado.pescaEspecies = {};
       for (const [id, n] of Object.entries(estado.pets?.bolsa || {})) if (id.startsWith('pesca_') && Number(n) > 0) estado.pescaEspecies[id.slice(6)] = Number(n);
@@ -970,6 +976,7 @@ export async function iniciarJogo(sess) {
   carregarTitulos();
   iniciarAlbum();
   iniciarPet();
+  if (entregaRetroativa()) entregarPetsGinasio();   // 🎁 pets dos ginásios já vencidos (PROMPT-169)
   setTimeout(verificarCores, 2500);   // quem já cumpriu as condições ganha as cores (aviso uma vez)
   setTimeout(bonusMoedasRetroativo, 1800);   // 🎁 PROMPT-133
   setTimeout(xpJogoRetroativo, 6000);       // ⭐ PROMPT-156 (depois dos outros avisos da entrada)
@@ -1424,7 +1431,7 @@ function surgirPetSePendente() {
 }
 
 function abrirLevarPet() {
-  if (!petGin || petGin.levado) return;
+  if (!petGin || petGin.levado || petEntregue) return;
   const p = petGin.pet;
   const img = $('levar-img');
   const [w, h] = temBusto(p) ? tamanhoBusto() : tamanhoQuadro();   // sem busto: sentado_girando_1 (mapa `reserva`)
@@ -1435,6 +1442,7 @@ function abrirLevarPet() {
 }
 
 function conquistarPet(usarAgora) {
+  if (petEntregue) { fecharPetEntregue(usarAgora); return; }   // 🎁 o cartão do pet entregue (PROMPT-169)
   $('pet-levar').hidden = true;
   if (!petGin || petGin.levado) return;
   const { pet, chave, x, y, anim } = petGin;
@@ -1451,6 +1459,58 @@ function conquistarPet(usarAgora) {
     removerPetGinasio();
     if (usar && cena?.chave === chave) usarPet(pet, x, y);
   });
+}
+
+// ── 🎁 Pets dos ginásios entregues direto (PROMPT-169) ──
+// Ginásio que dá pet fixo (não o 'inicial'): líder vencido e sem o pet → o pet vai para a coleção na hora, com
+// { data, origem: chave } e os cuidados de pet novo, num update só, e um cartão para cada (um depois do outro, depois do
+// tutorial). O ativo não muda (só se o aluno tocar "Usar agora"). Ao entrar no jogo: retroativo, menos modo teste, professora
+// e contas escondidas (esses ainda encontram o pet ao lado do líder). Ao vencer o líder: na hora, para todos.
+const filaPetsEntregues = [];
+let petEntregue = null;   // o cartão aberto: { pet, chave, anim }
+const entregaRetroativa = () => !teste && !ehProfessora() && !contaEscondida(sessao?.uid, sessao?.nome);
+function entregarPetsGinasio() {
+  if (!petsOk || !estado?.pets?.conquistados) return;
+  const patch = {}, novos = [];
+  for (const [chave, pet] of Object.entries(PETS_GINASIO)) {
+    if (pet === 'inicial' || !petValido(pet) || temPet(pet) || !estado.ginasios[chave]?.lider?.vencido) continue;
+    const c = { data: Date.now(), origem: chave, ...cuidadosNovos() };
+    estado.pets.conquistados[pet] = c;
+    patch[`pets/conquistados/${pet}`] = c;
+    novos.push({ pet, chave });
+  }
+  if (!novos.length) return;
+  if (!estado.pets.ativo) { estado.pets.ativo = novos[0].pet; patch['pets/ativo'] = novos[0].pet; usarPet(novos[0].pet); }   // sem pet nenhum: o 1º passa a seguir
+  gravar(patch);
+  atualizarBotaoPet();
+  filaPetsEntregues.push(...novos);
+  setTimeout(mostrarPetEntregue, 1200);
+}
+function mostrarPetEntregue() {
+  if (petEntregue || !filaPetsEntregues.length) return;
+  const tutorialVem = !estado.avisos?.tutorial && petValido(estado.pets?.ativo) && entregaRetroativa();   // o tutorial ainda vai abrir: ele primeiro
+  if (tutorialVem || !$('tutorial').hidden || sobreposicaoAberta() || perguntaAberta || transicionando) { setTimeout(mostrarPetEntregue, 1500); return; }
+  const { pet, chave } = filaPetsEntregues.shift();
+  const [n, G] = chave.replace('mapa', '').split('-'), gin = D.questoes[Number(n)]?.ginasios?.[G]?.nome || chave;
+  const img = $('levar-img'), forma = formaDe(pet), [w, h] = tamanhoQuadro(forma);
+  img.width = w; img.height = h;
+  petEntregue = { pet, chave, anim: new PetParado(img) };
+  preCarregarPet(forma);
+  petEntregue.anim.definir(forma);
+  if (temAnim(forma, 'feliz')) petEntregue.anim.tocar('feliz');
+  aplicarVisualPet(img, pet);
+  $('levar-nome').innerHTML = `🎉 Você ganhou <b>${esc(NOME_PET[pet])}</b> por ter vencido o ginásio <b>${esc(gin)}</b>!`;
+  $('pet-levar').classList.add('entregue');
+  $('pet-levar').hidden = false;
+  tocar('vitoria');
+}
+function fecharPetEntregue(usar) {
+  const { pet } = petEntregue;
+  petEntregue = null;
+  $('pet-levar').hidden = true;
+  $('pet-levar').classList.remove('entregue');
+  if (usar) trocarPetAtivo(pet);
+  setTimeout(mostrarPetEntregue, 500);
 }
 
 // ============================================================
@@ -5151,6 +5211,7 @@ function loop(t) {
   atualizarMeuPet(dt);
   pgPet?.atualizar(dt);
   tut?.pet.atualizar(dt);
+  petEntregue?.anim.atualizar(dt);
   atualizarBotaoConfig();
   tickNemAi(dt);
   tickOnline(dt);
@@ -13668,7 +13729,10 @@ function vencer() {
   if (p === 'lider' || p === 'revanche') ganharFigurinha(chave);   // 📒 a figurinha (dourada com a revanche) aparece depois da insígnia
   if (ganhou) moedasDaInsignia(ganhou);
   if (p === 'lider' || p === 'revanche') conversa.evento = 'venceu';   // o pet comenta ao sair do ginásio
-  if (p === 'lider' && primeiraVez && petDoGinasio(chave)) petSurgir = chave;
+  if (p === 'lider' && primeiraVez) {
+    if (PETS_GINASIO[chave] && PETS_GINASIO[chave] !== 'inicial') entregarPetsGinasio();   // 🎁 direto para a coleção (PROMPT-169)
+    else if (petDoGinasio(chave)) petSurgir = chave;
+  }
   registrarDiaJogado();
   tocar('vitoria');
   vitoriaNemAi();
