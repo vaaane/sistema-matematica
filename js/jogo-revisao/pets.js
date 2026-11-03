@@ -138,12 +138,16 @@ export function msAtePasso(forma, nome, achar, { deFrente = true } = {}) {
   for (const p of passos) { if (achar(p)) return t; t += p[2]; }
   return t;
 }
-// Ações do adulto parado (Meu Pet e mapas), sorteadas sem repetir a anterior. A lista vem do sprites.json → acoes_parado
-// (uma lista para todos, ou { forma: lista }), para religar/desligar ações sem mexer no código (PROMPT-67). Nunca cuspir_fogo.
+// Ações do pet parado (Meu Pet e mapas), sorteadas sem repetir a anterior. A lista vem do sprites.json → acoes_parado
+// (uma lista para todos, ou { forma: lista, _padrao: lista }), para religar/desligar ações sem mexer no código (PROMPT-67).
+// Por pet (PROMPT-165): a forma com cor (pet_{cor}) usa a lista do pet; sem lista, a _padrao.
+// Nunca sozinho: o fogo, o voo (fica para o combate e o Meu Pet), o ataque e o 🙃 pendurado da capivara.
 const ACOES_PARADO = ['cheirar', 'lamber_pata', 'lamber_rabo', 'banho'];
+const NUNCA_SOZINHO = new Set(['cuspir_fogo', 'voar', 'voo_campeao', 'ataque_batalha', 'pendurada', 'comer', 'comendo']);
 function acoesParado(forma) {
-  const j = SPR?.acoes_parado, l = Array.isArray(j) ? j : j?.[forma];
-  return (Array.isArray(l) ? l : ACOES_PARADO).filter(a => a !== 'cuspir_fogo');
+  const j = SPR?.acoes_parado;
+  const l = Array.isArray(j) ? j : j?.[forma] ?? j?.[String(forma || '').replace(/_[a-z]+$/, '')] ?? j?._padrao;
+  return (Array.isArray(l) ? l : ACOES_PARADO).filter(a => !NUNCA_SOZINHO.has(a));
 }
 let ultimaAcao = null;
 export function sortearAcaoParado(forma) {

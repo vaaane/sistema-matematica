@@ -38,6 +38,7 @@
       <button class="jr-selo-seq apagado" id="selo-seq" aria-label="Sequência de dias">🔥 0</button>
       <button class="jr-btn-som" data-som aria-label="Desligar o som">🔊</button>
       <button class="jr-btn-som jr-btn-musica mudo" data-musica aria-label="Ligar a música">🎵</button>
+      <button class="jr-btn-som jr-btn-config" data-config aria-label="Configuração" title="Configuração">⚙️</button>
       <button class="jr-btn-estojo" id="btn-insignias" aria-label="Minhas insígnias">
         <img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>
         <span class="jr-estojo-estrela" hidden>★</span>
@@ -95,6 +96,7 @@
       <button class="jr-btn-hud jr-btn-batalhar" id="btn-batalhar" hidden aria-label="Treinadores">⚔️<span>Treinadores</span></button>
       <button class="jr-btn-som" data-som aria-label="Desligar o som">🔊</button>
       <button class="jr-btn-som jr-btn-musica mudo" data-musica aria-label="Ligar a música">🎵</button>
+      <button class="jr-btn-som jr-btn-config" id="btn-config" data-config aria-label="Configuração" title="Configuração">⚙️</button>
       <button class="jr-btn-estojo" id="btn-insignias-2" aria-label="Minhas insígnias">
         <img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>
         <span class="jr-estojo-estrela" hidden>★</span>
@@ -322,6 +324,20 @@
     <div class="jr-pet-escolha-caixa pres-caixa">
       <div class="jr-pet-escolha-titulo" id="vila-conv-txt"></div>
       <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-conv="aceitar">✔ Aceitar</button><button class="jr-btn jr-btn-sec" data-conv="recusar">Recusar</button></div>
+    </div>
+  </div>
+  <!-- 🚪 Pedido para visitar a casinha (PROMPT-168) -->
+  <div id="visita-pedido" class="jr-pet-escolha" hidden role="dialog" aria-label="Pedido de visita">
+    <div class="jr-pet-escolha-caixa pres-caixa">
+      <div class="jr-pet-escolha-titulo" id="visita-ped-txt"></div>
+      <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-ped="deixar">✔ Deixar</button><button class="jr-btn jr-btn-sec" data-ped="nao">✖ Agora não</button></div>
+    </div>
+  </div>
+  <!-- 🏅 Perfil do colega (PROMPT-168) -->
+  <div id="perfil-colega" class="jr-pet-escolha" hidden role="dialog" aria-label="Perfil do colega">
+    <div class="jr-pet-escolha-caixa pf-caixa">
+      <button class="jr-btn jr-btn-sec pf-fechar" id="perfil-fechar" aria-label="Fechar">✕</button>
+      <div class="pf-corpo" id="perfil-corpo"></div>
     </div>
   </div>
   <div id="vila-busca" class="al-fundo" hidden role="dialog" aria-label="Convidar um vizinho">
@@ -836,6 +852,39 @@
     </div>
   </div>
   <!-- 🎂 Aniversário do pet (PROMPT-102) -->
+  <!-- ⚙️ Configuração (PROMPT-167) -->
+  <div id="config" class="jr-pet-escolha jr-config" hidden role="dialog" aria-modal="true" aria-label="Configuração">
+    <div class="jr-pet-escolha-caixa cfg-caixa">
+      <div class="cfg-topo">
+        <div class="jr-pet-escolha-titulo cfg-tit" id="cfg-tit">⚙️ Configuração</div>
+        <button class="jr-btn jr-btn-sec" id="cfg-voltar" aria-label="Fechar">✕</button>
+      </div>
+      <div class="cfg-lista" id="cfg-lista"></div>
+      <div class="cfg-presentes" id="cfg-presentes" hidden></div>
+    </div>
+  </div>
+  <!-- 📖 Tutorial apresentado pelo pet (PROMPT-166) -->
+  <div id="tutorial" class="jr-pet-escolha jr-tut" hidden role="dialog" aria-modal="true" aria-label="Como jogar">
+    <div class="jr-pet-escolha-caixa tut-caixa">
+      <div class="tut-topo">
+        <span class="tut-cont" id="tut-cont"></span>
+        <div class="jr-pet-escolha-titulo tut-tit" id="tut-tit"></div>
+        <button class="jr-btn jr-btn-sec tut-fechar" id="tut-fechar" aria-label="Fechar" hidden>✕</button>
+      </div>
+      <div class="tut-bolinhas" id="tut-bolinhas" aria-hidden="true"></div>
+      <div class="tut-corpo">
+        <div class="tut-apresenta">
+          <div class="tut-balao" id="tut-fala" aria-live="polite"></div>
+          <img class="tut-pet" id="tut-pet" alt="" draggable="false"/>
+        </div>
+        <div class="tut-img" id="tut-img"></div>
+      </div>
+      <div class="tut-botoes">
+        <button class="jr-btn jr-btn-sec" id="tut-ant">◀ Voltar</button>
+        <button class="jr-btn jr-btn-ouro" id="tut-prox">Próximo ▶</button>
+      </div>
+    </div>
+  </div>
   <div id="aniv" class="jr-pet-escolha" hidden role="dialog" aria-label="Aniversário do pet">
     <div class="jr-pet-escolha-caixa aniv-caixa">
       <div class="aniv-confete" id="aniv-confete" aria-hidden="true"></div>

@@ -788,9 +788,6 @@
     "pets/morcego/feliz_2.webp",
     "pets/morcego/feliz_3.webp"
    ],
-   "lamber_beicos": [
-    "pets/morcego/lamber_beicos_1.webp"
-   ],
    "lamber_pata": [
     "pets/morcego/lamber_pata_1.webp",
     "pets/morcego/lamber_pata_2.webp"
@@ -2688,7 +2685,7 @@
     ["lamber_pata", 2, 450],
     ["lamber_pata", 1, 450],
     ["lamber_pata", 2, 450],
-    ["lamber_beicos", 1, 1200],
+    ["sentado_2", 3, 800],
     ["carinho", 1, 1500],
     ["sentado_2", 1, 700]
    ],
@@ -4248,14 +4245,11 @@
    ]
   }
  },
- "acoes_parado": [
-  "cheirar",
-  "lamber_pata",
-  "lamber_rabo",
-  "banho",
-  "rugir",
-  "descansar"
- ],
+ "acoes_parado": {
+  "_padrao": ["cheirar", "lamber_pata", "lamber_rabo", "banho", "rugir", "descansar"],
+  "morcego": ["banho", "bolinha", "brincar", "lamber_pata", "descansar"],
+  "capivara": ["acenar", "flor", "borboleta", "cambalhota"]
+ },
  "cores": {
   "sombra": {
    "nome": "Sombra",

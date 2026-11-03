@@ -452,6 +452,7 @@ async function carregarEstado() {
     estado.pets = lerPets(v);   // validado depois de ler o sprites.json (cachorro/porco antigos são ignorados)
     estado.petCor = typeof v.pet_cor === 'string' ? v.pet_cor : null;   // cor especial do dragão (PROMPT-74): null = normal
     estado.semConvites = !!v.sem_convites;   // "Não receber convites" (PROMPT-76)
+    estado.config = { nomes: v.config?.nomes !== false };   // ⚙️ config/nomes: false = esconde os nomes dos colegas (PROMPT-167)
     estado.vencedoresPublicado = !!v.vencedores_publicado;   // 🏆 as insígnias antigas já foram para a placa (PROMPT-113)
     estado.coresLiberadas = v.cores_liberadas && typeof v.cores_liberadas === 'object' ? { ...v.cores_liberadas } : {};   // { cor: true } — para sempre
     liberarCoresDaConta();
@@ -973,9 +974,10 @@ export async function iniciarJogo(sess) {
   setTimeout(bonusMoedasRetroativo, 1800);   // 🎁 PROMPT-133
   setTimeout(xpJogoRetroativo, 6000);       // ⭐ PROMPT-156 (depois dos outros avisos da entrada)
   setTimeout(avisarTrocaPersonagem, 4200);
+  setTimeout(verificarTutorial, 1500);   // 📖 PROMPT-166
   if (comecaNaPraca) abrirPraca('fonte').catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   atualizarBotaoMissoes();
-  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); avisarCoracoes(); ouvirVila(); iniciarPraca(); publicarResumoInsignias(); publicarVencedoresAntigos(); migrarQuadrosV2(); ouvirConvitesAoVivo(); });
+  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); avisarCoracoes(); ouvirVila(); ouvirPedidosVisita(); iniciarPraca(); publicarResumoInsignias(); publicarVencedoresAntigos(); migrarQuadrosV2(); ouvirConvitesAoVivo(); });
   // aluno novo escolhe o personagem antes de tudo (o pet inicial vem depois, ao entrar num mapa)
   if (carregouProgresso && estado.novo && !estado.personagem) abrirEscolhaPersonagem(true);
 }
@@ -1269,6 +1271,7 @@ function escolherPet(pet) {
   usarPet(pet);
   $('pet-escolha').hidden = true;
   tocar('vitoria');
+  setTimeout(verificarTutorial, 1500);   // 📖 o pet já existe para apresentar (PROMPT-166)
 }
 
 // Troca o pet que segue o personagem (aparece em x, y — por padrão junto do personagem)
@@ -1657,6 +1660,7 @@ function avisoPet(texto, festa = false, img = '') {
 function proximoAvisoPet() {
   const a = filaAvisoPet[0];
   if (!a) return;
+  if (!$('tutorial').hidden) { setTimeout(proximoAvisoPet, 1500); return; }   // 📖 o tutorial primeiro (PROMPT-166)
   const el = document.createElement('div');
   el.className = 'jr-aviso-seq jr-aviso-pet' + (a.festa ? ' festa' : '') + (a.img ? ' com-busto' : '');
   el.textContent = a.texto;
@@ -3055,6 +3059,7 @@ function ouvirPresentes() {
   try {
     pararPresentes = onValue(ref(db, `${basePresentes()}/${sessao.uid}`), (snap) => {
       const v = snap.exists() ? snap.val() || {} : {};
+      presentesTodos = v;   // 📜 histórico na ⚙️ Configuração (PROMPT-167)
       for (const [k, p] of Object.entries(v)) if (p && !p.recebido) receberPresente(k, p);
     }, () => {});
   } catch (_) { pararPresentes = null; }
@@ -3150,7 +3155,7 @@ async function entrarOnline() {
     if (s.exists() && s.val()) { apelido = String(s.val()); apelidoAluno = apelido; }
   } catch (_) {}
   await iniciarOnline({ uid: sessao.uid, teste, dados: {
-    apelido, turma: sessao.turma || '', pet: estado.pets?.ativo || null, ...(estado.pets?.ativo ? visualOnline(estado.pets.ativo) : {}), personagem: meuPersonagem(), cores: minhasCores(), mapa: 'geral', local: 'geral', x: 0, y: 0, dir: 'frente', titulo: meuTitulo(), sem_convites: estado.semConvites || null,
+    apelido, turma: sessao.turma || '', pet: estado.pets?.ativo || null, ...(estado.pets?.ativo ? visualOnline(estado.pets.ativo) : {}), personagem: meuPersonagem(), cores: minhasCores(), mapa: 'geral', local: 'geral', x: 0, y: 0, dir: 'frente', titulo: meuTitulo(), seq: sequenciaVigente(estado.sequencia) || null, n_pets: Object.keys(estado.pets?.conquistados || {}).length || null, sem_convites: estado.semConvites || null,
   } });
   if (!$('tela-geral').hidden) ouvirGeral();
   else if (ehPraca()) entrarNoMapaOnline('praca');   // o jogo começou na Praça antes do online ficar pronto
@@ -3245,7 +3250,11 @@ function atualizarColega(c, r) {
   else if (nx !== c.x || ny !== c.y) { c.de = [c.x, c.y]; c.alvo = [nx, ny]; c.t0 = performance.now(); }
   // reação recente (menos de 3 s) aparece sobre a cabeça
   const t = Number(r.reacao?.t) || 0;
-  if (r.reacao?.e && balaoValido(r.reacao.e) && t > c.reacaoT && Date.now() - t < 3000) { c.reacaoT = t; mostrarBalaoReacao(c, r.reacao.e); }   // só frases prontas e reações
+  if (r.reacao?.e && (balaoValido(r.reacao.e) || EMOJIS_CARTAO.includes(r.reacao.e)) && t > c.reacaoT && Date.now() - t < 3000) {   // só frases prontas, reações e os emojis do cartão
+    c.reacaoT = t;
+    if (r.reacao.para && EMOJIS_CARTAO.includes(r.reacao.e)) { mostrarEmojiNoColega(c, r.reacao.e); emojiParaAlguem(r); }   // 😀 para alguém (PROMPT-168)
+    else mostrarBalaoReacao(c, r.reacao.e);
+  }
 }
 
 // A cada quadro: desliza até a posição recebida, anima o andar, pet segue pelo rastro
@@ -3337,18 +3346,23 @@ function abrirCartaoColega(c) {
     ${podeDesafiar() && !r.sem_convites ? '<button class="jr-colega-oi jr-colega-desafiar" data-desafiar aria-label="Desafiar" title="Desafiar">⚔️</button>' : ''}
     ${presenteBloqueado(c) ? '' : '<button class="jr-colega-oi" data-presente aria-label="Presentear" title="Presentear">🎁</button>'}
     ${casaPub(c.uid) ? BOTAO_VISITAR : ''}
-    <button class="jr-colega-oi" data-oi aria-label="Acenar">👋</button>`;
+    <button class="jr-colega-oi" data-oi aria-label="Acenar">👋</button>
+    <button class="jr-colega-oi" data-emojis aria-label="Mandar um emoji" title="Emoji">😀</button>
+    <button class="jr-colega-oi" data-perfil aria-label="Ver perfil" title="Ver perfil">🏅</button>`;
   const ti = el.querySelector('img[data-tinta]');
   if (ti) aplicarTinta(ti, ti.dataset.tinta);
   el.hidden = false;
   el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
-  cartaoColega = { c, timer: setTimeout(fecharCartaoColega, 4000) };
+  cartaoColega = { c, timer: setTimeout(fecharCartaoColega, MS_CARTAO_COLEGA) };   // 8 s para escolher (PROMPT-168)
   posicionarCartaoColega();
   carregarCasasPub().then(() => {   // 🏠 a lista das casinhas chegou agora: o botão aparece
-    if (cartaoColega?.c === c && casaPub(c.uid) && !el.querySelector('[data-visitar]')) el.querySelector('[data-oi]')?.insertAdjacentHTML('beforebegin', BOTAO_VISITAR);
+    if (cartaoColega?.c !== c) return;
+    if (casaPub(c.uid)) { if (!el.querySelector('[data-visitar]')) el.querySelector('[data-oi]')?.insertAdjacentHTML('beforebegin', BOTAO_VISITAR); }
+    else if (podePedirVisita(c) && !el.querySelector('[data-pedir-visita]')) el.querySelector('[data-oi]')?.insertAdjacentHTML('beforebegin', BOTAO_PEDIR_VISITA);   // 🚪 (PROMPT-168)
   });
   botaoConvidarNoCartao(c, el);   // 🏡 (PROMPT-109)
 }
+const MS_CARTAO_COLEGA = 8000;
 const BOTAO_VISITAR = '<button class="jr-colega-oi" data-visitar aria-label="Visitar a casinha" title="Visitar a casinha">🏠</button>';
 
 function posicionarCartaoColega() {
@@ -5012,7 +5026,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -5136,6 +5150,8 @@ function loop(t) {
   ultimoT = t;
   atualizarMeuPet(dt);
   pgPet?.atualizar(dt);
+  tut?.pet.atualizar(dt);
+  atualizarBotaoConfig();
   tickNemAi(dt);
   tickOnline(dt);
   dmPet?.atualizar(dt);
@@ -6567,6 +6583,14 @@ function aplicarMusicaOff(v) {
   musicaOff = v || {};
   musicaBloqueada(!!(musicaOff.todas || musicaOff[sessao?.turma]));
   pintarMusica();
+}
+function pintarSom() {
+  document.querySelectorAll('[data-som]').forEach(b => {
+    const on = somLigado();
+    b.textContent = on ? '🔊' : '🔇';
+    b.setAttribute('aria-label', on ? 'Desligar o som' : 'Ligar o som');
+    b.classList.toggle('mudo', !on);
+  });
 }
 function pintarMusica() {
   const bloq = musicaBloqueada(), on = musicaLigada() && !bloq;
@@ -10945,6 +10969,8 @@ async function deixarDeSerVizinho(uid) {
 function ligarVila() {
   $('vila-balao').addEventListener('click', cliqueBalaoVila);
   $('vila-convite').addEventListener('click', (e) => { const b = e.target.closest('[data-conv]'); if (b) responderConviteVila(b.dataset.conv === 'aceitar'); });
+  $('visita-pedido').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-ped]'); if (b) responderPedidoVisita(b.dataset.ped === 'deixar'); });   // 🚪 (PROMPT-168)
+  $('perfil-colega').addEventListener('click', (e) => { e.stopPropagation(); if (e.target === $('perfil-colega') || e.target.closest('#perfil-fechar')) $('perfil-colega').hidden = true; });
   $('vila-busca-txt').addEventListener('input', renderBuscaVizinho);
   $('vila-busca').addEventListener('click', (e) => {
     if (e.target === $('vila-busca') || e.target.closest('[data-fechar="vila-busca"]')) { $('vila-busca').hidden = true; return; }
@@ -14596,6 +14622,363 @@ function fazerTruque(id) {
 }
 
 // ============================================================
+//  👆 CARTÃO DO COLEGA: mais opções (PROMPT-168)
+//  😀 emoji para o colega: vai pelo mesmo `reacao` do online, com `para` (uid). Todos no mapa veem o emoji em cima de quem
+//     mandou (o balão de sempre) e em cima de quem recebeu; quem recebeu vê em cima de si mesmo. 1 a cada 3 s (INTERVALO_REACAO).
+//     Não é convite: vale com "Não receber convites".
+//  🚪 Pedir para visitar (a casinha ainda não está aberta): jogo_revisao_praca(_teste)/visita_pedidos/{dono}/{quem pede} =
+//     { nome, turma, ts, resp? }. O dono vê a faixa (✔ Deixar / ✖ Agora não); ✔ publica a casinha (publicarCasinha) e responde
+//     'sim', e quem pediu entra como numa visita normal. ✖ ou 60 s sem resposta: "Fulano não pode agora." Respeita sem_convites;
+//     um pedido por vez para o mesmo colega e no máximo 1 a cada 30 s.
+//  🏅 Perfil: busto, nome, turma, título, insígnias (o resumo público do mural; a fileira vem da cópia pública da casinha,
+//     quando há), o pet ativo (do online) e a sequência de dias. Sem nota e sem XP.
+// ============================================================
+const EMOJIS_CARTAO = ['😀', '😂', '😍', '👏', '😮', '😢'];
+const MS_EMOJI = 2500;
+function mostrarEmojiEmMim(e) {
+  const b = $('minha-reacao');
+  b.textContent = e;
+  b.classList.remove('frase', 'pop'); void b.offsetWidth; b.classList.add('pop');
+  b.hidden = false;
+  clearTimeout(b._t);
+  b._t = setTimeout(() => { b.hidden = true; }, MS_EMOJI);
+}
+function mostrarEmojiNoColega(c, e) {
+  mostrarBalaoReacao(c, e);
+  c.balao.classList.remove('pop'); void c.balao.offsetWidth; c.balao.classList.add('pop');
+  clearTimeout(c.balaoT);
+  c.balaoT = setTimeout(() => { if (c.balao) c.balao.hidden = true; }, MS_EMOJI);
+}
+function abrirEmojisCartao() {
+  const el = $('colega-cartao');
+  if (!cartaoColega || el.querySelector('.jr-colega-emojis')) return;
+  el.insertAdjacentHTML('beforeend', `<div class="jr-colega-emojis">${EMOJIS_CARTAO.map(e => `<button class="jr-colega-oi" data-emoji="${e}" aria-label="Mandar ${e}">${e}</button>`).join('')}</div>`);
+  renovarCartaoColega();
+}
+function mandarEmoji(c, e) {
+  if (!EMOJIS_CARTAO.includes(e) || !c) return;
+  if (performance.now() - ultimaReacao < INTERVALO_REACAO) { avisoTopo('Espere um pouquinho para mandar outro.'); return; }
+  ultimaReacao = performance.now();
+  fecharCartaoColega();
+  enviarOnline({ reacao: { e, t: Date.now(), para: c.uid } });
+  mostrarEmojiEmMim(e);
+  if (colegas.has(c.uid)) mostrarEmojiNoColega(colegas.get(c.uid), e);
+  tocar('clique');
+}
+// reação recebida com `para`: em cima de quem recebeu também (eu ou outro colega no mapa)
+function emojiParaAlguem(r) {
+  const para = r.reacao?.para;
+  if (!para || !EMOJIS_CARTAO.includes(r.reacao.e)) return;
+  if (para === sessao.uid) mostrarEmojiEmMim(r.reacao.e);
+  else if (colegas.has(para)) mostrarEmojiNoColega(colegas.get(para), r.reacao.e);
+}
+// o cartão fica aberto mais 8 s a cada escolha
+function renovarCartaoColega() {
+  if (!cartaoColega) return;
+  clearTimeout(cartaoColega.timer);
+  cartaoColega.timer = setTimeout(fecharCartaoColega, MS_CARTAO_COLEGA);
+}
+
+// ── 🚪 Pedir para visitar ──
+const MS_PEDIDO_VISITA = 60000, MS_ENTRE_PEDIDOS = 30000;
+let pedidoVisita = null, ultimoPedidoVisita = 0;   // o meu pedido em andamento: { uid, nome, parar, timer }
+const BOTAO_PEDIR_VISITA = '<button class="jr-colega-oi" data-pedir-visita aria-label="Pedir para visitar a casinha" title="Pedir para visitar">🚪</button>';
+const podePedirVisita = (c) => !!c && !c.reg?.sem_convites && !!CASA;   // o colega com "Não receber convites": sem o botão
+async function pedirVisita(c) {
+  if (!podePedirVisita(c)) return;
+  const nome = rotuloColega(c.uid, c.reg);
+  fecharCartaoColega();
+  if (pedidoVisita) { avisoTopo(pedidoVisita.uid === c.uid ? 'Você já pediu. Espere a resposta!' : 'Espere a resposta do outro pedido.'); return; }
+  if (performance.now() - ultimoPedidoVisita < MS_ENTRE_PEDIDOS && ultimoPedidoVisita) { avisoTopo('Espere um pouquinho para pedir de novo.'); return; }
+  ultimoPedidoVisita = performance.now();
+  const no = ref(db, `${basePraca()}/visita_pedidos/${c.uid}/${sessao.uid}`);
+  try { await set(no, { nome: nomeRanking(), turma: sessao.turma || '', ts: agoraServ() }); }
+  catch (e) { console.warn('[jogo-revisao] pedido de visita indisponível', e?.code || e); avisoTopo('Não deu para pedir agora.'); return; }
+  avisoPet(`🚪 Pedido enviado para ${nome}!`);
+  const fim = (resp) => {
+    if (!pedidoVisita) return;
+    pedidoVisita.parar?.(); clearTimeout(pedidoVisita.timer);
+    pedidoVisita = null;
+    remove(no).catch(() => {});
+    if (resp === 'sim') { avisoPet(`${nome} deixou! 🏠`, true); visitarCasinha(c.uid); }
+    else avisoPet(`${nome} não pode agora.`);
+  };
+  pedidoVisita = { uid: c.uid, nome, timer: setTimeout(() => fim('nao'), MS_PEDIDO_VISITA) };
+  try {
+    pedidoVisita.parar = onValue(no, (s) => { const v = s.exists() ? s.val() : null; if (v?.resp) fim(v.resp); }, () => {});
+  } catch (_) {}
+}
+// o dono: um pedido por vez na faixa
+const filaPedidosVisita = [], pedidosVistos = new Set();
+let pararPedidosVisita = null;
+function ouvirPedidosVisita() {
+  if (pararPedidosVisita || !carregouProgresso) return;
+  try {
+    pararPedidosVisita = onValue(ref(db, `${basePraca()}/visita_pedidos/${sessao.uid}`), (snap) => {
+      for (const [uid, p] of Object.entries(snap.exists() ? snap.val() || {} : {})) receberPedidoVisita(uid, p);
+    }, () => {});
+  } catch (e) { console.warn('[jogo-revisao] pedidos de visita indisponíveis', e?.code || e); }
+}
+function receberPedidoVisita(uid, p) {
+  const chave = `${uid}|${p?.ts}`;
+  if (!p || p.resp || pedidosVistos.has(chave)) return;
+  pedidosVistos.add(chave);
+  const no = ref(db, `${basePraca()}/visita_pedidos/${sessao.uid}/${uid}`);
+  if (agoraServ() - (Number(p.ts) || 0) > MS_PEDIDO_VISITA || !visivelNoRanking(uid, p)) return;   // vencido: quem pediu já desistiu
+  if (estado.semConvites) { update(no, { resp: 'nao' }).catch(() => {}); return; }
+  filaPedidosVisita.push({ uid, ...p });
+  mostrarPedidoVisita();
+}
+function mostrarPedidoVisita() {
+  if (!$('visita-pedido').hidden || !filaPedidosVisita.length) return;
+  const p = filaPedidosVisita[0];
+  if (agoraServ() - (Number(p.ts) || 0) > MS_PEDIDO_VISITA) { filaPedidosVisita.shift(); mostrarPedidoVisita(); return; }
+  if (perguntaAberta || transicionando || sobreposicaoAberta()) { setTimeout(mostrarPedidoVisita, 2000); return; }
+  const turma = nomeVisivel(p.turma || '');
+  $('visita-ped-txt').innerHTML = `🚪 <b>${esc(nomeVisivel(p.nome) || 'Um colega')}</b>${turma ? ` (${esc(turma)})` : ''} quer visitar a sua casinha.`;
+  $('visita-pedido').hidden = false;
+  tocar('clique');
+  clearTimeout(mostrarPedidoVisita.t);
+  mostrarPedidoVisita.t = setTimeout(() => responderPedidoVisita(false), Math.max(1000, MS_PEDIDO_VISITA - (agoraServ() - (Number(p.ts) || 0))));
+}
+async function responderPedidoVisita(deixar) {
+  clearTimeout(mostrarPedidoVisita.t);
+  const p = filaPedidosVisita.shift();
+  $('visita-pedido').hidden = true;
+  if (!p) return;
+  const no = ref(db, `${basePraca()}/visita_pedidos/${sessao.uid}/${p.uid}`);
+  if (deixar) await publicarCasinha();   // a casinha fica aberta para visitas (como depois de arrumar)
+  update(no, { resp: deixar ? 'sim' : 'nao' }).catch(() => {});
+  setTimeout(mostrarPedidoVisita, 400);
+}
+
+// ── 🏅 Perfil do colega ──
+async function abrirPerfilColega(c) {
+  if (!c) return;
+  fecharCartaoColega();
+  const r = c.reg || {}, nome = rotuloColega(c.uid, r), turma = nomeVisivel(r.turma), tit = tituloDe(c.uid, r);
+  let ins = null;
+  try { ins = await lerNo(`${basePraca()}/insignias/${c.uid}`); } catch (_) {}
+  await carregarCasasPub().catch(() => {});
+  const casa = casasPub[c.uid], lista = casa?.ins ? Object.keys(casa.ins).sort((a, b) => ordemInsignia(a) - ordemInsignia(b)) : [];
+  const n = Number(ins?.n) || lista.length, d = Number(ins?.d) || lista.filter(k => casa.ins[k]?.d).length;
+  const pet = petValido(petAtual(r.pet)) ? petAtual(r.pet) : null, forma = pet ? formaValida(pet, r.pet_forma) : null;
+  const seq = Number(r.seq) || 0;
+  $('perfil-corpo').innerHTML = `
+    <div class="pf-topo">
+      ${bustoHtml(urlQuadro('frente', -1, c.pers || PERS.padrao, c.cores), `pf-busto${temBrilho(c.uid, r) ? ' jr-brilho' : ''}`, BUSTO_PERS)}
+      <div class="pf-quem"><b>${nomeT(c.uid, nome, r)}</b>${turma ? `<small>${esc(turma)}</small>` : ''}
+        ${tit ? `<span class="jr-titulo-mestre ${tit === 2 ? 'lenda' : ''}">${NOME_TITULO[tit]}</span>` : ''}</div>
+    </div>
+    <div class="pf-linha">🏅 <b>${n}</b> insígnia${n === 1 ? '' : 's'}${d ? ` · ✨ <b>${d}</b> dourada${d === 1 ? '' : 's'}` : ''} <small>de ${NUM_MAPAS * 2}</small></div>
+    ${lista.length ? `<div class="pf-ins">${lista.map(k => `<img src="${IMG}/insignias/insignia-${k}.webp" class="${casa.ins[k]?.d ? 'dourada' : ''}" alt="" draggable="false"/>`).join('')}</div>` : ''}
+    ${pet ? `<div class="pf-linha pf-pet"><span class="jr-icone-pet"><img src="${srcIcone(forma)}" alt="" draggable="false" data-icone-pet${r.pet_tinta ? ` data-tinta="${esc(r.pet_tinta)}"` : ''}/></span>
+      <span>🐾 <b>${esc(r.pet_nome || NOME_PET[pet])}</b>${r.pet_nome && r.pet_nome !== NOME_PET[pet] ? ` <small>(${NOME_PET[pet]})</small>` : ''}${Number(r.pet_nivel) > 0 ? ` · ❤️ ${Number(r.pet_nivel)}` : ''}${Number(r.n_pets) > 1 ? ` · ${Number(r.n_pets)} pets` : ''}</span></div>` : ''}
+    ${seq > 0 ? `<div class="pf-linha">🔥 <b>${seq}</b> dia${seq === 1 ? '' : 's'} seguido${seq === 1 ? '' : 's'}</div>` : ''}`;
+  const ti = $('perfil-corpo').querySelector('img[data-tinta]');
+  if (ti) aplicarTinta(ti, ti.dataset.tinta);
+  $('perfil-colega').hidden = false;
+  tocar('clique');
+}
+const ordemInsignia = (k) => { const [, m, G] = /^mapa(\d+)-([AB])$/.exec(k) || [0, 99, 'B']; return Number(m) * 2 + (G === 'B' ? 1 : 0); };
+
+// ============================================================
+//  ⚙️ CONFIGURAÇÃO (PROMPT-167) — painel do botão ⚙️ (mapa geral, mapas, praça, vila e casinha; não no ginásio nem na pesca).
+//  Cada opção grava na hora e usa o que já existe: som e música (sons.js, localStorage), conversa do pet (petCalado,
+//  localStorage), convites (sem_convites, o mesmo do Meu Pet), nomes dos colegas (config/nomes, padrão: mostrar),
+//  o guarda-roupa, o tutorial (rever) e a lista dos últimos 30 presentes recebidos (jogo_revisao_presentes/{uid}).
+//  Os botões soltos (🔊, 🎵, 💬 e "Não receber convites" do Meu Pet) continuam e mostram o mesmo estado.
+// ============================================================
+let presentesTodos = {};   // o último retrato de jogo_revisao_presentes/{uid} (ouvirPresentes)
+const nomesColegasVisiveis = () => estado?.config?.nomes !== false;
+const aplicarNomesColegas = () => $('jr-app').classList.toggle('sem-nomes', !nomesColegasVisiveis());
+const podeConfig = () => !cena || (cena.tipo === 'mapa' && !pesca);
+function atualizarBotaoConfig() {
+  const b = $('btn-config');
+  if (b) b.hidden = !podeConfig();
+}
+function abrirConfig() {
+  if (!estado) return;
+  $('cfg-lista').hidden = false; $('cfg-presentes').hidden = true;
+  $('cfg-tit').textContent = '⚙️ Configuração';
+  renderConfig();
+  $('config').hidden = false;
+  tocar('clique');
+}
+function fecharConfig() { $('config').hidden = true; }
+function renderConfig() {
+  const bloq = musicaBloqueada();
+  const chave = (id, ic, nome, on, sub = '') => `<button class="cfg-linha" data-cfg="${id}" role="switch" aria-checked="${on}">
+      <span class="cfg-ic">${ic}</span><span class="cfg-nome">${nome}${sub ? `<small>${sub}</small>` : ''}</span><span class="cfg-chave${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
+  const abre = (id, ic, nome, sub = '') => `<button class="cfg-linha" data-cfg="${id}">
+      <span class="cfg-ic">${ic}</span><span class="cfg-nome">${nome}${sub ? `<small>${sub}</small>` : ''}</span><span class="cfg-seta" aria-hidden="true">›</span></button>`;
+  $('cfg-lista').innerHTML =
+    abre('personagem', '👤', 'Personagem e cores') +
+    chave('som', '🔊', 'Efeitos sonoros', somLigado()) +
+    chave('musica', '🎵', 'Música', musicaLigada() && !bloq, bloq ? 'A professora desligou a música' : '') +
+    chave('conversa', '💬', 'Conversa do pet', !petCalado, 'Os avisos importantes continuam') +
+    chave('convites', '⚔️', 'Receber convites', !estado.semConvites, 'Duelos, damas e chamados da Praça') +
+    chave('nomes', '🏷️', 'Nomes dos colegas', nomesColegasVisiveis(), 'Em cima dos colegas no mapa') +
+    abre('tutorial', '❓', 'Como jogar') +
+    abre('presentes', '📜', 'Presentes recebidos');
+}
+function acaoConfig(id) {
+  if (id === 'personagem') { fecharConfig(); abrirEscolhaPersonagem(); return; }
+  if (id === 'tutorial') { fecharConfig(); abrirTutorial(true); return; }
+  if (id === 'presentes') { abrirHistoricoPresentes(); return; }
+  if (id === 'som') { alternarSom(); pintarSom(); }
+  else if (id === 'musica') { if (musicaBloqueada()) { avisoTopo('A professora desligou a música'); return; } alternarMusica(); pintarMusica(); }
+  else if (id === 'conversa') alternarPetCalado();
+  else if (id === 'convites') alternarSemConvites();
+  else if (id === 'nomes') {
+    const v = !nomesColegasVisiveis();
+    (estado.config ||= {}).nomes = v;
+    gravar({ 'config/nomes': v ? null : false });   // padrão (mostrar) não ocupa o banco
+    aplicarNomesColegas();
+  }
+  tocar('clique');
+  renderConfig();
+}
+// 📜 os últimos 30 presentes já recebidos: ícone, o que foi, de quem (nome e turma; conta escondida sem nome) e o recado
+function abrirHistoricoPresentes() {
+  const lista = Object.values(presentesTodos || {}).filter(p => p?.recebido).sort((a, b) => (Number(b.recebido || b.ts) || 0) - (Number(a.recebido || a.ts) || 0)).slice(0, 30);
+  const data = (t) => (t ? new Date(Number(t)).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '');
+  $('cfg-presentes').innerHTML = lista.length ? `<ul class="cfg-pres">${lista.map(p => {
+    const item = itemPresente(p.item || p.peixe), turma = nomeVisivel(p.de_turma);
+    const quem = `<b>${esc(nomeVisivel(p.de_nome) || 'Um colega')}</b>${turma ? ` (${esc(turma)})` : ''}`;
+    return `<li>${item ? imgItem(item.imagem, item.emoji || '🎁', 'jr-item-peixe', item.filtro) : '🎁'}<span>${quem} te deu ${esc(item ? comArtigo(item.nome) : 'um presente')}${p.recado ? `<small>“${esc(p.recado)}”</small>` : ''}</span><em>${data(p.recebido || p.ts)}</em></li>`;
+  }).join('')}</ul>` : '<p class="cfg-vazio">Você ainda não recebeu presentes.</p>';
+  $('cfg-tit').textContent = '📜 Presentes recebidos';
+  $('cfg-lista').hidden = true; $('cfg-presentes').hidden = false;
+  tocar('clique');
+}
+function voltarConfig() {
+  if (!$('cfg-presentes').hidden) { $('cfg-presentes').hidden = true; $('cfg-lista').hidden = false; $('cfg-tit').textContent = '⚙️ Configuração'; return; }
+  fecharConfig();
+}
+
+// ============================================================
+//  📖 TUTORIAL (PROMPT-166) — o pet ativo apresenta o jogo, tela por tela. Abre sozinho uma vez (depois do personagem e do
+//  pet inicial; quem já jogava vê na próxima entrada) e não fecha até "Vamos jogar!" (avisos/tutorial). Fechou o jogo no
+//  meio: recomeça na tela em que parou (avisos/tutorial_tela = id da tela). ❓ no mapa geral revê, e aí fecha quando quiser;
+//  professora e contas de teste/escondidas também têm o ✕. Enquanto está aberto, conta como janela por cima
+//  (sobreposicaoAberta): convite, chamado e presente esperam; os avisos do pet (avisoPet) também.
+//  Os números vêm do código (nota.js, gerarQuestoes, PETS_GINASIO, damas); as telas 11 e 12 só com os desafios ligados.
+// ============================================================
+let tut = null;   // { telas, i, revendo, pet: PetParado }
+const SAUDACAO_TUT = {
+  gato: 'Hmpf. Oi, {apelido}.', gaviao: 'Olá, {apelido}!', axolote: 'Uiii, oi {apelido}!', tigre: 'E AÍ, {apelido}!',
+  unicornio: 'Oiê, {apelido}! ✨', morcego: 'Psiu… oi, {apelido}!', dragao_vermelho: 'Saudações, {apelido}!',
+  elefante: 'Oi, {apelido}! Lembra de mim?', capivara: 'Oi… {apelido}. Com calma:',
+};
+function telasTutorial() {
+  const pet = estado.pets.ativo, nome = nomePet(pet) || 'seu pet';
+  const ap = apelidoAluno || String(sessao?.nome || '').split(' ')[0] || '';
+  const sd = SAUDACAO_TUT[pet] || 'Oi, {apelido}!', oi = ap ? sd.replace('{apelido}', ap) : sd.replace(/,?\s*\{apelido\}/, '');
+  const foto = (src, cls = '') => `<img class="tut-foto${cls ? ' ' + cls : ''}" src="${src}" alt="" draggable="false"/>`;
+  const emo = (e) => `<span class="tut-emoji">${e}</span>`;
+  const nIns = NUM_MAPAS * 2, peso = formatarNota(Math.round(PESO_INSIGNIAS / nIns * 10) / 10);
+  const curto = (k) => k.replace('mapa', '').replace('-', '');   // 'mapa3-B' → '3B'
+  const ginPets = Object.keys(PETS_GINASIO).map(curto).join(', ');
+  const petsFoto = Object.values(PETS_GINASIO).filter(p => p !== 'inicial' && petValido(p)).slice(0, 4)
+    .map(p => `<img class="tut-mini" src="${quadrosDe(p, 'sentado_girando')[0]}" alt="" draggable="false"/>`).join('');
+  const ins = `${IMG}/insignias/insignia-mapa1-A.webp`;
+  const extras = [['📋', 'Missões do dia', 1], ['🎯', 'Treino do dia', 1], ['🤖', 'Programe o Pet', 1], ['🖼️', 'Exposição', 1],
+    ['📚', 'Quadros de estudos', 1], ...(desafiosLigados() ? [['⚡', 'Relâmpago', 1]] : []), ['📅', 'Revisão da semana', 0],
+    ['🕹️', 'Fliperama', 0], ['🏠', 'Casinha', 0], ['📒', 'Álbum de figurinhas', 0], ['🎒', 'Expedições do pet', 0]];
+  const telas = [
+    { id: 'boas_vindas', tit: '👋 Boas-vindas', img: foto(urlQuadro('frente', -1), 'pers'),
+      fala: `${oi} Eu sou ${nome}! Este jogo é a revisão do ano. Vamos andar pelos mapas, vencer ginásios e cuidar de mim!` },
+    { id: 'mapa', tit: '🗺️ Mapa geral', img: foto(`${IMG}/mapa-geral/mapa-geral.webp`, 'largo'),
+      fala: `São ${NUM_MAPAS} mapas, cada um com 2 ginásios (A e B): ${nIns} ao todo. Eles abrem em ordem (1A, 1B, 2A…): vencendo o líder de um, abre o próximo.` },
+    { id: 'nota', tit: '🏅 A nota', img: foto(ins),
+      fala: `O jogo vale ${NOTA_MAX} pontos: ${PESO_INSIGNIAS} pelas ${nIns} insígnias (cada uma ≈ ${peso}) e ${PESO_XP} pela experiência (⭐ XP) de tudo o que você faz, até ${XP_META} XP. Vale no máximo ${XP_DIA} XP por dia.` },
+    { id: 'onde_ver', tit: '📈 Onde ver', img: foto('/img/jogo/ui/botao-insignias.webp'),
+      fala: 'No estojo de insígnias (o botão lá em cima) você vê as insígnias e a sua nota. No site, ela aparece também na sua ficha.' },
+    { id: 'ginasios', tit: '🏟️ Ginásios', img: foto(`${IMG}/interiores/mapa1-A.webp`, 'largo'),
+      fala: `Em cada ginásio há ${PERSONAGENS.length - 1} treinadores e o líder, com 5 perguntas cada. Errou? A pergunta volta com outros números até você acertar.` },
+    { id: 'insignias', tit: '🥇 Insígnias', img: foto(ins) + foto(ins, 'dourada'),
+      fala: 'Venceu o líder, ganhou a insígnia! Depois vem a revanche, mais difícil, que deixa a insígnia dourada e dá mais XP.' },
+    { id: 'estudos', tit: '📚 Quadros de Estudos', img: foto(`${IMG}/mapas/objetos/mural-estudos.webp`),
+      fala: 'Nos mapas há quadros que explicam o conteúdo de cada ginásio. Leia antes de enfrentar o líder!' },
+    { id: 'mural', tit: '📋 Mural da Escola', img: emo('📋'),
+      fala: 'Na Praça, o mural mostra os rankings da escola e da turma: insígnias, pesca, desafios, damas e mais.' },
+    { id: 'pets', tit: '🐾 Pets', img: `<span class="tut-pets">${petsFoto}</span>`,
+      fala: `Você começou comigo, e vencendo ginásios ganha outros pets (${ginPets}).` },
+    { id: 'comida', tit: '🍎 Comida e lealdade', img: foto(`${IMG}/itens/maca.webp`, 'item'),
+      fala: 'Me dê comida pelo Meu Pet: a minha favorita rende mais! Cuidando de mim, a lealdade sobe e eu aprendo a conversar, dar dicas nos ginásios, dar cambalhota e fazer truques.' },
+    ...(desafiosLigados() ? [
+      { id: 'batalha', tit: '⚔️ Batalha de pets', img: foto(`${IMG}/batalha/arena.webp`, 'largo'),
+        fala: 'Nas batalhas, eu luto e você responde às contas: quanto mais rápido, mais dano. Preciso estar alimentado para lutar.' },
+      { id: 'duelos', tit: '🤝 Duelos e damas', img: foto(`${IMG}/praca/mesa-damas.webp`),
+        fala: `Toque num colega para chamar para um duelo ou para as damas.${apostasLigadas() ? ' Dá para apostar moedas!' : ''} Damas contra o computador também dão moedas, até ${VITORIAS_DAMAS_CPU_DIA} vitórias por dia.` },
+    ] : []),
+    { id: 'loja', tit: '🛒 Loja', img: foto(`${IMG}/npcs/dona_cida.webp`, 'npc'),
+      fala: 'Na loja da Dona Cida você compra comida, tintas, efeitos, iscas e móveis para a casinha com as moedas que ganha.' },
+    { id: 'pesca', tit: '🎣 Pesca', img: foto(`${IMG}/itens/isca.webp`, 'item') + foto(`${IMG}/itens/lambari.webp`, 'item'),
+      fala: 'Com isca, pesque no rio: espere beliscar e puxe na hora certa. Cada peixe vai para a sua coleção e dá XP.' },
+    { id: 'cavar', tit: '⛏️ Cavar e 🌿 capinar', img: foto(`${IMG}/itens/montinho.webp`, 'item') + foto(`${IMG}/mato/mato-1.webp`, 'item'),
+      fala: 'Nos mapas há montinhos para cavar (saem moedas e tesouros) e mato para arrancar (sai fruta e verdura). O mato cresce de novo em 6 horas!' },
+    { id: 'extras', tit: '✨ Atividades extras', img: `<ul class="tut-extras">${extras.map(([e, n, xp]) => `<li>${e} ${n}${xp ? ' <b>⭐</b>' : ''}</li>`).join('')}</ul>`,
+      fala: 'E tem muito mais para fazer! As com ⭐ dão XP para a sua nota.' },
+    { id: 'pronto', tit: '🏁 Pronto!', img: `<img class="tut-foto pers" src="${urlComemorando()}" onerror="this.onerror=null;this.src='${urlQuadro('frente', -1)}'" alt="" draggable="false"/>`,
+      fala: `Agora é com você${ap ? ', ' + ap : ''}! Se esquecer de algo, toque em ⚙️ e em ❓ Como jogar para me ver explicar de novo.` },
+  ];
+  return telas;
+}
+// Abre sozinho: progresso carregado, com pet (o inicial vem ao entrar num mapa) e sem outra janela por cima
+function verificarTutorial() {
+  if (!carregouProgresso || !estado || estado.avisos?.tutorial || tut || !petsOk || !petValido(estado.pets?.ativo)) return;
+  if (sobreposicaoAberta() || transicionando || perguntaAberta) { setTimeout(verificarTutorial, 2000); return; }
+  abrirTutorial(false);
+}
+function abrirTutorial(revendo = true) {
+  if (!estado || !petValido(estado.pets?.ativo)) { avisoTopo('Escolha um pet para ver o tutorial.'); return; }
+  const telas = telasTutorial();
+  const i = revendo ? 0 : Math.max(0, telas.findIndex(t => t.id === estado.avisos?.tutorial_tela));
+  tut = { telas, i, revendo, pet: new PetParado($('tut-pet')) };
+  const pet = estado.pets.ativo, forma = formaDe(pet);
+  tut.pet.definir(forma);
+  aplicarVisualPet($('tut-pet'), pet);
+  $('tut-fechar').hidden = !(revendo || teste || ehProfessora() || contaEscondida(sessao?.uid, sessao?.nome));
+  $('tutorial').hidden = false;
+  renderTutorial();
+}
+function renderTutorial() {
+  if (!tut) return;
+  const t = tut.telas[tut.i], n = tut.telas.length;
+  $('tut-tit').textContent = t.tit;
+  $('tut-cont').textContent = `${tut.i + 1} / ${n}`;
+  $('tut-bolinhas').innerHTML = tut.telas.map((_, k) => `<span class="${k === tut.i ? 'atual' : k < tut.i ? 'feita' : ''}"></span>`).join('');
+  $('tut-img').innerHTML = t.img;
+  $('tut-fala').textContent = t.fala;
+  $('tut-ant').disabled = tut.i === 0;
+  $('tut-prox').textContent = tut.i === n - 1 ? 'Vamos jogar! 🎮' : 'Próximo ▶';
+  tut.pet.tocar(temAnim(tut.pet.pet, 'feliz') ? 'feliz' : 'sentado_girando');   // feliz e volta ao sentado_girando
+  if (!tut.revendo) { (estado.avisos ||= {}).tutorial_tela = t.id; gravar({ 'avisos/tutorial_tela': t.id }); }
+}
+function passoTutorial(d) {
+  if (!tut) return;
+  if (d > 0 && tut.i === tut.telas.length - 1) { fecharTutorial(true); return; }
+  tut.i = Math.max(0, Math.min(tut.telas.length - 1, tut.i + d));
+  tocar('clique');
+  renderTutorial();
+}
+function fecharTutorial(concluiu = false) {
+  if (!tut) return;
+  if (concluiu || tut.revendo || !$('tut-fechar').hidden) {
+    if (!tut.revendo || concluiu) {
+      (estado.avisos ||= {}).tutorial = true; delete estado.avisos.tutorial_tela;
+      gravar({ 'avisos/tutorial': true, 'avisos/tutorial_tela': null });
+    }
+    if (concluiu) tocar('vitoria');
+    tut = null;
+    $('tutorial').hidden = true;
+    $('tut-img').innerHTML = '';
+  }
+}
+
+// ============================================================
 //  📖 RELEMBRE — explicação curta de cada ginásio (dados/jogo/explicacoes.json: titulo, regra, exemplo, dica).
 //  Não conta tempo nem tentativa. Registro em relembre/{ginásio}: visto (já apareceu na entrada), ocultar
 //  ("não mostrar de novo"), aberturas (vezes que o aluno ABRIU: 📖, erro, batalha, insígnia) e ultima.
@@ -14744,13 +15127,7 @@ function ligarEventos() {
   imgRev.addEventListener('error', () => imgRev.remove());
   imgRev.src = `${IMG}/ui/botao-revisao.webp`;
   document.addEventListener('click', (e) => { if (!e.target.closest('#selo-seq, #btn-revisao')) $('seq-balao').hidden = true; });
-  // botão de som (🔊 / 🔇), lembrado em localStorage
-  const pintarSom = () => document.querySelectorAll('[data-som]').forEach(b => {
-    const on = somLigado();
-    b.textContent = on ? '🔊' : '🔇';
-    b.setAttribute('aria-label', on ? 'Desligar o som' : 'Ligar o som');
-    b.classList.toggle('mudo', !on);
-  });
+  // botão de som (🔊 / 🔇), lembrado em localStorage (pintarSom: também pela ⚙️ Configuração)
   document.querySelectorAll('[data-som]').forEach(b => b.addEventListener('click', () => { alternarSom(); pintarSom(); tocar('clique'); }));
   pintarSom();
   // 🎵 música de fundo (PROMPT-88): começa desligada, lembrada em localStorage 'jr_musica'; a professora pode desligar por turma
@@ -15008,6 +15385,11 @@ function ligarEventos() {
     e.stopPropagation();
     if (e.target.closest('[data-oi]')) { fecharCartaoColega(); reagirCom('👋'); return; }
     if (!cartaoColega) return;
+    if (e.target.closest('[data-emojis]')) { abrirEmojisCartao(); return; }   // 😀 (PROMPT-168)
+    const em = e.target.closest('[data-emoji]');
+    if (em) { mandarEmoji(cartaoColega.c, em.dataset.emoji); return; }
+    if (e.target.closest('[data-perfil]')) { abrirPerfilColega(cartaoColega.c); return; }   // 🏅
+    if (e.target.closest('[data-pedir-visita]')) { pedirVisita(cartaoColega.c); return; }   // 🚪
     if (e.target.closest('[data-presente]')) { escolherPresente(cartaoColega.c); return; }
     if (e.target.closest('[data-visitar]')) { visitarCasinha(cartaoColega.c.uid); return; }   // 🏠 (PROMPT-107)
     if (e.target.closest('[data-vizinho]')) { const c = cartaoColega.c; fecharCartaoColega(); convidarVizinho(c.uid, rotuloColega(c.uid, c.reg), c.reg?.turma); return; }   // 🏡 (PROMPT-109)
@@ -15118,6 +15500,15 @@ function ligarEventos() {
   });
   $('exp-volta-ok').addEventListener('click', (e) => { e.stopPropagation(); fecharVoltaExp(); });
   $('pres-ok').addEventListener('click', (e) => { e.stopPropagation(); $('pres-card').hidden = true; });
+  document.querySelectorAll('[data-config]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); abrirConfig(); }));
+  $('cfg-lista').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-cfg]'); if (b) acaoConfig(b.dataset.cfg); });
+  $('cfg-voltar').addEventListener('click', (e) => { e.stopPropagation(); voltarConfig(); });
+  $('config').addEventListener('click', (e) => { e.stopPropagation(); if (e.target === $('config')) fecharConfig(); });
+  aplicarNomesColegas();
+  $('tut-prox').addEventListener('click', (e) => { e.stopPropagation(); passoTutorial(1); });
+  $('tut-ant').addEventListener('click', (e) => { e.stopPropagation(); passoTutorial(-1); });
+  $('tut-fechar').addEventListener('click', (e) => { e.stopPropagation(); fecharTutorial(); });
+  $('tutorial').addEventListener('click', (e) => e.stopPropagation());   // tocar fora não fecha nem mexe no mapa
   $('aniv-ok').addEventListener('click', (e) => { e.stopPropagation(); $('aniv').hidden = true; $('aniv-confete').innerHTML = ''; });
   setInterval(tickAniversario, 2000);   // 🎂 a festa do dia (PROMPT-102)
   setInterval(tickExpedicao, 5000);   // relógio do HUD, cartão do Meu Pet e a volta do pet
