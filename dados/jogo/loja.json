@@ -271,6 +271,15 @@
    "macaco"
   ]
  },
+ "cores_pet": {
+  "_nota": "PROMPT-170: cores dos pets (imagens pintadas, sprites-pets-cores.json). Compra por pet: pets/cores_pet/{pet}/{cor}. preco = cada cor; preco_cor = as mais caras.",
+  "preco": 80,
+  "preco_cor": {
+   "branco": 120,
+   "dourado": 120
+  }
+ },
+ "_nota_tintas_cores": "PROMPT-170: as tintas Azul, Rosa, Verde, Roxo, Dourado, Noite (→ preto) e Laranja (→ marrom) saíram da loja (jogo-revisao.js → TINTA_VIROU_COR); quem tinha ganhou essa cor em todos os pets (pets/cores_todas/{cor}). O pet sem essa cor (dragão, morcego, axolote rosa) ainda pode usar a tinta.",
  "tintas_nota": "Tinta = tingir: o pet fica todo na cor escolhida, mantendo contorno, olhos e sombras. Funciona igual em qualquer pet.",
  "icones": {
   "moeda": "img/jogo/itens/moeda.webp",

@@ -1,0 +1,4497 @@
+{
+ "_nota": "PROMPT-170: cores dos pets à venda. pets.{pet}_{cor} = as mesmas animações de pets.{pet}, na pasta {pet}_{cor} (mesmos nomes de arquivo, já pintados). A forma colorida usa o tamanho, a distância, as sequências, os truques e as ações do pet de base. Carregado junto com o sprites.json (pets.js). Gerado a partir de sprites.json: se o pet ganhar animação nova, gerar de novo.",
+ "pets": {
+  "elefante_marrom": {
+   "andar_costas": [
+    "pets/elefante_marrom/andar_costas_1.webp",
+    "pets/elefante_marrom/andar_costas_2.webp",
+    "pets/elefante_marrom/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/elefante_marrom/andar_direita_1.webp",
+    "pets/elefante_marrom/andar_direita_2.webp",
+    "pets/elefante_marrom/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/elefante_marrom/andar_esquerda_1.webp",
+    "pets/elefante_marrom/andar_esquerda_2.webp",
+    "pets/elefante_marrom/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/elefante_marrom/andar_frente_1.webp",
+    "pets/elefante_marrom/andar_frente_2.webp",
+    "pets/elefante_marrom/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/elefante_marrom/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/elefante_marrom/comendo_1.webp",
+    "pets/elefante_marrom/comendo_2.webp",
+    "pets/elefante_marrom/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/elefante_marrom/correndo_1.webp",
+    "pets/elefante_marrom/correndo_2.webp",
+    "pets/elefante_marrom/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/elefante_marrom/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/elefante_marrom/dormindo_1.webp",
+    "pets/elefante_marrom/dormindo_2.webp",
+    "pets/elefante_marrom/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/elefante_marrom/feliz_1.webp",
+    "pets/elefante_marrom/feliz_2.webp",
+    "pets/elefante_marrom/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/elefante_marrom/pulo_cambalhota_1.webp",
+    "pets/elefante_marrom/pulo_cambalhota_2.webp",
+    "pets/elefante_marrom/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/elefante_marrom/salto_pouso_1.webp",
+    "pets/elefante_marrom/salto_pouso_2.webp",
+    "pets/elefante_marrom/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/elefante_marrom/sentado_2_1.webp",
+    "pets/elefante_marrom/sentado_2_2.webp",
+    "pets/elefante_marrom/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/elefante_marrom/sentado_girando_1.webp",
+    "pets/elefante_marrom/sentado_girando_2.webp",
+    "pets/elefante_marrom/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/elefante_marrom/triste_fome_1.webp",
+    "pets/elefante_marrom/triste_fome_2.webp",
+    "pets/elefante_marrom/triste_fome_3.webp"
+   ]
+  },
+  "elefante_cinza": {
+   "andar_costas": [
+    "pets/elefante_cinza/andar_costas_1.webp",
+    "pets/elefante_cinza/andar_costas_2.webp",
+    "pets/elefante_cinza/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/elefante_cinza/andar_direita_1.webp",
+    "pets/elefante_cinza/andar_direita_2.webp",
+    "pets/elefante_cinza/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/elefante_cinza/andar_esquerda_1.webp",
+    "pets/elefante_cinza/andar_esquerda_2.webp",
+    "pets/elefante_cinza/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/elefante_cinza/andar_frente_1.webp",
+    "pets/elefante_cinza/andar_frente_2.webp",
+    "pets/elefante_cinza/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/elefante_cinza/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/elefante_cinza/comendo_1.webp",
+    "pets/elefante_cinza/comendo_2.webp",
+    "pets/elefante_cinza/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/elefante_cinza/correndo_1.webp",
+    "pets/elefante_cinza/correndo_2.webp",
+    "pets/elefante_cinza/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/elefante_cinza/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/elefante_cinza/dormindo_1.webp",
+    "pets/elefante_cinza/dormindo_2.webp",
+    "pets/elefante_cinza/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/elefante_cinza/feliz_1.webp",
+    "pets/elefante_cinza/feliz_2.webp",
+    "pets/elefante_cinza/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/elefante_cinza/pulo_cambalhota_1.webp",
+    "pets/elefante_cinza/pulo_cambalhota_2.webp",
+    "pets/elefante_cinza/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/elefante_cinza/salto_pouso_1.webp",
+    "pets/elefante_cinza/salto_pouso_2.webp",
+    "pets/elefante_cinza/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/elefante_cinza/sentado_2_1.webp",
+    "pets/elefante_cinza/sentado_2_2.webp",
+    "pets/elefante_cinza/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/elefante_cinza/sentado_girando_1.webp",
+    "pets/elefante_cinza/sentado_girando_2.webp",
+    "pets/elefante_cinza/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/elefante_cinza/triste_fome_1.webp",
+    "pets/elefante_cinza/triste_fome_2.webp",
+    "pets/elefante_cinza/triste_fome_3.webp"
+   ]
+  },
+  "elefante_branco": {
+   "andar_costas": [
+    "pets/elefante_branco/andar_costas_1.webp",
+    "pets/elefante_branco/andar_costas_2.webp",
+    "pets/elefante_branco/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/elefante_branco/andar_direita_1.webp",
+    "pets/elefante_branco/andar_direita_2.webp",
+    "pets/elefante_branco/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/elefante_branco/andar_esquerda_1.webp",
+    "pets/elefante_branco/andar_esquerda_2.webp",
+    "pets/elefante_branco/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/elefante_branco/andar_frente_1.webp",
+    "pets/elefante_branco/andar_frente_2.webp",
+    "pets/elefante_branco/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/elefante_branco/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/elefante_branco/comendo_1.webp",
+    "pets/elefante_branco/comendo_2.webp",
+    "pets/elefante_branco/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/elefante_branco/correndo_1.webp",
+    "pets/elefante_branco/correndo_2.webp",
+    "pets/elefante_branco/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/elefante_branco/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/elefante_branco/dormindo_1.webp",
+    "pets/elefante_branco/dormindo_2.webp",
+    "pets/elefante_branco/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/elefante_branco/feliz_1.webp",
+    "pets/elefante_branco/feliz_2.webp",
+    "pets/elefante_branco/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/elefante_branco/pulo_cambalhota_1.webp",
+    "pets/elefante_branco/pulo_cambalhota_2.webp",
+    "pets/elefante_branco/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/elefante_branco/salto_pouso_1.webp",
+    "pets/elefante_branco/salto_pouso_2.webp",
+    "pets/elefante_branco/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/elefante_branco/sentado_2_1.webp",
+    "pets/elefante_branco/sentado_2_2.webp",
+    "pets/elefante_branco/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/elefante_branco/sentado_girando_1.webp",
+    "pets/elefante_branco/sentado_girando_2.webp",
+    "pets/elefante_branco/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/elefante_branco/triste_fome_1.webp",
+    "pets/elefante_branco/triste_fome_2.webp",
+    "pets/elefante_branco/triste_fome_3.webp"
+   ]
+  },
+  "elefante_roxo": {
+   "andar_costas": [
+    "pets/elefante_roxo/andar_costas_1.webp",
+    "pets/elefante_roxo/andar_costas_2.webp",
+    "pets/elefante_roxo/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/elefante_roxo/andar_direita_1.webp",
+    "pets/elefante_roxo/andar_direita_2.webp",
+    "pets/elefante_roxo/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/elefante_roxo/andar_esquerda_1.webp",
+    "pets/elefante_roxo/andar_esquerda_2.webp",
+    "pets/elefante_roxo/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/elefante_roxo/andar_frente_1.webp",
+    "pets/elefante_roxo/andar_frente_2.webp",
+    "pets/elefante_roxo/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/elefante_roxo/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/elefante_roxo/comendo_1.webp",
+    "pets/elefante_roxo/comendo_2.webp",
+    "pets/elefante_roxo/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/elefante_roxo/correndo_1.webp",
+    "pets/elefante_roxo/correndo_2.webp",
+    "pets/elefante_roxo/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/elefante_roxo/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/elefante_roxo/dormindo_1.webp",
+    "pets/elefante_roxo/dormindo_2.webp",
+    "pets/elefante_roxo/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/elefante_roxo/feliz_1.webp",
+    "pets/elefante_roxo/feliz_2.webp",
+    "pets/elefante_roxo/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/elefante_roxo/pulo_cambalhota_1.webp",
+    "pets/elefante_roxo/pulo_cambalhota_2.webp",
+    "pets/elefante_roxo/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/elefante_roxo/salto_pouso_1.webp",
+    "pets/elefante_roxo/salto_pouso_2.webp",
+    "pets/elefante_roxo/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/elefante_roxo/sentado_2_1.webp",
+    "pets/elefante_roxo/sentado_2_2.webp",
+    "pets/elefante_roxo/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/elefante_roxo/sentado_girando_1.webp",
+    "pets/elefante_roxo/sentado_girando_2.webp",
+    "pets/elefante_roxo/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/elefante_roxo/triste_fome_1.webp",
+    "pets/elefante_roxo/triste_fome_2.webp",
+    "pets/elefante_roxo/triste_fome_3.webp"
+   ]
+  },
+  "elefante_azul": {
+   "andar_costas": [
+    "pets/elefante_azul/andar_costas_1.webp",
+    "pets/elefante_azul/andar_costas_2.webp",
+    "pets/elefante_azul/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/elefante_azul/andar_direita_1.webp",
+    "pets/elefante_azul/andar_direita_2.webp",
+    "pets/elefante_azul/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/elefante_azul/andar_esquerda_1.webp",
+    "pets/elefante_azul/andar_esquerda_2.webp",
+    "pets/elefante_azul/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/elefante_azul/andar_frente_1.webp",
+    "pets/elefante_azul/andar_frente_2.webp",
+    "pets/elefante_azul/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/elefante_azul/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/elefante_azul/comendo_1.webp",
+    "pets/elefante_azul/comendo_2.webp",
+    "pets/elefante_azul/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/elefante_azul/correndo_1.webp",
+    "pets/elefante_azul/correndo_2.webp",
+    "pets/elefante_azul/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/elefante_azul/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/elefante_azul/dormindo_1.webp",
+    "pets/elefante_azul/dormindo_2.webp",
+    "pets/elefante_azul/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/elefante_azul/feliz_1.webp",
+    "pets/elefante_azul/feliz_2.webp",
+    "pets/elefante_azul/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/elefante_azul/pulo_cambalhota_1.webp",
+    "pets/elefante_azul/pulo_cambalhota_2.webp",
+    "pets/elefante_azul/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/elefante_azul/salto_pouso_1.webp",
+    "pets/elefante_azul/salto_pouso_2.webp",
+    "pets/elefante_azul/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/elefante_azul/sentado_2_1.webp",
+    "pets/elefante_azul/sentado_2_2.webp",
+    "pets/elefante_azul/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/elefante_azul/sentado_girando_1.webp",
+    "pets/elefante_azul/sentado_girando_2.webp",
+    "pets/elefante_azul/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/elefante_azul/triste_fome_1.webp",
+    "pets/elefante_azul/triste_fome_2.webp",
+    "pets/elefante_azul/triste_fome_3.webp"
+   ]
+  },
+  "elefante_rosa": {
+   "andar_costas": [
+    "pets/elefante_rosa/andar_costas_1.webp",
+    "pets/elefante_rosa/andar_costas_2.webp",
+    "pets/elefante_rosa/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/elefante_rosa/andar_direita_1.webp",
+    "pets/elefante_rosa/andar_direita_2.webp",
+    "pets/elefante_rosa/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/elefante_rosa/andar_esquerda_1.webp",
+    "pets/elefante_rosa/andar_esquerda_2.webp",
+    "pets/elefante_rosa/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/elefante_rosa/andar_frente_1.webp",
+    "pets/elefante_rosa/andar_frente_2.webp",
+    "pets/elefante_rosa/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/elefante_rosa/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/elefante_rosa/comendo_1.webp",
+    "pets/elefante_rosa/comendo_2.webp",
+    "pets/elefante_rosa/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/elefante_rosa/correndo_1.webp",
+    "pets/elefante_rosa/correndo_2.webp",
+    "pets/elefante_rosa/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/elefante_rosa/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/elefante_rosa/dormindo_1.webp",
+    "pets/elefante_rosa/dormindo_2.webp",
+    "pets/elefante_rosa/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/elefante_rosa/feliz_1.webp",
+    "pets/elefante_rosa/feliz_2.webp",
+    "pets/elefante_rosa/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/elefante_rosa/pulo_cambalhota_1.webp",
+    "pets/elefante_rosa/pulo_cambalhota_2.webp",
+    "pets/elefante_rosa/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/elefante_rosa/salto_pouso_1.webp",
+    "pets/elefante_rosa/salto_pouso_2.webp",
+    "pets/elefante_rosa/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/elefante_rosa/sentado_2_1.webp",
+    "pets/elefante_rosa/sentado_2_2.webp",
+    "pets/elefante_rosa/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/elefante_rosa/sentado_girando_1.webp",
+    "pets/elefante_rosa/sentado_girando_2.webp",
+    "pets/elefante_rosa/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/elefante_rosa/triste_fome_1.webp",
+    "pets/elefante_rosa/triste_fome_2.webp",
+    "pets/elefante_rosa/triste_fome_3.webp"
+   ]
+  },
+  "elefante_verde": {
+   "andar_costas": [
+    "pets/elefante_verde/andar_costas_1.webp",
+    "pets/elefante_verde/andar_costas_2.webp",
+    "pets/elefante_verde/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/elefante_verde/andar_direita_1.webp",
+    "pets/elefante_verde/andar_direita_2.webp",
+    "pets/elefante_verde/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/elefante_verde/andar_esquerda_1.webp",
+    "pets/elefante_verde/andar_esquerda_2.webp",
+    "pets/elefante_verde/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/elefante_verde/andar_frente_1.webp",
+    "pets/elefante_verde/andar_frente_2.webp",
+    "pets/elefante_verde/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/elefante_verde/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/elefante_verde/comendo_1.webp",
+    "pets/elefante_verde/comendo_2.webp",
+    "pets/elefante_verde/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/elefante_verde/correndo_1.webp",
+    "pets/elefante_verde/correndo_2.webp",
+    "pets/elefante_verde/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/elefante_verde/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/elefante_verde/dormindo_1.webp",
+    "pets/elefante_verde/dormindo_2.webp",
+    "pets/elefante_verde/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/elefante_verde/feliz_1.webp",
+    "pets/elefante_verde/feliz_2.webp",
+    "pets/elefante_verde/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/elefante_verde/pulo_cambalhota_1.webp",
+    "pets/elefante_verde/pulo_cambalhota_2.webp",
+    "pets/elefante_verde/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/elefante_verde/salto_pouso_1.webp",
+    "pets/elefante_verde/salto_pouso_2.webp",
+    "pets/elefante_verde/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/elefante_verde/sentado_2_1.webp",
+    "pets/elefante_verde/sentado_2_2.webp",
+    "pets/elefante_verde/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/elefante_verde/sentado_girando_1.webp",
+    "pets/elefante_verde/sentado_girando_2.webp",
+    "pets/elefante_verde/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/elefante_verde/triste_fome_1.webp",
+    "pets/elefante_verde/triste_fome_2.webp",
+    "pets/elefante_verde/triste_fome_3.webp"
+   ]
+  },
+  "elefante_dourado": {
+   "andar_costas": [
+    "pets/elefante_dourado/andar_costas_1.webp",
+    "pets/elefante_dourado/andar_costas_2.webp",
+    "pets/elefante_dourado/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/elefante_dourado/andar_direita_1.webp",
+    "pets/elefante_dourado/andar_direita_2.webp",
+    "pets/elefante_dourado/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/elefante_dourado/andar_esquerda_1.webp",
+    "pets/elefante_dourado/andar_esquerda_2.webp",
+    "pets/elefante_dourado/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/elefante_dourado/andar_frente_1.webp",
+    "pets/elefante_dourado/andar_frente_2.webp",
+    "pets/elefante_dourado/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/elefante_dourado/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/elefante_dourado/comendo_1.webp",
+    "pets/elefante_dourado/comendo_2.webp",
+    "pets/elefante_dourado/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/elefante_dourado/correndo_1.webp",
+    "pets/elefante_dourado/correndo_2.webp",
+    "pets/elefante_dourado/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/elefante_dourado/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/elefante_dourado/dormindo_1.webp",
+    "pets/elefante_dourado/dormindo_2.webp",
+    "pets/elefante_dourado/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/elefante_dourado/feliz_1.webp",
+    "pets/elefante_dourado/feliz_2.webp",
+    "pets/elefante_dourado/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/elefante_dourado/pulo_cambalhota_1.webp",
+    "pets/elefante_dourado/pulo_cambalhota_2.webp",
+    "pets/elefante_dourado/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/elefante_dourado/salto_pouso_1.webp",
+    "pets/elefante_dourado/salto_pouso_2.webp",
+    "pets/elefante_dourado/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/elefante_dourado/sentado_2_1.webp",
+    "pets/elefante_dourado/sentado_2_2.webp",
+    "pets/elefante_dourado/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/elefante_dourado/sentado_girando_1.webp",
+    "pets/elefante_dourado/sentado_girando_2.webp",
+    "pets/elefante_dourado/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/elefante_dourado/triste_fome_1.webp",
+    "pets/elefante_dourado/triste_fome_2.webp",
+    "pets/elefante_dourado/triste_fome_3.webp"
+   ]
+  },
+  "elefante_preto": {
+   "andar_costas": [
+    "pets/elefante_preto/andar_costas_1.webp",
+    "pets/elefante_preto/andar_costas_2.webp",
+    "pets/elefante_preto/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/elefante_preto/andar_direita_1.webp",
+    "pets/elefante_preto/andar_direita_2.webp",
+    "pets/elefante_preto/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/elefante_preto/andar_esquerda_1.webp",
+    "pets/elefante_preto/andar_esquerda_2.webp",
+    "pets/elefante_preto/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/elefante_preto/andar_frente_1.webp",
+    "pets/elefante_preto/andar_frente_2.webp",
+    "pets/elefante_preto/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/elefante_preto/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/elefante_preto/comendo_1.webp",
+    "pets/elefante_preto/comendo_2.webp",
+    "pets/elefante_preto/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/elefante_preto/correndo_1.webp",
+    "pets/elefante_preto/correndo_2.webp",
+    "pets/elefante_preto/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/elefante_preto/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/elefante_preto/dormindo_1.webp",
+    "pets/elefante_preto/dormindo_2.webp",
+    "pets/elefante_preto/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/elefante_preto/feliz_1.webp",
+    "pets/elefante_preto/feliz_2.webp",
+    "pets/elefante_preto/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/elefante_preto/pulo_cambalhota_1.webp",
+    "pets/elefante_preto/pulo_cambalhota_2.webp",
+    "pets/elefante_preto/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/elefante_preto/salto_pouso_1.webp",
+    "pets/elefante_preto/salto_pouso_2.webp",
+    "pets/elefante_preto/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/elefante_preto/sentado_2_1.webp",
+    "pets/elefante_preto/sentado_2_2.webp",
+    "pets/elefante_preto/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/elefante_preto/sentado_girando_1.webp",
+    "pets/elefante_preto/sentado_girando_2.webp",
+    "pets/elefante_preto/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/elefante_preto/triste_fome_1.webp",
+    "pets/elefante_preto/triste_fome_2.webp",
+    "pets/elefante_preto/triste_fome_3.webp"
+   ]
+  },
+  "gato_marrom": {
+   "andar_costas": [
+    "pets/gato_marrom/andar_costas_1.webp",
+    "pets/gato_marrom/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/gato_marrom/andar_direita_1.webp",
+    "pets/gato_marrom/andar_direita_2.webp",
+    "pets/gato_marrom/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gato_marrom/andar_esquerda_1.webp",
+    "pets/gato_marrom/andar_esquerda_2.webp",
+    "pets/gato_marrom/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gato_marrom/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gato_marrom/comendo_1.webp",
+    "pets/gato_marrom/comendo_2.webp",
+    "pets/gato_marrom/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gato_marrom/correndo_1.webp",
+    "pets/gato_marrom/correndo_2.webp",
+    "pets/gato_marrom/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gato_marrom/costas_parado_1.webp",
+    "pets/gato_marrom/costas_parado_2.webp",
+    "pets/gato_marrom/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/gato_marrom/dormindo_1.webp"
+   ],
+   "feliz": [
+    "pets/gato_marrom/feliz_1.webp",
+    "pets/gato_marrom/feliz_2.webp",
+    "pets/gato_marrom/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gato_marrom/pulo_cambalhota_1.webp",
+    "pets/gato_marrom/pulo_cambalhota_2.webp",
+    "pets/gato_marrom/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gato_marrom/salto_pouso_1.webp",
+    "pets/gato_marrom/salto_pouso_2.webp",
+    "pets/gato_marrom/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/gato_marrom/sentado_2_1.webp",
+    "pets/gato_marrom/sentado_2_2.webp",
+    "pets/gato_marrom/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gato_marrom/sentado_girando_1.webp",
+    "pets/gato_marrom/sentado_girando_2.webp",
+    "pets/gato_marrom/sentado_girando_3.webp"
+   ]
+  },
+  "gato_cinza": {
+   "andar_costas": [
+    "pets/gato_cinza/andar_costas_1.webp",
+    "pets/gato_cinza/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/gato_cinza/andar_direita_1.webp",
+    "pets/gato_cinza/andar_direita_2.webp",
+    "pets/gato_cinza/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gato_cinza/andar_esquerda_1.webp",
+    "pets/gato_cinza/andar_esquerda_2.webp",
+    "pets/gato_cinza/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gato_cinza/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gato_cinza/comendo_1.webp",
+    "pets/gato_cinza/comendo_2.webp",
+    "pets/gato_cinza/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gato_cinza/correndo_1.webp",
+    "pets/gato_cinza/correndo_2.webp",
+    "pets/gato_cinza/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gato_cinza/costas_parado_1.webp",
+    "pets/gato_cinza/costas_parado_2.webp",
+    "pets/gato_cinza/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/gato_cinza/dormindo_1.webp"
+   ],
+   "feliz": [
+    "pets/gato_cinza/feliz_1.webp",
+    "pets/gato_cinza/feliz_2.webp",
+    "pets/gato_cinza/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gato_cinza/pulo_cambalhota_1.webp",
+    "pets/gato_cinza/pulo_cambalhota_2.webp",
+    "pets/gato_cinza/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gato_cinza/salto_pouso_1.webp",
+    "pets/gato_cinza/salto_pouso_2.webp",
+    "pets/gato_cinza/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/gato_cinza/sentado_2_1.webp",
+    "pets/gato_cinza/sentado_2_2.webp",
+    "pets/gato_cinza/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gato_cinza/sentado_girando_1.webp",
+    "pets/gato_cinza/sentado_girando_2.webp",
+    "pets/gato_cinza/sentado_girando_3.webp"
+   ]
+  },
+  "gato_branco": {
+   "andar_costas": [
+    "pets/gato_branco/andar_costas_1.webp",
+    "pets/gato_branco/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/gato_branco/andar_direita_1.webp",
+    "pets/gato_branco/andar_direita_2.webp",
+    "pets/gato_branco/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gato_branco/andar_esquerda_1.webp",
+    "pets/gato_branco/andar_esquerda_2.webp",
+    "pets/gato_branco/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gato_branco/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gato_branco/comendo_1.webp",
+    "pets/gato_branco/comendo_2.webp",
+    "pets/gato_branco/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gato_branco/correndo_1.webp",
+    "pets/gato_branco/correndo_2.webp",
+    "pets/gato_branco/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gato_branco/costas_parado_1.webp",
+    "pets/gato_branco/costas_parado_2.webp",
+    "pets/gato_branco/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/gato_branco/dormindo_1.webp"
+   ],
+   "feliz": [
+    "pets/gato_branco/feliz_1.webp",
+    "pets/gato_branco/feliz_2.webp",
+    "pets/gato_branco/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gato_branco/pulo_cambalhota_1.webp",
+    "pets/gato_branco/pulo_cambalhota_2.webp",
+    "pets/gato_branco/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gato_branco/salto_pouso_1.webp",
+    "pets/gato_branco/salto_pouso_2.webp",
+    "pets/gato_branco/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/gato_branco/sentado_2_1.webp",
+    "pets/gato_branco/sentado_2_2.webp",
+    "pets/gato_branco/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gato_branco/sentado_girando_1.webp",
+    "pets/gato_branco/sentado_girando_2.webp",
+    "pets/gato_branco/sentado_girando_3.webp"
+   ]
+  },
+  "gato_roxo": {
+   "andar_costas": [
+    "pets/gato_roxo/andar_costas_1.webp",
+    "pets/gato_roxo/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/gato_roxo/andar_direita_1.webp",
+    "pets/gato_roxo/andar_direita_2.webp",
+    "pets/gato_roxo/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gato_roxo/andar_esquerda_1.webp",
+    "pets/gato_roxo/andar_esquerda_2.webp",
+    "pets/gato_roxo/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gato_roxo/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gato_roxo/comendo_1.webp",
+    "pets/gato_roxo/comendo_2.webp",
+    "pets/gato_roxo/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gato_roxo/correndo_1.webp",
+    "pets/gato_roxo/correndo_2.webp",
+    "pets/gato_roxo/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gato_roxo/costas_parado_1.webp",
+    "pets/gato_roxo/costas_parado_2.webp",
+    "pets/gato_roxo/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/gato_roxo/dormindo_1.webp"
+   ],
+   "feliz": [
+    "pets/gato_roxo/feliz_1.webp",
+    "pets/gato_roxo/feliz_2.webp",
+    "pets/gato_roxo/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gato_roxo/pulo_cambalhota_1.webp",
+    "pets/gato_roxo/pulo_cambalhota_2.webp",
+    "pets/gato_roxo/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gato_roxo/salto_pouso_1.webp",
+    "pets/gato_roxo/salto_pouso_2.webp",
+    "pets/gato_roxo/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/gato_roxo/sentado_2_1.webp",
+    "pets/gato_roxo/sentado_2_2.webp",
+    "pets/gato_roxo/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gato_roxo/sentado_girando_1.webp",
+    "pets/gato_roxo/sentado_girando_2.webp",
+    "pets/gato_roxo/sentado_girando_3.webp"
+   ]
+  },
+  "gato_azul": {
+   "andar_costas": [
+    "pets/gato_azul/andar_costas_1.webp",
+    "pets/gato_azul/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/gato_azul/andar_direita_1.webp",
+    "pets/gato_azul/andar_direita_2.webp",
+    "pets/gato_azul/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gato_azul/andar_esquerda_1.webp",
+    "pets/gato_azul/andar_esquerda_2.webp",
+    "pets/gato_azul/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gato_azul/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gato_azul/comendo_1.webp",
+    "pets/gato_azul/comendo_2.webp",
+    "pets/gato_azul/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gato_azul/correndo_1.webp",
+    "pets/gato_azul/correndo_2.webp",
+    "pets/gato_azul/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gato_azul/costas_parado_1.webp",
+    "pets/gato_azul/costas_parado_2.webp",
+    "pets/gato_azul/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/gato_azul/dormindo_1.webp"
+   ],
+   "feliz": [
+    "pets/gato_azul/feliz_1.webp",
+    "pets/gato_azul/feliz_2.webp",
+    "pets/gato_azul/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gato_azul/pulo_cambalhota_1.webp",
+    "pets/gato_azul/pulo_cambalhota_2.webp",
+    "pets/gato_azul/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gato_azul/salto_pouso_1.webp",
+    "pets/gato_azul/salto_pouso_2.webp",
+    "pets/gato_azul/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/gato_azul/sentado_2_1.webp",
+    "pets/gato_azul/sentado_2_2.webp",
+    "pets/gato_azul/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gato_azul/sentado_girando_1.webp",
+    "pets/gato_azul/sentado_girando_2.webp",
+    "pets/gato_azul/sentado_girando_3.webp"
+   ]
+  },
+  "gato_rosa": {
+   "andar_costas": [
+    "pets/gato_rosa/andar_costas_1.webp",
+    "pets/gato_rosa/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/gato_rosa/andar_direita_1.webp",
+    "pets/gato_rosa/andar_direita_2.webp",
+    "pets/gato_rosa/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gato_rosa/andar_esquerda_1.webp",
+    "pets/gato_rosa/andar_esquerda_2.webp",
+    "pets/gato_rosa/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gato_rosa/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gato_rosa/comendo_1.webp",
+    "pets/gato_rosa/comendo_2.webp",
+    "pets/gato_rosa/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gato_rosa/correndo_1.webp",
+    "pets/gato_rosa/correndo_2.webp",
+    "pets/gato_rosa/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gato_rosa/costas_parado_1.webp",
+    "pets/gato_rosa/costas_parado_2.webp",
+    "pets/gato_rosa/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/gato_rosa/dormindo_1.webp"
+   ],
+   "feliz": [
+    "pets/gato_rosa/feliz_1.webp",
+    "pets/gato_rosa/feliz_2.webp",
+    "pets/gato_rosa/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gato_rosa/pulo_cambalhota_1.webp",
+    "pets/gato_rosa/pulo_cambalhota_2.webp",
+    "pets/gato_rosa/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gato_rosa/salto_pouso_1.webp",
+    "pets/gato_rosa/salto_pouso_2.webp",
+    "pets/gato_rosa/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/gato_rosa/sentado_2_1.webp",
+    "pets/gato_rosa/sentado_2_2.webp",
+    "pets/gato_rosa/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gato_rosa/sentado_girando_1.webp",
+    "pets/gato_rosa/sentado_girando_2.webp",
+    "pets/gato_rosa/sentado_girando_3.webp"
+   ]
+  },
+  "gato_verde": {
+   "andar_costas": [
+    "pets/gato_verde/andar_costas_1.webp",
+    "pets/gato_verde/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/gato_verde/andar_direita_1.webp",
+    "pets/gato_verde/andar_direita_2.webp",
+    "pets/gato_verde/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gato_verde/andar_esquerda_1.webp",
+    "pets/gato_verde/andar_esquerda_2.webp",
+    "pets/gato_verde/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gato_verde/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gato_verde/comendo_1.webp",
+    "pets/gato_verde/comendo_2.webp",
+    "pets/gato_verde/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gato_verde/correndo_1.webp",
+    "pets/gato_verde/correndo_2.webp",
+    "pets/gato_verde/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gato_verde/costas_parado_1.webp",
+    "pets/gato_verde/costas_parado_2.webp",
+    "pets/gato_verde/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/gato_verde/dormindo_1.webp"
+   ],
+   "feliz": [
+    "pets/gato_verde/feliz_1.webp",
+    "pets/gato_verde/feliz_2.webp",
+    "pets/gato_verde/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gato_verde/pulo_cambalhota_1.webp",
+    "pets/gato_verde/pulo_cambalhota_2.webp",
+    "pets/gato_verde/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gato_verde/salto_pouso_1.webp",
+    "pets/gato_verde/salto_pouso_2.webp",
+    "pets/gato_verde/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/gato_verde/sentado_2_1.webp",
+    "pets/gato_verde/sentado_2_2.webp",
+    "pets/gato_verde/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gato_verde/sentado_girando_1.webp",
+    "pets/gato_verde/sentado_girando_2.webp",
+    "pets/gato_verde/sentado_girando_3.webp"
+   ]
+  },
+  "gato_dourado": {
+   "andar_costas": [
+    "pets/gato_dourado/andar_costas_1.webp",
+    "pets/gato_dourado/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/gato_dourado/andar_direita_1.webp",
+    "pets/gato_dourado/andar_direita_2.webp",
+    "pets/gato_dourado/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gato_dourado/andar_esquerda_1.webp",
+    "pets/gato_dourado/andar_esquerda_2.webp",
+    "pets/gato_dourado/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gato_dourado/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gato_dourado/comendo_1.webp",
+    "pets/gato_dourado/comendo_2.webp",
+    "pets/gato_dourado/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gato_dourado/correndo_1.webp",
+    "pets/gato_dourado/correndo_2.webp",
+    "pets/gato_dourado/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gato_dourado/costas_parado_1.webp",
+    "pets/gato_dourado/costas_parado_2.webp",
+    "pets/gato_dourado/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/gato_dourado/dormindo_1.webp"
+   ],
+   "feliz": [
+    "pets/gato_dourado/feliz_1.webp",
+    "pets/gato_dourado/feliz_2.webp",
+    "pets/gato_dourado/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gato_dourado/pulo_cambalhota_1.webp",
+    "pets/gato_dourado/pulo_cambalhota_2.webp",
+    "pets/gato_dourado/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gato_dourado/salto_pouso_1.webp",
+    "pets/gato_dourado/salto_pouso_2.webp",
+    "pets/gato_dourado/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/gato_dourado/sentado_2_1.webp",
+    "pets/gato_dourado/sentado_2_2.webp",
+    "pets/gato_dourado/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gato_dourado/sentado_girando_1.webp",
+    "pets/gato_dourado/sentado_girando_2.webp",
+    "pets/gato_dourado/sentado_girando_3.webp"
+   ]
+  },
+  "gato_preto": {
+   "andar_costas": [
+    "pets/gato_preto/andar_costas_1.webp",
+    "pets/gato_preto/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/gato_preto/andar_direita_1.webp",
+    "pets/gato_preto/andar_direita_2.webp",
+    "pets/gato_preto/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gato_preto/andar_esquerda_1.webp",
+    "pets/gato_preto/andar_esquerda_2.webp",
+    "pets/gato_preto/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gato_preto/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gato_preto/comendo_1.webp",
+    "pets/gato_preto/comendo_2.webp",
+    "pets/gato_preto/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gato_preto/correndo_1.webp",
+    "pets/gato_preto/correndo_2.webp",
+    "pets/gato_preto/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gato_preto/costas_parado_1.webp",
+    "pets/gato_preto/costas_parado_2.webp",
+    "pets/gato_preto/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/gato_preto/dormindo_1.webp"
+   ],
+   "feliz": [
+    "pets/gato_preto/feliz_1.webp",
+    "pets/gato_preto/feliz_2.webp",
+    "pets/gato_preto/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gato_preto/pulo_cambalhota_1.webp",
+    "pets/gato_preto/pulo_cambalhota_2.webp",
+    "pets/gato_preto/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gato_preto/salto_pouso_1.webp",
+    "pets/gato_preto/salto_pouso_2.webp",
+    "pets/gato_preto/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/gato_preto/sentado_2_1.webp",
+    "pets/gato_preto/sentado_2_2.webp",
+    "pets/gato_preto/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gato_preto/sentado_girando_1.webp",
+    "pets/gato_preto/sentado_girando_2.webp",
+    "pets/gato_preto/sentado_girando_3.webp"
+   ]
+  },
+  "tigre_marrom": {
+   "andar_costas": [
+    "pets/tigre_marrom/andar_costas_1.webp",
+    "pets/tigre_marrom/andar_costas_2.webp",
+    "pets/tigre_marrom/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_marrom/andar_direita_1.webp",
+    "pets/tigre_marrom/andar_direita_2.webp",
+    "pets/tigre_marrom/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_marrom/andar_esquerda_1.webp",
+    "pets/tigre_marrom/andar_esquerda_2.webp",
+    "pets/tigre_marrom/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_marrom/andar_frente_1.webp",
+    "pets/tigre_marrom/andar_frente_2.webp",
+    "pets/tigre_marrom/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_marrom/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_marrom/comendo_1.webp",
+    "pets/tigre_marrom/comendo_2.webp",
+    "pets/tigre_marrom/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/tigre_marrom/correndo_1.webp",
+    "pets/tigre_marrom/correndo_2.webp",
+    "pets/tigre_marrom/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_marrom/costas_parado_1.webp",
+    "pets/tigre_marrom/costas_parado_2.webp",
+    "pets/tigre_marrom/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_marrom/dormindo_1.webp",
+    "pets/tigre_marrom/dormindo_2.webp",
+    "pets/tigre_marrom/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_marrom/feliz_1.webp",
+    "pets/tigre_marrom/feliz_2.webp",
+    "pets/tigre_marrom/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_marrom/pulo_cambalhota_1.webp",
+    "pets/tigre_marrom/pulo_cambalhota_2.webp",
+    "pets/tigre_marrom/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_marrom/salto_pouso_1.webp",
+    "pets/tigre_marrom/salto_pouso_2.webp",
+    "pets/tigre_marrom/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_marrom/sentado_2_1.webp",
+    "pets/tigre_marrom/sentado_2_2.webp",
+    "pets/tigre_marrom/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_marrom/sentado_girando_1.webp",
+    "pets/tigre_marrom/sentado_girando_2.webp",
+    "pets/tigre_marrom/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/tigre_marrom/triste_fome_1.webp",
+    "pets/tigre_marrom/triste_fome_2.webp",
+    "pets/tigre_marrom/triste_fome_3.webp"
+   ]
+  },
+  "tigre_cinza": {
+   "andar_costas": [
+    "pets/tigre_cinza/andar_costas_1.webp",
+    "pets/tigre_cinza/andar_costas_2.webp",
+    "pets/tigre_cinza/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_cinza/andar_direita_1.webp",
+    "pets/tigre_cinza/andar_direita_2.webp",
+    "pets/tigre_cinza/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_cinza/andar_esquerda_1.webp",
+    "pets/tigre_cinza/andar_esquerda_2.webp",
+    "pets/tigre_cinza/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_cinza/andar_frente_1.webp",
+    "pets/tigre_cinza/andar_frente_2.webp",
+    "pets/tigre_cinza/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_cinza/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_cinza/comendo_1.webp",
+    "pets/tigre_cinza/comendo_2.webp",
+    "pets/tigre_cinza/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/tigre_cinza/correndo_1.webp",
+    "pets/tigre_cinza/correndo_2.webp",
+    "pets/tigre_cinza/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_cinza/costas_parado_1.webp",
+    "pets/tigre_cinza/costas_parado_2.webp",
+    "pets/tigre_cinza/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_cinza/dormindo_1.webp",
+    "pets/tigre_cinza/dormindo_2.webp",
+    "pets/tigre_cinza/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_cinza/feliz_1.webp",
+    "pets/tigre_cinza/feliz_2.webp",
+    "pets/tigre_cinza/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_cinza/pulo_cambalhota_1.webp",
+    "pets/tigre_cinza/pulo_cambalhota_2.webp",
+    "pets/tigre_cinza/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_cinza/salto_pouso_1.webp",
+    "pets/tigre_cinza/salto_pouso_2.webp",
+    "pets/tigre_cinza/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_cinza/sentado_2_1.webp",
+    "pets/tigre_cinza/sentado_2_2.webp",
+    "pets/tigre_cinza/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_cinza/sentado_girando_1.webp",
+    "pets/tigre_cinza/sentado_girando_2.webp",
+    "pets/tigre_cinza/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/tigre_cinza/triste_fome_1.webp",
+    "pets/tigre_cinza/triste_fome_2.webp",
+    "pets/tigre_cinza/triste_fome_3.webp"
+   ]
+  },
+  "tigre_branco": {
+   "andar_costas": [
+    "pets/tigre_branco/andar_costas_1.webp",
+    "pets/tigre_branco/andar_costas_2.webp",
+    "pets/tigre_branco/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_branco/andar_direita_1.webp",
+    "pets/tigre_branco/andar_direita_2.webp",
+    "pets/tigre_branco/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_branco/andar_esquerda_1.webp",
+    "pets/tigre_branco/andar_esquerda_2.webp",
+    "pets/tigre_branco/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_branco/andar_frente_1.webp",
+    "pets/tigre_branco/andar_frente_2.webp",
+    "pets/tigre_branco/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_branco/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_branco/comendo_1.webp",
+    "pets/tigre_branco/comendo_2.webp",
+    "pets/tigre_branco/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/tigre_branco/correndo_1.webp",
+    "pets/tigre_branco/correndo_2.webp",
+    "pets/tigre_branco/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_branco/costas_parado_1.webp",
+    "pets/tigre_branco/costas_parado_2.webp",
+    "pets/tigre_branco/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_branco/dormindo_1.webp",
+    "pets/tigre_branco/dormindo_2.webp",
+    "pets/tigre_branco/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_branco/feliz_1.webp",
+    "pets/tigre_branco/feliz_2.webp",
+    "pets/tigre_branco/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_branco/pulo_cambalhota_1.webp",
+    "pets/tigre_branco/pulo_cambalhota_2.webp",
+    "pets/tigre_branco/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_branco/salto_pouso_1.webp",
+    "pets/tigre_branco/salto_pouso_2.webp",
+    "pets/tigre_branco/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_branco/sentado_2_1.webp",
+    "pets/tigre_branco/sentado_2_2.webp",
+    "pets/tigre_branco/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_branco/sentado_girando_1.webp",
+    "pets/tigre_branco/sentado_girando_2.webp",
+    "pets/tigre_branco/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/tigre_branco/triste_fome_1.webp",
+    "pets/tigre_branco/triste_fome_2.webp",
+    "pets/tigre_branco/triste_fome_3.webp"
+   ]
+  },
+  "tigre_roxo": {
+   "andar_costas": [
+    "pets/tigre_roxo/andar_costas_1.webp",
+    "pets/tigre_roxo/andar_costas_2.webp",
+    "pets/tigre_roxo/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_roxo/andar_direita_1.webp",
+    "pets/tigre_roxo/andar_direita_2.webp",
+    "pets/tigre_roxo/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_roxo/andar_esquerda_1.webp",
+    "pets/tigre_roxo/andar_esquerda_2.webp",
+    "pets/tigre_roxo/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_roxo/andar_frente_1.webp",
+    "pets/tigre_roxo/andar_frente_2.webp",
+    "pets/tigre_roxo/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_roxo/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_roxo/comendo_1.webp",
+    "pets/tigre_roxo/comendo_2.webp",
+    "pets/tigre_roxo/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/tigre_roxo/correndo_1.webp",
+    "pets/tigre_roxo/correndo_2.webp",
+    "pets/tigre_roxo/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_roxo/costas_parado_1.webp",
+    "pets/tigre_roxo/costas_parado_2.webp",
+    "pets/tigre_roxo/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_roxo/dormindo_1.webp",
+    "pets/tigre_roxo/dormindo_2.webp",
+    "pets/tigre_roxo/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_roxo/feliz_1.webp",
+    "pets/tigre_roxo/feliz_2.webp",
+    "pets/tigre_roxo/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_roxo/pulo_cambalhota_1.webp",
+    "pets/tigre_roxo/pulo_cambalhota_2.webp",
+    "pets/tigre_roxo/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_roxo/salto_pouso_1.webp",
+    "pets/tigre_roxo/salto_pouso_2.webp",
+    "pets/tigre_roxo/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_roxo/sentado_2_1.webp",
+    "pets/tigre_roxo/sentado_2_2.webp",
+    "pets/tigre_roxo/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_roxo/sentado_girando_1.webp",
+    "pets/tigre_roxo/sentado_girando_2.webp",
+    "pets/tigre_roxo/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/tigre_roxo/triste_fome_1.webp",
+    "pets/tigre_roxo/triste_fome_2.webp",
+    "pets/tigre_roxo/triste_fome_3.webp"
+   ]
+  },
+  "tigre_azul": {
+   "andar_costas": [
+    "pets/tigre_azul/andar_costas_1.webp",
+    "pets/tigre_azul/andar_costas_2.webp",
+    "pets/tigre_azul/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_azul/andar_direita_1.webp",
+    "pets/tigre_azul/andar_direita_2.webp",
+    "pets/tigre_azul/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_azul/andar_esquerda_1.webp",
+    "pets/tigre_azul/andar_esquerda_2.webp",
+    "pets/tigre_azul/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_azul/andar_frente_1.webp",
+    "pets/tigre_azul/andar_frente_2.webp",
+    "pets/tigre_azul/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_azul/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_azul/comendo_1.webp",
+    "pets/tigre_azul/comendo_2.webp",
+    "pets/tigre_azul/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/tigre_azul/correndo_1.webp",
+    "pets/tigre_azul/correndo_2.webp",
+    "pets/tigre_azul/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_azul/costas_parado_1.webp",
+    "pets/tigre_azul/costas_parado_2.webp",
+    "pets/tigre_azul/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_azul/dormindo_1.webp",
+    "pets/tigre_azul/dormindo_2.webp",
+    "pets/tigre_azul/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_azul/feliz_1.webp",
+    "pets/tigre_azul/feliz_2.webp",
+    "pets/tigre_azul/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_azul/pulo_cambalhota_1.webp",
+    "pets/tigre_azul/pulo_cambalhota_2.webp",
+    "pets/tigre_azul/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_azul/salto_pouso_1.webp",
+    "pets/tigre_azul/salto_pouso_2.webp",
+    "pets/tigre_azul/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_azul/sentado_2_1.webp",
+    "pets/tigre_azul/sentado_2_2.webp",
+    "pets/tigre_azul/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_azul/sentado_girando_1.webp",
+    "pets/tigre_azul/sentado_girando_2.webp",
+    "pets/tigre_azul/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/tigre_azul/triste_fome_1.webp",
+    "pets/tigre_azul/triste_fome_2.webp",
+    "pets/tigre_azul/triste_fome_3.webp"
+   ]
+  },
+  "tigre_rosa": {
+   "andar_costas": [
+    "pets/tigre_rosa/andar_costas_1.webp",
+    "pets/tigre_rosa/andar_costas_2.webp",
+    "pets/tigre_rosa/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_rosa/andar_direita_1.webp",
+    "pets/tigre_rosa/andar_direita_2.webp",
+    "pets/tigre_rosa/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_rosa/andar_esquerda_1.webp",
+    "pets/tigre_rosa/andar_esquerda_2.webp",
+    "pets/tigre_rosa/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_rosa/andar_frente_1.webp",
+    "pets/tigre_rosa/andar_frente_2.webp",
+    "pets/tigre_rosa/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_rosa/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_rosa/comendo_1.webp",
+    "pets/tigre_rosa/comendo_2.webp",
+    "pets/tigre_rosa/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/tigre_rosa/correndo_1.webp",
+    "pets/tigre_rosa/correndo_2.webp",
+    "pets/tigre_rosa/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_rosa/costas_parado_1.webp",
+    "pets/tigre_rosa/costas_parado_2.webp",
+    "pets/tigre_rosa/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_rosa/dormindo_1.webp",
+    "pets/tigre_rosa/dormindo_2.webp",
+    "pets/tigre_rosa/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_rosa/feliz_1.webp",
+    "pets/tigre_rosa/feliz_2.webp",
+    "pets/tigre_rosa/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_rosa/pulo_cambalhota_1.webp",
+    "pets/tigre_rosa/pulo_cambalhota_2.webp",
+    "pets/tigre_rosa/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_rosa/salto_pouso_1.webp",
+    "pets/tigre_rosa/salto_pouso_2.webp",
+    "pets/tigre_rosa/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_rosa/sentado_2_1.webp",
+    "pets/tigre_rosa/sentado_2_2.webp",
+    "pets/tigre_rosa/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_rosa/sentado_girando_1.webp",
+    "pets/tigre_rosa/sentado_girando_2.webp",
+    "pets/tigre_rosa/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/tigre_rosa/triste_fome_1.webp",
+    "pets/tigre_rosa/triste_fome_2.webp",
+    "pets/tigre_rosa/triste_fome_3.webp"
+   ]
+  },
+  "tigre_verde": {
+   "andar_costas": [
+    "pets/tigre_verde/andar_costas_1.webp",
+    "pets/tigre_verde/andar_costas_2.webp",
+    "pets/tigre_verde/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_verde/andar_direita_1.webp",
+    "pets/tigre_verde/andar_direita_2.webp",
+    "pets/tigre_verde/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_verde/andar_esquerda_1.webp",
+    "pets/tigre_verde/andar_esquerda_2.webp",
+    "pets/tigre_verde/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_verde/andar_frente_1.webp",
+    "pets/tigre_verde/andar_frente_2.webp",
+    "pets/tigre_verde/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_verde/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_verde/comendo_1.webp",
+    "pets/tigre_verde/comendo_2.webp",
+    "pets/tigre_verde/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/tigre_verde/correndo_1.webp",
+    "pets/tigre_verde/correndo_2.webp",
+    "pets/tigre_verde/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_verde/costas_parado_1.webp",
+    "pets/tigre_verde/costas_parado_2.webp",
+    "pets/tigre_verde/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_verde/dormindo_1.webp",
+    "pets/tigre_verde/dormindo_2.webp",
+    "pets/tigre_verde/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_verde/feliz_1.webp",
+    "pets/tigre_verde/feliz_2.webp",
+    "pets/tigre_verde/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_verde/pulo_cambalhota_1.webp",
+    "pets/tigre_verde/pulo_cambalhota_2.webp",
+    "pets/tigre_verde/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_verde/salto_pouso_1.webp",
+    "pets/tigre_verde/salto_pouso_2.webp",
+    "pets/tigre_verde/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_verde/sentado_2_1.webp",
+    "pets/tigre_verde/sentado_2_2.webp",
+    "pets/tigre_verde/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_verde/sentado_girando_1.webp",
+    "pets/tigre_verde/sentado_girando_2.webp",
+    "pets/tigre_verde/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/tigre_verde/triste_fome_1.webp",
+    "pets/tigre_verde/triste_fome_2.webp",
+    "pets/tigre_verde/triste_fome_3.webp"
+   ]
+  },
+  "tigre_dourado": {
+   "andar_costas": [
+    "pets/tigre_dourado/andar_costas_1.webp",
+    "pets/tigre_dourado/andar_costas_2.webp",
+    "pets/tigre_dourado/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_dourado/andar_direita_1.webp",
+    "pets/tigre_dourado/andar_direita_2.webp",
+    "pets/tigre_dourado/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_dourado/andar_esquerda_1.webp",
+    "pets/tigre_dourado/andar_esquerda_2.webp",
+    "pets/tigre_dourado/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_dourado/andar_frente_1.webp",
+    "pets/tigre_dourado/andar_frente_2.webp",
+    "pets/tigre_dourado/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_dourado/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_dourado/comendo_1.webp",
+    "pets/tigre_dourado/comendo_2.webp",
+    "pets/tigre_dourado/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/tigre_dourado/correndo_1.webp",
+    "pets/tigre_dourado/correndo_2.webp",
+    "pets/tigre_dourado/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_dourado/costas_parado_1.webp",
+    "pets/tigre_dourado/costas_parado_2.webp",
+    "pets/tigre_dourado/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_dourado/dormindo_1.webp",
+    "pets/tigre_dourado/dormindo_2.webp",
+    "pets/tigre_dourado/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_dourado/feliz_1.webp",
+    "pets/tigre_dourado/feliz_2.webp",
+    "pets/tigre_dourado/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_dourado/pulo_cambalhota_1.webp",
+    "pets/tigre_dourado/pulo_cambalhota_2.webp",
+    "pets/tigre_dourado/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_dourado/salto_pouso_1.webp",
+    "pets/tigre_dourado/salto_pouso_2.webp",
+    "pets/tigre_dourado/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_dourado/sentado_2_1.webp",
+    "pets/tigre_dourado/sentado_2_2.webp",
+    "pets/tigre_dourado/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_dourado/sentado_girando_1.webp",
+    "pets/tigre_dourado/sentado_girando_2.webp",
+    "pets/tigre_dourado/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/tigre_dourado/triste_fome_1.webp",
+    "pets/tigre_dourado/triste_fome_2.webp",
+    "pets/tigre_dourado/triste_fome_3.webp"
+   ]
+  },
+  "tigre_preto": {
+   "andar_costas": [
+    "pets/tigre_preto/andar_costas_1.webp",
+    "pets/tigre_preto/andar_costas_2.webp",
+    "pets/tigre_preto/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_preto/andar_direita_1.webp",
+    "pets/tigre_preto/andar_direita_2.webp",
+    "pets/tigre_preto/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_preto/andar_esquerda_1.webp",
+    "pets/tigre_preto/andar_esquerda_2.webp",
+    "pets/tigre_preto/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_preto/andar_frente_1.webp",
+    "pets/tigre_preto/andar_frente_2.webp",
+    "pets/tigre_preto/andar_frente_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_preto/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_preto/comendo_1.webp",
+    "pets/tigre_preto/comendo_2.webp",
+    "pets/tigre_preto/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/tigre_preto/correndo_1.webp",
+    "pets/tigre_preto/correndo_2.webp",
+    "pets/tigre_preto/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_preto/costas_parado_1.webp",
+    "pets/tigre_preto/costas_parado_2.webp",
+    "pets/tigre_preto/costas_parado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_preto/dormindo_1.webp",
+    "pets/tigre_preto/dormindo_2.webp",
+    "pets/tigre_preto/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_preto/feliz_1.webp",
+    "pets/tigre_preto/feliz_2.webp",
+    "pets/tigre_preto/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_preto/pulo_cambalhota_1.webp",
+    "pets/tigre_preto/pulo_cambalhota_2.webp",
+    "pets/tigre_preto/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_preto/salto_pouso_1.webp",
+    "pets/tigre_preto/salto_pouso_2.webp",
+    "pets/tigre_preto/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_preto/sentado_2_1.webp",
+    "pets/tigre_preto/sentado_2_2.webp",
+    "pets/tigre_preto/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_preto/sentado_girando_1.webp",
+    "pets/tigre_preto/sentado_girando_2.webp",
+    "pets/tigre_preto/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/tigre_preto/triste_fome_1.webp",
+    "pets/tigre_preto/triste_fome_2.webp",
+    "pets/tigre_preto/triste_fome_3.webp"
+   ]
+  },
+  "unicornio_marrom": {
+   "andar_costas": [
+    "pets/unicornio_marrom/andar_costas_1.webp",
+    "pets/unicornio_marrom/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/unicornio_marrom/andar_direita_1.webp",
+    "pets/unicornio_marrom/andar_direita_2.webp",
+    "pets/unicornio_marrom/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/unicornio_marrom/andar_esquerda_1.webp",
+    "pets/unicornio_marrom/andar_esquerda_2.webp",
+    "pets/unicornio_marrom/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/unicornio_marrom/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/unicornio_marrom/comendo_1.webp",
+    "pets/unicornio_marrom/comendo_2.webp",
+    "pets/unicornio_marrom/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/unicornio_marrom/correndo_1.webp",
+    "pets/unicornio_marrom/correndo_2.webp",
+    "pets/unicornio_marrom/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/unicornio_marrom/costas_parado_1.webp",
+    "pets/unicornio_marrom/costas_parado_2.webp",
+    "pets/unicornio_marrom/costas_parado_3.webp",
+    "pets/unicornio_marrom/costas_parado_4.webp"
+   ],
+   "dormindo": [
+    "pets/unicornio_marrom/dormindo_1.webp",
+    "pets/unicornio_marrom/dormindo_2.webp",
+    "pets/unicornio_marrom/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/unicornio_marrom/feliz_1.webp",
+    "pets/unicornio_marrom/feliz_2.webp",
+    "pets/unicornio_marrom/feliz_3.webp"
+   ],
+   "sentado_2": [
+    "pets/unicornio_marrom/sentado_2_1.webp",
+    "pets/unicornio_marrom/sentado_2_2.webp",
+    "pets/unicornio_marrom/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/unicornio_marrom/sentado_girando_1.webp",
+    "pets/unicornio_marrom/sentado_girando_2.webp",
+    "pets/unicornio_marrom/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/unicornio_marrom/triste_fome_1.webp",
+    "pets/unicornio_marrom/triste_fome_2.webp",
+    "pets/unicornio_marrom/triste_fome_3.webp"
+   ]
+  },
+  "unicornio_cinza": {
+   "andar_costas": [
+    "pets/unicornio_cinza/andar_costas_1.webp",
+    "pets/unicornio_cinza/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/unicornio_cinza/andar_direita_1.webp",
+    "pets/unicornio_cinza/andar_direita_2.webp",
+    "pets/unicornio_cinza/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/unicornio_cinza/andar_esquerda_1.webp",
+    "pets/unicornio_cinza/andar_esquerda_2.webp",
+    "pets/unicornio_cinza/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/unicornio_cinza/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/unicornio_cinza/comendo_1.webp",
+    "pets/unicornio_cinza/comendo_2.webp",
+    "pets/unicornio_cinza/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/unicornio_cinza/correndo_1.webp",
+    "pets/unicornio_cinza/correndo_2.webp",
+    "pets/unicornio_cinza/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/unicornio_cinza/costas_parado_1.webp",
+    "pets/unicornio_cinza/costas_parado_2.webp",
+    "pets/unicornio_cinza/costas_parado_3.webp",
+    "pets/unicornio_cinza/costas_parado_4.webp"
+   ],
+   "dormindo": [
+    "pets/unicornio_cinza/dormindo_1.webp",
+    "pets/unicornio_cinza/dormindo_2.webp",
+    "pets/unicornio_cinza/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/unicornio_cinza/feliz_1.webp",
+    "pets/unicornio_cinza/feliz_2.webp",
+    "pets/unicornio_cinza/feliz_3.webp"
+   ],
+   "sentado_2": [
+    "pets/unicornio_cinza/sentado_2_1.webp",
+    "pets/unicornio_cinza/sentado_2_2.webp",
+    "pets/unicornio_cinza/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/unicornio_cinza/sentado_girando_1.webp",
+    "pets/unicornio_cinza/sentado_girando_2.webp",
+    "pets/unicornio_cinza/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/unicornio_cinza/triste_fome_1.webp",
+    "pets/unicornio_cinza/triste_fome_2.webp",
+    "pets/unicornio_cinza/triste_fome_3.webp"
+   ]
+  },
+  "unicornio_branco": {
+   "andar_costas": [
+    "pets/unicornio_branco/andar_costas_1.webp",
+    "pets/unicornio_branco/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/unicornio_branco/andar_direita_1.webp",
+    "pets/unicornio_branco/andar_direita_2.webp",
+    "pets/unicornio_branco/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/unicornio_branco/andar_esquerda_1.webp",
+    "pets/unicornio_branco/andar_esquerda_2.webp",
+    "pets/unicornio_branco/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/unicornio_branco/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/unicornio_branco/comendo_1.webp",
+    "pets/unicornio_branco/comendo_2.webp",
+    "pets/unicornio_branco/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/unicornio_branco/correndo_1.webp",
+    "pets/unicornio_branco/correndo_2.webp",
+    "pets/unicornio_branco/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/unicornio_branco/costas_parado_1.webp",
+    "pets/unicornio_branco/costas_parado_2.webp",
+    "pets/unicornio_branco/costas_parado_3.webp",
+    "pets/unicornio_branco/costas_parado_4.webp"
+   ],
+   "dormindo": [
+    "pets/unicornio_branco/dormindo_1.webp",
+    "pets/unicornio_branco/dormindo_2.webp",
+    "pets/unicornio_branco/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/unicornio_branco/feliz_1.webp",
+    "pets/unicornio_branco/feliz_2.webp",
+    "pets/unicornio_branco/feliz_3.webp"
+   ],
+   "sentado_2": [
+    "pets/unicornio_branco/sentado_2_1.webp",
+    "pets/unicornio_branco/sentado_2_2.webp",
+    "pets/unicornio_branco/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/unicornio_branco/sentado_girando_1.webp",
+    "pets/unicornio_branco/sentado_girando_2.webp",
+    "pets/unicornio_branco/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/unicornio_branco/triste_fome_1.webp",
+    "pets/unicornio_branco/triste_fome_2.webp",
+    "pets/unicornio_branco/triste_fome_3.webp"
+   ]
+  },
+  "unicornio_roxo": {
+   "andar_costas": [
+    "pets/unicornio_roxo/andar_costas_1.webp",
+    "pets/unicornio_roxo/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/unicornio_roxo/andar_direita_1.webp",
+    "pets/unicornio_roxo/andar_direita_2.webp",
+    "pets/unicornio_roxo/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/unicornio_roxo/andar_esquerda_1.webp",
+    "pets/unicornio_roxo/andar_esquerda_2.webp",
+    "pets/unicornio_roxo/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/unicornio_roxo/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/unicornio_roxo/comendo_1.webp",
+    "pets/unicornio_roxo/comendo_2.webp",
+    "pets/unicornio_roxo/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/unicornio_roxo/correndo_1.webp",
+    "pets/unicornio_roxo/correndo_2.webp",
+    "pets/unicornio_roxo/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/unicornio_roxo/costas_parado_1.webp",
+    "pets/unicornio_roxo/costas_parado_2.webp",
+    "pets/unicornio_roxo/costas_parado_3.webp",
+    "pets/unicornio_roxo/costas_parado_4.webp"
+   ],
+   "dormindo": [
+    "pets/unicornio_roxo/dormindo_1.webp",
+    "pets/unicornio_roxo/dormindo_2.webp",
+    "pets/unicornio_roxo/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/unicornio_roxo/feliz_1.webp",
+    "pets/unicornio_roxo/feliz_2.webp",
+    "pets/unicornio_roxo/feliz_3.webp"
+   ],
+   "sentado_2": [
+    "pets/unicornio_roxo/sentado_2_1.webp",
+    "pets/unicornio_roxo/sentado_2_2.webp",
+    "pets/unicornio_roxo/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/unicornio_roxo/sentado_girando_1.webp",
+    "pets/unicornio_roxo/sentado_girando_2.webp",
+    "pets/unicornio_roxo/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/unicornio_roxo/triste_fome_1.webp",
+    "pets/unicornio_roxo/triste_fome_2.webp",
+    "pets/unicornio_roxo/triste_fome_3.webp"
+   ]
+  },
+  "unicornio_azul": {
+   "andar_costas": [
+    "pets/unicornio_azul/andar_costas_1.webp",
+    "pets/unicornio_azul/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/unicornio_azul/andar_direita_1.webp",
+    "pets/unicornio_azul/andar_direita_2.webp",
+    "pets/unicornio_azul/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/unicornio_azul/andar_esquerda_1.webp",
+    "pets/unicornio_azul/andar_esquerda_2.webp",
+    "pets/unicornio_azul/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/unicornio_azul/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/unicornio_azul/comendo_1.webp",
+    "pets/unicornio_azul/comendo_2.webp",
+    "pets/unicornio_azul/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/unicornio_azul/correndo_1.webp",
+    "pets/unicornio_azul/correndo_2.webp",
+    "pets/unicornio_azul/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/unicornio_azul/costas_parado_1.webp",
+    "pets/unicornio_azul/costas_parado_2.webp",
+    "pets/unicornio_azul/costas_parado_3.webp",
+    "pets/unicornio_azul/costas_parado_4.webp"
+   ],
+   "dormindo": [
+    "pets/unicornio_azul/dormindo_1.webp",
+    "pets/unicornio_azul/dormindo_2.webp",
+    "pets/unicornio_azul/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/unicornio_azul/feliz_1.webp",
+    "pets/unicornio_azul/feliz_2.webp",
+    "pets/unicornio_azul/feliz_3.webp"
+   ],
+   "sentado_2": [
+    "pets/unicornio_azul/sentado_2_1.webp",
+    "pets/unicornio_azul/sentado_2_2.webp",
+    "pets/unicornio_azul/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/unicornio_azul/sentado_girando_1.webp",
+    "pets/unicornio_azul/sentado_girando_2.webp",
+    "pets/unicornio_azul/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/unicornio_azul/triste_fome_1.webp",
+    "pets/unicornio_azul/triste_fome_2.webp",
+    "pets/unicornio_azul/triste_fome_3.webp"
+   ]
+  },
+  "unicornio_rosa": {
+   "andar_costas": [
+    "pets/unicornio_rosa/andar_costas_1.webp",
+    "pets/unicornio_rosa/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/unicornio_rosa/andar_direita_1.webp",
+    "pets/unicornio_rosa/andar_direita_2.webp",
+    "pets/unicornio_rosa/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/unicornio_rosa/andar_esquerda_1.webp",
+    "pets/unicornio_rosa/andar_esquerda_2.webp",
+    "pets/unicornio_rosa/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/unicornio_rosa/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/unicornio_rosa/comendo_1.webp",
+    "pets/unicornio_rosa/comendo_2.webp",
+    "pets/unicornio_rosa/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/unicornio_rosa/correndo_1.webp",
+    "pets/unicornio_rosa/correndo_2.webp",
+    "pets/unicornio_rosa/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/unicornio_rosa/costas_parado_1.webp",
+    "pets/unicornio_rosa/costas_parado_2.webp",
+    "pets/unicornio_rosa/costas_parado_3.webp",
+    "pets/unicornio_rosa/costas_parado_4.webp"
+   ],
+   "dormindo": [
+    "pets/unicornio_rosa/dormindo_1.webp",
+    "pets/unicornio_rosa/dormindo_2.webp",
+    "pets/unicornio_rosa/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/unicornio_rosa/feliz_1.webp",
+    "pets/unicornio_rosa/feliz_2.webp",
+    "pets/unicornio_rosa/feliz_3.webp"
+   ],
+   "sentado_2": [
+    "pets/unicornio_rosa/sentado_2_1.webp",
+    "pets/unicornio_rosa/sentado_2_2.webp",
+    "pets/unicornio_rosa/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/unicornio_rosa/sentado_girando_1.webp",
+    "pets/unicornio_rosa/sentado_girando_2.webp",
+    "pets/unicornio_rosa/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/unicornio_rosa/triste_fome_1.webp",
+    "pets/unicornio_rosa/triste_fome_2.webp",
+    "pets/unicornio_rosa/triste_fome_3.webp"
+   ]
+  },
+  "unicornio_verde": {
+   "andar_costas": [
+    "pets/unicornio_verde/andar_costas_1.webp",
+    "pets/unicornio_verde/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/unicornio_verde/andar_direita_1.webp",
+    "pets/unicornio_verde/andar_direita_2.webp",
+    "pets/unicornio_verde/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/unicornio_verde/andar_esquerda_1.webp",
+    "pets/unicornio_verde/andar_esquerda_2.webp",
+    "pets/unicornio_verde/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/unicornio_verde/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/unicornio_verde/comendo_1.webp",
+    "pets/unicornio_verde/comendo_2.webp",
+    "pets/unicornio_verde/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/unicornio_verde/correndo_1.webp",
+    "pets/unicornio_verde/correndo_2.webp",
+    "pets/unicornio_verde/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/unicornio_verde/costas_parado_1.webp",
+    "pets/unicornio_verde/costas_parado_2.webp",
+    "pets/unicornio_verde/costas_parado_3.webp",
+    "pets/unicornio_verde/costas_parado_4.webp"
+   ],
+   "dormindo": [
+    "pets/unicornio_verde/dormindo_1.webp",
+    "pets/unicornio_verde/dormindo_2.webp",
+    "pets/unicornio_verde/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/unicornio_verde/feliz_1.webp",
+    "pets/unicornio_verde/feliz_2.webp",
+    "pets/unicornio_verde/feliz_3.webp"
+   ],
+   "sentado_2": [
+    "pets/unicornio_verde/sentado_2_1.webp",
+    "pets/unicornio_verde/sentado_2_2.webp",
+    "pets/unicornio_verde/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/unicornio_verde/sentado_girando_1.webp",
+    "pets/unicornio_verde/sentado_girando_2.webp",
+    "pets/unicornio_verde/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/unicornio_verde/triste_fome_1.webp",
+    "pets/unicornio_verde/triste_fome_2.webp",
+    "pets/unicornio_verde/triste_fome_3.webp"
+   ]
+  },
+  "unicornio_dourado": {
+   "andar_costas": [
+    "pets/unicornio_dourado/andar_costas_1.webp",
+    "pets/unicornio_dourado/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/unicornio_dourado/andar_direita_1.webp",
+    "pets/unicornio_dourado/andar_direita_2.webp",
+    "pets/unicornio_dourado/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/unicornio_dourado/andar_esquerda_1.webp",
+    "pets/unicornio_dourado/andar_esquerda_2.webp",
+    "pets/unicornio_dourado/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/unicornio_dourado/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/unicornio_dourado/comendo_1.webp",
+    "pets/unicornio_dourado/comendo_2.webp",
+    "pets/unicornio_dourado/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/unicornio_dourado/correndo_1.webp",
+    "pets/unicornio_dourado/correndo_2.webp",
+    "pets/unicornio_dourado/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/unicornio_dourado/costas_parado_1.webp",
+    "pets/unicornio_dourado/costas_parado_2.webp",
+    "pets/unicornio_dourado/costas_parado_3.webp",
+    "pets/unicornio_dourado/costas_parado_4.webp"
+   ],
+   "dormindo": [
+    "pets/unicornio_dourado/dormindo_1.webp",
+    "pets/unicornio_dourado/dormindo_2.webp",
+    "pets/unicornio_dourado/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/unicornio_dourado/feliz_1.webp",
+    "pets/unicornio_dourado/feliz_2.webp",
+    "pets/unicornio_dourado/feliz_3.webp"
+   ],
+   "sentado_2": [
+    "pets/unicornio_dourado/sentado_2_1.webp",
+    "pets/unicornio_dourado/sentado_2_2.webp",
+    "pets/unicornio_dourado/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/unicornio_dourado/sentado_girando_1.webp",
+    "pets/unicornio_dourado/sentado_girando_2.webp",
+    "pets/unicornio_dourado/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/unicornio_dourado/triste_fome_1.webp",
+    "pets/unicornio_dourado/triste_fome_2.webp",
+    "pets/unicornio_dourado/triste_fome_3.webp"
+   ]
+  },
+  "unicornio_preto": {
+   "andar_costas": [
+    "pets/unicornio_preto/andar_costas_1.webp",
+    "pets/unicornio_preto/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/unicornio_preto/andar_direita_1.webp",
+    "pets/unicornio_preto/andar_direita_2.webp",
+    "pets/unicornio_preto/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/unicornio_preto/andar_esquerda_1.webp",
+    "pets/unicornio_preto/andar_esquerda_2.webp",
+    "pets/unicornio_preto/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/unicornio_preto/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/unicornio_preto/comendo_1.webp",
+    "pets/unicornio_preto/comendo_2.webp",
+    "pets/unicornio_preto/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/unicornio_preto/correndo_1.webp",
+    "pets/unicornio_preto/correndo_2.webp",
+    "pets/unicornio_preto/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/unicornio_preto/costas_parado_1.webp",
+    "pets/unicornio_preto/costas_parado_2.webp",
+    "pets/unicornio_preto/costas_parado_3.webp",
+    "pets/unicornio_preto/costas_parado_4.webp"
+   ],
+   "dormindo": [
+    "pets/unicornio_preto/dormindo_1.webp",
+    "pets/unicornio_preto/dormindo_2.webp",
+    "pets/unicornio_preto/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/unicornio_preto/feliz_1.webp",
+    "pets/unicornio_preto/feliz_2.webp",
+    "pets/unicornio_preto/feliz_3.webp"
+   ],
+   "sentado_2": [
+    "pets/unicornio_preto/sentado_2_1.webp",
+    "pets/unicornio_preto/sentado_2_2.webp",
+    "pets/unicornio_preto/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/unicornio_preto/sentado_girando_1.webp",
+    "pets/unicornio_preto/sentado_girando_2.webp",
+    "pets/unicornio_preto/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/unicornio_preto/triste_fome_1.webp",
+    "pets/unicornio_preto/triste_fome_2.webp",
+    "pets/unicornio_preto/triste_fome_3.webp"
+   ]
+  },
+  "capivara_marrom": {
+   "acenando": [
+    "pets/capivara_marrom/acenando_1.webp",
+    "pets/capivara_marrom/acenando_2.webp"
+   ],
+   "andar_costas": [
+    "pets/capivara_marrom/andar_costas_1.webp",
+    "pets/capivara_marrom/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/capivara_marrom/andar_direita_1.webp",
+    "pets/capivara_marrom/andar_direita_2.webp",
+    "pets/capivara_marrom/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/capivara_marrom/andar_esquerda_1.webp",
+    "pets/capivara_marrom/andar_esquerda_2.webp",
+    "pets/capivara_marrom/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/capivara_marrom/andar_frente_1.webp",
+    "pets/capivara_marrom/andar_frente_2.webp"
+   ],
+   "borboleta": [
+    "pets/capivara_marrom/borboleta_1.webp",
+    "pets/capivara_marrom/borboleta_2.webp",
+    "pets/capivara_marrom/borboleta_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/capivara_marrom/busto_sorrindo_1.webp"
+   ],
+   "cheirar_flor": [
+    "pets/capivara_marrom/cheirar_flor_1.webp",
+    "pets/capivara_marrom/cheirar_flor_2.webp",
+    "pets/capivara_marrom/cheirar_flor_3.webp",
+    "pets/capivara_marrom/cheirar_flor_4.webp"
+   ],
+   "comendo": [
+    "pets/capivara_marrom/comendo_1.webp",
+    "pets/capivara_marrom/comendo_2.webp",
+    "pets/capivara_marrom/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/capivara_marrom/correndo_1.webp",
+    "pets/capivara_marrom/correndo_2.webp",
+    "pets/capivara_marrom/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/capivara_marrom/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/capivara_marrom/dormindo_1.webp",
+    "pets/capivara_marrom/dormindo_2.webp",
+    "pets/capivara_marrom/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/capivara_marrom/feliz_1.webp",
+    "pets/capivara_marrom/feliz_2.webp",
+    "pets/capivara_marrom/feliz_3.webp"
+   ],
+   "pendurado": [
+    "pets/capivara_marrom/pendurado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/capivara_marrom/pulo_cambalhota_1.webp",
+    "pets/capivara_marrom/pulo_cambalhota_2.webp",
+    "pets/capivara_marrom/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/capivara_marrom/salto_pouso_1.webp",
+    "pets/capivara_marrom/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/capivara_marrom/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/capivara_marrom/sentado_girando_1.webp",
+    "pets/capivara_marrom/sentado_girando_2.webp",
+    "pets/capivara_marrom/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/capivara_marrom/triste_fome_1.webp",
+    "pets/capivara_marrom/triste_fome_2.webp",
+    "pets/capivara_marrom/triste_fome_3.webp"
+   ]
+  },
+  "capivara_cinza": {
+   "acenando": [
+    "pets/capivara_cinza/acenando_1.webp",
+    "pets/capivara_cinza/acenando_2.webp"
+   ],
+   "andar_costas": [
+    "pets/capivara_cinza/andar_costas_1.webp",
+    "pets/capivara_cinza/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/capivara_cinza/andar_direita_1.webp",
+    "pets/capivara_cinza/andar_direita_2.webp",
+    "pets/capivara_cinza/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/capivara_cinza/andar_esquerda_1.webp",
+    "pets/capivara_cinza/andar_esquerda_2.webp",
+    "pets/capivara_cinza/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/capivara_cinza/andar_frente_1.webp",
+    "pets/capivara_cinza/andar_frente_2.webp"
+   ],
+   "borboleta": [
+    "pets/capivara_cinza/borboleta_1.webp",
+    "pets/capivara_cinza/borboleta_2.webp",
+    "pets/capivara_cinza/borboleta_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/capivara_cinza/busto_sorrindo_1.webp"
+   ],
+   "cheirar_flor": [
+    "pets/capivara_cinza/cheirar_flor_1.webp",
+    "pets/capivara_cinza/cheirar_flor_2.webp",
+    "pets/capivara_cinza/cheirar_flor_3.webp",
+    "pets/capivara_cinza/cheirar_flor_4.webp"
+   ],
+   "comendo": [
+    "pets/capivara_cinza/comendo_1.webp",
+    "pets/capivara_cinza/comendo_2.webp",
+    "pets/capivara_cinza/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/capivara_cinza/correndo_1.webp",
+    "pets/capivara_cinza/correndo_2.webp",
+    "pets/capivara_cinza/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/capivara_cinza/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/capivara_cinza/dormindo_1.webp",
+    "pets/capivara_cinza/dormindo_2.webp",
+    "pets/capivara_cinza/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/capivara_cinza/feliz_1.webp",
+    "pets/capivara_cinza/feliz_2.webp",
+    "pets/capivara_cinza/feliz_3.webp"
+   ],
+   "pendurado": [
+    "pets/capivara_cinza/pendurado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/capivara_cinza/pulo_cambalhota_1.webp",
+    "pets/capivara_cinza/pulo_cambalhota_2.webp",
+    "pets/capivara_cinza/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/capivara_cinza/salto_pouso_1.webp",
+    "pets/capivara_cinza/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/capivara_cinza/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/capivara_cinza/sentado_girando_1.webp",
+    "pets/capivara_cinza/sentado_girando_2.webp",
+    "pets/capivara_cinza/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/capivara_cinza/triste_fome_1.webp",
+    "pets/capivara_cinza/triste_fome_2.webp",
+    "pets/capivara_cinza/triste_fome_3.webp"
+   ]
+  },
+  "capivara_branco": {
+   "acenando": [
+    "pets/capivara_branco/acenando_1.webp",
+    "pets/capivara_branco/acenando_2.webp"
+   ],
+   "andar_costas": [
+    "pets/capivara_branco/andar_costas_1.webp",
+    "pets/capivara_branco/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/capivara_branco/andar_direita_1.webp",
+    "pets/capivara_branco/andar_direita_2.webp",
+    "pets/capivara_branco/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/capivara_branco/andar_esquerda_1.webp",
+    "pets/capivara_branco/andar_esquerda_2.webp",
+    "pets/capivara_branco/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/capivara_branco/andar_frente_1.webp",
+    "pets/capivara_branco/andar_frente_2.webp"
+   ],
+   "borboleta": [
+    "pets/capivara_branco/borboleta_1.webp",
+    "pets/capivara_branco/borboleta_2.webp",
+    "pets/capivara_branco/borboleta_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/capivara_branco/busto_sorrindo_1.webp"
+   ],
+   "cheirar_flor": [
+    "pets/capivara_branco/cheirar_flor_1.webp",
+    "pets/capivara_branco/cheirar_flor_2.webp",
+    "pets/capivara_branco/cheirar_flor_3.webp",
+    "pets/capivara_branco/cheirar_flor_4.webp"
+   ],
+   "comendo": [
+    "pets/capivara_branco/comendo_1.webp",
+    "pets/capivara_branco/comendo_2.webp",
+    "pets/capivara_branco/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/capivara_branco/correndo_1.webp",
+    "pets/capivara_branco/correndo_2.webp",
+    "pets/capivara_branco/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/capivara_branco/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/capivara_branco/dormindo_1.webp",
+    "pets/capivara_branco/dormindo_2.webp",
+    "pets/capivara_branco/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/capivara_branco/feliz_1.webp",
+    "pets/capivara_branco/feliz_2.webp",
+    "pets/capivara_branco/feliz_3.webp"
+   ],
+   "pendurado": [
+    "pets/capivara_branco/pendurado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/capivara_branco/pulo_cambalhota_1.webp",
+    "pets/capivara_branco/pulo_cambalhota_2.webp",
+    "pets/capivara_branco/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/capivara_branco/salto_pouso_1.webp",
+    "pets/capivara_branco/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/capivara_branco/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/capivara_branco/sentado_girando_1.webp",
+    "pets/capivara_branco/sentado_girando_2.webp",
+    "pets/capivara_branco/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/capivara_branco/triste_fome_1.webp",
+    "pets/capivara_branco/triste_fome_2.webp",
+    "pets/capivara_branco/triste_fome_3.webp"
+   ]
+  },
+  "capivara_roxo": {
+   "acenando": [
+    "pets/capivara_roxo/acenando_1.webp",
+    "pets/capivara_roxo/acenando_2.webp"
+   ],
+   "andar_costas": [
+    "pets/capivara_roxo/andar_costas_1.webp",
+    "pets/capivara_roxo/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/capivara_roxo/andar_direita_1.webp",
+    "pets/capivara_roxo/andar_direita_2.webp",
+    "pets/capivara_roxo/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/capivara_roxo/andar_esquerda_1.webp",
+    "pets/capivara_roxo/andar_esquerda_2.webp",
+    "pets/capivara_roxo/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/capivara_roxo/andar_frente_1.webp",
+    "pets/capivara_roxo/andar_frente_2.webp"
+   ],
+   "borboleta": [
+    "pets/capivara_roxo/borboleta_1.webp",
+    "pets/capivara_roxo/borboleta_2.webp",
+    "pets/capivara_roxo/borboleta_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/capivara_roxo/busto_sorrindo_1.webp"
+   ],
+   "cheirar_flor": [
+    "pets/capivara_roxo/cheirar_flor_1.webp",
+    "pets/capivara_roxo/cheirar_flor_2.webp",
+    "pets/capivara_roxo/cheirar_flor_3.webp",
+    "pets/capivara_roxo/cheirar_flor_4.webp"
+   ],
+   "comendo": [
+    "pets/capivara_roxo/comendo_1.webp",
+    "pets/capivara_roxo/comendo_2.webp",
+    "pets/capivara_roxo/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/capivara_roxo/correndo_1.webp",
+    "pets/capivara_roxo/correndo_2.webp",
+    "pets/capivara_roxo/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/capivara_roxo/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/capivara_roxo/dormindo_1.webp",
+    "pets/capivara_roxo/dormindo_2.webp",
+    "pets/capivara_roxo/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/capivara_roxo/feliz_1.webp",
+    "pets/capivara_roxo/feliz_2.webp",
+    "pets/capivara_roxo/feliz_3.webp"
+   ],
+   "pendurado": [
+    "pets/capivara_roxo/pendurado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/capivara_roxo/pulo_cambalhota_1.webp",
+    "pets/capivara_roxo/pulo_cambalhota_2.webp",
+    "pets/capivara_roxo/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/capivara_roxo/salto_pouso_1.webp",
+    "pets/capivara_roxo/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/capivara_roxo/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/capivara_roxo/sentado_girando_1.webp",
+    "pets/capivara_roxo/sentado_girando_2.webp",
+    "pets/capivara_roxo/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/capivara_roxo/triste_fome_1.webp",
+    "pets/capivara_roxo/triste_fome_2.webp",
+    "pets/capivara_roxo/triste_fome_3.webp"
+   ]
+  },
+  "capivara_azul": {
+   "acenando": [
+    "pets/capivara_azul/acenando_1.webp",
+    "pets/capivara_azul/acenando_2.webp"
+   ],
+   "andar_costas": [
+    "pets/capivara_azul/andar_costas_1.webp",
+    "pets/capivara_azul/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/capivara_azul/andar_direita_1.webp",
+    "pets/capivara_azul/andar_direita_2.webp",
+    "pets/capivara_azul/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/capivara_azul/andar_esquerda_1.webp",
+    "pets/capivara_azul/andar_esquerda_2.webp",
+    "pets/capivara_azul/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/capivara_azul/andar_frente_1.webp",
+    "pets/capivara_azul/andar_frente_2.webp"
+   ],
+   "borboleta": [
+    "pets/capivara_azul/borboleta_1.webp",
+    "pets/capivara_azul/borboleta_2.webp",
+    "pets/capivara_azul/borboleta_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/capivara_azul/busto_sorrindo_1.webp"
+   ],
+   "cheirar_flor": [
+    "pets/capivara_azul/cheirar_flor_1.webp",
+    "pets/capivara_azul/cheirar_flor_2.webp",
+    "pets/capivara_azul/cheirar_flor_3.webp",
+    "pets/capivara_azul/cheirar_flor_4.webp"
+   ],
+   "comendo": [
+    "pets/capivara_azul/comendo_1.webp",
+    "pets/capivara_azul/comendo_2.webp",
+    "pets/capivara_azul/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/capivara_azul/correndo_1.webp",
+    "pets/capivara_azul/correndo_2.webp",
+    "pets/capivara_azul/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/capivara_azul/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/capivara_azul/dormindo_1.webp",
+    "pets/capivara_azul/dormindo_2.webp",
+    "pets/capivara_azul/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/capivara_azul/feliz_1.webp",
+    "pets/capivara_azul/feliz_2.webp",
+    "pets/capivara_azul/feliz_3.webp"
+   ],
+   "pendurado": [
+    "pets/capivara_azul/pendurado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/capivara_azul/pulo_cambalhota_1.webp",
+    "pets/capivara_azul/pulo_cambalhota_2.webp",
+    "pets/capivara_azul/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/capivara_azul/salto_pouso_1.webp",
+    "pets/capivara_azul/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/capivara_azul/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/capivara_azul/sentado_girando_1.webp",
+    "pets/capivara_azul/sentado_girando_2.webp",
+    "pets/capivara_azul/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/capivara_azul/triste_fome_1.webp",
+    "pets/capivara_azul/triste_fome_2.webp",
+    "pets/capivara_azul/triste_fome_3.webp"
+   ]
+  },
+  "capivara_rosa": {
+   "acenando": [
+    "pets/capivara_rosa/acenando_1.webp",
+    "pets/capivara_rosa/acenando_2.webp"
+   ],
+   "andar_costas": [
+    "pets/capivara_rosa/andar_costas_1.webp",
+    "pets/capivara_rosa/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/capivara_rosa/andar_direita_1.webp",
+    "pets/capivara_rosa/andar_direita_2.webp",
+    "pets/capivara_rosa/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/capivara_rosa/andar_esquerda_1.webp",
+    "pets/capivara_rosa/andar_esquerda_2.webp",
+    "pets/capivara_rosa/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/capivara_rosa/andar_frente_1.webp",
+    "pets/capivara_rosa/andar_frente_2.webp"
+   ],
+   "borboleta": [
+    "pets/capivara_rosa/borboleta_1.webp",
+    "pets/capivara_rosa/borboleta_2.webp",
+    "pets/capivara_rosa/borboleta_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/capivara_rosa/busto_sorrindo_1.webp"
+   ],
+   "cheirar_flor": [
+    "pets/capivara_rosa/cheirar_flor_1.webp",
+    "pets/capivara_rosa/cheirar_flor_2.webp",
+    "pets/capivara_rosa/cheirar_flor_3.webp",
+    "pets/capivara_rosa/cheirar_flor_4.webp"
+   ],
+   "comendo": [
+    "pets/capivara_rosa/comendo_1.webp",
+    "pets/capivara_rosa/comendo_2.webp",
+    "pets/capivara_rosa/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/capivara_rosa/correndo_1.webp",
+    "pets/capivara_rosa/correndo_2.webp",
+    "pets/capivara_rosa/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/capivara_rosa/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/capivara_rosa/dormindo_1.webp",
+    "pets/capivara_rosa/dormindo_2.webp",
+    "pets/capivara_rosa/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/capivara_rosa/feliz_1.webp",
+    "pets/capivara_rosa/feliz_2.webp",
+    "pets/capivara_rosa/feliz_3.webp"
+   ],
+   "pendurado": [
+    "pets/capivara_rosa/pendurado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/capivara_rosa/pulo_cambalhota_1.webp",
+    "pets/capivara_rosa/pulo_cambalhota_2.webp",
+    "pets/capivara_rosa/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/capivara_rosa/salto_pouso_1.webp",
+    "pets/capivara_rosa/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/capivara_rosa/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/capivara_rosa/sentado_girando_1.webp",
+    "pets/capivara_rosa/sentado_girando_2.webp",
+    "pets/capivara_rosa/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/capivara_rosa/triste_fome_1.webp",
+    "pets/capivara_rosa/triste_fome_2.webp",
+    "pets/capivara_rosa/triste_fome_3.webp"
+   ]
+  },
+  "capivara_verde": {
+   "acenando": [
+    "pets/capivara_verde/acenando_1.webp",
+    "pets/capivara_verde/acenando_2.webp"
+   ],
+   "andar_costas": [
+    "pets/capivara_verde/andar_costas_1.webp",
+    "pets/capivara_verde/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/capivara_verde/andar_direita_1.webp",
+    "pets/capivara_verde/andar_direita_2.webp",
+    "pets/capivara_verde/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/capivara_verde/andar_esquerda_1.webp",
+    "pets/capivara_verde/andar_esquerda_2.webp",
+    "pets/capivara_verde/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/capivara_verde/andar_frente_1.webp",
+    "pets/capivara_verde/andar_frente_2.webp"
+   ],
+   "borboleta": [
+    "pets/capivara_verde/borboleta_1.webp",
+    "pets/capivara_verde/borboleta_2.webp",
+    "pets/capivara_verde/borboleta_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/capivara_verde/busto_sorrindo_1.webp"
+   ],
+   "cheirar_flor": [
+    "pets/capivara_verde/cheirar_flor_1.webp",
+    "pets/capivara_verde/cheirar_flor_2.webp",
+    "pets/capivara_verde/cheirar_flor_3.webp",
+    "pets/capivara_verde/cheirar_flor_4.webp"
+   ],
+   "comendo": [
+    "pets/capivara_verde/comendo_1.webp",
+    "pets/capivara_verde/comendo_2.webp",
+    "pets/capivara_verde/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/capivara_verde/correndo_1.webp",
+    "pets/capivara_verde/correndo_2.webp",
+    "pets/capivara_verde/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/capivara_verde/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/capivara_verde/dormindo_1.webp",
+    "pets/capivara_verde/dormindo_2.webp",
+    "pets/capivara_verde/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/capivara_verde/feliz_1.webp",
+    "pets/capivara_verde/feliz_2.webp",
+    "pets/capivara_verde/feliz_3.webp"
+   ],
+   "pendurado": [
+    "pets/capivara_verde/pendurado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/capivara_verde/pulo_cambalhota_1.webp",
+    "pets/capivara_verde/pulo_cambalhota_2.webp",
+    "pets/capivara_verde/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/capivara_verde/salto_pouso_1.webp",
+    "pets/capivara_verde/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/capivara_verde/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/capivara_verde/sentado_girando_1.webp",
+    "pets/capivara_verde/sentado_girando_2.webp",
+    "pets/capivara_verde/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/capivara_verde/triste_fome_1.webp",
+    "pets/capivara_verde/triste_fome_2.webp",
+    "pets/capivara_verde/triste_fome_3.webp"
+   ]
+  },
+  "capivara_dourado": {
+   "acenando": [
+    "pets/capivara_dourado/acenando_1.webp",
+    "pets/capivara_dourado/acenando_2.webp"
+   ],
+   "andar_costas": [
+    "pets/capivara_dourado/andar_costas_1.webp",
+    "pets/capivara_dourado/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/capivara_dourado/andar_direita_1.webp",
+    "pets/capivara_dourado/andar_direita_2.webp",
+    "pets/capivara_dourado/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/capivara_dourado/andar_esquerda_1.webp",
+    "pets/capivara_dourado/andar_esquerda_2.webp",
+    "pets/capivara_dourado/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/capivara_dourado/andar_frente_1.webp",
+    "pets/capivara_dourado/andar_frente_2.webp"
+   ],
+   "borboleta": [
+    "pets/capivara_dourado/borboleta_1.webp",
+    "pets/capivara_dourado/borboleta_2.webp",
+    "pets/capivara_dourado/borboleta_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/capivara_dourado/busto_sorrindo_1.webp"
+   ],
+   "cheirar_flor": [
+    "pets/capivara_dourado/cheirar_flor_1.webp",
+    "pets/capivara_dourado/cheirar_flor_2.webp",
+    "pets/capivara_dourado/cheirar_flor_3.webp",
+    "pets/capivara_dourado/cheirar_flor_4.webp"
+   ],
+   "comendo": [
+    "pets/capivara_dourado/comendo_1.webp",
+    "pets/capivara_dourado/comendo_2.webp",
+    "pets/capivara_dourado/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/capivara_dourado/correndo_1.webp",
+    "pets/capivara_dourado/correndo_2.webp",
+    "pets/capivara_dourado/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/capivara_dourado/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/capivara_dourado/dormindo_1.webp",
+    "pets/capivara_dourado/dormindo_2.webp",
+    "pets/capivara_dourado/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/capivara_dourado/feliz_1.webp",
+    "pets/capivara_dourado/feliz_2.webp",
+    "pets/capivara_dourado/feliz_3.webp"
+   ],
+   "pendurado": [
+    "pets/capivara_dourado/pendurado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/capivara_dourado/pulo_cambalhota_1.webp",
+    "pets/capivara_dourado/pulo_cambalhota_2.webp",
+    "pets/capivara_dourado/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/capivara_dourado/salto_pouso_1.webp",
+    "pets/capivara_dourado/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/capivara_dourado/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/capivara_dourado/sentado_girando_1.webp",
+    "pets/capivara_dourado/sentado_girando_2.webp",
+    "pets/capivara_dourado/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/capivara_dourado/triste_fome_1.webp",
+    "pets/capivara_dourado/triste_fome_2.webp",
+    "pets/capivara_dourado/triste_fome_3.webp"
+   ]
+  },
+  "capivara_preto": {
+   "acenando": [
+    "pets/capivara_preto/acenando_1.webp",
+    "pets/capivara_preto/acenando_2.webp"
+   ],
+   "andar_costas": [
+    "pets/capivara_preto/andar_costas_1.webp",
+    "pets/capivara_preto/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/capivara_preto/andar_direita_1.webp",
+    "pets/capivara_preto/andar_direita_2.webp",
+    "pets/capivara_preto/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/capivara_preto/andar_esquerda_1.webp",
+    "pets/capivara_preto/andar_esquerda_2.webp",
+    "pets/capivara_preto/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/capivara_preto/andar_frente_1.webp",
+    "pets/capivara_preto/andar_frente_2.webp"
+   ],
+   "borboleta": [
+    "pets/capivara_preto/borboleta_1.webp",
+    "pets/capivara_preto/borboleta_2.webp",
+    "pets/capivara_preto/borboleta_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/capivara_preto/busto_sorrindo_1.webp"
+   ],
+   "cheirar_flor": [
+    "pets/capivara_preto/cheirar_flor_1.webp",
+    "pets/capivara_preto/cheirar_flor_2.webp",
+    "pets/capivara_preto/cheirar_flor_3.webp",
+    "pets/capivara_preto/cheirar_flor_4.webp"
+   ],
+   "comendo": [
+    "pets/capivara_preto/comendo_1.webp",
+    "pets/capivara_preto/comendo_2.webp",
+    "pets/capivara_preto/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/capivara_preto/correndo_1.webp",
+    "pets/capivara_preto/correndo_2.webp",
+    "pets/capivara_preto/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/capivara_preto/costas_parado_1.webp"
+   ],
+   "dormindo": [
+    "pets/capivara_preto/dormindo_1.webp",
+    "pets/capivara_preto/dormindo_2.webp",
+    "pets/capivara_preto/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/capivara_preto/feliz_1.webp",
+    "pets/capivara_preto/feliz_2.webp",
+    "pets/capivara_preto/feliz_3.webp"
+   ],
+   "pendurado": [
+    "pets/capivara_preto/pendurado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/capivara_preto/pulo_cambalhota_1.webp",
+    "pets/capivara_preto/pulo_cambalhota_2.webp",
+    "pets/capivara_preto/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/capivara_preto/salto_pouso_1.webp",
+    "pets/capivara_preto/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/capivara_preto/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/capivara_preto/sentado_girando_1.webp",
+    "pets/capivara_preto/sentado_girando_2.webp",
+    "pets/capivara_preto/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/capivara_preto/triste_fome_1.webp",
+    "pets/capivara_preto/triste_fome_2.webp",
+    "pets/capivara_preto/triste_fome_3.webp"
+   ]
+  },
+  "gaviao_marrom": {
+   "andar_costas": [
+    "pets/gaviao_marrom/andar_costas_1.webp",
+    "pets/gaviao_marrom/andar_costas_2.webp",
+    "pets/gaviao_marrom/andar_costas_3.webp",
+    "pets/gaviao_marrom/andar_costas_4.webp"
+   ],
+   "andar_direita": [
+    "pets/gaviao_marrom/andar_direita_1.webp",
+    "pets/gaviao_marrom/andar_direita_2.webp",
+    "pets/gaviao_marrom/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gaviao_marrom/andar_esquerda_1.webp",
+    "pets/gaviao_marrom/andar_esquerda_2.webp",
+    "pets/gaviao_marrom/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/gaviao_marrom/andar_frente_1.webp",
+    "pets/gaviao_marrom/andar_frente_2.webp",
+    "pets/gaviao_marrom/andar_frente_3.webp",
+    "pets/gaviao_marrom/andar_frente_4.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gaviao_marrom/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gaviao_marrom/comendo_1.webp",
+    "pets/gaviao_marrom/comendo_2.webp",
+    "pets/gaviao_marrom/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gaviao_marrom/correndo_1.webp",
+    "pets/gaviao_marrom/correndo_2.webp",
+    "pets/gaviao_marrom/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gaviao_marrom/costas_parado_1.webp",
+    "pets/gaviao_marrom/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/gaviao_marrom/dormindo_1.webp",
+    "pets/gaviao_marrom/dormindo_2.webp",
+    "pets/gaviao_marrom/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/gaviao_marrom/feliz_1.webp",
+    "pets/gaviao_marrom/feliz_2.webp",
+    "pets/gaviao_marrom/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gaviao_marrom/pulo_cambalhota_1.webp",
+    "pets/gaviao_marrom/pulo_cambalhota_2.webp",
+    "pets/gaviao_marrom/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gaviao_marrom/salto_pouso_1.webp",
+    "pets/gaviao_marrom/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/gaviao_marrom/sentado_2_1.webp",
+    "pets/gaviao_marrom/sentado_2_2.webp",
+    "pets/gaviao_marrom/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gaviao_marrom/sentado_girando_1.webp",
+    "pets/gaviao_marrom/sentado_girando_2.webp",
+    "pets/gaviao_marrom/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/gaviao_marrom/triste_fome_1.webp",
+    "pets/gaviao_marrom/triste_fome_2.webp",
+    "pets/gaviao_marrom/triste_fome_3.webp"
+   ],
+   "galho": [
+    "pets/gaviao_marrom/galho_1.webp"
+   ],
+   "cacar": [
+    "pets/gaviao_marrom/cacar_1.webp",
+    "pets/gaviao_marrom/cacar_2.webp",
+    "pets/gaviao_marrom/cacar_3.webp"
+   ],
+   "banana": [
+    "pets/gaviao_marrom/banana_1.webp"
+   ],
+   "uva": [
+    "pets/gaviao_marrom/uva_1.webp"
+   ],
+   "parado_frente": [
+    "pets/gaviao_marrom/parado_frente_1.webp"
+   ]
+  },
+  "gaviao_branco": {
+   "andar_costas": [
+    "pets/gaviao_branco/andar_costas_1.webp",
+    "pets/gaviao_branco/andar_costas_2.webp",
+    "pets/gaviao_branco/andar_costas_3.webp",
+    "pets/gaviao_branco/andar_costas_4.webp"
+   ],
+   "andar_direita": [
+    "pets/gaviao_branco/andar_direita_1.webp",
+    "pets/gaviao_branco/andar_direita_2.webp",
+    "pets/gaviao_branco/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gaviao_branco/andar_esquerda_1.webp",
+    "pets/gaviao_branco/andar_esquerda_2.webp",
+    "pets/gaviao_branco/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/gaviao_branco/andar_frente_1.webp",
+    "pets/gaviao_branco/andar_frente_2.webp",
+    "pets/gaviao_branco/andar_frente_3.webp",
+    "pets/gaviao_branco/andar_frente_4.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gaviao_branco/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gaviao_branco/comendo_1.webp",
+    "pets/gaviao_branco/comendo_2.webp",
+    "pets/gaviao_branco/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gaviao_branco/correndo_1.webp",
+    "pets/gaviao_branco/correndo_2.webp",
+    "pets/gaviao_branco/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gaviao_branco/costas_parado_1.webp",
+    "pets/gaviao_branco/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/gaviao_branco/dormindo_1.webp",
+    "pets/gaviao_branco/dormindo_2.webp",
+    "pets/gaviao_branco/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/gaviao_branco/feliz_1.webp",
+    "pets/gaviao_branco/feliz_2.webp",
+    "pets/gaviao_branco/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gaviao_branco/pulo_cambalhota_1.webp",
+    "pets/gaviao_branco/pulo_cambalhota_2.webp",
+    "pets/gaviao_branco/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gaviao_branco/salto_pouso_1.webp",
+    "pets/gaviao_branco/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/gaviao_branco/sentado_2_1.webp",
+    "pets/gaviao_branco/sentado_2_2.webp",
+    "pets/gaviao_branco/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gaviao_branco/sentado_girando_1.webp",
+    "pets/gaviao_branco/sentado_girando_2.webp",
+    "pets/gaviao_branco/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/gaviao_branco/triste_fome_1.webp",
+    "pets/gaviao_branco/triste_fome_2.webp",
+    "pets/gaviao_branco/triste_fome_3.webp"
+   ],
+   "galho": [
+    "pets/gaviao_branco/galho_1.webp"
+   ],
+   "cacar": [
+    "pets/gaviao_branco/cacar_1.webp",
+    "pets/gaviao_branco/cacar_2.webp",
+    "pets/gaviao_branco/cacar_3.webp"
+   ],
+   "banana": [
+    "pets/gaviao_branco/banana_1.webp"
+   ],
+   "uva": [
+    "pets/gaviao_branco/uva_1.webp"
+   ],
+   "parado_frente": [
+    "pets/gaviao_branco/parado_frente_1.webp"
+   ]
+  },
+  "gaviao_roxo": {
+   "andar_costas": [
+    "pets/gaviao_roxo/andar_costas_1.webp",
+    "pets/gaviao_roxo/andar_costas_2.webp",
+    "pets/gaviao_roxo/andar_costas_3.webp",
+    "pets/gaviao_roxo/andar_costas_4.webp"
+   ],
+   "andar_direita": [
+    "pets/gaviao_roxo/andar_direita_1.webp",
+    "pets/gaviao_roxo/andar_direita_2.webp",
+    "pets/gaviao_roxo/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gaviao_roxo/andar_esquerda_1.webp",
+    "pets/gaviao_roxo/andar_esquerda_2.webp",
+    "pets/gaviao_roxo/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/gaviao_roxo/andar_frente_1.webp",
+    "pets/gaviao_roxo/andar_frente_2.webp",
+    "pets/gaviao_roxo/andar_frente_3.webp",
+    "pets/gaviao_roxo/andar_frente_4.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gaviao_roxo/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gaviao_roxo/comendo_1.webp",
+    "pets/gaviao_roxo/comendo_2.webp",
+    "pets/gaviao_roxo/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gaviao_roxo/correndo_1.webp",
+    "pets/gaviao_roxo/correndo_2.webp",
+    "pets/gaviao_roxo/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gaviao_roxo/costas_parado_1.webp",
+    "pets/gaviao_roxo/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/gaviao_roxo/dormindo_1.webp",
+    "pets/gaviao_roxo/dormindo_2.webp",
+    "pets/gaviao_roxo/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/gaviao_roxo/feliz_1.webp",
+    "pets/gaviao_roxo/feliz_2.webp",
+    "pets/gaviao_roxo/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gaviao_roxo/pulo_cambalhota_1.webp",
+    "pets/gaviao_roxo/pulo_cambalhota_2.webp",
+    "pets/gaviao_roxo/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gaviao_roxo/salto_pouso_1.webp",
+    "pets/gaviao_roxo/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/gaviao_roxo/sentado_2_1.webp",
+    "pets/gaviao_roxo/sentado_2_2.webp",
+    "pets/gaviao_roxo/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gaviao_roxo/sentado_girando_1.webp",
+    "pets/gaviao_roxo/sentado_girando_2.webp",
+    "pets/gaviao_roxo/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/gaviao_roxo/triste_fome_1.webp",
+    "pets/gaviao_roxo/triste_fome_2.webp",
+    "pets/gaviao_roxo/triste_fome_3.webp"
+   ],
+   "galho": [
+    "pets/gaviao_roxo/galho_1.webp"
+   ],
+   "cacar": [
+    "pets/gaviao_roxo/cacar_1.webp",
+    "pets/gaviao_roxo/cacar_2.webp",
+    "pets/gaviao_roxo/cacar_3.webp"
+   ],
+   "banana": [
+    "pets/gaviao_roxo/banana_1.webp"
+   ],
+   "uva": [
+    "pets/gaviao_roxo/uva_1.webp"
+   ],
+   "parado_frente": [
+    "pets/gaviao_roxo/parado_frente_1.webp"
+   ]
+  },
+  "gaviao_azul": {
+   "andar_costas": [
+    "pets/gaviao_azul/andar_costas_1.webp",
+    "pets/gaviao_azul/andar_costas_2.webp",
+    "pets/gaviao_azul/andar_costas_3.webp",
+    "pets/gaviao_azul/andar_costas_4.webp"
+   ],
+   "andar_direita": [
+    "pets/gaviao_azul/andar_direita_1.webp",
+    "pets/gaviao_azul/andar_direita_2.webp",
+    "pets/gaviao_azul/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gaviao_azul/andar_esquerda_1.webp",
+    "pets/gaviao_azul/andar_esquerda_2.webp",
+    "pets/gaviao_azul/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/gaviao_azul/andar_frente_1.webp",
+    "pets/gaviao_azul/andar_frente_2.webp",
+    "pets/gaviao_azul/andar_frente_3.webp",
+    "pets/gaviao_azul/andar_frente_4.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gaviao_azul/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gaviao_azul/comendo_1.webp",
+    "pets/gaviao_azul/comendo_2.webp",
+    "pets/gaviao_azul/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gaviao_azul/correndo_1.webp",
+    "pets/gaviao_azul/correndo_2.webp",
+    "pets/gaviao_azul/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gaviao_azul/costas_parado_1.webp",
+    "pets/gaviao_azul/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/gaviao_azul/dormindo_1.webp",
+    "pets/gaviao_azul/dormindo_2.webp",
+    "pets/gaviao_azul/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/gaviao_azul/feliz_1.webp",
+    "pets/gaviao_azul/feliz_2.webp",
+    "pets/gaviao_azul/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gaviao_azul/pulo_cambalhota_1.webp",
+    "pets/gaviao_azul/pulo_cambalhota_2.webp",
+    "pets/gaviao_azul/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gaviao_azul/salto_pouso_1.webp",
+    "pets/gaviao_azul/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/gaviao_azul/sentado_2_1.webp",
+    "pets/gaviao_azul/sentado_2_2.webp",
+    "pets/gaviao_azul/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gaviao_azul/sentado_girando_1.webp",
+    "pets/gaviao_azul/sentado_girando_2.webp",
+    "pets/gaviao_azul/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/gaviao_azul/triste_fome_1.webp",
+    "pets/gaviao_azul/triste_fome_2.webp",
+    "pets/gaviao_azul/triste_fome_3.webp"
+   ],
+   "galho": [
+    "pets/gaviao_azul/galho_1.webp"
+   ],
+   "cacar": [
+    "pets/gaviao_azul/cacar_1.webp",
+    "pets/gaviao_azul/cacar_2.webp",
+    "pets/gaviao_azul/cacar_3.webp"
+   ],
+   "banana": [
+    "pets/gaviao_azul/banana_1.webp"
+   ],
+   "uva": [
+    "pets/gaviao_azul/uva_1.webp"
+   ],
+   "parado_frente": [
+    "pets/gaviao_azul/parado_frente_1.webp"
+   ]
+  },
+  "gaviao_rosa": {
+   "andar_costas": [
+    "pets/gaviao_rosa/andar_costas_1.webp",
+    "pets/gaviao_rosa/andar_costas_2.webp",
+    "pets/gaviao_rosa/andar_costas_3.webp",
+    "pets/gaviao_rosa/andar_costas_4.webp"
+   ],
+   "andar_direita": [
+    "pets/gaviao_rosa/andar_direita_1.webp",
+    "pets/gaviao_rosa/andar_direita_2.webp",
+    "pets/gaviao_rosa/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gaviao_rosa/andar_esquerda_1.webp",
+    "pets/gaviao_rosa/andar_esquerda_2.webp",
+    "pets/gaviao_rosa/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/gaviao_rosa/andar_frente_1.webp",
+    "pets/gaviao_rosa/andar_frente_2.webp",
+    "pets/gaviao_rosa/andar_frente_3.webp",
+    "pets/gaviao_rosa/andar_frente_4.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gaviao_rosa/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gaviao_rosa/comendo_1.webp",
+    "pets/gaviao_rosa/comendo_2.webp",
+    "pets/gaviao_rosa/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gaviao_rosa/correndo_1.webp",
+    "pets/gaviao_rosa/correndo_2.webp",
+    "pets/gaviao_rosa/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gaviao_rosa/costas_parado_1.webp",
+    "pets/gaviao_rosa/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/gaviao_rosa/dormindo_1.webp",
+    "pets/gaviao_rosa/dormindo_2.webp",
+    "pets/gaviao_rosa/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/gaviao_rosa/feliz_1.webp",
+    "pets/gaviao_rosa/feliz_2.webp",
+    "pets/gaviao_rosa/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gaviao_rosa/pulo_cambalhota_1.webp",
+    "pets/gaviao_rosa/pulo_cambalhota_2.webp",
+    "pets/gaviao_rosa/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gaviao_rosa/salto_pouso_1.webp",
+    "pets/gaviao_rosa/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/gaviao_rosa/sentado_2_1.webp",
+    "pets/gaviao_rosa/sentado_2_2.webp",
+    "pets/gaviao_rosa/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gaviao_rosa/sentado_girando_1.webp",
+    "pets/gaviao_rosa/sentado_girando_2.webp",
+    "pets/gaviao_rosa/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/gaviao_rosa/triste_fome_1.webp",
+    "pets/gaviao_rosa/triste_fome_2.webp",
+    "pets/gaviao_rosa/triste_fome_3.webp"
+   ],
+   "galho": [
+    "pets/gaviao_rosa/galho_1.webp"
+   ],
+   "cacar": [
+    "pets/gaviao_rosa/cacar_1.webp",
+    "pets/gaviao_rosa/cacar_2.webp",
+    "pets/gaviao_rosa/cacar_3.webp"
+   ],
+   "banana": [
+    "pets/gaviao_rosa/banana_1.webp"
+   ],
+   "uva": [
+    "pets/gaviao_rosa/uva_1.webp"
+   ],
+   "parado_frente": [
+    "pets/gaviao_rosa/parado_frente_1.webp"
+   ]
+  },
+  "gaviao_verde": {
+   "andar_costas": [
+    "pets/gaviao_verde/andar_costas_1.webp",
+    "pets/gaviao_verde/andar_costas_2.webp",
+    "pets/gaviao_verde/andar_costas_3.webp",
+    "pets/gaviao_verde/andar_costas_4.webp"
+   ],
+   "andar_direita": [
+    "pets/gaviao_verde/andar_direita_1.webp",
+    "pets/gaviao_verde/andar_direita_2.webp",
+    "pets/gaviao_verde/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gaviao_verde/andar_esquerda_1.webp",
+    "pets/gaviao_verde/andar_esquerda_2.webp",
+    "pets/gaviao_verde/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/gaviao_verde/andar_frente_1.webp",
+    "pets/gaviao_verde/andar_frente_2.webp",
+    "pets/gaviao_verde/andar_frente_3.webp",
+    "pets/gaviao_verde/andar_frente_4.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gaviao_verde/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gaviao_verde/comendo_1.webp",
+    "pets/gaviao_verde/comendo_2.webp",
+    "pets/gaviao_verde/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gaviao_verde/correndo_1.webp",
+    "pets/gaviao_verde/correndo_2.webp",
+    "pets/gaviao_verde/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gaviao_verde/costas_parado_1.webp",
+    "pets/gaviao_verde/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/gaviao_verde/dormindo_1.webp",
+    "pets/gaviao_verde/dormindo_2.webp",
+    "pets/gaviao_verde/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/gaviao_verde/feliz_1.webp",
+    "pets/gaviao_verde/feliz_2.webp",
+    "pets/gaviao_verde/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gaviao_verde/pulo_cambalhota_1.webp",
+    "pets/gaviao_verde/pulo_cambalhota_2.webp",
+    "pets/gaviao_verde/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gaviao_verde/salto_pouso_1.webp",
+    "pets/gaviao_verde/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/gaviao_verde/sentado_2_1.webp",
+    "pets/gaviao_verde/sentado_2_2.webp",
+    "pets/gaviao_verde/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gaviao_verde/sentado_girando_1.webp",
+    "pets/gaviao_verde/sentado_girando_2.webp",
+    "pets/gaviao_verde/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/gaviao_verde/triste_fome_1.webp",
+    "pets/gaviao_verde/triste_fome_2.webp",
+    "pets/gaviao_verde/triste_fome_3.webp"
+   ],
+   "galho": [
+    "pets/gaviao_verde/galho_1.webp"
+   ],
+   "cacar": [
+    "pets/gaviao_verde/cacar_1.webp",
+    "pets/gaviao_verde/cacar_2.webp",
+    "pets/gaviao_verde/cacar_3.webp"
+   ],
+   "banana": [
+    "pets/gaviao_verde/banana_1.webp"
+   ],
+   "uva": [
+    "pets/gaviao_verde/uva_1.webp"
+   ],
+   "parado_frente": [
+    "pets/gaviao_verde/parado_frente_1.webp"
+   ]
+  },
+  "gaviao_dourado": {
+   "andar_costas": [
+    "pets/gaviao_dourado/andar_costas_1.webp",
+    "pets/gaviao_dourado/andar_costas_2.webp",
+    "pets/gaviao_dourado/andar_costas_3.webp",
+    "pets/gaviao_dourado/andar_costas_4.webp"
+   ],
+   "andar_direita": [
+    "pets/gaviao_dourado/andar_direita_1.webp",
+    "pets/gaviao_dourado/andar_direita_2.webp",
+    "pets/gaviao_dourado/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gaviao_dourado/andar_esquerda_1.webp",
+    "pets/gaviao_dourado/andar_esquerda_2.webp",
+    "pets/gaviao_dourado/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/gaviao_dourado/andar_frente_1.webp",
+    "pets/gaviao_dourado/andar_frente_2.webp",
+    "pets/gaviao_dourado/andar_frente_3.webp",
+    "pets/gaviao_dourado/andar_frente_4.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gaviao_dourado/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gaviao_dourado/comendo_1.webp",
+    "pets/gaviao_dourado/comendo_2.webp",
+    "pets/gaviao_dourado/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gaviao_dourado/correndo_1.webp",
+    "pets/gaviao_dourado/correndo_2.webp",
+    "pets/gaviao_dourado/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gaviao_dourado/costas_parado_1.webp",
+    "pets/gaviao_dourado/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/gaviao_dourado/dormindo_1.webp",
+    "pets/gaviao_dourado/dormindo_2.webp",
+    "pets/gaviao_dourado/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/gaviao_dourado/feliz_1.webp",
+    "pets/gaviao_dourado/feliz_2.webp",
+    "pets/gaviao_dourado/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gaviao_dourado/pulo_cambalhota_1.webp",
+    "pets/gaviao_dourado/pulo_cambalhota_2.webp",
+    "pets/gaviao_dourado/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gaviao_dourado/salto_pouso_1.webp",
+    "pets/gaviao_dourado/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/gaviao_dourado/sentado_2_1.webp",
+    "pets/gaviao_dourado/sentado_2_2.webp",
+    "pets/gaviao_dourado/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gaviao_dourado/sentado_girando_1.webp",
+    "pets/gaviao_dourado/sentado_girando_2.webp",
+    "pets/gaviao_dourado/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/gaviao_dourado/triste_fome_1.webp",
+    "pets/gaviao_dourado/triste_fome_2.webp",
+    "pets/gaviao_dourado/triste_fome_3.webp"
+   ],
+   "galho": [
+    "pets/gaviao_dourado/galho_1.webp"
+   ],
+   "cacar": [
+    "pets/gaviao_dourado/cacar_1.webp",
+    "pets/gaviao_dourado/cacar_2.webp",
+    "pets/gaviao_dourado/cacar_3.webp"
+   ],
+   "banana": [
+    "pets/gaviao_dourado/banana_1.webp"
+   ],
+   "uva": [
+    "pets/gaviao_dourado/uva_1.webp"
+   ],
+   "parado_frente": [
+    "pets/gaviao_dourado/parado_frente_1.webp"
+   ]
+  },
+  "gaviao_preto": {
+   "andar_costas": [
+    "pets/gaviao_preto/andar_costas_1.webp",
+    "pets/gaviao_preto/andar_costas_2.webp",
+    "pets/gaviao_preto/andar_costas_3.webp",
+    "pets/gaviao_preto/andar_costas_4.webp"
+   ],
+   "andar_direita": [
+    "pets/gaviao_preto/andar_direita_1.webp",
+    "pets/gaviao_preto/andar_direita_2.webp",
+    "pets/gaviao_preto/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/gaviao_preto/andar_esquerda_1.webp",
+    "pets/gaviao_preto/andar_esquerda_2.webp",
+    "pets/gaviao_preto/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/gaviao_preto/andar_frente_1.webp",
+    "pets/gaviao_preto/andar_frente_2.webp",
+    "pets/gaviao_preto/andar_frente_3.webp",
+    "pets/gaviao_preto/andar_frente_4.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/gaviao_preto/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/gaviao_preto/comendo_1.webp",
+    "pets/gaviao_preto/comendo_2.webp",
+    "pets/gaviao_preto/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/gaviao_preto/correndo_1.webp",
+    "pets/gaviao_preto/correndo_2.webp",
+    "pets/gaviao_preto/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/gaviao_preto/costas_parado_1.webp",
+    "pets/gaviao_preto/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/gaviao_preto/dormindo_1.webp",
+    "pets/gaviao_preto/dormindo_2.webp",
+    "pets/gaviao_preto/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/gaviao_preto/feliz_1.webp",
+    "pets/gaviao_preto/feliz_2.webp",
+    "pets/gaviao_preto/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/gaviao_preto/pulo_cambalhota_1.webp",
+    "pets/gaviao_preto/pulo_cambalhota_2.webp",
+    "pets/gaviao_preto/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/gaviao_preto/salto_pouso_1.webp",
+    "pets/gaviao_preto/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/gaviao_preto/sentado_2_1.webp",
+    "pets/gaviao_preto/sentado_2_2.webp",
+    "pets/gaviao_preto/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/gaviao_preto/sentado_girando_1.webp",
+    "pets/gaviao_preto/sentado_girando_2.webp",
+    "pets/gaviao_preto/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/gaviao_preto/triste_fome_1.webp",
+    "pets/gaviao_preto/triste_fome_2.webp",
+    "pets/gaviao_preto/triste_fome_3.webp"
+   ],
+   "galho": [
+    "pets/gaviao_preto/galho_1.webp"
+   ],
+   "cacar": [
+    "pets/gaviao_preto/cacar_1.webp",
+    "pets/gaviao_preto/cacar_2.webp",
+    "pets/gaviao_preto/cacar_3.webp"
+   ],
+   "banana": [
+    "pets/gaviao_preto/banana_1.webp"
+   ],
+   "uva": [
+    "pets/gaviao_preto/uva_1.webp"
+   ],
+   "parado_frente": [
+    "pets/gaviao_preto/parado_frente_1.webp"
+   ]
+  },
+  "axolote_marrom": {
+   "andar_costas": [
+    "pets/axolote_marrom/andar_costas_1.webp",
+    "pets/axolote_marrom/andar_costas_2.webp",
+    "pets/axolote_marrom/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/axolote_marrom/andar_direita_1.webp",
+    "pets/axolote_marrom/andar_direita_2.webp",
+    "pets/axolote_marrom/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/axolote_marrom/andar_esquerda_1.webp",
+    "pets/axolote_marrom/andar_esquerda_2.webp",
+    "pets/axolote_marrom/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/axolote_marrom/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/axolote_marrom/comendo_1.webp",
+    "pets/axolote_marrom/comendo_2.webp",
+    "pets/axolote_marrom/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/axolote_marrom/correndo_1.webp",
+    "pets/axolote_marrom/correndo_2.webp",
+    "pets/axolote_marrom/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/axolote_marrom/costas_parado_1.webp",
+    "pets/axolote_marrom/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/axolote_marrom/dormindo_1.webp",
+    "pets/axolote_marrom/dormindo_2.webp",
+    "pets/axolote_marrom/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/axolote_marrom/feliz_1.webp",
+    "pets/axolote_marrom/feliz_2.webp",
+    "pets/axolote_marrom/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/axolote_marrom/pulo_cambalhota_1.webp",
+    "pets/axolote_marrom/pulo_cambalhota_2.webp",
+    "pets/axolote_marrom/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/axolote_marrom/salto_pouso_1.webp",
+    "pets/axolote_marrom/salto_pouso_2.webp",
+    "pets/axolote_marrom/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/axolote_marrom/sentado_2_1.webp",
+    "pets/axolote_marrom/sentado_2_2.webp",
+    "pets/axolote_marrom/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/axolote_marrom/sentado_girando_1.webp",
+    "pets/axolote_marrom/sentado_girando_2.webp",
+    "pets/axolote_marrom/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/axolote_marrom/triste_fome_1.webp",
+    "pets/axolote_marrom/triste_fome_2.webp",
+    "pets/axolote_marrom/triste_fome_3.webp"
+   ]
+  },
+  "axolote_cinza": {
+   "andar_costas": [
+    "pets/axolote_cinza/andar_costas_1.webp",
+    "pets/axolote_cinza/andar_costas_2.webp",
+    "pets/axolote_cinza/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/axolote_cinza/andar_direita_1.webp",
+    "pets/axolote_cinza/andar_direita_2.webp",
+    "pets/axolote_cinza/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/axolote_cinza/andar_esquerda_1.webp",
+    "pets/axolote_cinza/andar_esquerda_2.webp",
+    "pets/axolote_cinza/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/axolote_cinza/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/axolote_cinza/comendo_1.webp",
+    "pets/axolote_cinza/comendo_2.webp",
+    "pets/axolote_cinza/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/axolote_cinza/correndo_1.webp",
+    "pets/axolote_cinza/correndo_2.webp",
+    "pets/axolote_cinza/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/axolote_cinza/costas_parado_1.webp",
+    "pets/axolote_cinza/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/axolote_cinza/dormindo_1.webp",
+    "pets/axolote_cinza/dormindo_2.webp",
+    "pets/axolote_cinza/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/axolote_cinza/feliz_1.webp",
+    "pets/axolote_cinza/feliz_2.webp",
+    "pets/axolote_cinza/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/axolote_cinza/pulo_cambalhota_1.webp",
+    "pets/axolote_cinza/pulo_cambalhota_2.webp",
+    "pets/axolote_cinza/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/axolote_cinza/salto_pouso_1.webp",
+    "pets/axolote_cinza/salto_pouso_2.webp",
+    "pets/axolote_cinza/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/axolote_cinza/sentado_2_1.webp",
+    "pets/axolote_cinza/sentado_2_2.webp",
+    "pets/axolote_cinza/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/axolote_cinza/sentado_girando_1.webp",
+    "pets/axolote_cinza/sentado_girando_2.webp",
+    "pets/axolote_cinza/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/axolote_cinza/triste_fome_1.webp",
+    "pets/axolote_cinza/triste_fome_2.webp",
+    "pets/axolote_cinza/triste_fome_3.webp"
+   ]
+  },
+  "axolote_branco": {
+   "andar_costas": [
+    "pets/axolote_branco/andar_costas_1.webp",
+    "pets/axolote_branco/andar_costas_2.webp",
+    "pets/axolote_branco/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/axolote_branco/andar_direita_1.webp",
+    "pets/axolote_branco/andar_direita_2.webp",
+    "pets/axolote_branco/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/axolote_branco/andar_esquerda_1.webp",
+    "pets/axolote_branco/andar_esquerda_2.webp",
+    "pets/axolote_branco/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/axolote_branco/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/axolote_branco/comendo_1.webp",
+    "pets/axolote_branco/comendo_2.webp",
+    "pets/axolote_branco/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/axolote_branco/correndo_1.webp",
+    "pets/axolote_branco/correndo_2.webp",
+    "pets/axolote_branco/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/axolote_branco/costas_parado_1.webp",
+    "pets/axolote_branco/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/axolote_branco/dormindo_1.webp",
+    "pets/axolote_branco/dormindo_2.webp",
+    "pets/axolote_branco/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/axolote_branco/feliz_1.webp",
+    "pets/axolote_branco/feliz_2.webp",
+    "pets/axolote_branco/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/axolote_branco/pulo_cambalhota_1.webp",
+    "pets/axolote_branco/pulo_cambalhota_2.webp",
+    "pets/axolote_branco/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/axolote_branco/salto_pouso_1.webp",
+    "pets/axolote_branco/salto_pouso_2.webp",
+    "pets/axolote_branco/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/axolote_branco/sentado_2_1.webp",
+    "pets/axolote_branco/sentado_2_2.webp",
+    "pets/axolote_branco/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/axolote_branco/sentado_girando_1.webp",
+    "pets/axolote_branco/sentado_girando_2.webp",
+    "pets/axolote_branco/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/axolote_branco/triste_fome_1.webp",
+    "pets/axolote_branco/triste_fome_2.webp",
+    "pets/axolote_branco/triste_fome_3.webp"
+   ]
+  },
+  "axolote_roxo": {
+   "andar_costas": [
+    "pets/axolote_roxo/andar_costas_1.webp",
+    "pets/axolote_roxo/andar_costas_2.webp",
+    "pets/axolote_roxo/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/axolote_roxo/andar_direita_1.webp",
+    "pets/axolote_roxo/andar_direita_2.webp",
+    "pets/axolote_roxo/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/axolote_roxo/andar_esquerda_1.webp",
+    "pets/axolote_roxo/andar_esquerda_2.webp",
+    "pets/axolote_roxo/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/axolote_roxo/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/axolote_roxo/comendo_1.webp",
+    "pets/axolote_roxo/comendo_2.webp",
+    "pets/axolote_roxo/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/axolote_roxo/correndo_1.webp",
+    "pets/axolote_roxo/correndo_2.webp",
+    "pets/axolote_roxo/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/axolote_roxo/costas_parado_1.webp",
+    "pets/axolote_roxo/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/axolote_roxo/dormindo_1.webp",
+    "pets/axolote_roxo/dormindo_2.webp",
+    "pets/axolote_roxo/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/axolote_roxo/feliz_1.webp",
+    "pets/axolote_roxo/feliz_2.webp",
+    "pets/axolote_roxo/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/axolote_roxo/pulo_cambalhota_1.webp",
+    "pets/axolote_roxo/pulo_cambalhota_2.webp",
+    "pets/axolote_roxo/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/axolote_roxo/salto_pouso_1.webp",
+    "pets/axolote_roxo/salto_pouso_2.webp",
+    "pets/axolote_roxo/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/axolote_roxo/sentado_2_1.webp",
+    "pets/axolote_roxo/sentado_2_2.webp",
+    "pets/axolote_roxo/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/axolote_roxo/sentado_girando_1.webp",
+    "pets/axolote_roxo/sentado_girando_2.webp",
+    "pets/axolote_roxo/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/axolote_roxo/triste_fome_1.webp",
+    "pets/axolote_roxo/triste_fome_2.webp",
+    "pets/axolote_roxo/triste_fome_3.webp"
+   ]
+  },
+  "axolote_azul": {
+   "andar_costas": [
+    "pets/axolote_azul/andar_costas_1.webp",
+    "pets/axolote_azul/andar_costas_2.webp",
+    "pets/axolote_azul/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/axolote_azul/andar_direita_1.webp",
+    "pets/axolote_azul/andar_direita_2.webp",
+    "pets/axolote_azul/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/axolote_azul/andar_esquerda_1.webp",
+    "pets/axolote_azul/andar_esquerda_2.webp",
+    "pets/axolote_azul/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/axolote_azul/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/axolote_azul/comendo_1.webp",
+    "pets/axolote_azul/comendo_2.webp",
+    "pets/axolote_azul/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/axolote_azul/correndo_1.webp",
+    "pets/axolote_azul/correndo_2.webp",
+    "pets/axolote_azul/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/axolote_azul/costas_parado_1.webp",
+    "pets/axolote_azul/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/axolote_azul/dormindo_1.webp",
+    "pets/axolote_azul/dormindo_2.webp",
+    "pets/axolote_azul/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/axolote_azul/feliz_1.webp",
+    "pets/axolote_azul/feliz_2.webp",
+    "pets/axolote_azul/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/axolote_azul/pulo_cambalhota_1.webp",
+    "pets/axolote_azul/pulo_cambalhota_2.webp",
+    "pets/axolote_azul/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/axolote_azul/salto_pouso_1.webp",
+    "pets/axolote_azul/salto_pouso_2.webp",
+    "pets/axolote_azul/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/axolote_azul/sentado_2_1.webp",
+    "pets/axolote_azul/sentado_2_2.webp",
+    "pets/axolote_azul/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/axolote_azul/sentado_girando_1.webp",
+    "pets/axolote_azul/sentado_girando_2.webp",
+    "pets/axolote_azul/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/axolote_azul/triste_fome_1.webp",
+    "pets/axolote_azul/triste_fome_2.webp",
+    "pets/axolote_azul/triste_fome_3.webp"
+   ]
+  },
+  "axolote_verde": {
+   "andar_costas": [
+    "pets/axolote_verde/andar_costas_1.webp",
+    "pets/axolote_verde/andar_costas_2.webp",
+    "pets/axolote_verde/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/axolote_verde/andar_direita_1.webp",
+    "pets/axolote_verde/andar_direita_2.webp",
+    "pets/axolote_verde/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/axolote_verde/andar_esquerda_1.webp",
+    "pets/axolote_verde/andar_esquerda_2.webp",
+    "pets/axolote_verde/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/axolote_verde/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/axolote_verde/comendo_1.webp",
+    "pets/axolote_verde/comendo_2.webp",
+    "pets/axolote_verde/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/axolote_verde/correndo_1.webp",
+    "pets/axolote_verde/correndo_2.webp",
+    "pets/axolote_verde/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/axolote_verde/costas_parado_1.webp",
+    "pets/axolote_verde/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/axolote_verde/dormindo_1.webp",
+    "pets/axolote_verde/dormindo_2.webp",
+    "pets/axolote_verde/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/axolote_verde/feliz_1.webp",
+    "pets/axolote_verde/feliz_2.webp",
+    "pets/axolote_verde/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/axolote_verde/pulo_cambalhota_1.webp",
+    "pets/axolote_verde/pulo_cambalhota_2.webp",
+    "pets/axolote_verde/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/axolote_verde/salto_pouso_1.webp",
+    "pets/axolote_verde/salto_pouso_2.webp",
+    "pets/axolote_verde/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/axolote_verde/sentado_2_1.webp",
+    "pets/axolote_verde/sentado_2_2.webp",
+    "pets/axolote_verde/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/axolote_verde/sentado_girando_1.webp",
+    "pets/axolote_verde/sentado_girando_2.webp",
+    "pets/axolote_verde/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/axolote_verde/triste_fome_1.webp",
+    "pets/axolote_verde/triste_fome_2.webp",
+    "pets/axolote_verde/triste_fome_3.webp"
+   ]
+  },
+  "axolote_dourado": {
+   "andar_costas": [
+    "pets/axolote_dourado/andar_costas_1.webp",
+    "pets/axolote_dourado/andar_costas_2.webp",
+    "pets/axolote_dourado/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/axolote_dourado/andar_direita_1.webp",
+    "pets/axolote_dourado/andar_direita_2.webp",
+    "pets/axolote_dourado/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/axolote_dourado/andar_esquerda_1.webp",
+    "pets/axolote_dourado/andar_esquerda_2.webp",
+    "pets/axolote_dourado/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/axolote_dourado/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/axolote_dourado/comendo_1.webp",
+    "pets/axolote_dourado/comendo_2.webp",
+    "pets/axolote_dourado/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/axolote_dourado/correndo_1.webp",
+    "pets/axolote_dourado/correndo_2.webp",
+    "pets/axolote_dourado/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/axolote_dourado/costas_parado_1.webp",
+    "pets/axolote_dourado/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/axolote_dourado/dormindo_1.webp",
+    "pets/axolote_dourado/dormindo_2.webp",
+    "pets/axolote_dourado/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/axolote_dourado/feliz_1.webp",
+    "pets/axolote_dourado/feliz_2.webp",
+    "pets/axolote_dourado/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/axolote_dourado/pulo_cambalhota_1.webp",
+    "pets/axolote_dourado/pulo_cambalhota_2.webp",
+    "pets/axolote_dourado/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/axolote_dourado/salto_pouso_1.webp",
+    "pets/axolote_dourado/salto_pouso_2.webp",
+    "pets/axolote_dourado/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/axolote_dourado/sentado_2_1.webp",
+    "pets/axolote_dourado/sentado_2_2.webp",
+    "pets/axolote_dourado/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/axolote_dourado/sentado_girando_1.webp",
+    "pets/axolote_dourado/sentado_girando_2.webp",
+    "pets/axolote_dourado/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/axolote_dourado/triste_fome_1.webp",
+    "pets/axolote_dourado/triste_fome_2.webp",
+    "pets/axolote_dourado/triste_fome_3.webp"
+   ]
+  },
+  "axolote_preto": {
+   "andar_costas": [
+    "pets/axolote_preto/andar_costas_1.webp",
+    "pets/axolote_preto/andar_costas_2.webp",
+    "pets/axolote_preto/andar_costas_3.webp"
+   ],
+   "andar_direita": [
+    "pets/axolote_preto/andar_direita_1.webp",
+    "pets/axolote_preto/andar_direita_2.webp",
+    "pets/axolote_preto/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/axolote_preto/andar_esquerda_1.webp",
+    "pets/axolote_preto/andar_esquerda_2.webp",
+    "pets/axolote_preto/andar_esquerda_3.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/axolote_preto/busto_sorrindo_1.webp"
+   ],
+   "comendo": [
+    "pets/axolote_preto/comendo_1.webp",
+    "pets/axolote_preto/comendo_2.webp",
+    "pets/axolote_preto/comendo_3.webp"
+   ],
+   "correndo": [
+    "pets/axolote_preto/correndo_1.webp",
+    "pets/axolote_preto/correndo_2.webp",
+    "pets/axolote_preto/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/axolote_preto/costas_parado_1.webp",
+    "pets/axolote_preto/costas_parado_2.webp"
+   ],
+   "dormindo": [
+    "pets/axolote_preto/dormindo_1.webp",
+    "pets/axolote_preto/dormindo_2.webp",
+    "pets/axolote_preto/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/axolote_preto/feliz_1.webp",
+    "pets/axolote_preto/feliz_2.webp",
+    "pets/axolote_preto/feliz_3.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/axolote_preto/pulo_cambalhota_1.webp",
+    "pets/axolote_preto/pulo_cambalhota_2.webp",
+    "pets/axolote_preto/pulo_cambalhota_3.webp"
+   ],
+   "salto_pouso": [
+    "pets/axolote_preto/salto_pouso_1.webp",
+    "pets/axolote_preto/salto_pouso_2.webp",
+    "pets/axolote_preto/salto_pouso_3.webp"
+   ],
+   "sentado_2": [
+    "pets/axolote_preto/sentado_2_1.webp",
+    "pets/axolote_preto/sentado_2_2.webp",
+    "pets/axolote_preto/sentado_2_3.webp"
+   ],
+   "sentado_girando": [
+    "pets/axolote_preto/sentado_girando_1.webp",
+    "pets/axolote_preto/sentado_girando_2.webp",
+    "pets/axolote_preto/sentado_girando_3.webp"
+   ],
+   "triste_fome": [
+    "pets/axolote_preto/triste_fome_1.webp",
+    "pets/axolote_preto/triste_fome_2.webp",
+    "pets/axolote_preto/triste_fome_3.webp"
+   ]
+  }
+ }
+}

@@ -19,7 +19,8 @@ import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVa
   semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha, peixeEhRaro } from '/js/jogo-revisao/pesca.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado,
   temAnim, formaAdulta, formaValida, sentadoNoQuadro, escalaPet, escalaMax, quadrosSeq, sortearOcioso, temSequencia, tocarSequencia, pararSequencia, msAtePasso,
-  sortearAcaoParado, EMOCOES, MS_EMOCAO, coresDragao, aceitaCor, ehFormaAdulta, formaComCor, definirNoite } from '/js/jogo-revisao/pets.js';
+  sortearAcaoParado, EMOCOES, MS_EMOCAO, coresDragao, aceitaCor, ehFormaAdulta, formaComCor, definirNoite,
+  NOME_COR_PET, petDaCor, coresDoPet } from '/js/jogo-revisao/pets.js';
 import { lerTodos, lerRegistro, iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, limiteMoedasPedidos, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
 import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, tiposDeConta, gerarConta, vidaExtraLealdade, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
@@ -67,7 +68,8 @@ const ALT_JOGADOR_MAPA = 55 * ESCALA_ATORES;   // nos mapas da cidade o personag
 // Não depende do tamanho do arquivo: trocar a resolução das imagens não muda o tamanho na tela.
 // Altura do pet SENTADO no mapa, em px na escala base (personagem = 55; no mapa tudo × ESCALA_ATORES)
 const ALT_PET = {
-  elefante: 36, gato: 30, gaviao: 30, axolote: 30, tigre: 30, capivara: 36,   // capivara: 20% maior que o tigre (30 × TAM_VISUAL)
+  elefante: 36, gato: 30, gaviao: 32.7, axolote: 30, tigre: 30, capivara: 36,   // capivara: 20% maior que o tigre (30 × TAM_VISUAL)
+  // gavião: PROMPT-170, o desenho novo sentado mede 556 px no quadro (o antigo, 606): 30 × 606/556, para ficar do tamanho de antes
   unicornio: 40, morcego: 46,   // PROMPT-161: o morcego entre o gavião (30) e o dragão vermelho filhote (62,5); PROMPT-159: no lugar do dragão azul; PROMPT-129: vermelho +25% (era 50)
   dragao_vermelho: 62.5,
 };
@@ -86,7 +88,7 @@ ALT_PET.dragao_azul_adulto = ALT_PET.dragao_vermelho_adulto = ALT_BASE_PERSONAGE
 const ALT_PET_PADRAO = 30;   // pet que não estiver na tabela
 // cores especiais do dragão (PROMPT-74/84): a cor é só visual; o tamanho é o do dragão de base.
 // dragao_vermelho_{cor}[_adulto] → dragao_vermelho[_adulto]; dragao_{cor}[_adulto] → dragao_azul[_adulto]
-const formaDeTamanho = (f) => String(f || '')
+const formaDeTamanho = (f) => petDaCor(f) || String(f || '')   // 🎨 PROMPT-170: {pet}_{cor} → o pet
   .replace(/^dragao_vermelho_(?!adulto$)[a-z]+(?=(_adulto)?$)/, 'dragao_vermelho')
   .replace(/^dragao_(?!azul|vermelho)[a-z]+(?=(_adulto)?$)/, 'dragao_azul');
 const altPet = (pet) => (ALT_PET[pet] ?? ALT_PET[formaDeTamanho(pet)] ?? ALT_PET_PADRAO) * escalaPet(pet);
@@ -96,8 +98,8 @@ const altImagemPet = (pet) => altPet(pet) / sentadoNoQuadro(pet);
 // Telas em que o pet tem tamanho relativo ao filhote (batalha, Meu Pet, duelo do ginásio, evolução): quanto a IMAGEM da forma
 // é maior que a do filhote. O desenho sentado fica ADULTO_ANTES × escala maior (o mesmo de antes no azul; +40% no vermelho).
 // Filhote maior que os outros nessas telas (no mapa é o ALT_PET/DIST_PET): a capivara 20% maior em tudo.
-const TAM_VISUAL = { capivara: 1.2 };
-const tamVisual = (forma) => TAM_VISUAL[forma] || 1;
+const TAM_VISUAL = { capivara: 1.2, gaviao: 606 / 556 };   // gavião: o desenho novo é menor no quadro (PROMPT-170)
+const tamVisual = (forma) => TAM_VISUAL[forma] || TAM_VISUAL[petDaCor(forma)] || 1;
 const fatorForma = (pet, forma) => (ehFormaAdulta(forma) ? ADULTO_ANTES * escalaPet(forma) * sentadoNoQuadro(pet) / sentadoNoQuadro(forma) : tamVisual(forma));
 // Revisão da semana (PROMPT-80): o dragão adulto ~30% maior (o vermelho continua 1,75 / 0,75 × o azul), até 58% da arena no CSS.
 const DUELO_ADULTO = 1.3;
@@ -318,7 +320,7 @@ function marcarForma(img, pet, forma) {
 // Distância normal do pet atrás do personagem (ao longo do rastro), em px na escala base (× ESCALA_ATORES no mapa).
 // Parado, o pet chega a 55% disso; acima de +10 anda 1,3× mais rápido; acima de +62 corre (pets.js).
 const DIST_PET = {
-  elefante: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36, capivara: 43.2,
+  elefante: 36, gato: 36, gaviao: 39.2, axolote: 36, tigre: 36, capivara: 43.2,   // gavião × 606/556, junto com o tamanho (PROMPT-170)
   unicornio: 55, morcego: 52, dragao_vermelho: 68.75,   // PROMPT-161: morcego entre o gavião e o vermelho; PROMPT-129: vermelho × 1,25, com o tamanho
 };
 // cresce junto com o tamanho (mesma proporção distância/altura do filhote vermelho; distPet ainda × a escala do vermelho)
@@ -1139,7 +1141,8 @@ function lerPets(v) {
   }
   return { ativo, conquistados, migrou, moedas: Number(v.pets?.moedas) || 0, iscas: Number(v.pets?.iscas) || 0, itens: { ...(v.pets?.itens || {}) },
     bolsa: { ...(v.pets?.bolsa || {}) }, tintas: { ...(v.pets?.tintas || {}) }, efeitos: { ...(v.pets?.efeitos || {}) }, cuidadosV2: !!v.pets?.cuidados_v2,
-    expedicoesDia: v.pets?.expedicoes_dia || null, migrouMorcego: !!v.pets?.migrou_morcego, migrouCapivara: !!v.pets?.migrou_capivara };   // 🧭 { data, n } (PROMPT-92)
+    expedicoesDia: v.pets?.expedicoes_dia || null, migrouMorcego: !!v.pets?.migrou_morcego, migrouCapivara: !!v.pets?.migrou_capivara,
+    coresPet: { ...(v.pets?.cores_pet || {}) }, coresTodas: { ...(v.pets?.cores_todas || {}) }, migrouTintas: !!v.pets?.migrou_tintas };   // 🎨 PROMPT-170   // 🧭 { data, n } (PROMPT-92)
 }
 
 const temPet = (p) => !!(p && estado.pets.conquistados[p]);
@@ -1163,6 +1166,7 @@ function iniciarPet() {
   const ps = estado.pets;
   migrarCapivara(ps);
   migrarMorcego(ps);
+  migrarTintas(ps);   // 🎨 PROMPT-170
   for (const p of Object.keys(ps.conquistados)) if (!petValido(p)) delete ps.conquistados[p];
   liberarPetsProfessora(ps);
   if (!temPet(ps.ativo)) ps.ativo = Object.keys(ps.conquistados)[0] || null;
@@ -1572,7 +1576,8 @@ const cuidadosDe = (pet) => estado.pets.conquistados[pet];
 const formaBase = (pet) => { const a = formaAdulta(pet), c = a && cuidadosDe(pet); return c?.evoluido && !c.mostrar_filhote ? a : pet; };
 const formaDe = (pet) => formaComCor(formaBase(pet), corAtiva(pet));
 // cor especial do dragão (PROMPT-74): pet_cor do aluno, só se liberada e só nos dragões; com cor, a tinta não é aplicada
-const corAtiva = (pet) => (aceitaCor(pet) && estado?.petCor && estado.coresLiberadas?.[estado.petCor] && coresDragao()[estado.petCor] ? estado.petCor : null);
+// os outros pets: a cor comprada de cada um (PROMPT-170)
+const corAtiva = (pet) => (aceitaCor(pet) ? (estado?.petCor && estado.coresLiberadas?.[estado.petCor] && coresDragao()[estado.petCor] ? estado.petCor : null) : corDoPet(pet));
 const tintaVisivel = (pet) => (pet && !corAtiva(pet) ? cuidadosDe(pet)?.tinta || null : null);
 const barrigaDe = (pet) => { const c = cuidadosDe(pet); return c ? barrigaDoPet(c, pet === estado.pets.ativo) : 100; };
 
@@ -2131,6 +2136,96 @@ function efeitosDoMapa() {
   for (const cg of colegas.values()) if (!cg.el.hidden && cg.pet) emitirEfeito(cg.seg, cg.reg?.pet_efeito, Number(cg.reg?.pet_nivel) >= 3, agora);
 }
 
+// ── 🎨 Cores dos pets (PROMPT-170) ──────────────────────────
+// Imagens pintadas (sprites-pets-cores.json, pets.js → CORES_PET): a forma {pet}_{cor} é só visual. Compra por pet
+// (pets/cores_pet/{pet}/{cor}); uma cor em pets/cores_todas (das tintas antigas) vale em qualquer pet que tenha essa cor.
+// A cor escolhida fica em pets/conquistados/{pet}/cor; com cor, a tinta não é aplicada (continua guardada).
+const temCorPet = (pet, cor) => !!(estado?.pets?.coresPet?.[pet]?.[cor] || estado?.pets?.coresTodas?.[cor]) && coresDoPet(pet).includes(cor);
+const corDoPet = (pet) => { const c = estado?.pets?.conquistados?.[pet]?.cor; return c && temCorPet(pet, c) ? c : null; };
+const precoCorPet = (cor) => Number(cfgLoja().cores_pet?.preco_cor?.[cor] ?? cfgLoja().cores_pet?.preco ?? 80);
+const petsComCores = () => PETS.filter(p => temPet(p) && coresDoPet(p).length);
+// Tintas antigas viram cores (uma vez, pets/migrou_tintas): quem tem a tinta ganha a cor em todos os pets que têm essa cor,
+// também nos que ganhar depois (cores_todas); o pet usando a tinta passa a usar a cor. O pet sem essa cor (dragão, morcego,
+// axolote rosa) continua com a tinta, que ainda aparece para ele no Meu Pet. Arco-íris, Esmeralda e Cristal continuam tintas.
+const TINTA_VIROU_COR = { azul: 'azul', rosa: 'rosa', verde: 'verde', roxo: 'roxo', dourado: 'dourado', noite: 'preto', laranja: 'marrom' };
+const tintaVirouCor = (tintaId, pet) => { const cor = TINTA_VIROU_COR[tintaId]; return !!cor && coresDoPet(pet).includes(cor); };
+function migrarTintas(ps) {
+  if (ps.migrouTintas) return;
+  ps.migrouTintas = true;
+  const patch = { 'pets/migrou_tintas': true }, ganhou = new Set();
+  for (const [t, cor] of Object.entries(TINTA_VIROU_COR)) if (ps.tintas?.[t]) ganhou.add(cor);
+  for (const [pet, c] of Object.entries(ps.conquistados)) {
+    const cor = TINTA_VIROU_COR[c?.tinta];
+    if (!cor) continue;
+    ganhou.add(cor);
+    if (!coresDoPet(pet).includes(cor)) continue;
+    c.tinta = null; c.cor = cor;
+    patch[`pets/conquistados/${pet}/tinta`] = null;
+    patch[`pets/conquistados/${pet}/cor`] = cor;
+  }
+  for (const cor of ganhou) { ps.coresTodas[cor] = true; patch[`pets/cores_todas/${cor}`] = true; }
+  gravar(patch);
+  if (ganhou.size) setTimeout(avisarTintasViraramCores, 4000);
+}
+function avisarTintasViraramCores() {   // depois do tutorial (e do cartão de pet entregue)
+  const tutorialVem = !estado.avisos?.tutorial && petValido(estado.pets?.ativo);
+  if (tutorialVem || !$('tutorial').hidden || petEntregue) { setTimeout(avisarTintasViraramCores, 2000); return; }
+  avisoPet('🎨 Suas tintas viraram cores novas para os seus pets!', true);
+}
+// Loja → aba Tintas: o pet ativo (◀ ▶ troca entre os meus pets com cores); cada cor com a imagem pintada, o preço e Comprar ou ✔
+let lojaCorPet = null;
+function blocoCoresPet(preco, botao) {
+  const l = petsComCores();
+  if (!l.length) return '';
+  if (!l.includes(lojaCorPet)) lojaCorPet = l.includes(estado.pets.ativo) ? estado.pets.ativo : l[0];
+  const pet = lojaCorPet, atual = corDoPet(pet);
+  const seta = (d, rot) => (l.length > 1 ? `<button class="lj-cor-seta" data-cor-pet="${d}" aria-label="${rot}">${d < 0 ? '◀' : '▶'}</button>` : '');
+  return `<div class="lj-secao lj-cores-topo">${seta(-1, 'Pet anterior')}<span>🎨 Cores dos pets · ${esc(NOME_PET[pet])}</span>${seta(1, 'Próximo pet')}</div>` +
+    coresDoPet(pet).map(cor => {
+      const f = `${pet}_${cor}`, tem = temCorPet(pet, cor), v = precoCorPet(cor);
+      return `<div class="lj-item lj-tinta lj-cor${atual === cor ? ' provando' : ''}">
+        <div class="lj-previa"><img src="${quadrosDe(f, 'sentado_girando')[0]}" alt="" draggable="false"${attrForma(pet, f)}/></div>
+        <div class="lj-info"><b>${esc(NOME_COR_PET[cor])}</b>${tem ? '' : preco(v)}</div>
+        ${tem ? `<button class="lj-comprar ok" disabled>✔ ${atual === cor ? 'Usando' : 'Sua'}</button>` : botao(`cor:${pet}:${cor}`, v, 'Comprar')}
+      </div>`;
+    }).join('') + '<div class="lj-secao">🖌️ Tintas · valem para todos os pets</div>';
+}
+function comprarCorPet(pet, cor) {
+  const ps = estado.pets, moedas = Number(ps.moedas) || 0, v = precoCorPet(cor), c = cuidadosDe(pet);
+  if (!c || !coresDoPet(pet).includes(cor) || temCorPet(pet, cor) || moedas < v) return;
+  ps.moedas = moedas - v;
+  (ps.coresPet[pet] ||= {})[cor] = true;
+  c.cor = cor;   // já veste (dá para trocar no Meu Pet → Visual)
+  gravar({ 'pets/moedas': ps.moedas, [`pets/cores_pet/${pet}/${cor}`]: true, [`pets/conquistados/${pet}/cor`]: cor });
+  tocar('vitoria');
+  aplicarForma(pet);
+  renderLoja();
+  $('lj-msg').textContent = `${NOME_COR_PET[cor]}: comprada! ${nomePet(pet)} já está usando. Troque quando quiser no "Meu Pet" → Visual.`;
+}
+// Meu Pet → Visual: Original + as cores do pet (as não compradas com 🔒 e o preço; tocar diz onde comprar)
+function renderCoresPet(pet, cores) {
+  const base = formaBase(pet), atual = corAtiva(pet);
+  const mini = (forma) => `<img src="${quadrosDe(forma, 'sentado_girando')[0]}" alt="" draggable="false"${attrForma(pet, forma)}/>`;
+  $('mp-cores-rot').textContent = '🎨 Cores';
+  $('mp-visual-cores').innerHTML = `<button class="mp-chip${!atual ? ' sel' : ''}" data-cor="">${mini(base)}Original</button>` +
+    cores.map(cor => {
+      const tem = temCorPet(pet, cor);
+      return `<button class="mp-chip${atual === cor ? ' sel' : ''}${tem ? '' : ' trancada'}" data-cor="${cor}">${mini(formaComCor(base, cor))}${esc(NOME_COR_PET[cor])}${tem ? '' : ` 🔒 ${moedaHtml()} ${precoCorPet(cor)}`}</button>`;
+    }).join('');
+}
+function escolherCorPet(cor) {
+  const pet = mp.pet, c = cuidadosDe(pet);
+  if (!c || (cor && !coresDoPet(pet).includes(cor))) return;
+  if (cor && !temCorPet(pet, cor)) {
+    $('mp-cor-msg').textContent = `🔒 ${NOME_COR_PET[cor]}: compre por ${precoCorPet(cor)} moedas na loja da Dona Cida (${ondeDonaCida()}), aba Tintas 🛒.`;
+    return;
+  }
+  c.cor = cor || null;
+  gravar({ [`pets/conquistados/${pet}/cor`]: c.cor });
+  aplicarForma(pet);
+  renderVisual();
+}
+
 // ── Loja (no interior da loja: Dona Cida ou um dos cantos, que já abre na aba dele) ──
 let lojaAba = 'comidas', lojaQtd = {}, lojaProva = null;
 // soMoveis (PROMPT-108): aberta pelo 🛒 da casinha — só o catálogo de móveis
@@ -2210,7 +2305,7 @@ function renderLoja() {
     if (CASA && !$('loja').classList.contains('so-moveis')) html += '<div class="lj-secao">🎨 Reformas</div>' + temasCasa().map(cartaoTema).join('');   // na Dona Cida: no fim da grade
   } else if (lojaAba === 'tintas') {
     const src = pet ? quadrosDe(formaDe(pet), 'sentado_girando')[0] : '';
-    html = tintas().filter(t => !t.exclusiva).map(t => {   // Esmeralda e Cristal: só cavando
+    html = blocoCoresPet(preco, botao) + tintas().filter(t => !t.exclusiva && !TINTA_VIROU_COR[t.id]).map(t => {   // Esmeralda e Cristal: só cavando; as que viraram cor saíram (PROMPT-170)
       const tem = !!estado.pets.tintas?.[t.id];
       return `<div class="lj-item lj-tinta${lojaProva === t.id ? ' provando' : ''}" data-provar="${esc(t.id)}">
         <div class="lj-previa">${src ? `<img src="${src}" alt="" draggable="false" data-tinta="${t.id}"${attrForma(pet, formaDe(pet))}/>` : ''}</div>
@@ -2236,12 +2331,14 @@ function cliqueLoja(e) {
   const aba = e.target.closest('[data-aba]');
   if (aba) {
     lojaAba = aba.dataset.aba;
-    $('lj-msg').textContent = { tintas: ehLoja() ? 'Toque numa tinta para provar no pet 🐾 · comprada uma vez, vale para todos os seus pets.' : 'Comprada uma vez, a tinta vale para todos os seus pets.',
+    $('lj-msg').textContent = { tintas: ehLoja() ? 'Cada cor é de um pet · toque numa tinta para provar no pet 🐾 (a tinta vale para todos).' : 'Cada cor é de um pet · a tinta vale para todos os seus pets.',
       pesca: 'Iscas para pescar e Dona Cida compra os peixes que você pescou.', moveis: 'Móveis para a sua 🏠 Casinha (placa na Praça).',
       reformas: 'Um tema novo para o quarto. Os móveis continuam no lugar.' }[lojaAba] || '';
     if (lojaAba === 'tintas' && ehLoja()) subirNoPedestal();
     renderLoja(); return;
   }
+  const sp = e.target.closest('[data-cor-pet]');   // 🎨 ◀ ▶ troca o pet das cores
+  if (sp) { const l = petsComCores(), i = l.indexOf(lojaCorPet); lojaCorPet = l[(i + Number(sp.dataset.corPet) + l.length) % l.length]; renderLoja(); return; }
   const prova = e.target.closest('[data-provar]');
   if (prova && !e.target.closest('button') && petNoPedestal) {   // prévia no pet do pedestal (sem comprar)
     lojaProva = prova.dataset.provar;
@@ -2295,6 +2392,7 @@ function cartoesQuadros(preco, botao) {
   return html;
 }
 function comprar(id) {
+  if (String(id).startsWith('cor:')) { const [, p, c] = id.split(':'); comprarCorPet(p, c); return; }   // 🎨 cor do pet (PROMPT-170)
   if (String(id).startsWith('tema:')) { comprarTema(id.slice(5)); return; }   // 🎨 Reformas (aba própria ou no fim dos Móveis)
   if (id === 'quadro_ins') { if (insigniasSemQuadro().length) abrirColecaoCasa(null, true); return; }   // 🏅 escolhe a insígnia (PROMPT-117)
   const ps = estado.pets, moedas = Number(ps.moedas) || 0, patch = {};
@@ -2480,12 +2578,12 @@ function abrirVisual() {
 }
 function renderVisual() {
   const c = cuidadosDe(mp.pet), src = quadrosDe(mp.forma, 'sentado_girando')[0];
-  const ts = tintas().filter(t => estado.pets.tintas?.[t.id]), es = efeitos().filter(e => estado.pets.efeitos?.[e.id]);
+  const ts = tintas().filter(t => estado.pets.tintas?.[t.id] && !tintaVirouCor(t.id, mp.pet)), es = efeitos().filter(e => estado.pets.efeitos?.[e.id]);   // a tinta que virou cor deste pet: está nas cores
   const chip = (tipo, id, conteudo, sel) => `<button class="mp-chip${sel ? ' sel' : ''}" data-${tipo}="${id}">${conteudo}</button>`;
   const comCor = !!corAtiva(mp.pet);   // com cor especial a tinta não vale (continua guardada)
   $('mp-visual-tintas').innerHTML = chip('tinta', '', 'Nenhuma', !c.tinta) +
     ts.map(t => chip('tinta', t.id, `<img src="${src}" alt="" draggable="false" data-previa="${t.id}"${attrForma(mp.pet, mp.forma)}/>${esc(t.nome)}`, c.tinta === t.id)).join('') +
-    (comCor ? '<span class="mp-cor-aviso">Tire a cor especial para usar tinta</span>' : '');
+    (comCor ? `<span class="mp-cor-aviso">${aceitaCor(mp.pet) ? 'Tire a cor especial para usar tinta' : 'Escolha Original nas cores para usar tinta'}</span>` : '');
   $('mp-visual-tintas').classList.toggle('apagado', comCor);
   for (const b of $('mp-visual-tintas').querySelectorAll('[data-tinta]')) b.disabled = comCor;
   renderCores();
@@ -2524,8 +2622,12 @@ function aplicarForma(pet) {
 // 🐉 Cores do dragão (só quando o pet é dragão): Normal + as cores do sprites.json; bloqueada = cinza com 🔒 e o que fazer
 function renderCores() {
   const pet = mp.pet, temCores = Object.keys(coresDragao()).length > 0, ok = aceitaCor(pet) && temCores;
-  $('mp-cores-bloco').hidden = !ok;   // PROMPT-129: só o vermelho tem cores
+  const cores = aceitaCor(pet) ? [] : coresDoPet(pet);   // 🎨 os outros pets: as cores compradas (PROMPT-170)
+  $('mp-cores-bloco').hidden = !ok && !cores.length;   // PROMPT-129: das cores especiais, só o vermelho
+  $('mp-cor-msg').textContent = '';
+  if (cores.length) { renderCoresPet(pet, cores); return; }
   if (!ok) return;
+  $('mp-cores-rot').textContent = '🐉 Cores do dragão';
   const base = formaBase(pet), atual = corAtiva(pet);
   const mini = (forma) => `<img src="${quadrosDe(forma, 'sentado_girando')[0]}" alt="" draggable="false"${attrForma(pet, forma)}/>`;
   $('mp-visual-cores').innerHTML = `<button class="mp-chip${!atual ? ' sel' : ''}" data-cor="">${mini(base)}Normal</button>` +
@@ -2537,6 +2639,7 @@ function renderCores() {
 }
 function escolherCor(cor) {
   if (!mp) return;
+  if (!aceitaCor(mp.pet)) { escolherCorPet(cor); return; }   // 🎨 PROMPT-170
   const c = cor && coresDragao()[cor];
   if (cor && !c) return;
   if (cor && !estado.coresLiberadas?.[cor]) { $('mp-cor-msg').textContent = `🔒 ${c.texto}`; return; }
@@ -3501,7 +3604,7 @@ function onlinePorMapa() {
   return por;
 }
 
-const rostoPet = (pet, tintaId) => petValido(pet) ? `<img src="${srcIcone(pet)}" alt="" data-icone-pet${tintaId ? ` data-tinta="${esc(tintaId)}"` : ''}/>` : '<span>🙂</span>';
+const rostoPet = (pet, tintaId, forma) => petValido(pet) ? `<img src="${srcIcone(formaValida(pet, forma))}" alt="" data-icone-pet${tintaId ? ` data-tinta="${esc(tintaId)}"` : ''}/>` : '<span>🙂</span>';
 const pintarRostos = (raizEl) => { for (const img of raizEl.querySelectorAll('img[data-tinta]')) aplicarTinta(img, img.dataset.tinta); };
 
 function desenharOnlineGeral() {
@@ -3523,7 +3626,7 @@ function desenharOnlineGeral() {
     b.style.left = reg.x / W * 100 + '%';
     b.style.top = reg.y / H * 100 + '%';
     b.setAttribute('aria-label', `${lista.length} colega${lista.length > 1 ? 's' : ''} online no mapa ${n}`);
-    b.innerHTML = lista.slice(0, 3).map(r => `<span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(petAtual(r.pet), r.pet_tinta)}</span>`).join('') +
+    b.innerHTML = lista.slice(0, 3).map(r => `<span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(petAtual(r.pet), r.pet_tinta, r.pet_forma)}</span>`).join('') +
       (lista.length > 3 ? `<span class="jr-rosto-mais">+${lista.length - 3}</span>` : '');
     pintarRostos(b);
     cont.appendChild(b);
@@ -3536,7 +3639,7 @@ function abrirListaOnline(n) {
   const reg = D.geral.regioes.find(r => r.mapa === n);
   $('online-titulo').textContent = `${n}. ${reg?.nome || ''}`;
   $('online-itens').innerHTML = lista.map(r => `
-    <li><span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(petAtual(r.pet), r.pet_tinta)}</span>
+    <li><span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(petAtual(r.pet), r.pet_tinta, r.pet_forma)}</span>
       <span class="jr-online-nome">${nomeT(r.uid, rotuloColega(r.uid, r), r)}</span>
       <span class="jr-online-det">${esc(nomeVisivel(r.turma))}${petValido(petAtual(r.pet)) ? ' · ' + esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[petAtual(r.pet)]) : ''} · ${r.local === 'ginasio' ? 'no ginásio' : 'no mapa'}</span>
       ${botaoChamar(r)}</li>`).join('')
@@ -3626,7 +3729,7 @@ function renderListaTodos() {
 }
 function linhaOnline(r) {
   const pet = petAtual(r.pet);
-  return `<li><span class="jr-rosto">${rostoPet(pet, r.pet_tinta)}</span>
+  return `<li><span class="jr-rosto">${rostoPet(pet, r.pet_tinta, r.pet_forma)}</span>
     <span class="jr-online-nome">${nomeT(r.uid, rotuloColega(r.uid, r), r)}</span>
     <span class="jr-online-det">${esc(nomeVisivel(r.turma))}${petValido(pet) ? ' · ' + esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[pet]) : ''} · ${esc(lugarDe(r))}</span>
     ${botaoOnline(r)}${casaPub(r.uid) ? `<button class="jr-online-acao" data-visitar-online="${esc(r.uid)}">🏠 Visitar</button>` : ''}</li>`;

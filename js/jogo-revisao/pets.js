@@ -13,9 +13,32 @@ const BASE = '/img/jogo/';
 let SPR = null;
 
 export async function carregarSprites() {
-  if (!SPR) SPR = await fetch(BASE + 'pets/sprites.json').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); });
+  if (!SPR) {
+    const [j, cores] = await Promise.all([
+      fetch(BASE + 'pets/sprites.json').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),
+      fetch(BASE + 'pets/sprites-pets-cores.json').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
+    ]);
+    for (const [f, a] of Object.entries(cores?.pets || {})) if (petDaCor(f) && !j.pets[f]) j.pets[f] = a;
+    // a forma colorida usa as sequências do pet (o sprites-pets-cores.json só tem as animações)
+    for (const f of Object.keys(j.pets)) { const p = petDaCor(f); if (p && j.sequencias?.[p] && !j.sequencias[f]) j.sequencias[f] = j.sequencias[p]; }
+    SPR = j;
+  }
   return SPR;
 }
+
+// 🎨 Cores dos pets (PROMPT-170, sprites-pets-cores.json): a forma {pet}_{cor} é só visual (mesmos nomes de arquivo, já
+// pintados); o pet continua o mesmo (falas, comidas, truques, lealdade) e o tamanho, a distância, as sequências e as ações
+// são os do pet de base. Uma cor só vale se a forma existir no JSON (o morcego entra aqui quando chegarem as imagens dele).
+const CORES_TODAS = ['marrom', 'cinza', 'branco', 'roxo', 'azul', 'rosa', 'verde', 'dourado', 'preto'];
+export const CORES_PET = {
+  elefante: CORES_TODAS, gato: CORES_TODAS, tigre: CORES_TODAS, unicornio: CORES_TODAS, capivara: CORES_TODAS,
+  gaviao: CORES_TODAS.filter(c => c !== 'cinza'),
+  axolote: CORES_TODAS.filter(c => c !== 'rosa'),
+};
+export const NOME_COR_PET = { marrom: 'Marrom', cinza: 'Cinza', branco: 'Branco', roxo: 'Roxo', azul: 'Azul', rosa: 'Rosa', verde: 'Verde', dourado: 'Dourado', preto: 'Preto' };
+// gato_azul → 'gato'; o resto (gato, dragao_azul, dragao_vermelho_sombra…) → null
+export const petDaCor = (forma) => { const m = /^([a-z]+)_([a-z]+)$/.exec(forma || ''); return m && CORES_PET[m[1]]?.includes(m[2]) ? m[1] : null; };
+export const coresDoPet = (pet) => (CORES_PET[pet] || []).filter(c => SPR?.pets?.[`${pet}_${c}`]);
 
 // Pet salvo que não existe mais (ex.: cachorro, porco) conta como "sem pet"
 export const petValido = (p) => !!(p && PETS.includes(p) && SPR?.pets?.[p]);
@@ -32,6 +55,7 @@ export const coresDragao = () => SPR?.cores || {};
 export const aceitaCor = (pet) => /^dragao_vermelho$/.test(pet || '');   // PROMPT-129: cores especiais só no dragão vermelho
 export const ehFormaAdulta = (forma) => /_adulto$/.test(forma || '');
 export function formaComCor(forma, cor) {
+  if (cor && CORES_PET[forma]?.includes(cor) && SPR?.pets?.[`${forma}_${cor}`]) return `${forma}_${cor}`;   // 🎨 PROMPT-170
   if (!cor || !coresDragao()[cor] || !/^dragao_(azul|vermelho)(_adulto)?$/.test(forma || '')) return forma;
   const adulto = ehFormaAdulta(forma) ? '_adulto' : '';
   const f = /^dragao_vermelho/.test(forma) ? `dragao_vermelho_${cor}${adulto}` : `dragao_${cor}${adulto}`;
@@ -39,9 +63,10 @@ export function formaComCor(forma, cor) {
   const antiga = `dragao_${cor}${adulto}`;   // sprites.json sem as formas do vermelho colorido: o nome antigo
   return SPR?.pets?.[antiga] ? antiga : forma;
 }
-// forma recebida de fora (colegas online): só vale o próprio pet, a forma adulta dele ou (dragão) uma das cores
+// forma recebida de fora (colegas online): só vale o próprio pet, a forma adulta dele ou uma das cores (dragão e pets)
 export function formaValida(pet, forma) {
   if (!forma || forma === pet) return pet;
+  if (petDaCor(forma) === pet && SPR?.pets?.[forma]) return forma;
   if (forma === formaAdulta(pet)) return forma;
   if (aceitaCor(pet)) for (const cor of Object.keys(coresDragao())) if (forma === formaComCor(pet, cor) || forma === formaComCor(formaAdulta(pet), cor)) return forma;
   return pet;
