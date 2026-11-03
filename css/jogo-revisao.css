@@ -935,6 +935,17 @@ html.jr-deitado #pet-escolha-cancelar { min-height: 32px; padding: 3px 16px; }
   display: flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1;
   background: #1a1d2e; border: 1px solid rgba(255,255,255,.3); filter: grayscale(1); opacity: .7; }
 .jr-mp-marca.ok { filter: none; opacity: 1; border-color: var(--jr-ouro); }
+/* ✨ evolução (PROMPT-173): marcador no 100 ("vira adulto") e o selo embaixo do nome */
+.jr-mp-marca.evo { filter: none; opacity: 1; border-color: var(--jr-ouro); background: #3a2d0a; box-shadow: 0 0 6px rgba(255,215,0,.55); }
+.mp-evo { display: flex; align-items: center; gap: 8px; align-self: flex-start; margin: 2px 0 4px; padding: 4px 12px 4px 6px; border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,215,0,.22), rgba(124,92,252,.18)); border: 1px solid rgba(255,215,0,.6);
+  font: 700 13px/1.2 'Inter', sans-serif; color: #ffe9a8; }
+.mp-evo[hidden] { display: none; }
+.mp-evo img { height: 34px; width: auto; filter: brightness(0) drop-shadow(0 0 1px rgba(255,255,255,.5)); opacity: .85; }
+.mp-evo b { color: #fff; }
+.mp-evo.adulto { padding: 3px 12px; font-size: 13px; }
+html.jr-deitado .mp-evo { font-size: 11.5px; padding: 2px 10px 2px 4px; margin: 0 0 2px; }
+html.jr-deitado .mp-evo img { height: 24px; }
 .jr-mp-legenda { margin-top: 3px; font-family: 'Inter', sans-serif; font-size: 11.5px; line-height: 1.25; color: #c9cde0; }
 html.jr-deitado .jr-mp-legenda { font-size: 10.5px; }
 
@@ -3267,8 +3278,6 @@ html.jr-deitado .rl-caixa { gap: 7px; padding: 10px 14px; }
 .pres-lista li small { display: block; margin-top: 2px; color: #ffd27a; font-weight: 700; }
 #jr-app .pres-lista img.jr-item-img { height: 36px; width: auto; flex: none; }
 .pres-lista .jr-item-emoji { font-size: 30px; flex: none; }
-.mp-presentes { font: 700 13px 'Inter', sans-serif; color: #ffd27a; }
-.mp-presentes:empty { display: none; }
 
 /* ============================================================
    🌧️ CLIMA (PROMPT-104): html.cl-{sol|nublado|chuva|vento|calor}; só no exterior (#tela-cena.dn-ativo, como o dia e noite) e no
@@ -3783,6 +3792,17 @@ html.jr-deitado .tut-botoes .jr-btn { min-width: 120px; padding-top: 6px; paddin
 .cfg-pres li em { font: 700 11px 'Orbitron', sans-serif; color: #9aa0c0; font-style: normal; }
 .cfg-pres .jr-item-img, .cfg-pres .jr-item-peixe { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; }
 .cfg-vazio { font: 500 14px 'Inter', sans-serif; color: #c9cde0; margin: 12px 0; }
+/* 🧪 PROMPT-173: professora zera um ginásio (grade 1A … 13B e a confirmação) */
+.cfg-zerar { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 6px; }
+.cfg-zerar-gin { display: flex; flex-direction: column; align-items: center; padding: 6px 0; border-radius: 10px; cursor: pointer;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); color: #eef0fa; font: 700 15px 'Orbitron', sans-serif; }
+.cfg-zerar-gin small { min-height: 15px; font-size: 12px; }
+.cfg-zerar-gin.feito { border-color: rgba(255,215,0,.5); }
+.cfg-zerar-gin:hover { background: rgba(124,92,252,.14); border-color: rgba(124,92,252,.4); }
+.cfg-zerar-perg { font: 700 16px 'Inter', sans-serif; color: #eef0fa; margin: 14px 0 6px; }
+.cfg-zerar-bts { display: flex; gap: 10px; justify-content: center; }
+html.jr-deitado .cfg-zerar { grid-template-columns: repeat(9, 1fr); gap: 4px; }
+html.jr-deitado .cfg-zerar-gin { padding: 3px 0; font-size: 13px; }
 html.jr-deitado .cfg-caixa { max-width: 640px; }
 html.jr-deitado .cfg-tit { font-size: 19px; }
 html.jr-deitado .cfg-lista { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 8px; }
@@ -3841,32 +3861,14 @@ html.jr-deitado #jr-app .pf-ins img { width: 26px; height: 26px; }
 .tut-alvo.dentro b { top: -62px; }
 @keyframes tutPulsa { 0% { transform: scale(.75); opacity: 1; } 100% { transform: scale(1.35); opacity: .25; } }
 @keyframes tutSeta { from { transform: translateY(0); } to { transform: translateY(7px); } }
-.tut-linha { display: flex; align-items: flex-end; justify-content: center; gap: 10px; }
-#jr-app .tut-ins { height: 62px; width: auto; }
-.tut-grande figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.tut-grande figcaption { font: 700 13px 'Inter', sans-serif; color: #e6e8f5; }
-#jr-app .tut-grande .tut-ins { height: 112px; }
 .tut-nota { display: flex; width: 86%; height: 26px; border-radius: 8px; overflow: hidden; font: 800 12.5px 'Inter', sans-serif; color: #10121f; }
 .tut-nota span { min-width: 46px; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
 .tut-nota-ins { background: var(--jr-ouro); }
 .tut-nota-xp { background: var(--jr-ciano, #00d4ff); }
 .tut-nota-total { font: 700 15px 'Orbitron', sans-serif; color: #e6e8f5; }
 .tut-nota-total b { color: var(--jr-ouro); font-size: 20px; }
-.tut-onde { display: flex; align-items: center; gap: 12px; }
-.tut-botao-topo { position: relative; padding: 8px; border-radius: 12px; background: rgba(0,0,0,.35); }
-#jr-app .tut-botao-topo img { display: block; width: 58px; height: 58px; }
 .tut-seta-lado { font-size: 26px; color: var(--jr-ouro); }
-.tut-estojo { position: relative; width: 52%; }
-#jr-app .tut-estojo > img { display: block; width: 100%; height: auto; }
-.tut-estojo-ins { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 6%; }
-#jr-app .tut-estojo-ins .tut-ins { height: 42%; }
 .tut-bolinhas-perg { position: absolute; left: 50%; top: 6%; transform: translateX(-50%); padding: 5px 9px; border-radius: 99px; background: rgba(10,11,24,.75); }
-.tut-colecao { display: flex; align-items: flex-end; justify-content: center; gap: 6px; flex-wrap: wrap; }
-.tut-carta { display: flex; flex-direction: column; align-items: center; padding: 4px 6px 6px; border-radius: 10px; background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.12); font: 700 11.5px 'Inter', sans-serif; color: #c9cce0; }
-.tut-carta.meu { border-color: var(--jr-ouro); color: var(--jr-ouro); }
-#jr-app .tut-carta img { height: 70px; width: auto; }
-#jr-app .tut-carta.meu img { height: 92px; }
 #jr-app img.tut-silhueta { filter: brightness(0) opacity(.45); }
 .tut-comida { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 4px; }
 #jr-app .tut-comida .tut-pet-cena { height: 128px; width: auto; }
@@ -3900,7 +3902,45 @@ html.jr-deitado #jr-app .pf-ins img { width: 26px; height: 26px; }
 .tut-extra b { color: var(--jr-ouro); }
 /* deitado: a cena cabe na altura do jogo */
 html.jr-deitado .tut-cena { width: min(100%, calc(var(--jr-alt, 100dvh) * .42 * 16 / 9)); margin: 0 auto; }
-html.jr-deitado #jr-app .tut-grande .tut-ins { height: calc(var(--jr-alt, 100dvh) * .2); }
-html.jr-deitado #jr-app .tut-carta img { height: calc(var(--jr-alt, 100dvh) * .13); }
-html.jr-deitado #jr-app .tut-carta.meu img, html.jr-deitado #jr-app .tut-comida .tut-pet-cena { height: calc(var(--jr-alt, 100dvh) * .18); }
+html.jr-deitado #jr-app .tut-comida .tut-pet-cena { height: calc(var(--jr-alt, 100dvh) * .18); }
 html.jr-deitado .tut-extra { font-size: 11px; padding: 2px 6px; }
+
+/* 📖 PROMPT-172: o pet do tutorial só pisca (sem quadro de olhos fechados, respira); a cena mede em cqw */
+.tut-cena { container-type: inline-size; }
+.tut-respira { transform-origin: 50% 100%; animation: tutRespira 3s ease-in-out infinite alternate; }
+@keyframes tutRespira { from { scale: 1; } to { scale: 1.02; } }
+@media (prefers-reduced-motion: reduce) { .tut-respira { animation: none; } }
+/* pedaços de telas de verdade (estojo, mural) no tamanho do jogo, reduzidos para caber no .tut-slot (encaixarTut) */
+.tut-slot { position: relative; width: 100%; overflow: hidden; }
+.tut-slot-pedras { height: 50%; }
+.tut-slot-pedras.grande { height: 72%; }
+.tut-slot-cheio { height: 100%; }
+.tut-cena .tut-tela { position: absolute; left: 0; top: 0; width: max-content; height: max-content; transform-origin: 0 0; pointer-events: none; }
+.tut-cena .jr-estojo.tut-tela { inset: auto; left: 0; top: 0; z-index: auto; overflow: visible; background: none; }
+.tut-cena .tut-tela:not(.so-pedras) .ins-page { width: 760px; }
+.tut-cena .tut-tela .ins-cap-pedras { flex-wrap: nowrap; }
+#jr-app .tut-cena .tut-tela .ins-page { min-height: 0; padding: 36px 16px 14px; border-radius: 14px; }
+#jr-app .tut-cena .tut-tela.so-pedras .ins-page { padding: 0; background: none; overflow: visible; }
+.tut-cena .tut-tela .ins-cap { margin: 0; }
+/* no tutorial o estojo é sempre o do computador (o encaixarTut reduz): sem as regras de celular em pé / deitado */
+#jr-app .tut-cena .tut-tela .ins-cap-tag { top: -26px; padding: 12px 52px 12px 24px; gap: 12px; font-size: 30px; }
+#jr-app .tut-cena .tut-tela .ins-cap-moldura { grid-template-columns: 170px 1fr; min-height: 220px; padding: 30px 14px 14px; }
+#jr-app .tut-cena .tut-tela .ins-cap-num { margin: 0 14px 0 0; height: auto; font-size: 90px; }
+#jr-app .tut-cena .tut-tela .ins-cap-pedras { gap: 36px; padding: 18px; }
+#jr-app .tut-cena .tut-tela .insignia { width: 150px; }
+#jr-app .tut-cena .tut-tela .insignia.bloqueada::after { font-size: 38px; }
+#jr-app .tut-cena .tut-tela .ins-estrela { font-size: 30px; }
+.tut-cena .tut-mural .ml-caixa { width: 640px; }
+.tut-onde { display: flex; align-items: center; gap: 2cqw; width: 100%; height: 100%; }
+.tut-bt-estojo { display: inline-block; margin-left: 3cqw; flex: none; }
+.tut-slot-estojo { flex: 1; height: 100%; }
+.tut-legendas { display: flex; justify-content: center; gap: 20cqw; font: 700 max(11px, 2.6cqw) 'Inter', sans-serif; color: #e6e8f5; }
+/* 🐾 todos os pets, com a etapa (e o ginásio, se couber); os 3 iniciais com borda dourada; os que faltam em silhueta */
+.tut-cena.lisa.tut-lisa-pets { padding: 1.4cqw; }
+.tut-todos { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1cqw; width: 100%; }
+.tut-carta { display: flex; flex-direction: column; align-items: center; min-width: 0; padding: .6cqw .6cqw .8cqw; border-radius: 10px; background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12); color: #c9cce0; }
+.tut-carta.inicial { border: 2px solid var(--jr-ouro); box-shadow: 0 0 8px rgba(255,215,0,.35); }
+#jr-app .tut-carta img { height: 13cqw; width: auto; max-width: 100%; object-fit: contain; }
+.tut-carta b { font: 700 max(10px, 2.3cqw) 'Inter', sans-serif; color: #e6e8f5; }
+.tut-carta small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 max(9px, 1.9cqw) 'Inter', sans-serif; color: var(--jr-ouro); }

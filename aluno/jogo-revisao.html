@@ -943,6 +943,8 @@
           <div class="jr-moedas jr-mp-moedas" aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span id="mp-moedas">0</span></div>
           <button class="bt-lista-x jr-mp-x" id="mp-fechar" aria-label="Fechar">✕</button>
         </div>
+        <!-- ✨ evolução (PROMPT-173): "Com lealdade 100, {nome} vira adulto!" com o adulto em silhueta; depois, "✨ Adulto" -->
+        <div class="mp-evo" id="mp-evo" hidden></div>
         <div class="jr-mp-balao" id="mp-balao" hidden></div>
         <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Barriga</span><span id="mp-barriga-rot"></span></div><div class="jr-mp-trilho"><div class="jr-mp-fill" id="mp-barriga-fill"></div></div></div>
         <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Lealdade</span><span id="mp-lealdade-rot"></span></div>
@@ -951,6 +953,7 @@
             <span class="jr-mp-marca" id="mp-marca-conversa" title="Conversa">💬</span>
             <span class="jr-mp-marca" id="mp-marca-ajuda" title="Dica nos ginásios">💡</span>
             <span class="jr-mp-marca" id="mp-marca-elimina" title="Elimina uma opção">❌</span>
+            <span class="jr-mp-marca evo" id="mp-marca-adulto" title="Vira adulto" hidden>✨</span>
           </div>
           <div class="jr-mp-marco"><span id="mp-marco"></span><button class="jr-mp-info-btn" id="mp-info" title="Como a lealdade funciona" aria-label="Como a lealdade funciona">ⓘ</button>
             <div class="jr-mp-info-balao" id="mp-info-balao" hidden></div></div>
@@ -961,7 +964,6 @@
           <button class="jr-btn mp-treino" id="mp-treino">🎯 Treino de hoje</button>
           <button class="jr-btn mp-exp-btn" id="mp-exp">🧭 Expedição</button>
         </div>
-        <div class="mp-presentes" id="mp-presentes"></div>
         <div class="jr-mp-botoes jr-mp-principais">
           <button class="jr-btn" id="mp-bolsa"><img class="jr-item-img jr-ic-btn" data-icone="bolsa" alt="🎒" draggable="false"/> Bolsa</button>
           <button class="jr-btn" id="mp-carinho">💜 Carinho</button>

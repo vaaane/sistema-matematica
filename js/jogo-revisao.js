@@ -435,6 +435,7 @@ async function carregarEstado() {
         if (x?.vencido) g[p] = { vencido: true, acertosPrimeira: x.acertos_primeira || 0, total: x.total || 0, data: x.data || null };
       }
       g.primeiraTentativa = Number(gs?.primeira_tentativa) || null;   // 1ª luta com o líder (PROMPT-97, painel "Travados")
+      g.zerado = !!gs?.zerado;   // 🧪 professora zerou este ginásio (PROMPT-173): o pet dele só volta vencendo o líder
     }
     for (const [chave, ins] of Object.entries(v.insignias || {})) {
       const g = estado.ginasios[chave];
@@ -778,7 +779,7 @@ const mapaConcluido  = (n) => estado.ginasios[chaveGinasio(n, 'A')].lider.vencid
 // quando todos os anteriores têm o líder vencido. Mapa liberado pela professora (mapas_abertos) recomeça a
 // contagem nele; ginásio em que o aluno já venceu alguém continua aberto (não tranca progresso antigo).
 function ginasioPendenteAntes(n, G) {
-  if (modoDev) return null;
+  if (modoDev || ehProfessora()) return null;   // 🔓 conta da professora: todos os ginásios abertos (PROMPT-173)
   const g = estado.ginasios[chaveGinasio(n, G)];
   if (['treinador1', 'treinador2', 'treinador3', 'lider'].some(p => g[p].vencido)) return null;
   let ini = 1;
@@ -1103,6 +1104,7 @@ function confirmarPersonagem() {
     if (!$('pergunta').hidden) $('perg-jog').src = urlQuadro('direita', -1);
   }
   if (!pers.primeira) tocar('porta');
+  setTimeout(verificarTutorial, 800);   // 📖 aluno novo: o tutorial logo depois do personagem (PROMPT-172)
 }
 
 // ============================================================
@@ -1185,7 +1187,10 @@ function iniciarPet() {
 function liberarPetsProfessora(ps) {
   if (!ehProfessora()) return;
   const patch = {};
+  // ginásio zerado (🧪 PROMPT-173) e líder ainda não vencido: o pet dele fica de fora, para aparecer de novo ao vencer
+  const zerado = (p) => Object.entries(PETS_GINASIO).some(([k, x]) => x === p && estado.ginasios[k]?.zerado && !estado.ginasios[k].lider.vencido);
   for (const p of PETS.filter(petValido)) {
+    if (!ps.conquistados[p] && zerado(p)) continue;
     const evoluido = formaAdulta(p) ? { evoluido: true } : {};
     if (!ps.conquistados[p]) { ps.conquistados[p] = { data: Date.now(), origem: 'professora', ...cuidadosNovos(), ...evoluido }; patch[`pets/conquistados/${p}`] = ps.conquistados[p]; }
     else if (evoluido.evoluido && !ps.conquistados[p].evoluido) { ps.conquistados[p].evoluido = true; patch[`pets/conquistados/${p}/evoluido`] = true; }
@@ -1239,6 +1244,7 @@ function migrarMorcego(ps) {
 
 // Ainda sem nenhum pet: pede a escolha do inicial ao entrar num mapa da região
 function pedirPetSeFaltar() {
+  if (tutorialPendente() || !$('tutorial').hidden) return;   // 📖 o tutorial vem antes (PROMPT-172); no fim ele chama de novo
   if (seguidor && !Object.keys(estado.pets.conquistados).length && $('pet-escolha').hidden && $('pers-escolha').hidden) abrirEscolhaPet();
 }
 
@@ -1282,7 +1288,6 @@ function escolherPet(pet) {
   usarPet(pet);
   $('pet-escolha').hidden = true;
   tocar('vitoria');
-  setTimeout(verificarTutorial, 1500);   // 📖 o pet já existe para apresentar (PROMPT-166)
 }
 
 // Troca o pet que segue o personagem (aparece em x, y — por padrão junto do personagem)
@@ -1492,7 +1497,7 @@ function entregarPetsGinasio() {
 }
 function mostrarPetEntregue() {
   if (petEntregue || !filaPetsEntregues.length) return;
-  const tutorialVem = !estado.avisos?.tutorial && petValido(estado.pets?.ativo) && entregaRetroativa();   // o tutorial ainda vai abrir: ele primeiro
+  const tutorialVem = tutorialPendente() && entregaRetroativa();   // o tutorial ainda vai abrir: ele primeiro
   if (tutorialVem || !$('tutorial').hidden || sobreposicaoAberta() || perguntaAberta || transicionando) { setTimeout(mostrarPetEntregue, 1500); return; }
   const { pet, chave } = filaPetsEntregues.shift();
   const [n, G] = chave.replace('mapa', '').split('-'), gin = D.questoes[Number(n)]?.ginasios?.[G]?.nome || chave;
@@ -1827,7 +1832,7 @@ function renderMeuPet() {
   // uma linha só: o próximo marco ainda não alcançado (os números são os do jogo: falas, dica, eliminar, cambalhota, amizade)
   // (dois marcos no mesmo número: vale o primeiro; o outro está no ⓘ)
   const marcos = [[lc, 'começa a conversar 💬'], [ld, 'dá dicas nos ginásios 💡'], [le, 'elimina uma opção nos ginásios ❌'],
-    [LEALDADE_CAMBALHOTA, 'aprende a cambalhota 🤸'], [100, formaAdulta(pet) && !c.evoluido ? 'começa a amizade ❤️ e vira adulto ✨' : 'começa a amizade ❤️'],
+    [LEALDADE_CAMBALHOTA, 'aprende a cambalhota 🤸'], [100, formaAdulta(pet) && !c.evoluido ? 'vira adulto ✨ e começa a amizade ❤️' : 'começa a amizade ❤️'],
     ...(truquesDe(pet) || []).filter(t => t.lealdade > 0).map(t => [t.lealdade, `aprende o truque ${t.nome} ${t.emoji}`])]
     .filter(([v], i, t) => t.findIndex(([w]) => w === v) === i).sort((a, b) => a[0] - b[0]);
   const prox = marcos.find(([v]) => l < v);
@@ -1838,8 +1843,16 @@ function renderMeuPet() {
     <b>Marcos</b> Com ${lc}, ${esc(nomePet(pet))} começa a conversar${LEALDADE_CAMBALHOTA === lc ? ' e aprende a cambalhota' : ''}.${LEALDADE_CAMBALHOTA !== lc ? ` Com ${LEALDADE_CAMBALHOTA}, aprende a cambalhota.` : ''} Com ${ld}, dá dicas nos ginásios; com ${le}, elimina uma opção.${formaAdulta(pet) ? ` Com 100 de lealdade, ${esc(nomePet(pet))} vira adulto!` : ''}
     Acima de 100, cada ${pp} pontos sobem um nível de amizade ❤️ (moldura de prata no 2, corações ao seguir no 3, moldura dourada no 5, coroa no 10).${truquesDe(pet) ? `
     <b>Truques ✨</b> ${truquesDe(pet).map(t => `${t.emoji} ${esc(t.nome)} ${t.lealdade > 0 ? t.lealdade : '(desde o início)'}`).join(' · ')}.` : ''}`;
+  // ✨ evolução (PROMPT-173): ✨ no 100 da barra e o selo embaixo do nome, só nos pets com forma adulta (sprites.json → evolucao)
+  const adulto = formaAdulta(pet), evoluiu = !!c.evoluido;
+  $('mp-marca-adulto').hidden = !adulto || evoluiu;
+  $('mp-marca-adulto').style.left = LEALDADE_EVOLUCAO + '%';
+  $('mp-marca-adulto').classList.toggle('ok', l >= LEALDADE_EVOLUCAO);
+  $('mp-evo').hidden = !adulto;
+  $('mp-evo').classList.toggle('adulto', evoluiu);
+  if (adulto) $('mp-evo').innerHTML = evoluiu ? '✨ Adulto'
+    : `<img src="${quadrosDe(adulto, 'sentado_girando')[0]}" alt="" draggable="false"/><span>✨ Com lealdade 100, <b>${esc(nomePet(pet))}</b> vira adulto!</span>`;
   atualizarBotaoTreino();
-  $('mp-presentes').textContent = estado.presentesRecebidos ? `🎁 Presentes recebidos: ${estado.presentesRecebidos}` : '';
   pintarExpMeuPet();
   pintarChapeuMeuPet();
   $('mp-bolsa').innerHTML = `${imgItem(icone('bolsa'), '🎒', 'jr-ic-btn')} Bolsa (${Object.values(estado.pets.bolsa || {}).reduce((a, n) => a + (Number(n) || 0), 0)})`;
@@ -2170,7 +2183,7 @@ function migrarTintas(ps) {
   if (primeira && ganhou.size) setTimeout(avisarTintasViraramCores, 4000);
 }
 function avisarTintasViraramCores() {   // depois do tutorial (e do cartão de pet entregue)
-  const tutorialVem = !estado.avisos?.tutorial && petValido(estado.pets?.ativo);
+  const tutorialVem = tutorialPendente();
   if (tutorialVem || !$('tutorial').hidden || petEntregue) { setTimeout(avisarTintasViraramCores, 2000); return; }
   avisoPet('🎨 Suas tintas viraram cores novas para os seus pets!', true);
 }
@@ -5315,7 +5328,7 @@ function loop(t) {
   ultimoT = t;
   atualizarMeuPet(dt);
   pgPet?.atualizar(dt);
-  tut?.pet.atualizar(dt);
+  tut?.pet.atualizar(dt);   // 😌 só pisca (PROMPT-172)
   for (const a of tut?.cena || []) a.atualizar(dt);
   petEntregue?.anim.atualizar(dt);
   atualizarBotaoConfig();
@@ -6067,7 +6080,7 @@ function alvoNoInterior() {
   for (const p of PERSONAGENS) {
     if (Math.abs(jog.x - xDoPersonagem(p)) >= 30) continue;
     if (p === 'lider' && g.lider.vencido) return { id: 'revanche', texto: '⚔ Revanche', acao: () => $('btn-revanche').click() };
-    if (g[p].vencido) continue;
+    if (g[p].vencido && !ehProfessora()) continue;
     const quem = p === 'lider' ? 'o líder' : `o treinador ${p.slice(-1)}`;
     return { id: 'npc-' + p, texto: `⚔ Desafiar ${quem}`, acao: () => desafiar(p) };
   }
@@ -6166,13 +6179,14 @@ function atualizarNpcs() {
   const g = estado.ginasios[cena.chave];
   const prox = proximoDesafio(g);
   const iProx = prox ? PERSONAGENS.indexOf(prox) : -1;
+  const livre = ehProfessora();   // 🔓 professora: qualquer treinador, o líder e a revanche, em qualquer ordem (a seta é só dica)
   for (const el of document.querySelectorAll('#cena-atores .jr-npc')) {
     const p = el.dataset.p, i = PERSONAGENS.indexOf(p);
     el.classList.toggle('vencido', g[p].vencido);
     el.classList.toggle('proximo', p === prox);
-    el.classList.toggle('bloqueado', !g[p].vencido && iProx >= 0 && i > iProx);   // vem depois do próximo
+    el.classList.toggle('bloqueado', !livre && !g[p].vencido && iProx >= 0 && i > iProx);   // vem depois do próximo
   }
-  $('btn-revanche').hidden = !g.lider.vencido;
+  $('btn-revanche').hidden = !g.lider.vencido && !livre;
   $('btn-revanche').classList.toggle('pulsa', prox === 'revanche');
   // setinha dourada acima do próximo personagem (mesmas coordenadas da imagem dos .jr-npc)
   let seta = document.querySelector('#cena-atores .jr-seta');
@@ -6250,8 +6264,9 @@ function verificarSaiuGin() {
 function desafiar(p) {
   const g = estado.ginasios[cena.chave];
   const idx = PERSONAGENS.indexOf(p);
-  if (idx > 0 && !g[PERSONAGENS[idx - 1]].vencido) { avisar('Vença o treinador anterior primeiro!', p); return; }
-  if (g[p].vencido) {
+  const livre = ehProfessora();   // 🔓 professora: enfrenta quem quiser, quantas vezes quiser (PROMPT-173)
+  if (!livre && idx > 0 && !g[PERSONAGENS[idx - 1]].vencido) { avisar('Vença o treinador anterior primeiro!', p); return; }
+  if (!livre && g[p].vencido) {
     avisar(p === 'lider' ? 'Toque em “Revanche” para um novo desafio!' : 'Você já venceu este treinador!', p);
     return;
   }
@@ -7032,10 +7047,12 @@ function escolherModoDesafio(c) {
     <span class="jr-presente-lista"><button data-modo="contas">✖️ Contas</button>${PROG ? '<button data-modo="corrida">🤖 Corrida</button>' : ''}<button data-modo="damas">♟️ Damas</button></span></span>`;
   posicionarCartaoColega();
 }
+// 🔓 professora: todo desafio vale prêmio (sem limite do dia, PROMPT-173)
+const valeDesafio = (hoje, outro) => ehProfessora() || vale(estado.desafiosDia, hoje, outro);
 function confirmarDesafio(c, modo = 'contas') {
   if (!podeDesafiar()) return;
   if (modo === 'corrida' && petFora()) { fecharCartaoColega(); avisoPetFora(); return; }   // a corrida precisa do pet
-  if (modo === 'damas' || vale(estado.desafiosDia, diaLocal(), c.uid)) { escolherAposta(c, modo); return; }   // damas não tem prêmio: não precisa do aviso
+  if (modo === 'damas' || valeDesafio(diaLocal(), c.uid)) { escolherAposta(c, modo); return; }   // damas não tem prêmio: não precisa do aviso
   const el = $('colega-cartao');
   clearTimeout(cartaoColega.timer);
   cartaoColega.timer = setTimeout(fecharCartaoColega, 10000);
@@ -7065,7 +7082,7 @@ async function desafiarColega(c, modo = 'contas', aposta = 0) {
   aposta = apostasLigadas() && VALORES_APOSTA.includes(Number(aposta)) && Number(aposta) <= saldoMoedas() ? Number(aposta) : 0;
   const C = cfgDesafio(), base = basePraca();
   const id = push(ref(db, `${base}/duelos`)).key;
-  const eu = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), vencidos: vencidosMeus(), premio: vale(estado.desafiosDia, diaLocal(), c.uid), ...dadosCorrida() };
+  const eu = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), vencidos: vencidosMeus(), premio: valeDesafio(diaLocal(), c.uid), ...dadosCorrida() };
   const nomeOutro = nomeCurto(c.uid, c.reg?.apelido);
   try {
     const m = modo === 'corrida' || modo === 'damas' ? modo : 'contas';
@@ -7092,7 +7109,7 @@ async function receberConvite(cv) {
     remove(ref(db, `${basePraca()}/convites/${sessao.uid}`)).catch(() => {});
     return;
   }
-  const premio = vale(estado.desafiosDia, diaLocal(), cv.de);
+  const premio = valeDesafio(diaLocal(), cv.de);
   const aposta = Number(cv.aposta) || 0;
   convite = { ...cv, premio, aposta, etapa: 'convite' };
   const quem = `<b>${nomeT(cv.de, nomeCurto(cv.de, cv.de_nome))}</b>`, valendo = aposta ? ` valendo <b>${aposta} 🪙</b>` : '';
@@ -7461,7 +7478,7 @@ function aplicarFimDuelo(d) {
   const eu = sessao.uid, outro = du.outro.uid, f = d.fim;
   const res = f.vencedor === 'empate' ? 'empate' : f.vencedor === eu ? 'venceu' : 'perdeu';
   const ganhas = Number(f.placar?.[eu]) || 0;
-  const hoje = diaLocal(), valeu = !!du.eu.premio && vale(estado.desafiosDia, hoje, outro);
+  const hoje = diaLocal(), valeu = !!du.eu.premio && valeDesafio(hoje, outro);
   const pd0 = premioDesafio(res, ganhas), moedas = comMult(pd0.moedas), pontos = pd0.pontos;
   const patch = {};
   for (const [i, r] of Object.entries(d.rodadas || {})) {   // cada rodada nas respostas (relatórios da professora)
@@ -7713,7 +7730,7 @@ function moedasDamasCpu(nivel) {
   const n = MOEDAS_DAMAS_CPU[nivel] || 0;
   if (!n || !carregouProgresso || !estado?.pets) return '';
   const hoje = diaLocal(), dia = estado.damasCpuDia?.data === hoje ? estado.damasCpuDia : { data: hoje, n: 0 };
-  if ((Number(dia.n) || 0) >= VITORIAS_DAMAS_CPU_DIA) return 'Vitória! (as moedas de hoje já foram)';
+  if (!ehProfessora() && (Number(dia.n) || 0) >= VITORIAS_DAMAS_CPU_DIA) return 'Vitória! (as moedas de hoje já foram)';
   estado.damasCpuDia = { data: hoje, n: (Number(dia.n) || 0) + 1 };
   estado.pets.moedas = saldoMoedas() + n;
   const patch = { damas_cpu_dia: estado.damasCpuDia, 'pets/moedas': estado.pets.moedas };
@@ -9089,7 +9106,7 @@ function taxaFliperama() {
 // Fim de partida (postMessage do jogo): +1 moeda a cada 10 acertos somados no dia, até 10 por dia (× multiplicador, PROMPT-126)
 function premioFliperama(d) {
   if (!jogoEmbed || !carregouProgresso) return;
-  const hoje = diaLocal(), por = FLIPER.acertos_por_moeda ?? 10, lim = comMult(FLIPER.moedas_dia ?? 10);
+  const hoje = diaLocal(), por = FLIPER.acertos_por_moeda ?? 10, lim = ehProfessora() ? Infinity : comMult(FLIPER.moedas_dia ?? 10);   // 🔓 professora: sem teto
   const fd = estado.fliperDia?.data === hoje ? { ...estado.fliperDia } : { data: hoje, acertos: 0, moedas: 0 };
   const acertosPartida = Math.max(0, Math.min(500, Math.round(Number(d.acertos) || 0)));
   fd.acertos = (Number(fd.acertos) || 0) + acertosPartida;
@@ -11634,7 +11651,7 @@ function entregarAchado(a, onde, n, patch = {}) {
   missaoProgresso('cavar');   // montinho, tesouro ou mato
   const ps = estado.pets, cfg = cfgCavar(), cav = cavadosHoje();
   let icone = '', titulo = '', sub = '', raro = false, registro = null;
-  const moedasLivres = () => Math.max(0, comMult(cfg.moedas_cavar_dia ?? 15) - (Number(cav.moedas) || 0));
+  const moedasLivres = () => (ehProfessora() ? Infinity : Math.max(0, comMult(cfg.moedas_cavar_dia ?? 15) - (Number(cav.moedas) || 0)));   // 🔓 professora: sem teto
   const darMoedas = (q, semLimite = false) => { const g = semLimite ? q : Math.min(q, moedasLivres()); if (!semLimite) cav.moedas = (Number(cav.moedas) || 0) + g; ps.moedas = (Number(ps.moedas) || 0) + g; patch['pets/moedas'] = ps.moedas; registrarGanho(semLimite ? 'colecao' : 'cavar', g, patch); return g; };
   if (a.tipo === 'moedas') {
     const g = darMoedas(comMult(qtdDe(a.qtd)));
@@ -11762,7 +11779,9 @@ let btSel = null, btTimerLista = 0;   // treinador selecionado na lista
 // nome do aluno na batalha: apelido ativo ou o primeiro nome (professor/teste: "Você")
 const nomeAluno = () => nomeVisivel(apelidoAluno || String(sessao?.nome || '').split(' ')[0]) || 'Você';
 const podeBatalhar = () => petsOk && batalhasProntas() && carregouProgresso && !!estado?.pets?.ativo && !petFora();   // em expedição: como sem pet
-const desafioCom = (id) => desafioDe(estado.batalhas?.[id]);
+// 🔓 professora: treinador nunca descansa e prêmio sem teto do dia (PROMPT-173)
+const desafioCom = (id) => { const d = desafioDe(estado.batalhas?.[id]); if (ehProfessora()) d.descansa_ate = 0; return d; };
+const limitesBatalhaDia = () => (ehProfessora() ? {} : cfgBatalha().limites_dia || {});
 
 // Prêmios de batalha de hoje (zera quando muda o dia)
 function diaBatalhas() {
@@ -11783,7 +11802,7 @@ const faltaTexto = (ms) => {
 // Com fome não batalha: o pet fica triste e aparece o aviso
 function petComFomeParaBatalha() {
   const pet = estado.pets.ativo;
-  if (barrigaDe(pet) >= (cfgBatalha().barriga_minima ?? 25)) return false;
+  if (ehProfessora() || barrigaDe(pet) >= (cfgBatalha().barriga_minima ?? 25)) return false;   // 🔓 professora: batalha com qualquer barriga
   if (mp) { mp.anim.tocar('triste_fome'); setTimeout(() => { if (mp && !mp.ocupado) voltarAoNormal(); }, 1800); }
   else seguidor?.reagir('triste_fome', 2000);
   avisoPet(`${nomePet(pet)} está com fome. Dê comida antes de batalhar.`);
@@ -11803,7 +11822,7 @@ function abrirListaBatalha() {
 }
 
 function renderListaBatalha() {
-  const dia = diaBatalhas(), lim = cfgBatalha().limites_dia || {};
+  const dia = diaBatalhas(), lim = limitesBatalhaDia();
   $('bt-lista-dia').innerHTML = `prêmios de hoje ${dia.moedas}/${lim.moedas != null ? comMult(lim.moedas) : '∞'} ${moedaHtml()}`;
   const agora = Date.now(), ts = treinadores();
   if (!ts.some(t => t.id === btSel)) btSel = ts[0]?.id || null;
@@ -12346,7 +12365,7 @@ function btFim() {
   if (pr.lealdade) chips.push(`<span class="bt-premio le">+${Math.round(pr.lealdade * 10) / 10} lealdade</span>`);
   if (pr.bonusPrimeira) chips.push(`<span class="bt-premio mo">🏆 1ª vitória: +${pr.bonusPrimeira} ${moedaHtml()}</span>`);
   $('bt-premios').innerHTML = chips.join('') || '<span class="bt-premio">Sem prêmios</span>';
-  const dia = diaBatalhas(), lim = cfgBatalha().limites_dia || {};
+  const dia = diaBatalhas(), lim = limitesBatalhaDia();
   $('bt-fim-dia').innerHTML = (pr.cortado ? '<b>Limite de prêmios de hoje atingido — amanhã tem mais!</b>' : '') +
     `<span>Prêmios de batalha hoje: ${dia.moedas} / ${lim.moedas != null ? comMult(lim.moedas) : '∞'} moedas</span>`;
   $('bt-revanche').hidden = venceu;
@@ -12387,7 +12406,7 @@ function registrarBatalha(resultado) {
   if (resultado === 'venceu') { missaoProgresso('batalha'); ganharXPJogo(XP_JOGO.batalha, 'batalha'); }
   const dia = diaBatalhas();
   const c = cuidadosDe(pet);
-  const pr = premios(resultado, d, dia, c?.lealdade);
+  const pr = premios(resultado, d, ehProfessora() ? { moedas: 0, lealdade: 0, xp: 0 } : dia, c?.lealdade);
   const novo = depoisDaBatalha(d, resultado);
   (estado.batalhas ||= {})[t.id] = novo;
   dia.moedas += pr.moedas; dia.lealdade += pr.lealdade; dia.xp += pr.xp;
@@ -12629,7 +12648,7 @@ function falarCom(o, convite = false) {   // convite: tocou no Engrenaldo → pe
     const d = desafioCom(o.p.id);
     if (situacao(d) === 'descansando') aviso = `<div class="jr-pessoa-descansa">Estou descansando. Volta em ${Math.max(1, Math.ceil((d.descansa_ate - Date.now()) / 3600e3))} h!</div>`;
     else if (petsOk && batalhasProntas() && petFora()) aviso = `<div class="jr-pessoa-descansa">Seu pet está em expedição. 🧭</div>`;
-    else if (podeBatalhar() && barrigaDe(estado.pets.ativo) < (cfgBatalha().barriga_minima ?? 25)) { seguidor?.reagir('triste_fome', 2000); aviso = `<div class="jr-pessoa-descansa">${esc(nomePet(estado.pets.ativo))} está com fome. Dê comida antes de batalhar.</div>`; }
+    else if (podeBatalhar() && !ehProfessora() && barrigaDe(estado.pets.ativo) < (cfgBatalha().barriga_minima ?? 25)) { seguidor?.reagir('triste_fome', 2000); aviso = `<div class="jr-pessoa-descansa">${esc(nomePet(estado.pets.ativo))} está com fome. Dê comida antes de batalhar.</div>`; }
     else if (podeBatalhar()) botoes.push(`<button class="jr-btn ${ped ? '' : 'jr-btn-ouro'}" data-acao="batalhar">⚔️ Batalhar</button>`);
     else aviso = `<div class="jr-pessoa-descansa">${motivoSemBatalha()}</div>`;   // nunca um treinador sem botão e sem motivo (PROMPT-155)
   }
@@ -12762,8 +12781,10 @@ function abrirPedido(o) {
   $('pedido').hidden = false;
 }
 
+// 🔓 professora: o teto de moedas dos pedidos não conta (PROMPT-173)
+const diaMoedasPedidos = () => (ehProfessora() ? {} : diaPedidos());
 function atualizarPremioPedido() {
-  const dia = diaPedidos();
+  const dia = diaMoedasPedidos();
   $('pd-premio').innerHTML = limiteDoDiaAtingido(dia)
     ? 'Hoje você já ganhou o máximo de moedas com pedidos: esta ajuda vale um "obrigado"!'
     : pd.tentativa === 1 ? `Acertando de primeira: +${moedasDoPedido(1, dia)} ${moedaHtml()} · na 2ª tentativa: +${moedasDoPedido(2, dia)} ${moedaHtml()}`
@@ -12805,7 +12826,7 @@ function responderPedido() {
   const max = cfgPedidos().tentativas ?? 2;
   const certa = `${mostrarInteiro(p.resposta)}${p.unidade ? ' ' + esc(p.unidade) : ''}`;
   if (ok) {
-    const moedas = moedasDoPedido(pd.tentativa, diaPedidos());
+    const moedas = moedasDoPedido(pd.tentativa, diaMoedasPedidos());
     finalizarPedido('acertou', moedas, patch);
     missaoProgresso('ajudar');
     tocar('acerto');
@@ -13822,6 +13843,7 @@ function vencer() {
   const acertosPrimeira = total - pg.errouIds.size;
   const antes = g[p];
   const primeiraVez = !antes.vencido;
+  const petFixo = PETS_GINASIO[chave] !== 'inicial' ? PETS_GINASIO[chave] : null, jaTinhaPet = !!petFixo && temPet(petFixo);
   g[p] = {
     vencido: true,
     acertosPrimeira: antes.vencido ? Math.max(antes.acertosPrimeira, acertosPrimeira) : acertosPrimeira,
@@ -13830,7 +13852,10 @@ function vencer() {
   };
   let ganhou = null;
   if (p === 'lider' && !g.insignia) { g.insignia = true; g.dataInsignia = Date.now(); ganhou = 'normal'; }
-  if (p === 'revanche' && !g.dourada) { g.dourada = true; ganhou = 'dourada'; }
+  if (p === 'revanche' && !g.dourada && g.insignia) { g.dourada = true; ganhou = 'dourada'; }   // (professora: revanche antes do líder não grava a dourada)
+  // 🔓 professora repetindo (PROMPT-173): mostra a insígnia e o cartão do pet como na 1ª vez, sem gravar de novo nem dar moedas
+  const verInsignia = ganhou || (ehProfessora() && (p === 'lider' ? 'normal' : p === 'revanche' ? 'dourada' : null));
+  if (ehProfessora() && p === 'lider' && jaTinhaPet && petValido(petFixo)) { filaPetsEntregues.push({ pet: petFixo, chave }); setTimeout(mostrarPetEntregue, 1200); }
   gravarVitoria(chave, p);
   if (p === 'lider' || p === 'revanche') ganharFigurinha(chave);   // 📒 a figurinha (dourada com a revanche) aparece depois da insígnia
   if (ganhou) moedasDaInsignia(ganhou);
@@ -13878,8 +13903,8 @@ function vencer() {
   $('perg-continuar').hidden = false;
   pg.aoContinuar = () => {
     fecharPergunta();
-    if (ganhou) {
-      mostrarInsigniaGanha(chave, ganhou === 'dourada');
+    if (verInsignia) {
+      mostrarInsigniaGanha(chave, verInsignia === 'dourada');
       if (!temSequencia(seguidor?.forma, 'vitoria')) seguidor?.reagir('animado');   // com `vitoria`: comemora quando a insígnia some
       const pa = estado.pets.ativo, fa = pa && formaDe(pa);
       if (fa && temAnim(fa, 'busto_fogo')) setTimeout(() => avisoPet(`🔥 ${nomePet(pa)} está orgulhoso da insígnia!`, true, quadrosDe(fa, 'busto_fogo')[0]), 2600);
@@ -13998,7 +14023,7 @@ const PREMIO_PG = { estrela: 3, tres_estrelas: 5, lealdade: 1 };   // 1ª vez co
 const fasesPg = () => PROG?.fases || [];
 const progFase = (id) => estado.programe?.fases?.[id] || null;
 const faseResolvida = (id) => (Number(progFase(id)?.estrelas) || 0) > 0;
-const faseLiberada = (i) => i === 0 || faseResolvida(fasesPg()[i - 1]?.id);
+const faseLiberada = (i) => i === 0 || ehProfessora() || faseResolvida(fasesPg()[i - 1]?.id);   // 🔓 professora: todas as fases
 function capMaxLiberado() { let cap = 1; fasesPg().forEach((f, i) => { if (faseLiberada(i)) cap = Math.max(cap, f.cap); }); return cap; }
 function blocosAteCap(cap) { const s = new Set(); for (const f of fasesPg()) if (f.cap <= cap) for (const b of f.blocos) s.add(b); return [...s]; }
 const nomeCap = (cap) => PROG?.capitulos?.[cap]?.nome || `Capítulo ${cap}`;
@@ -14214,7 +14239,7 @@ function mostrarComoFunciona() {
 // ── 🐛 Caça ao bug (PROMPT-70): programa com 1 erro (dados/jogo/caca-ao-bug.json) no mapa de uma fase; o aluno conserta tocando no bloco.
 // Bug liberado quando a fase dele está resolvida ou o bug anterior foi consertado. Progresso em programe/bugs/{id}: { estrelas, execucoes, data, premio1, premio3 }.
 const bugResolvido = (id) => (Number(estado.programe.bugs?.[id]?.estrelas) || 0) > 0;
-const bugLiberado = (i) => !!BUGS?.[i] && (faseResolvida(BUGS[i].fase) || (i > 0 && bugResolvido(BUGS[i - 1].id)));
+const bugLiberado = (i) => !!BUGS?.[i] && (ehProfessora() || faseResolvida(BUGS[i].fase) || (i > 0 && bugResolvido(BUGS[i - 1].id)));
 async function abrirBug(id) {
   const i = (BUGS || []).findIndex(b => b.id === id), b = BUGS?.[i], f = b && fasesPg().find(x => x.id === b.fase);
   if (!b || !f || !bugLiberado(i)) return;
@@ -14475,7 +14500,7 @@ const FONTES_MOEDA = {
   expedicao: { nome: 'Expedição do pet' },
   relampago: { nome: 'Desafio relâmpago' },
   insignia: { nome: 'Insígnias' },
-  batalha: { nome: 'Batalhas', limite: () => (cfgBatalha().limites_dia?.moedas != null ? comMult(cfgBatalha().limites_dia.moedas) : undefined) },
+  batalha: { nome: 'Batalhas', limite: () => (limitesBatalhaDia().moedas != null ? comMult(limitesBatalhaDia().moedas) : undefined) },
   batalha_primeira: { nome: 'Primeira vitória contra um treinador' },
   pedido: { nome: 'Pedidos de ajuda', limite: () => limiteMoedasPedidos() },
   cavar: { nome: 'Cavar e mato', limite: () => comMult(cfgCavar().moedas_cavar_dia ?? 15) },
@@ -14990,12 +15015,14 @@ function renderConfig() {
     chave('convites', '⚔️', 'Receber convites', !estado.semConvites, 'Duelos, damas e chamados da Praça') +
     chave('nomes', '🏷️', 'Nomes dos colegas', nomesColegasVisiveis(), 'Em cima dos colegas no mapa') +
     abre('tutorial', '❓', 'Como jogar') +
-    abre('presentes', '📜', 'Presentes recebidos');
+    abre('presentes', '📜', 'Presentes recebidos') +
+    (ehProfessora() ? abre('zerar', '🧪', 'Professora: zerar ginásio', 'Apaga o progresso de um ginásio só na sua conta') : '');
 }
 function acaoConfig(id) {
   if (id === 'personagem') { fecharConfig(); abrirEscolhaPersonagem(); return; }
   if (id === 'tutorial') { fecharConfig(); abrirTutorial(true); return; }
   if (id === 'presentes') { abrirHistoricoPresentes(); return; }
+  if (id === 'zerar') { abrirZerarGinasio(); return; }
   if (id === 'som') { alternarSom(); pintarSom(); }
   else if (id === 'musica') { if (musicaBloqueada()) { avisoTopo('A professora desligou a música'); return; } alternarMusica(); pintarMusica(); }
   else if (id === 'conversa') alternarPetCalado();
@@ -15022,25 +15049,85 @@ function abrirHistoricoPresentes() {
   $('cfg-lista').hidden = true; $('cfg-presentes').hidden = false;
   tocar('clique');
 }
+// 🧪 PROMPT-173: a professora escolhe um ginásio (1A a 13B) e apaga o progresso dele só na conta dela (treinadores, líder,
+// revanche, insígnia, figurinha e o pet que ele dá), para ver de novo a 1ª vitória, a insígnia nova e o pet aparecendo
+function abrirZerarGinasio(conf = null) {
+  if (!ehProfessora()) return;
+  const curto = (k) => k.replace('mapa', '').replace('-', '');
+  $('cfg-presentes').innerHTML = conf
+    ? `<p class="cfg-zerar-perg">Zerar o progresso do ginásio ${curto(conf)} na sua conta?</p>
+       <div class="cfg-zerar-bts"><button class="jr-btn jr-btn-ouro" data-zerar-ok="${conf}">Zerar</button><button class="jr-btn" data-zerar-volta>Cancelar</button></div>`
+    : `<p class="cfg-vazio">Escolha o ginásio. 🏅 = líder vencido.</p><div class="cfg-zerar">${CHAVES_ALBUM().map(k => {
+        const g = estado.ginasios[k], algo = PERSONAGENS.some(p => g[p].vencido) || g.revanche.vencido || g.insignia;
+        return `<button class="cfg-zerar-gin${algo ? ' feito' : ''}" data-zerar="${k}">${curto(k)}<small>${g.dourada ? '🌟' : g.lider.vencido ? '🏅' : algo ? '·' : ''}</small></button>`;
+      }).join('')}</div>`;
+  $('cfg-tit').textContent = '🧪 Zerar ginásio';
+  $('cfg-lista').hidden = true; $('cfg-presentes').hidden = false;
+  tocar('clique');
+}
+function zerarGinasioProfessora(chave) {
+  const g0 = estado.ginasios[chave];
+  if (!ehProfessora() || !g0) return;
+  estado.ginasios[chave] = { ...estadoVazio().ginasios[chave], zerado: true };
+  const patch = { [`ginasios/${chave}`]: { zerado: true }, [`insignias/${chave}`]: null, [`album/${chave}`]: null };
+  delete estado.album[chave];
+  const pf = PETS_GINASIO[chave], cq = estado.pets.conquistados;
+  const sai = (pf && pf !== 'inicial' ? [pf] : Object.keys(cq).filter(p => cq[p]?.origem === chave)).filter(temPet);
+  if (sai.includes(estado.pets.ativo)) { const outro = Object.keys(cq).find(p => !sai.includes(p) && petValido(p)); if (outro) trocarPetAtivo(outro); }
+  for (const p of sai) { delete cq[p]; patch[`pets/conquistados/${p}`] = null; }
+  if (sai.includes(estado.pets.ativo)) { estado.pets.ativo = null; patch['pets/ativo'] = null; }
+  gravar(patch);
+  atualizarBotaoPet();
+  avisoTopo(`Ginásio ${chave.replace('mapa', '').replace('-', '')} zerado na sua conta.`);
+}
+
 function voltarConfig() {
   if (!$('cfg-presentes').hidden) { $('cfg-presentes').hidden = true; $('cfg-lista').hidden = false; $('cfg-tit').textContent = '⚙️ Configuração'; return; }
   fecharConfig();
 }
 
 // ============================================================
-//  📖 TUTORIAL (PROMPT-166) — o pet ativo apresenta o jogo, tela por tela. Abre sozinho uma vez (depois do personagem e do
-//  pet inicial; quem já jogava vê na próxima entrada) e não fecha até "Vamos jogar!" (avisos/tutorial). Fechou o jogo no
+//  📖 TUTORIAL (PROMPT-166, 172) — o pet apresenta o jogo, tela por tela. Abre sozinho uma vez, depois do personagem e ANTES
+//  do pet inicial (quem ainda não tem pet vê o gato guia; a escolha do pet abre no fim; quem já jogava vê na próxima entrada) e não fecha até "Vamos jogar!" (avisos/tutorial). Fechou o jogo no
 //  meio: recomeça na tela em que parou (avisos/tutorial_tela = id da tela). ❓ no mapa geral revê, e aí fecha quando quiser;
 //  professora e contas de teste/escondidas também têm o ✕. Enquanto está aberto, conta como janela por cima
 //  (sobreposicaoAberta): convite, chamado e presente esperam; os avisos do pet (avisoPet) também.
 //  Os números vêm do código (nota.js, gerarQuestoes, PETS_GINASIO, damas); as telas 11 e 12 só com os desafios ligados.
 // ============================================================
-let tut = null;   // { telas, i, revendo, pet: PetParado }
+let tut = null;   // { telas, i, revendo, guia, pet: PiscaTut, cena: [PiscaTut] }
 const SAUDACAO_TUT = {
   gato: 'Hmpf. Oi, {apelido}.', gaviao: 'Olá, {apelido}!', axolote: 'Uiii, oi {apelido}!', tigre: 'E AÍ, {apelido}!',
   unicornio: 'Oiê, {apelido}! ✨', morcego: 'Psiu… oi, {apelido}!', dragao_vermelho: 'Saudações, {apelido}!',
   elefante: 'Oi, {apelido}! Lembra de mim?', capivara: 'Oi… {apelido}. Com calma:',
 };
+const GUIA_TUT = 'gato';   // quem apresenta antes de o aluno ter pet (PROMPT-172): filhote, sem cor
+// 😌 O pet do tutorial só pisca (PROMPT-172): fica no 1º quadro do sentado_girando e, a cada 2,5 a 4 s, mostra por 150 ms um
+// quadro de olhos fechados NA MESMA POSE (escolhido olhando as imagens: o dormindo é deitado e o carinho/sentado_girando_2
+// dos outros pets mudam de pose). Sem esse quadro, só respira (.tut-respira). Forma colorida = a do pet de base.
+const PISCA_TUT = { morcego: ['carinho', 0], gaviao: ['sentado_girando', 1], gato: ['feliz', 0] };
+// 🍽️ comendo com a mesma comida da favorita (conferido nos quadros): os outros aparecem no feliz, sem nada na mão
+const COMENDO_FAVORITA = ['capivara', 'elefante'];
+class PiscaTut {
+  constructor(img, forma) {
+    const p = PISCA_TUT[petDaCor(forma) || forma];
+    this.img = img;
+    this.aberto = quadrosDe(forma, 'sentado_girando')[0];
+    this.fechado = (p && temAnim(forma, p[0]) && quadrosDe(forma, p[0])[p[1]]) || null;
+    if (this.fechado) new Image().src = this.fechado;
+    img.src = this.aberto;
+    img.classList.toggle('tut-respira', !this.fechado);
+    this.t = 0; this.piscando = false; this.prox = this.sortear();
+  }
+  sortear() { return 2500 + Math.random() * 1500; }
+  atualizar(dt) {
+    if (!this.fechado) return;
+    this.t += dt * 1000;
+    if (this.t < (this.piscando ? 150 : this.prox)) return;
+    this.piscando = !this.piscando; this.t = 0;
+    if (!this.piscando) this.prox = this.sortear();
+    this.img.src = this.piscando ? this.fechado : this.aberto;
+  }
+}
 // ── Cenas do tutorial: montadas por código com as imagens do jogo, num quadro 16:9 (em %). Coordenadas de mapa na escala
 // 1376 × 768 (as imagens de fundo têm o dobro); recorte = [x, y, largura] do pedaço do fundo que aparece.
 const CENA_W = 1376, CENA_H = 768;
@@ -15050,29 +15137,55 @@ function cenaTut(fundo, recorte, corpo) {
   return `<div class="tut-cena"><img class="tut-fundo" data-fundo src="${fundo}" alt="" draggable="false"
     style="width:${CENA_W / cw * 100}%;left:${-cx / cw * 100}%;top:${-cy / (cw * 9 / 16) * 100}%"/>${corpo}</div>`;
 }
-const cenaLisa = (corpo) => `<div class="tut-cena lisa">${corpo}</div>`;
+const cenaLisa = (corpo, cls = '') => `<div class="tut-cena lisa${cls ? ' ' + cls : ''}">${corpo}</div>`;
 // ator em pé no chão da cena: centro em l%, pé em b% (de baixo), altura h% da cena; reserva = outra imagem se esta faltar
 const ator = (src, { l, b, h, flip = false, reserva = '' }) => `<img class="tut-ator" src="${src}" alt="" draggable="false"${reserva ? ` data-reserva="${reserva}"` : ''}
   style="left:${l}%;bottom:${b}%;height:${h}%;transform:translateX(-50%)${flip ? ' scaleX(-1)' : ''}"/>`;
 // objeto do mapa (âncora embaixo, no meio, como no jogo: .jr-estudos-quadro)
 const noMapa = (src, x, y, largura, r) => { const [l, t] = pctMapa(x, y, r);
   return `<img class="tut-ator" src="${src}" alt="" draggable="false" style="left:${l}%;top:${t}%;width:${largura / r[2] * 100}%;transform:translate(-50%,-100%)"/>`; };
-// pet animado: o quadro inteiro (com a folga de cima); sem l/b/h fica no fluxo (coleção, comida). meu: com a tinta do pet ativo
-const petTut = (forma, anim, { l, b, h, flip = false, meu = true }) => `<img class="tut-ator tut-pet-cena${l == null ? ' solto' : ''}" src="${quadrosDe(forma, 'sentado_girando')[0]}" alt=""
-  draggable="false" data-forma="${forma}" data-anim="${anim}"${meu ? ' data-meu' : ''}${l == null ? '' : ` style="left:${l}%;bottom:${b}%;height:${h}%;transform:translateX(-50%)${flip ? ' scaleX(-1)' : ''}"`}/>`;
+// pet: o quadro inteiro (com a folga de cima); sem l/b/h fica no fluxo (comida). Sem pose: parado, piscando (PiscaTut);
+// pose = [anim, quadro] fica parado nesse quadro. meu: com a tinta do pet ativo
+const petTut = (forma, { l, b, h, flip = false, meu = true, pose = null }) => `<img class="tut-ator tut-pet-cena${l == null ? ' solto' : ''}" src="${quadrosDe(forma, pose?.[0] || 'sentado_girando')[pose?.[1] || 0]}" alt=""
+  draggable="false" data-forma="${forma}"${pose ? '' : ' data-pisca'}${meu ? ' data-meu' : ''}${l == null ? '' : ` style="left:${l}%;bottom:${b}%;height:${h}%;transform:translateX(-50%)${flip ? ' scaleX(-1)' : ''}"`}/>`;
 // destaque: círculo amarelo pulsando e a seta em cima (x, y em % da cena; dentro = no meio de um botão)
 const alvoTut = (x, y, dentro = false) => `<span class="tut-alvo${dentro ? ' dentro' : ''}" style="left:${x}%;top:${y}%"><i></i><b>⬇</b></span>`;
-// depois de pôr a cena: os pets animam, imagem que falta some (o fundo que falta vira o emoji da tela)
+// 🏅 pedaço do estojo de verdade (as mesmas classes de abrirEstojo), desenhado no tamanho do jogo e reduzido para caber
+// (data-encaixar: encaixarTut). st = 'ganha' | 'dourada' | 'bloqueada'
+const pedraTut = (chave, st) => `<span class="insignia ${st}"><img src="${IMG}/insignias/insignia-${chave}.webp" alt="" draggable="false"/>${st === 'dourada' ? '<span class="ins-estrela">★</span>' : ''}</span>`;
+function estojoTut(pedras, { soPedras = false } = {}) {
+  const q = D.questoes[1], reg = (D.geral?.regioes || []).find(r => Number(r.mapa) === 1);
+  const dentro = soPedras ? `<div class="ins-cap-pedras">${pedras}</div>`
+    : `<div class="ins-cap"><div class="ins-cap-tag"><span>${reg?.emoji || '🗺️'}</span>${esc(q?.nome || '')}</div>
+      <div class="ins-cap-moldura"><div class="ins-cap-num">1</div><div class="ins-cap-pedras">${pedras}</div></div></div>`;
+  return `<div class="jr-estojo tut-tela${soPedras ? ' so-pedras' : ''}" data-encaixar><div class="ins-page">${dentro}</div></div>`;
+}
+// 📋 o mural aberto (as mesmas classes do #mural), com colegas de exemplo e o aluno no meio
+function muralTut(sprite, ap) {
+  const linha = (pos, pers, nome, rot, eu = false) => `<li class="${eu ? 'eu' : ''}"><span class="ml-pos">${['🥇', '🥈', '🥉'][pos - 1] || pos + 'º'}</span>
+    ${bustoHtml(pers ? urlQuadro('frente', -1, pers, null) : sprite('frente-parado'), 'ml-rosto', BUSTO_PERS)}<span class="ml-nome">${esc(nome)} <small>${esc(sessao?.turma || '')}</small></span><b>${rot}</b></li>`;
+  return `<div class="tut-tela tut-mural" data-encaixar><div class="ml-caixa">
+    <div class="ml-topo"><b>📋 Mural da Escola</b><span class="ml-filtro"><button class="ativa">Escola toda</button><button>Minha turma</button></span></div>
+    <div class="ml-abas">${MURAL_ABAS.slice(0, 5).map(([, n], k) => `<button class="${k ? '' : 'ativa'}">${n}</button>`).join('')}</div>
+    <ol class="ml-lista">${linha(1, 'menina_trancas', 'Colega', '12 🏅')}${linha(2, 'menino_bone', 'Colega', '10 🏅')}${linha(3, null, ap || 'Você', '9 🏅', true)}${linha(4, 'menina_tiara', 'Colega', '7 🏅')}</ol>
+  </div></div>`;
+}
+// reduz cada [data-encaixar] para caber no pai (no meio), sem deformar
+function encaixarTut() {
+  for (const el of $('tut-img').querySelectorAll('[data-encaixar]')) {
+    const pai = el.parentElement, w = el.offsetWidth, h = el.offsetHeight;
+    if (!w || !h || !pai.clientWidth) continue;
+    const s = Math.min(pai.clientWidth / w, pai.clientHeight / h);
+    el.style.transform = `translate(${(pai.clientWidth - w * s) / 2}px, ${(pai.clientHeight - h * s) / 2}px) scale(${s})`;
+  }
+}
+// depois de pôr a cena: os pets piscam, imagem que falta some (o fundo que falta vira o emoji da tela)
 function animarCenaTut(t) {
   const raiz = $('tut-img');
   tut.cena = [];
   for (const img of raiz.querySelectorAll('img.tut-pet-cena')) {
-    const a = new PetParado(img), anim = img.dataset.anim;
-    if (anim !== 'sentado_girando' && anim !== 'feliz' && temAnim(img.dataset.forma, anim)) a.repouso = { anim, ms: 220 };
-    a.definir(img.dataset.forma);
-    if (anim === 'feliz' && temAnim(img.dataset.forma, 'feliz')) a.tocar('feliz');
-    if ('meu' in img.dataset) aplicarVisualPet(img, estado.pets.ativo);
-    tut.cena.push(a);
+    if ('pisca' in img.dataset) tut.cena.push(new PiscaTut(img, img.dataset.forma));
+    if ('meu' in img.dataset && !tut.guia) aplicarVisualPet(img, estado.pets.ativo);
   }
   const falhou = (img) => {
     if ('fundo' in img.dataset) { raiz.innerHTML = `<span class="tut-emoji">${t.emoji}</span>`; tut.cena = []; return; }
@@ -15083,84 +15196,104 @@ function animarCenaTut(t) {
     if (img.complete && !img.naturalWidth && img.getAttribute('src')) falhou(img);
     else img.addEventListener('error', () => falhou(img), { once: true });
   }
+  encaixarTut();
 }
-function telasTutorial() {
-  const pet = estado.pets.ativo, nome = nomePet(pet) || 'seu pet';
+function telasTutorial(guia) {
+  // quem apresenta: o guia (gato filhote, sem cor) antes de ter pet; depois, o pet ativo na forma e na cor dele
+  const pet = guia ? GUIA_TUT : estado.pets.ativo, nome = nomePet(pet) || 'seu pet';
   const ap = apelidoAluno || String(sessao?.nome || '').split(' ')[0] || '';
   const sd = SAUDACAO_TUT[pet] || 'Oi, {apelido}!', oi = ap ? sd.replace('{apelido}', ap) : sd.replace(/,?\s*\{apelido\}/, '');
-  const nIns = NUM_MAPAS * 2, peso = formatarNota(Math.round(PESO_INSIGNIAS / nIns * 10) / 10);
+  const nIns = NUM_MAPAS * 2;
   const curto = (k) => k.replace('mapa', '').replace('-', '');   // 'mapa3-B' → '3B'
-  const ginPets = Object.keys(PETS_GINASIO).filter(k => PETS_GINASIO[k] !== 'inicial').map(curto).join(', ');
   const extras = [['📋', 'Missões do dia', 1], ['🎯', 'Treino do dia', 1], ['🤖', 'Programe o Pet', 1], ['🖼️', 'Exposição', 1],
     ['📚', 'Quadros de estudos', 1], ...(desafiosLigados() ? [['⚡', 'Relâmpago', 1]] : []), ['📅', 'Revisão da semana', 0],
     ['🕹️', 'Fliperama', 0], ['🏠', 'Casinha', 0], ['📒', 'Álbum de figurinhas', 0], ['🎒', 'Expedições do pet', 0]];
-  // ── as cenas (só imagens do jogo): fundo recortado + atores em % de um quadro 16:9; o pet anima (PetParado) ──
-  const forma = formaDe(pet), meu = meuPersonagem(), cores = minhasCores();
+  // ── as cenas (só imagens do jogo): fundo recortado + atores em % de um quadro 16:9; o pet só pisca (PiscaTut) ──
+  const forma = guia ? GUIA_TUT : formaDe(pet), base = petDaCor(forma) || pet, meu = meuPersonagem(), cores = minhasCores();
   const sprite = (q) => urlSprite(meu, q, cores);
-  const ins = (k, cls = '') => `<img class="tut-ins${cls ? ' ' + cls : ''}" src="${IMG}/insignias/insignia-${k}.webp" alt="" draggable="false"/>`;
   const prox = proximoGinasio(), nProx = prox ? Number(prox.replace('mapa', '').split('-')[0]) : 1;
   const regProx = D.geral?.regioes?.find(r => r.mapa === nProx);
   const rival = ['tigre', 'gato', 'axolote', 'gaviao'].find(p => p !== pet && petValido(p));
-  const outros = PETS.filter(p => p !== pet && petValido(p) && !temPet(p)).slice(0, 4);
+  // 🐾 todos os pets conquistáveis e onde se ganha cada um (INICIAIS = começo; PETS_GINASIO = o ginásio)
+  const nomeGin = (k) => { const [n, G] = k.replace('mapa', '').split('-'); return D.questoes[Number(n)]?.ginasios?.[G]?.nome || ''; };
+  const todos = [...INICIAIS.filter(petValido).map(p => ({ p, etapa: 'Começo', inicial: true })),
+    ...Object.entries(PETS_GINASIO).filter(([, p]) => p !== 'inicial' && petValido(p)).map(([k, p]) => ({ p, etapa: curto(k), gin: nomeGin(k) }))];
+  const semPet = !Object.keys(estado.pets?.conquistados || {}).some(petValido);
   const fav = [cfgLoja().favoritas?.[pet]].flat()[0];
-  const comida = comidas().find(c => c.imagem && (c.id === fav || c.id.startsWith(fav + '_'))) || comidas().find(c => c.id === 'maca');
+  const comida = comidas().find(c => c.imagem && (c.id === fav || c.id.startsWith(fav + '_'))) || comidas().find(c => c.imagem && ehFavorita(pet, c));
+  const poseComida = COMENDO_FAVORITA.includes(base) && temAnim(forma, 'comendo') ? ['comendo', 1] : ['feliz', 0];
   const praca = cfgPraca(), estudo = estudosDoMapa(1)?.mural, pontoPesca = pontosDoMapa(2)[0];
   const sp = spritePesca(), EP = ESCALA_SPRITE;
+  const cuida = guia ? 'cuidar do seu pet' : 'cuidar de mim';
   const telas = [
     { id: 'boas_vindas', tit: '👋 Boas-vindas', emoji: '👋',
-      cena: cenaTut(`${IMG}/mapas/mapa1.webp`, [520, 330, 460], ator(sprite('frente-parado'), { l: 40, b: 8, h: 62 }) + petTut(forma, 'feliz', { l: 62, b: 6, h: 46 })),
-      fala: `${oi} Eu sou ${nome}! Este jogo é a revisão do ano. Vamos andar pelos mapas, vencer ginásios e cuidar de mim!` },
+      cena: cenaTut(`${IMG}/mapas/mapa1.webp`, [520, 330, 460], ator(sprite('frente-parado'), { l: 40, b: 8, h: 62 }) + petTut(forma, { l: 62, b: 6, h: 46 })),
+      fala: guia ? `Oi${ap ? ', ' + ap : ''}! Eu sou o guia do jogo. Daqui a pouco você escolhe o seu pet!`
+        : `${oi} Eu sou ${nome}! Este jogo é a revisão do ano. Vamos andar pelos mapas, vencer ginásios e ${cuida}!` },
     { id: 'mapa', tit: '🗺️ Mapa geral', emoji: '🗺️',
       cena: cenaTut(`${IMG}/mapa-geral/mapa-geral.webp`, null, regProx ? alvoTut(regProx.x / CENA_W * 100, regProx.y / CENA_H * 100) : ''),
-      fala: `São ${NUM_MAPAS} mapas, cada um com 2 ginásios (A e B): ${nIns} ao todo. Eles abrem em ordem (1A, 1B, 2A…): vencendo o líder de um, abre o próximo.` },
+      fala: `${guia ? 'Este jogo é a revisão do ano. ' : ''}São ${NUM_MAPAS} mapas, cada um com 2 ginásios (A e B): ${nIns} ao todo. Eles abrem em ordem (1A, 1B, 2A…): vencendo o líder de um, abre o próximo.` },
     { id: 'nota', tit: '🏅 A nota', emoji: '🏅',
-      cena: cenaLisa(`<div class="tut-linha">${ins('mapa1-A')}${ins('mapa1-B')}${ins('mapa2-A')}</div>
-        <div class="tut-nota"><span class="tut-nota-ins" style="flex:${PESO_INSIGNIAS}">${PESO_INSIGNIAS} pelas insígnias</span><span class="tut-nota-xp" style="flex:${PESO_XP}">${PESO_XP} XP</span></div>
+      cena: cenaLisa(`<div class="tut-slot tut-slot-pedras">${estojoTut(pedraTut('mapa1-A', 'ganha') + pedraTut('mapa1-B', 'ganha') + pedraTut('mapa2-A', 'ganha'), { soPedras: true })}</div>
+        <div class="tut-nota"><span class="tut-nota-ins" style="flex:${PESO_INSIGNIAS}">${PESO_INSIGNIAS} insígnias</span><span class="tut-nota-xp" style="flex:${PESO_XP}">${PESO_XP} outras</span></div>
         <div class="tut-nota-total">${PESO_INSIGNIAS} + ${PESO_XP} = <b>${NOTA_MAX}</b></div>`),
-      fala: `O jogo vale ${NOTA_MAX} pontos: ${PESO_INSIGNIAS} pelas ${nIns} insígnias (cada uma ≈ ${peso}) e ${PESO_XP} pela experiência (⭐ XP) de tudo o que você faz, até ${XP_META} XP. Vale no máximo ${XP_DIA} XP por dia.` },
+      fala: `O jogo vale ${NOTA_MAX} pontos: ${PESO_INSIGNIAS} pelas insígnias dos ginásios e ${PESO_XP} por fazer as outras atividades do jogo, como pescar, batalhar, cuidar do pet e estudar.` },
     { id: 'onde_ver', tit: '📈 Onde ver', emoji: '📈',
-      cena: cenaLisa(`<div class="tut-onde"><span class="tut-botao-topo"><img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>${alvoTut(50, 50, true)}</span>
+      cena: cenaLisa(`<div class="tut-onde"><span class="jr-btn-estojo tut-bt-estojo"><img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/><span class="jr-estojo-cont">2/${nIns}</span>${alvoTut(50, 50, true)}</span>
         <span class="tut-seta-lado">➜</span>
-        <span class="tut-estojo"><img src="/img/jogo/ui/bandeja-insignias.webp" alt="" draggable="false"/><span class="tut-estojo-ins">${ins('mapa1-A')}${ins('mapa1-B')}${ins('mapa2-A', 'dourada')}</span></span></div>`),
+        <div class="tut-slot tut-slot-estojo">${estojoTut(pedraTut('mapa1-A', 'ganha') + pedraTut('mapa1-B', 'dourada') + pedraTut('mapa2-A', 'bloqueada'))}</div></div>`),
       fala: 'No estojo de insígnias (o botão lá em cima) você vê as insígnias e a sua nota. No site, ela aparece também na sua ficha.' },
     { id: 'ginasios', tit: '🏟️ Ginásios', emoji: '🏟️',
       cena: cenaTut(`${IMG}/interiores/mapa1-A.webp`, [280, 230, 820], ator(sprite('direita-parado'), { l: 34, b: 10, h: 46 }) + ator(`${IMG}/personagens/mapa1-A-lider.webp`, { l: 64, b: 10, h: 50, flip: true })
         + `<div class="jr-perg-bolinhas tut-bolinhas-perg"><span class="jr-bolinha certa"></span><span class="jr-bolinha certa"></span><span class="jr-bolinha errada"></span><span class="jr-bolinha atual"></span><span class="jr-bolinha"></span></div>`),
       fala: `Em cada ginásio há ${PERSONAGENS.length - 1} treinadores e o líder, com 5 perguntas cada. Errou? A pergunta volta com outros números até você acertar.` },
     { id: 'insignias', tit: '🥇 Insígnias', emoji: '🥇',
-      cena: cenaLisa(`<div class="tut-linha tut-grande"><figure>${ins('mapa1-A')}<figcaption>Insígnia</figcaption></figure><figure>${ins('mapa1-A', 'dourada')}<figcaption>Dourada ✨</figcaption></figure></div>`),
+      cena: cenaLisa(`<div class="tut-slot tut-slot-pedras grande">${estojoTut(pedraTut('mapa1-A', 'ganha') + pedraTut('mapa1-A', 'dourada'), { soPedras: true })}</div>
+        <div class="tut-legendas"><span>Insígnia</span><span>Dourada ✨</span></div>`),
       fala: 'Venceu o líder, ganhou a insígnia! Depois vem a revanche, mais difícil, que deixa a insígnia dourada e dá mais XP.' },
     { id: 'estudos', tit: '📚 Quadros de Estudos', emoji: '📚',
       cena: estudo ? (() => { const r = [estudo.x - 230, estudo.y - 190, 460];
         return cenaTut(`${IMG}/mapas/mapa1.webp`, r, noMapa(`${IMG}/mapas/objetos/mural-estudos.webp`, estudo.x, estudo.y, Number(estudo.largura) || 100, r)
           + alvoTut(...pctMapa(estudo.x, estudo.y - (Number(estudo.largura) || 100) * 0.55, r))); })() : null,
       fala: 'Nos mapas há quadros que explicam o conteúdo de cada ginásio. Leia antes de enfrentar o líder!' },
-    { id: 'mural', tit: '📋 Mural da Escola', emoji: '📋',
-      cena: praca?.mural ? (() => { const m = praca.mural, r = [m.x - 230, m.y - 120, 460]; return cenaTut(`${IMG}/mapas/praca.webp`, r, alvoTut(...pctMapa(m.x, m.y - 20, r))); })() : null,
-      fala: 'Na Praça, o mural mostra os rankings da escola e da turma: insígnias, pesca, desafios, damas e mais.' },
+    // 📋 o mural em dois passos (PROMPT-172): a praça com a seta e, depois, o mural aberto
+    ...(praca?.mural ? [{ id: 'mural', tit: '📋 Mural da Escola', emoji: '📋',
+      cena: (() => { const m = praca.mural, r = [m.x - 230, m.y - 120, 460]; return cenaTut(`${IMG}/mapas/praca.webp`, r, alvoTut(...pctMapa(m.x, m.y - 20, r))); })(),
+      fala: 'Na Praça fica o Mural da Escola. Toque em Próximo para ver o que tem nele.' }] : []),
+    { id: 'mural_aberto', tit: '📋 Mural da Escola', emoji: '📋',
+      cena: cenaLisa(`<div class="tut-slot tut-slot-cheio">${muralTut(sprite, ap)}</div>`),
+      fala: 'O mural mostra os rankings da escola e da turma: insígnias, pesca, desafios, damas e mais.' },
     { id: 'pets', tit: '🐾 Pets', emoji: '🐾',
-      cena: cenaLisa(`<div class="tut-colecao"><span class="tut-carta meu">${petTut(forma, 'sentado_girando', {})}<b>${esc(nome)}</b></span>${outros.map(p =>
-        `<span class="tut-carta"><img class="tut-silhueta" src="${quadrosDe(p, 'sentado_girando')[0]}" alt="" draggable="false"/><b>???</b></span>`).join('')}</div>`),
-      fala: `Você começou comigo, e vencendo ginásios ganha outros pets (${ginPets}).` },
+      cena: cenaLisa(`<div class="tut-todos">${todos.map(({ p, etapa, gin, inicial }) => `<span class="tut-carta${inicial ? ' inicial' : ''}">
+        <img class="${!semPet && !temPet(p) ? 'tut-silhueta' : ''}" src="${quadrosDe(p, 'sentado_girando')[0]}" alt="" draggable="false"/>
+        <b>${esc(NOME_PET[p] || p)}</b><small>${esc(etapa)}${gin ? ` · ${esc(gin)}` : ''}</small></span>`).join('')}</div>`, 'tut-lisa-pets'),
+      fala: semPet ? 'Você vai escolher um destes três para começar. Os outros você ganha vencendo os ginásios!'
+        : 'Estes são todos os pets. Os que você ainda não tem aparecem no ginásio indicado!' },
     { id: 'comida', tit: '🍎 Comida e lealdade', emoji: '🍎',
-      cena: cenaLisa(`<div class="tut-comida">${petTut(forma, temAnim(forma, 'comendo') ? 'comendo' : 'feliz', {})}
+      cena: cenaLisa(`<div class="tut-comida">${petTut(forma, { pose: poseComida })}
         ${comida?.imagem ? `<img class="tut-item" src="/${comida.imagem.replace(/^\//, '')}" alt="" draggable="false"/>` : ''}<span class="tut-coracoes"><i>❤️</i><i>❤️</i><i>❤️</i></span></div>
         <div class="tut-leal"><span>Lealdade</span><i><b style="width:62%"></b></i></div>`),
-      fala: 'Me dê comida pelo Meu Pet: a minha favorita rende mais! Cuidando de mim, a lealdade sobe e eu aprendo a conversar, dar dicas nos ginásios, dar cambalhota e fazer truques.' },
+      fala: guia ? 'Dê comida ao seu pet pelo Meu Pet: a favorita dele rende mais! Cuidando dele, a lealdade sobe e ele aprende a conversar, dar dicas nos ginásios, dar cambalhota e fazer truques.'
+        : 'Me dê comida pelo Meu Pet: a minha favorita rende mais! Cuidando de mim, a lealdade sobe e eu aprendo a conversar, dar dicas nos ginásios, dar cambalhota e fazer truques.' },
     ...(desafiosLigados() ? [
       { id: 'batalha', tit: '⚔️ Batalha de pets', emoji: '⚔️',
-        cena: cenaTut(`${IMG}/batalha/arena.webp`, null, petTut(forma, 'sentado_girando', { l: 28, b: 14, h: 46 }) + (rival ? petTut(rival, 'sentado_girando', { l: 72, b: 14, h: 46, flip: true, meu: false }) : '')
+        cena: cenaTut(`${IMG}/batalha/arena.webp`, null, petTut(forma, { l: 28, b: 14, h: 46 }) + (rival ? petTut(rival, { l: 72, b: 14, h: 46, flip: true, meu: false }) : '')
           + '<span class="tut-vida esq"><b style="width:80%"></b></span><span class="tut-vida dir"><b style="width:45%"></b></span>'),
-        fala: 'Nas batalhas, eu luto e você responde às contas: quanto mais rápido, mais dano. Preciso estar alimentado para lutar.' },
+        fala: guia ? 'Nas batalhas, o seu pet luta e você responde às contas: quanto mais rápido, mais dano. Ele precisa estar alimentado para lutar.'
+          : 'Nas batalhas, eu luto e você responde às contas: quanto mais rápido, mais dano. Preciso estar alimentado para lutar.' },
       { id: 'duelos', tit: '🤝 Duelos e damas', emoji: '🤝',
         cena: cenaLisa(`<div class="tut-duelo"><span class="tut-cartao"><img src="${urlQuadro('frente', -1, 'menina_trancas', null)}" alt="" draggable="false"/><b>Colega</b>
           <span class="tut-cartao-bts"><i>⚔️</i><i>♟️</i><i>🎁</i><i>🏠</i></span></span><img class="tut-damas" src="${IMG}/praca/mesa-damas.webp" alt="" draggable="false"/></div>`),
         fala: `Toque num colega para chamar para um duelo ou para as damas.${apostasLigadas() ? ' Dá para apostar moedas!' : ''} Damas contra o computador também dão moedas, até ${VITORIAS_DAMAS_CPU_DIA} vitórias por dia.` },
     ] : []),
-    { id: 'loja', tit: '🛒 Loja', emoji: '🛒',
+    // 🛒 a loja em dois passos (PROMPT-172): a porta na Praça (ondeDonaCida) e, depois, o interior
+    ...(praca?.loja ? [{ id: 'loja', tit: '🛒 Loja', emoji: '🛒',
+      cena: (() => { const l = praca.loja, r = [l.x - 230, l.y - 170, 460]; return cenaTut(`${IMG}/mapas/praca.webp`, r, alvoTut(...pctMapa(l.x, l.y - 20, r))); })(),
+      fala: `A loja da Dona Cida fica aqui, na Praça${/mercado/i.test(ondeDonaCida()) ? ' (tem outra porta no Mercado Central)' : ''}. Toque em Próximo para ver dentro.` }] : []),
+    { id: 'loja_dentro', tit: '🛒 Loja', emoji: '🛒',
       cena: cenaTut(`${IMG}/interiores/loja.webp`, null, ator(`${IMG}/npcs/dona_cida.webp`, { l: 50, b: 34, h: 40 }) + alvoTut(50, 22)
         + `<span class="tut-itens">${['maca', 'isca', 'tinta', 'bolo'].map(i => `<img src="${IMG}/itens/${i}.webp" alt="" draggable="false"/>`).join('')}</span>`),
-      fala: 'Na loja da Dona Cida você compra comida, cores e tintas, efeitos, iscas e móveis para a casinha com as moedas que ganha.' },
+      fala: 'Aqui você compra comida, cores, iscas e móveis com as suas moedas.' },
     { id: 'pesca', tit: '🎣 Pesca', emoji: '🎣',
       cena: pontoPesca && sp.largura ? (() => { const p = pontoPesca, r = [p.x - 120, p.y - 95, 210], esq = p.lado === 'esq';
         const w = sp.largura * EP, h = sp.altura * EP, x0 = p.x - (esq ? sp.largura - sp.ancora[0] : sp.ancora[0]) * EP, y0 = p.y - sp.ancora[1] * EP;
@@ -15175,26 +15308,29 @@ function telasTutorial() {
       cena: cenaLisa(`<div class="tut-extras">${extras.map(([e, n, xp]) => `<span class="tut-extra"><i>${e}</i>${n}${xp ? ' <b>⭐</b>' : ''}</span>`).join('')}</div>`),
       fala: 'E tem muito mais para fazer! As com ⭐ dão XP para a sua nota.' },
     { id: 'pronto', tit: '🏁 Pronto!', emoji: '🏁',
-      cena: cenaTut(`${IMG}/mapas/mapa1.webp`, [520, 330, 460], ator(urlComemorando(), { l: 40, b: 8, h: 62, reserva: sprite('frente-parado') }) + petTut(forma, 'feliz', { l: 62, b: 6, h: 46 })),
-      fala: `Agora é com você${ap ? ', ' + ap : ''}! Se esquecer de algo, toque em ⚙️ e em ❓ Como jogar para me ver explicar de novo.` },
+      cena: cenaTut(`${IMG}/mapas/mapa1.webp`, [520, 330, 460], ator(urlComemorando(), { l: 40, b: 8, h: 62, reserva: sprite('frente-parado') }) + petTut(forma, { l: 62, b: 6, h: 46 })),
+      fala: guia ? `Agora é com você${ap ? ', ' + ap : ''}! Já vai escolher o seu pet. Se esquecer de algo, toque em ⚙️ e em ❓ Como jogar para ver a explicação de novo.`
+        : `Agora é com você${ap ? ', ' + ap : ''}! Se esquecer de algo, toque em ⚙️ e em ❓ Como jogar para me ver explicar de novo.` },
   ];
   for (const t of telas) t.img = t.cena || `<span class="tut-emoji">${t.emoji}</span>`;   // sem a imagem: o emoji grande da tela
   return telas;
 }
-// Abre sozinho: progresso carregado, com pet (o inicial vem ao entrar num mapa) e sem outra janela por cima
+// Abre sozinho: progresso carregado, personagem escolhido e sem outra janela por cima. Antes do pet inicial (PROMPT-172):
+// sem pet, quem apresenta é o guia, e a escolha do pet abre quando o tutorial termina.
+const tutorialPendente = () => !!estado && !estado.avisos?.tutorial;
 function verificarTutorial() {
-  if (!carregouProgresso || !estado || estado.avisos?.tutorial || tut || !petsOk || !petValido(estado.pets?.ativo)) return;
+  if (!carregouProgresso || !estado || estado.avisos?.tutorial || tut || !petsOk || !persValido(estado.personagem)) return;
   if (sobreposicaoAberta() || transicionando || perguntaAberta) { setTimeout(verificarTutorial, 2000); return; }
   abrirTutorial(false);
 }
 function abrirTutorial(revendo = true) {
-  if (!estado || !petValido(estado.pets?.ativo)) { avisoTopo('Escolha um pet para ver o tutorial.'); return; }
-  const telas = telasTutorial();
+  if (!estado || !petsOk) return;
+  const guia = !petValido(estado.pets?.ativo);   // ainda sem pet: o gato guia apresenta
+  const telas = telasTutorial(guia);
   const i = revendo ? 0 : Math.max(0, telas.findIndex(t => t.id === estado.avisos?.tutorial_tela));
-  tut = { telas, i, revendo, pet: new PetParado($('tut-pet')) };
-  const pet = estado.pets.ativo, forma = formaDe(pet);
-  tut.pet.definir(forma);
-  aplicarVisualPet($('tut-pet'), pet);
+  const forma = guia ? GUIA_TUT : formaDe(estado.pets.ativo);
+  tut = { telas, i, revendo, guia, pet: new PiscaTut($('tut-pet'), forma), cena: [] };
+  aplicarVisualPet($('tut-pet'), guia ? null : estado.pets.ativo);   // o guia vai sem tinta
   $('tut-fechar').hidden = !(revendo || teste || ehProfessora() || contaEscondida(sessao?.uid, sessao?.nome));
   $('tutorial').hidden = false;
   renderTutorial();
@@ -15209,8 +15345,7 @@ function renderTutorial() {
   animarCenaTut(t);
   $('tut-fala').textContent = t.fala;
   $('tut-ant').disabled = tut.i === 0;
-  $('tut-prox').textContent = tut.i === n - 1 ? 'Vamos jogar! 🎮' : 'Próximo ▶';
-  tut.pet.tocar(temAnim(tut.pet.pet, 'feliz') ? 'feliz' : 'sentado_girando');   // feliz e volta ao sentado_girando
+  $('tut-prox').textContent = tut.i === n - 1 ? (tut.guia && !tut.revendo ? 'Escolher meu pet 🐾' : 'Vamos jogar! 🎮') : 'Próximo ▶';
   if (!tut.revendo) { (estado.avisos ||= {}).tutorial_tela = t.id; gravar({ 'avisos/tutorial_tela': t.id }); }
 }
 function passoTutorial(d) {
@@ -15231,6 +15366,7 @@ function fecharTutorial(concluiu = false) {
     tut = null;
     $('tutorial').hidden = true;
     $('tut-img').innerHTML = '';
+    setTimeout(pedirPetSeFaltar, 400);   // 🐾 personagem → tutorial → pet inicial (PROMPT-172)
   }
 }
 
@@ -15759,6 +15895,13 @@ function ligarEventos() {
   document.querySelectorAll('[data-config]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); abrirConfig(); }));
   $('cfg-lista').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-cfg]'); if (b) acaoConfig(b.dataset.cfg); });
   $('cfg-voltar').addEventListener('click', (e) => { e.stopPropagation(); voltarConfig(); });
+  $('cfg-presentes').addEventListener('click', (e) => {   // 🧪 zerar ginásio (só a professora vê)
+    const b = e.target.closest('[data-zerar], [data-zerar-ok], [data-zerar-volta]');
+    if (!b) return;
+    e.stopPropagation();
+    if (b.dataset.zerarOk) { zerarGinasioProfessora(b.dataset.zerarOk); abrirZerarGinasio(); }
+    else abrirZerarGinasio(b.dataset.zerar || null);
+  });
   $('config').addEventListener('click', (e) => { e.stopPropagation(); if (e.target === $('config')) fecharConfig(); });
   aplicarNomesColegas();
   $('tut-prox').addEventListener('click', (e) => { e.stopPropagation(); passoTutorial(1); });
@@ -15781,6 +15924,7 @@ function ligarEventos() {
   $('cartao').addEventListener('click', (e) => { if (e.target.id === 'cartao') $('cartao').hidden = true; });
 
   window.addEventListener('resize', () => {
+    if (tut) encaixarTut();   // 📖 o estojo e o mural do tutorial (PROMPT-172)
     if (!$('tela-geral').hidden) dimensionarGeral();
     if (cena) ajustarCamera();
   });
