@@ -35,7 +35,9 @@ export async function carregarSprites() {
 // são os do pet de base. Uma cor só vale se a forma existir no JSON. O morcego (PROMPT-163) tem cores próprias; o original dele é o preto.
 const CORES_TODAS = ['marrom', 'cinza', 'branco', 'roxo', 'azul', 'rosa', 'verde', 'dourado', 'preto'];
 export const CORES_PET = {
-  elefante: CORES_TODAS, gato: CORES_TODAS, tigre: CORES_TODAS, unicornio: CORES_TODAS, capivara: CORES_TODAS,
+  elefante: CORES_TODAS, tigre: CORES_TODAS, capivara: CORES_TODAS,
+  gato: ['preto'],   // 🐱 PROMPT-194: só o preto (desenho novo); as outras cores compradas voltaram em moedas
+  unicornio: CORES_TODAS.filter(c => !['marrom', 'dourado', 'preto'].includes(c)),   // 🦄 PROMPT-194
   gaviao: [],   // 🦅 PROMPT-190: o gavião só no desenho original (as cores compradas voltaram em moedas)
   axolote: CORES_TODAS.filter(c => c !== 'rosa'),
   morcego: ['marrom', 'cinza', 'branco', 'roxo', 'azul', 'vermelho', 'dourado'],
