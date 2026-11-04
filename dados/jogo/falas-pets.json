@@ -118,11 +118,6 @@
         "Não que eu ligue, mas o treino de hoje está te esperando no Meu Pet.",
         "Só 5 questõezinhas, {apelido}. Até um gato faz isso dormindo."
       ],
-      "expedicao_volta": [
-        "Fui longe, achei um ninho de passarinho e… não, não fiz nada. Juro.",
-        "Atravessei um rio sem molhar uma pata. Sou elegante assim.",
-        "Encontrei uma caverna cheia de números primos. Nem todos me impressionaram."
-      ],
       "aniversario": [
         "{tempo} juntos e você ainda não me cansou. Isso é um elogio, tá?",
         "Hmpf. Parabéns pra nós. Cadê meu pedaço de bolo?",
@@ -230,11 +225,6 @@
         "Treino do dia: 5 questões. Foco.",
         "Daqui de cima eu vejo: o treino de hoje ainda não foi feito.",
         "{apelido}. Cinco questões. Agora."
-      ],
-      "expedicao_volta": [
-        "Voei até as montanhas. Vi a vila inteira lá de cima.",
-        "Achei moedas brilhando numa clareira. Trouxe todas.",
-        "Longe daqui tem um vale onde tudo é simétrico. Interessante."
       ],
       "aniversario": [
         "{tempo} voando juntos. Boa parceria.",
@@ -344,11 +334,6 @@
         "Ei, ei! O treino de hoje está esperando a gente! Vamos?",
         "Treinar junto é tão legal! Só 5 questõezinhas!"
       ],
-      "expedicao_volta": [
-        "Achei uma caverna cheia de números primos! 2, 3, 5, 7… e mais!",
-        "Tinha um lago enooorme e eu nadei nele inteirinho! 💦",
-        "Fiz amizade com um sapo que sabia contar até mil! Foi demais!"
-      ],
       "aniversario": [
         "Eeeeba! {tempo} juntinhos! Vamos comemorar? 🎉",
         "Hoje é o nosso aniversário! Tem bolo? Tem festa? TEM!",
@@ -457,11 +442,6 @@
         "Ainda não treinou? Rawr! 5 questões e a gente fica imbatível!",
         "Desafio do dia: 5 questões sem piscar! Topa?"
       ],
-      "expedicao_volta": [
-        "Escalei a montanha mais alta e cheguei em primeiro! Rawr!",
-        "Corri 10 km em 0 minutos! …Tá, foi mais. Mas fui rápido!",
-        "Enfrentei um urso de pelúcia gigante. Venci, claro!"
-      ],
       "aniversario": [
         "{tempo} de campeões juntos! Rawr! Bora comemorar!",
         "Aniversário de parceria! Isso vale um troféu!",
@@ -569,11 +549,6 @@
         "Que tal 5 questões brilhantes antes de seguir? ✨",
         "O treino de hoje está te esperando, como uma estrela no céu.",
         "Cinco questões, cinco estrelinhas. Vamos?"
-      ],
-      "expedicao_volta": [
-        "Segui um arco-íris até o fim… e tinha moedas lá! ✨",
-        "Dancei com vaga-lumes numa floresta encantada.",
-        "Contei as estrelas do céu. Parei no 1 000 porque fiquei com sono."
       ],
       "aniversario": [
         "{tempo} de amizade brilhante! ✨",
@@ -684,11 +659,6 @@
         "Ei, o treino de hoje ainda tá esperando! 5 questões no Meu Pet.",
         "Antes de escurecer, que tal o treino? Só 5 questões.",
         "{apelido}, meu eco tá dizendo: treino! Treino! Treino!"
-      ],
-      "expedicao_volta": [
-        "Voei por uma caverna escura e achei umas moedas brilhando.",
-        "Encontrei uma árvore cheia de fruta. Comi algumas. Só algumas.",
-        "Dormi numa caverna de cabeça pra baixo e ouvi segredos das pedras."
       ],
       "aniversario": [
         "{tempo} juntos! Que noite especial. Quer dizer, que dia!",
@@ -875,11 +845,6 @@
         "Até o maior dragão do universo treina. Bora, 5 questões!",
         "Treina comigo, {apelido}! Eu faço parecer fácil. Hmpf."
       ],
-      "expedicao_volta": [
-        "O GRANDE {pet} voltou! Derreti uma montanha de gelo só de olhar.",
-        "Achei um tesouro guardado por um troll. O troll fugiu. Óbvio.",
-        "Os vulcões me reconheceram e se curvaram. Normal pra mim."
-      ],
       "aniversario": [
         "Mais um mês aturando minha magnificência. Você é forte!",
         "{tempo} ao lado do GRANDE {pet}! Que honra pra você!",
@@ -978,11 +943,6 @@
         "Elefante não esquece: o treino de hoje ainda não foi feito.",
         "Vamos treinar juntinhos? São só 5 questões.",
         "Cada treino fica guardado na memória. Bora, 5 questões?"
-      ],
-      "expedicao_volta": [
-        "Lembrei de um atalho que vi há anos. Elefante não esquece!",
-        "Ajudei uma família de patinhos a atravessar o rio.",
-        "Achei uma árvore com frutas que fazem contas. Trouxe umas moedas também."
       ],
       "aniversario": [
         "{tempo} juntos. Elefante não esquece um dia sequer!",
@@ -1091,11 +1051,6 @@
         "Só 5 questões… bem tranquilo. Vamos?",
         "Ainda não treinou hoje? Dá tempo, sem pressa.",
         "Treino rapidinho e depois um cochilo. Topa?"
-      ],
-      "expedicao_volta": [
-        "Nadei o rio inteiro e fiz amizade com um jacaré!",
-        "Achei a sombra mais gostosa do mundo e cochilei lá.",
-        "Um passarinho viajou nas minhas costas o caminho todo!"
       ],
       "aniversario": [
         "{tempo} juntos… que tranquilidade boa.",

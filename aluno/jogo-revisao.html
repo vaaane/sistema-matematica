@@ -891,20 +891,9 @@
       <div class="aniv-confete" id="aniv-confete" aria-hidden="true"></div>
       <div class="jr-pet-escolha-titulo" id="aniv-tit"></div>
       <div class="aniv-rosto"><span class="jr-icone-pet"><img id="aniv-img" alt="" draggable="false" data-icone-pet/></span><span class="jr-chapeu" aria-hidden="true"></span></div>
-      <div class="exp-volta-fala" id="aniv-fala"></div>
-      <div class="exp-volta-premios" id="aniv-premios"></div>
+      <div class="aniv-fala" id="aniv-fala"></div>
+      <div class="aniv-premios" id="aniv-premios"></div>
       <button class="jr-btn jr-btn-ouro" id="aniv-ok">Obrigado! 🎉</button>
-    </div>
-  </div>
-  <!-- 🎒 O pet voltou da expedição (PROMPT-92) -->
-  <div id="exp-volta" class="jr-pet-escolha" hidden role="dialog" aria-label="O pet voltou da expedição">
-    <div class="jr-pet-escolha-caixa exp-volta-caixa">
-      <div class="exp-volta-chuva" id="exp-volta-chuva" aria-hidden="true"></div>
-      <div class="jr-pet-escolha-titulo" id="exp-volta-tit"></div>
-      <span class="jr-icone-pet exp-volta-rosto"><img id="exp-volta-img" alt="" draggable="false" data-icone-pet/></span>
-      <div class="exp-volta-fala" id="exp-volta-fala"></div>
-      <div class="exp-volta-premios" id="exp-volta-premios"></div>
-      <button class="jr-btn jr-btn-ouro" id="exp-volta-ok">Oba! 🎉</button>
     </div>
   </div>
   <!-- Quem está online numa região (mapa geral) -->
@@ -930,97 +919,72 @@
         <div class="jr-mp-pulo" id="mp-pulo"><div class="jr-mp-corpo" id="mp-corpo"><img id="mp-img" alt="" draggable="false"/></div></div>
         <div class="jr-mp-particulas" id="mp-particulas"></div>
         <div id="mp-chapeu" class="jr-chapeu" hidden aria-hidden="true"></div>
-        <!-- 🧭 em expedição: no lugar do pet -->
-        <div class="mp-exp-fora" id="mp-exp-fora" hidden><b id="mp-exp-fora-tit"></b><span id="mp-exp-fora-hora"></span>
-          <div class="mp-exp-trilho"><div class="mp-exp-fill" id="mp-exp-fora-barra"></div></div>
-          <button class="jr-btn jr-btn-sec mp-exp-chamar" id="mp-exp-chamar">↩️ Chamar de volta</button></div>
         <!-- 😊 humor no canto e ◀ ▶ para trocar de pet (também deslizando o dedo) — PROMPT-175 -->
         <span class="mp-humor" id="mp-humor"></span>
         <button class="mp-seta ant" id="mp-ant" aria-label="Pet anterior">◀</button>
         <button class="mp-seta prox" id="mp-prox" aria-label="Próximo pet">▶</button>
+        <div class="mp-pos" id="mp-pos"></div>
       </div>
-      <div class="mp-pos" id="mp-pos"></div>
+      <!-- ✨ truques: botões redondos embaixo do pet (PROMPT-75; de volta aqui no PROMPT-177) -->
+      <div class="mp-tq-fila" id="mp-tq-fila" role="group" aria-label="Truques" hidden></div>
       </div>
       <div class="jr-mp-info">
         <div class="jr-mp-cab">
-          <div class="jr-mp-cab-nome"><div class="jr-mp-nome"><span id="mp-nome"></span><button class="jr-mp-editar" id="mp-editar" title="Dar um nome" aria-label="Dar um nome">✏️</button><button class="jr-mp-falas" id="mp-falas" title="Falas do pet: ligadas" aria-label="Falas do pet: ligadas">💬</button><button class="jr-mp-meuspets" id="mp-trocar" aria-label="Meus pets: ver e trocar"><span>🐾 Meus pets (<span id="mp-npets">1</span>)</span><span class="jr-mp-carinhas" id="mp-carinhas"></span></button></div></div>
+          <div class="jr-mp-cab-nome"><div class="jr-mp-nome"><span id="mp-nome"></span><button class="jr-mp-editar" id="mp-editar" title="Dar um nome" aria-label="Dar um nome">✏️</button></div></div>
           <div class="mp-cab-dir"><div class="jr-moedas jr-mp-moedas" aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span id="mp-moedas" data-moedas-n>0</span></div>
             <button class="mp-bolsa-ic" id="mp-bolsa" aria-label="Bolsa" title="Bolsa"><img class="jr-item-img" data-icone="bolsa" alt="🎒" draggable="false"/><b id="mp-bolsa-n"></b></button></div>
           <button class="bt-lista-x jr-mp-x" id="mp-fechar" aria-label="Fechar">✕</button>
         </div>
-        <!-- ✨ evolução (PROMPT-173): "Com lealdade 100, {nome} vira adulto!" com o adulto em silhueta; depois, "✨ Adulto" -->
+        <!-- 🐣 | ✨ PROMPT-180: chave Filhote / Adulto nos pets que evoluem (ainda filhote: Adulto com 🔒 e quanto falta) -->
         <div class="mp-evo" id="mp-evo" hidden></div>
         <div class="jr-mp-balao" id="mp-balao" hidden></div>
-        <!-- 🐾 PROMPT-175: três abas, uma de cada vez -->
-        <div class="mp-abas" id="mp-abas" role="tablist">
-          <button role="tab" data-mpaba="cuidar" class="ativa" aria-selected="true">🍖<span>Cuidar</span></button>
-          <button role="tab" data-mpaba="truques" aria-selected="false">✨<span>Truques</span></button>
-          <button role="tab" data-mpaba="visual" aria-selected="false">🎨<span>Visual</span></button>
+        <!-- 🐾 PROMPT-177: Meus pets (abre a coleção) e as abas Cuidar e Visual, uma de cada vez -->
+        <div class="mp-abas" id="mp-abas">
+          <button class="jr-mp-meuspets" id="mp-trocar" aria-label="Meus pets: ver e trocar"><span>🐾 Meus pets (<span id="mp-npets">1</span>)</span><span class="jr-mp-carinhas" id="mp-carinhas"></span></button>
+          <div class="mp-abas-tabs" role="tablist">
+            <button role="tab" data-mpaba="cuidar" class="ativa" aria-selected="true">💜<span>Cuidar</span></button>
+            <button role="tab" data-mpaba="visual" aria-selected="false">🎨<span>Visual</span></button>
+          </div>
         </div>
         <div class="mp-aba" id="mp-aba-cuidar" role="tabpanel">
-          <!-- 🍖 PROMPT-174: Alimentar ao lado da barra e a linha "Come: … · Favorita: …" embaixo -->
-          <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Barriga</span><span id="mp-barriga-rot"></span></div>
+          <!-- 🐾 PROMPT-178: um cartão só, Barriga e Lealdade separadas por uma linha fina -->
+          <div class="mp-cartao">
+          <!-- 🍖 PROMPT-174: Alimentar ao lado da barra e a linha "Come: … | Favorita: …" embaixo -->
+          <div class="jr-mp-barra mp-bloco"><div class="jr-mp-barra-topo"><span>🍖 Barriga</span><span id="mp-barriga-rot"></span></div>
             <div class="mp-barriga-linha"><div class="jr-mp-trilho"><div class="jr-mp-fill" id="mp-barriga-fill"></div></div><button class="jr-btn mp-alimentar" id="mp-alimentar">🍖 Alimentar</button></div>
             <div class="mp-come" id="mp-come"></div></div>
-          <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Lealdade</span><span id="mp-lealdade-rot"></span></div>
+          <div class="jr-mp-barra mp-bloco"><div class="jr-mp-barra-topo"><span>💜 Lealdade</span><span class="mp-leal-dir"><span id="mp-lealdade-rot"></span><button class="jr-mp-info-btn" id="mp-info" title="Como a lealdade funciona" aria-label="Como a lealdade funciona">ⓘ</button></span></div>
             <div class="jr-mp-trilho-marcado">
               <div class="jr-mp-trilho"><div class="jr-mp-fill lealdade" id="mp-lealdade-fill"></div></div>
+              <span class="mp-leal-ponta" id="mp-leal-ponta" aria-hidden="true"></span>
               <span class="jr-mp-marca" id="mp-marca-conversa" title="Conversa">💬</span>
               <span class="jr-mp-marca" id="mp-marca-ajuda" title="Dica nos ginásios">💡</span>
               <span class="jr-mp-marca" id="mp-marca-elimina" title="Elimina uma opção">❌</span>
               <span class="jr-mp-marca evo" id="mp-marca-adulto" title="Vira adulto" hidden>✨</span>
               <div class="mp-marca-balao" id="mp-marca-balao" hidden></div>
             </div>
-            <div class="jr-mp-marco"><span id="mp-marco"></span><button class="jr-mp-info-btn" id="mp-info" title="Como a lealdade funciona" aria-label="Como a lealdade funciona">ⓘ</button>
+            <!-- "Próximo: …" e o 💜 de carinho (tocar no pet também faz carinho) -->
+            <div class="jr-mp-marco"><span id="mp-marco"></span>
+              <button class="mp-carinho-mini" id="mp-carinho" aria-label="Fazer carinho" title="Fazer carinho">💜</button>
               <div class="jr-mp-info-balao" id="mp-info-balao" hidden></div></div>
           </div>
-          <!-- ✅ Hoje com {nome}: alimentou · carinho n/3 · treino n/5 (o 💜 também dá carinho, para quem não descobrir) -->
-          <div class="mp-hoje"><span class="mp-hoje-tit" id="mp-hoje-tit">Hoje</span><span class="mp-hoje-itens" id="mp-hoje"></span>
-            <button class="mp-carinho-mini" id="mp-carinho" aria-label="Fazer carinho" title="Fazer carinho">💜</button></div>
-          <!-- 🎯 Treino do pet (PROMPT-91): 5 questões por dia, puxadas dos próprios erros -->
-          <!-- 🧭 Expedição do pet (PROMPT-92): 1 h ou 2 h fora, volta com moedas -->
-          <div class="mp-extras">
-            <button class="jr-btn mp-treino" id="mp-treino">🎯 Treino de hoje</button>
-            <button class="jr-btn mp-exp-btn" id="mp-exp">🧭 Expedição</button>
           </div>
-        </div>
-        <div class="mp-aba" id="mp-aba-truques" role="tabpanel" hidden>
-          <!-- ✨ truques: botões redondos (PROMPT-75) -->
-          <div class="mp-tq-fila" id="mp-tq-fila" role="group" aria-label="Truques" hidden></div>
-          <div class="mp-visual-rot">🏅 Conquistas</div>
-          <div class="mp-medalhas" id="mp-medalhas"></div>
-          <div class="mp-medalha-info" id="mp-medalha-info">Toque numa medalha.</div>
+          <!-- 🎯 Treino do pet (PROMPT-91): 5 questões por dia, puxadas dos próprios erros -->
+          <button class="jr-btn mp-treino" id="mp-treino">🎯 Treino de hoje</button>
         </div>
         <div class="mp-aba" id="mp-aba-visual" role="tabpanel" hidden>
           <div id="mp-cores-bloco" hidden>
             <div class="mp-visual-rot" id="mp-cores-rot">🐉 Cores do dragão</div><div class="mp-chips" id="mp-visual-cores"></div>
             <div class="mp-visual-dica" id="mp-cor-msg"></div>
           </div>
-          <div id="mp-forma-bloco" hidden>
-            <div class="mp-visual-rot">Forma</div>
-            <button class="mp-chave" id="mp-filhote" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-filhote-txt">Mostrar como filhote</span></button>
+          <div class="mp-visual-dica" id="mp-visual-vazio" hidden></div>
+          <!-- 🖼️ PROMPT-179: fundo do cartão do pet (um só para todos os pets) -->
+          <div id="mp-fundos-bloco">
+            <div class="mp-visual-rot">🖼️ Fundo</div>
+            <div class="mp-fundos" id="mp-fundos"></div>
+            <div class="jr-pers-compra mp-fundo-compra" id="mp-fundo-compra" hidden></div>
           </div>
-          <div class="mp-visual-rot">Tinta</div><div class="mp-chips" id="mp-visual-tintas"></div>
-          <div class="mp-visual-rot">Efeito ao andar</div><div class="mp-chips" id="mp-visual-efeitos"></div>
-          <div class="mp-visual-dica" id="mp-visual-dica"></div>
-          <div class="mp-visual-rot">Convites</div>
-          <button class="mp-chave" id="mp-sem-convites" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-sem-convites-txt">Não receber convites: desligado</span></button>
-          <div class="mp-visual-rot">Letra</div>
-          <button class="mp-chave" id="mp-letra" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-letra-txt">Aa Letra grande: desligado</span></button>
-          <div class="mp-visual-rot">📖 Ficha do pet</div>
-          <div class="mp-ficha" id="mp-ficha"></div>
         </div>
-      </div>
-      <!-- 🧭 Expedição: 1 h ou 2 h -->
-      <div class="mp-sub" id="mp-exp-painel" hidden>
-        <div class="mp-sub-topo"><b>🧭 Expedição</b><span id="mp-exp-sub"></span><button class="bt-lista-x" id="mp-exp-fechar" aria-label="Fechar">✕</button></div>
-        <div class="mp-exp-opcoes" id="mp-exp-opcoes"></div>
-      </div>
-      <!-- 🧭 Chamar de volta antes do fim (PROMPT-116): sem prêmio -->
-      <div class="mp-sub" id="mp-exp-confirma" hidden>
-        <div class="mp-sub-topo"><b>↩️ Chamar de volta</b><button class="bt-lista-x" data-exp-conf="nao" aria-label="Fechar">✕</button></div>
-        <div class="mp-exp-opcoes"><p class="mp-exp-aviso" id="mp-exp-conf-txt"></p><p class="mp-exp-conf-perg">Chamar mesmo assim?</p>
-          <div class="mp-exp-conf-botoes"><button class="jr-btn" data-exp-conf="sim">↩️ Chamar de volta</button><button class="jr-btn jr-btn-ouro" data-exp-conf="nao">⏳ Deixar terminar</button></div></div>
       </div>
       <!-- Bolsa: comidas e peixes guardados -->
       <div class="mp-sub" id="mp-bolsa-painel" hidden>

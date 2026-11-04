@@ -9,6 +9,14 @@
  ],
  "sentado_altura": 604,
  "quadro_por_pet": {
+  "morcego": { "tamanho_quadro": [1400, 704] },
+  "morcego_marrom": { "tamanho_quadro": [1400, 704] },
+  "morcego_cinza": { "tamanho_quadro": [1400, 704] },
+  "morcego_branco": { "tamanho_quadro": [1400, 704] },
+  "morcego_roxo": { "tamanho_quadro": [1400, 704] },
+  "morcego_azul": { "tamanho_quadro": [1400, 704] },
+  "morcego_vermelho": { "tamanho_quadro": [1400, 704] },
+  "morcego_dourado": { "tamanho_quadro": [1400, 704] },
   "dragao_azul_adulto": {
    "tamanho_quadro": [
     1219,
@@ -598,18 +606,14 @@
    ],
    "sentado_2": [
     "pets/gaviao/sentado_2_1.webp",
-    "pets/gaviao/sentado_2_2.webp",
-    "pets/gaviao/sentado_2_3.webp"
+    "pets/gaviao/sentado_2_2.webp"
    ],
    "dormindo": [
-    "pets/gaviao/dormindo_1.webp",
-    "pets/gaviao/dormindo_2.webp",
-    "pets/gaviao/dormindo_3.webp"
+    "pets/gaviao/dormindo_1.webp"
    ],
    "feliz": [
     "pets/gaviao/feliz_1.webp",
-    "pets/gaviao/feliz_2.webp",
-    "pets/gaviao/feliz_3.webp"
+    "pets/gaviao/feliz_2.webp"
    ],
    "busto_sorrindo": [
     "pets/gaviao/busto_sorrindo_1.webp"
@@ -623,18 +627,10 @@
    "lamber_beicos": [
     "pets/gaviao/lamber_beicos_1.webp"
    ],
-   "pulo_cambalhota": [
-    "pets/gaviao/pulo_cambalhota_1.webp",
-    "pets/gaviao/pulo_cambalhota_2.webp",
-    "pets/gaviao/pulo_cambalhota_3.webp"
-   ],
-   "salto_pouso": [
-    "pets/gaviao/salto_pouso_1.webp"
-   ],
    "correndo": [
-    "pets/gaviao/pulo_cambalhota_1.webp",
-    "pets/gaviao/pulo_cambalhota_2.webp",
-    "pets/gaviao/pulo_cambalhota_3.webp"
+    "pets/gaviao/andar_direita_1.webp",
+    "pets/gaviao/andar_direita_2.webp",
+    "pets/gaviao/andar_direita_3.webp"
    ]
   },
   "capivara": {
@@ -762,20 +758,24 @@
    "comendo": [
     "pets/morcego/comendo_1.webp",
     "pets/morcego/comendo_2.webp",
-    "pets/morcego/comendo_3.webp"
+    "pets/morcego/comendo_3.webp",
+    "pets/morcego/comendo_4.webp"
    ],
    "correndo": [
     "pets/morcego/correndo_1.webp",
     "pets/morcego/correndo_2.webp",
-    "pets/morcego/correndo_3.webp"
+    "pets/morcego/correndo_3.webp",
+    "pets/morcego/correndo_4.webp",
+    "pets/morcego/correndo_5.webp",
+    "pets/morcego/correndo_6.webp",
+    "pets/morcego/correndo_7.webp",
+    "pets/morcego/correndo_8.webp"
    ],
    "costas_parado": [
     "pets/morcego/costas_parado_1.webp"
    ],
    "dormindo": [
-    "pets/morcego/dormindo_1.webp",
-    "pets/morcego/dormindo_2.webp",
-    "pets/morcego/dormindo_3.webp"
+    "pets/morcego/pendurado_1.webp"
    ],
    "enrolado": [
     "pets/morcego/enrolado_1.webp"
@@ -808,7 +808,23 @@
     "pets/morcego/voando_1.webp",
     "pets/morcego/voando_2.webp",
     "pets/morcego/voando_3.webp",
-    "pets/morcego/voando_4.webp"
+    "pets/morcego/voando_4.webp",
+    "pets/morcego/voando_5.webp",
+    "pets/morcego/voando_6.webp",
+    "pets/morcego/voando_7.webp",
+    "pets/morcego/voando_8.webp"
+   ],
+   "lamber_beicos": [
+    "pets/morcego/lamber_beicos_1.webp"
+   ],
+   "pendurado": [
+    "pets/morcego/pendurado_1.webp"
+   ],
+   "voando_frente": [
+    "pets/morcego/voando_frente_1.webp",
+    "pets/morcego/voando_frente_2.webp",
+    "pets/morcego/voando_frente_3.webp",
+    "pets/morcego/voando_frente_4.webp"
    ]
   },
   "dragao_azul_adulto": {
@@ -2642,33 +2658,29 @@
   "morcego": {
    "voar": [
     ["sentado_girando", 1, 600],
-    ["voando", 1, 130],
-    ["voando", 2, 130],
-    ["voando", 3, 130],
-    ["voando", 4, 130],
-    ["voando", 1, 130],
-    ["voando", 2, 130],
-    ["voando", 3, 130],
-    ["voando", 4, 130],
-    ["voando", 1, 130],
-    ["voando", 2, 130],
-    ["voando", 3, 130],
-    ["voando", 4, 130],
-    ["voando", 1, 130],
-    ["voando", 2, 130],
-    ["voando", 3, 130],
-    ["voando", 4, 130],
+    ["voando", 1, 120],
+    ["voando", 2, 120],
+    ["voando", 3, 120],
+    ["voando", 4, 120],
+    ["voando", 5, 120],
+    ["voando", 6, 120],
+    ["voando", 7, 120],
+    ["voando", 8, 120],
+    ["voando", 1, 120],
+    ["voando", 2, 120],
+    ["voando", 3, 120],
+    ["voando", 4, 120],
+    ["voando", 5, 120],
+    ["voando", 6, 120],
+    ["voando", 7, 120],
+    ["voando", 8, 120],
     ["feliz", 1, 900],
     ["sentado_girando", 1, 600]
    ],
    "dormir": [
     ["sentado_girando", 1, 600],
     ["bocejo", 1, 1200],
-    ["dormindo", 2, 1200],
-    ["dormindo", 1, 1400],
-    ["dormindo", 3, 1400],
-    ["dormindo", 1, 1400],
-    ["dormindo", 3, 1400],
+    ["pendurado", 1, 5600],
     ["sentado_girando", 2, 900],
     ["sentado_girando", 1, 600]
    ],
@@ -2705,10 +2717,10 @@
     ["voando", 2, 90],
     ["voando", 3, 90],
     ["voando", 4, 90],
-    ["voando", 1, 90],
-    ["voando", 2, 90],
-    ["voando", 3, 90],
-    ["voando", 4, 90],
+    ["voando", 5, 90],
+    ["voando", 6, 90],
+    ["voando", 7, 90],
+    ["voando", 8, 90],
     ["feliz", 2, 600]
    ],
    "lamber_pata": [

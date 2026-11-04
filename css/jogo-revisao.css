@@ -1150,49 +1150,16 @@ html.jr-deitado .jr-mp-info { gap: 5px; }
 .mp-treino { flex: 1 1 auto; min-width: 0; min-height: 36px; padding: 4px 10px; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .6; }
 .mp-treino.pronto { opacity: 1; color: #2a1a00; background: linear-gradient(135deg, #ffb300, var(--jr-ouro)); border-color: #c48a00; }
 html.jr-deitado .mp-treino { min-height: 34px; font-size: 14px; }
-/* 🧭 Expedição do pet (PROMPT-92) */
-.mp-exp-btn { flex: none; min-height: 36px; padding: 4px 12px; font-size: 15px; white-space: nowrap; }
-.mp-exp-btn.apagado { opacity: .6; }
-html.jr-deitado .mp-exp-btn { min-height: 34px; font-size: 14px; padding: 4px 8px; }
-.mp-exp-opcoes { display: flex; flex-direction: column; gap: 10px; justify-content: center; flex: 1; min-height: 0; }
-.mp-exp-op { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 14px; cursor: pointer; text-align: left; color: #fff;
-  background: rgba(124,92,252,.14); border: 2px solid rgba(124,92,252,.5); font-family: 'Inter', sans-serif; }
-.mp-exp-op b { font: 700 20px 'Rajdhani', sans-serif; color: var(--jr-ouro); }
-.mp-exp-op span { font-size: 14px; color: #dcdcf0; display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.mp-exp-op:not(:disabled):hover { background: rgba(124,92,252,.26); }
-.mp-exp-op:disabled { opacity: .45; cursor: default; }
-.mp-exp-aviso { margin: 0; padding: 8px 10px; border-radius: 10px; background: rgba(255,123,46,.14); border: 1px solid rgba(255,123,46,.5); color: #ffd2b0;
-  font: 700 14px 'Inter', sans-serif; }
-/* no Meu Pet: o cartão no lugar do pet (truques e o pet somem) */
-#meu-pet.mp-fora .jr-mp-pulo, #meu-pet.mp-fora .jr-mp-sombra, #meu-pet.mp-fora .mp-tq-fila { visibility: hidden; }
-#meu-pet.mp-fora .jr-mp-palco { cursor: default; }
-.mp-exp-fora { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 14px; text-align: center;
-  color: #fff; font-family: 'Inter', sans-serif; }
-.mp-exp-fora[hidden] { display: none; }
-.mp-exp-fora b { font: 700 20px 'Rajdhani', sans-serif; color: var(--jr-ouro); }
-.mp-exp-fora span { font-size: 14px; color: #dcdcf0; }
-.mp-exp-trilho { width: 80%; height: 10px; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; }
-.mp-exp-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--jr-cyan), var(--jr-verde)); transition: width .6s; }
-/* HUD: o rosto do pet vira um mini relógio */
-.jr-btn-pet.fora img { opacity: .25; filter: grayscale(1); }
-.jr-exp-relogio { position: absolute; inset: 0; display: grid; place-items: center; font: 700 10px/1.05 'Inter', sans-serif; color: #fff; text-align: center;
-  text-shadow: 0 1px 2px #000; padding: 2px; }
-.jr-exp-relogio[hidden] { display: none; }
-/* puf de poeira quando o pet sai ou volta */
+/* puf de poeira */
 .jr-puf { position: absolute; transform: translate(-50%, -100%); font-size: 34px; pointer-events: none; animation: jr-puf .9s ease-out forwards; }
 @keyframes jr-puf { from { opacity: 1; transform: translate(-50%, -100%) scale(.6); } to { opacity: 0; transform: translate(-50%, -140%) scale(1.6); } }
-/* cartão da volta: moedas caindo */
-.exp-volta-caixa { position: relative; max-width: 420px; overflow: hidden; }
-.exp-volta-rosto { width: 84px; height: 84px; border: 3px solid var(--jr-ouro); }
-.exp-volta-fala { position: relative; padding: 8px 12px; border-radius: 14px; background: #fff; color: #1b1838; font: 700 15px 'Inter', sans-serif; max-width: 100%; }
-.exp-volta-premios { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-.exp-premio { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 999px; background: rgba(255,215,0,.12); border: 1px solid rgba(255,215,0,.45);
+/* 🎂 aniversário do pet: a fala e os prêmios */
+.aniv-fala { position: relative; padding: 8px 12px; border-radius: 14px; background: #fff; color: #1b1838; font: 700 15px 'Inter', sans-serif; max-width: 100%; }
+.aniv-premios { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.aniv-premio { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 999px; background: rgba(255,215,0,.12); border: 1px solid rgba(255,215,0,.45);
   color: #ffe9a8; font: 700 18px 'Rajdhani', sans-serif; }
-.exp-premio .jr-item-img { width: 24px; height: 24px; object-fit: contain; }
-.exp-volta-chuva { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.exp-volta-chuva i { position: absolute; top: -30px; font-style: normal; font-size: 20px; animation: exp-cai 1.6s ease-in forwards; }
-@keyframes exp-cai { from { transform: translateY(0) rotate(0); opacity: 1; } 85% { opacity: 1; } to { transform: translateY(460px) rotate(300deg); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .exp-volta-chuva, .jr-puf { display: none; } }
+.aniv-premio .jr-item-img { width: 24px; height: 24px; object-fit: contain; }
+@media (prefers-reduced-motion: reduce) { .jr-puf { display: none; } }
 html.jr-deitado .jr-mp-nome { font-size: 22px; }
 html.jr-deitado .jr-mp-botoes .jr-btn { min-height: 36px; padding: 4px 10px; font-size: 15px; }
 /* 4 botões na última fileira: numa linha só se couberem, senão 2 × 2 */
@@ -3604,12 +3571,6 @@ html.jr-deitado .venc-corpo { grid-template-columns: repeat(3, minmax(0, 1fr)); 
 @keyframes qe-sp-pulo { 50% { transform: translateY(-110%); } }
 .qe-sp-num { position: absolute; left: 0; right: 0; bottom: 5%; text-align: center; }
 
-/* ↩️ chamar o pet de volta da expedição (PROMPT-116) */
-.mp-exp-chamar { margin-top: 4px; min-height: 36px; padding: 4px 14px; font-size: 14px; }
-.mp-exp-conf-perg { margin: 4px 0 0; text-align: center; font: 700 15px 'Inter', sans-serif; color: #fff; }
-.mp-exp-conf-botoes { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-.mp-exp-conf-botoes .jr-btn { min-height: 40px; padding: 4px 14px; }
-
 /* ── 🏅 quadros comprados e 🏆 Quadro dos Campeões (PROMPT-117) ── */
 .cs-mini-quadro { position: relative; width: 46px; height: 46px; pointer-events: none; }
 .cs-mini-quadro img { width: 100%; height: 100%; object-fit: contain; }
@@ -3628,9 +3589,6 @@ html.jr-deitado .venc-corpo { grid-template-columns: repeat(3, minmax(0, 1fr)); 
 @media (prefers-reduced-motion: reduce) { .cs-camp-brilho { animation: none; filter: drop-shadow(0 0 6px rgba(255,215,0,.7)); } }
 .cs-mini-quadro .cs-mini-trofeu { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); font-size: 22px; line-height: 1; }
 .lj-emoji > .cs-mini-quadro { width: 52px; height: 52px; display: block; }
-/* 🧭 quadro do pet com o pet em expedição (PROMPT-119) */
-.cs-foto-selo { position: absolute; right: 2%; top: 2%; display: grid; place-items: center; width: 30%; aspect-ratio: 1; border-radius: 50%; font-size: 13px; line-height: 1;
-  background: rgba(13,15,26,.85); border: 1px solid var(--jr-ouro); }
 
 /* ── 🎨 cores dos móveis (PROMPT-118): fileira de bolinhas acima das ferramentas ── */
 .cs-cores { flex-basis: 100%; display: flex; justify-content: center; gap: 8px; padding: 6px 8px; border-radius: 999px; background: rgba(13,15,26,.88); border: 1px solid rgba(255,255,255,.2); }
@@ -4013,36 +3971,155 @@ html.jr-deitado .jr-moedas-topo { font-size: 12.5px; padding: 3px 8px; margin-le
 .mp-seta:hover { background: rgba(124,92,252,.5); }
 .mp-pos { flex: none; text-align: center; font: 700 13px 'Orbitron', sans-serif; color: #c9cde0; min-height: 16px; }
 #jr-app #mp-palco { touch-action: pan-y; }
-/* ✅ Hoje com {nome} */
-.mp-hoje { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font: 600 12.5px 'Inter', sans-serif; color: #e4dcff; }
-.mp-hoje-tit { font-weight: 800; }
-.mp-hoje-itens { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; min-width: 0; }
-.mp-hoje-itens span { padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.05); color: #8a8fa8; border: 1px solid rgba(255,255,255,.1); white-space: nowrap; }
-.mp-hoje-itens span.feito { color: #b8ffd5; background: rgba(0,230,118,.12); border-color: rgba(0,230,118,.45); }
 .mp-carinho-mini { flex: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 1px solid rgba(124,92,252,.6); background: rgba(124,92,252,.2); font-size: 16px; }
 .mp-carinho-mini:disabled { opacity: .5; }
-/* 🏅 medalhas do pet */
-.mp-medalhas { display: flex; flex-wrap: wrap; gap: 6px; }
-.mp-medalha { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; font-size: 19px;
-  background: rgba(13,15,26,.6); border: 2px dashed rgba(255,255,255,.25); }
-.mp-medalha span { filter: grayscale(1); opacity: .45; }
-.mp-medalha.ok { background: radial-gradient(circle at 35% 30%, #ffe27a, #c48a00); border: 2px solid #ffd700; box-shadow: 0 2px 8px rgba(255,215,0,.35); }
-.mp-medalha.ok span { filter: none; opacity: 1; }
-.mp-medalha.sel { outline: 2px solid #fff; outline-offset: 2px; }
-.mp-medalha-info { font: 600 12.5px 'Inter', sans-serif; color: #c9cde0; min-height: 18px; }
-.mp-medalha-info b { color: #fff; }
-/* 📖 ficha do pet */
-.mp-ficha { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
-.mp-ficha div { display: flex; flex-direction: column; padding: 5px 8px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); }
-.mp-ficha span { font: 600 11px 'Inter', sans-serif; color: #9aa0c0; }
-.mp-ficha b { display: inline-flex; align-items: center; gap: 4px; font: 700 13.5px 'Inter', sans-serif; color: #fff; }
-.mp-ficha .jr-item-img, .mp-ficha .jr-item-emoji { width: 20px; height: 20px; object-fit: contain; font-size: 16px; line-height: 20px; flex: none; }
 .mp-aba { overflow-x: hidden; }
 html.jr-deitado .mp-abas button { min-height: 34px; font-size: 15px; }
 html.jr-deitado .mp-abas button span { font-size: 13.5px; }
 html.jr-deitado .mp-aba { gap: 5px; }
 html.jr-deitado .mp-humor { font-size: 11px; padding: 2px 7px; }
 html.jr-deitado .mp-pos { font-size: 11px; min-height: 13px; }
-html.jr-deitado .mp-medalha { width: 34px; height: 34px; font-size: 16px; }
-html.jr-deitado .mp-hoje { font-size: 11.5px; }
 html.jr-deitado .mp-bolsa-ic { width: 30px; height: 30px; }
+
+/* 💤 PROMPT-176: o pet no quadro de dormir respira (a imagem estica de leve na vertical; o morcego pendurado, a partir do galho)
+   e um "z" sobe ao lado da cabeça (criado pelo JS a cada ~1,5 s) */
+#jr-app img.pet-dorme { animation: pet-respira 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
+#jr-app img.pet-dorme.pendurado { transform-origin: 50% 0; }
+/* no mapa (.jr-ator: translate(-50%, -100%) antes da escala): o pé fica no topo da caixa e o galho, uma altura acima */
+#jr-app .jr-ator.pet-dorme { transform-origin: 50% 0; }
+#jr-app .jr-ator.pet-dorme.pendurado { transform-origin: 50% -100%; }
+@keyframes pet-respira { 0%, 100% { scale: 1 1; } 50% { scale: 1 1.025; } }
+.pet-z { position: absolute; pointer-events: none; font: 800 14px 'Rajdhani', sans-serif; color: #dfe6ff; text-shadow: 0 1px 3px rgba(0,0,0,.8);
+  animation: pet-z-sobe 1.5s ease-out forwards; }
+@keyframes pet-z-sobe { 0% { opacity: 0; translate: 0 0; } 20% { opacity: 1; } 100% { opacity: 0; translate: 10px -26px; } }
+@media (prefers-reduced-motion: reduce) { #jr-app img.pet-dorme { animation: none; } .pet-z { display: none; } }
+
+/* ============================================================
+   🐾 PROMPT-177: Meu Pet limpo — o pet e os truques à esquerda; à direita o topo, "Meus pets" + Cuidar / Visual e a aba
+   ============================================================ */
+.jr-mp-esq { flex-basis: 40%; gap: 5px; }
+/* o cartão corta o que passa das bordas (as asas do dragão adulto) */
+#jr-app .jr-mp-palco, #jr-app .jr-mp-palco.largo { overflow: hidden; z-index: auto; }
+#jr-app .jr-mp-caixa:has(.jr-mp-palco.largo) { overflow: hidden; }
+.jr-mp-palco .mp-pos { position: absolute; left: 0; right: 0; bottom: 4px; z-index: 3; min-height: 0; pointer-events: none; font-size: 11.5px; text-shadow: 0 1px 2px #000; }
+.jr-mp-palco .mp-pos:empty { display: none; }
+.jr-mp-esq > .mp-tq-fila { padding-bottom: 2px; }
+.mp-tq { width: 46px; }
+.mp-tq-ic { width: 44px; height: 44px; font-size: 22px; }
+/* "🐾 Meus pets (9)" e as duas abas numa linha */
+.mp-abas { align-items: stretch; gap: 6px; }
+.mp-abas > .jr-mp-meuspets { flex: none; border-radius: 12px; padding: 3px 8px; min-height: 40px; }
+.mp-abas-tabs { flex: 1 1 auto; min-width: 0; display: flex; gap: 6px; }
+/* Cuidar: o 💜 no fim da linha "Próximo: …" e o Treino na largura toda */
+.jr-mp-marco > #mp-marco { flex: 1; min-width: 0; }
+.jr-mp-marco > .mp-carinho-mini { margin-left: auto; }
+#jr-app .mp-treino { flex: none; width: 100%; min-height: 40px; }
+html.jr-deitado .jr-mp-esq { gap: 3px; }
+html.jr-deitado .mp-abas > .jr-mp-meuspets { min-height: 34px; font-size: 12px; }
+html.jr-deitado .mp-tq { width: 42px; }
+html.jr-deitado .mp-tq-ic { width: 38px; height: 38px; font-size: 19px; }
+html.jr-deitado .mp-tq small { font-size: 9px; }
+html.jr-deitado #jr-app .mp-treino { min-height: 34px; }
+
+/* ============================================================
+   🐾 PROMPT-178: aba Cuidar num cartão só (Barriga | Lealdade) e o Treino roxo; os blocos ocupam a coluna toda
+   ============================================================ */
+/* "Meus pets" abre por cima do Meu Pet (o Meu Pet não fecha); a silhueta do pet escondido, por cima dela */
+#pet-colecao, #pet-silhueta { z-index: 66; }
+#mp-aba-cuidar { gap: 8px; overflow-y: auto; }
+.mp-cartao { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: space-evenly; gap: 6px; padding: 10px 12px; border-radius: 14px;
+  background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.1); }
+.mp-bloco + .mp-bloco { padding-top: 10px; border-top: 1px solid rgba(255,255,255,.1); }
+.mp-bloco .jr-mp-barra-topo { align-items: center; font-size: 16px; }
+.mp-bloco .jr-mp-trilho { height: 16px; border-radius: 999px; }
+.mp-barriga-linha { gap: 10px; margin-top: 6px; }
+#jr-app .mp-alimentar { min-height: 32px; }
+.mp-come { margin-top: 6px; gap: 6px; }
+.mp-come-l { display: inline-flex; align-items: center; gap: 3px; }
+.mp-come-sep { align-self: stretch; width: 1px; margin: 2px 4px; background: rgba(255,255,255,.25); }
+.mp-leal-dir { display: inline-flex; align-items: center; gap: 6px; }
+.mp-bloco .jr-mp-trilho-marcado { margin-top: 6px; }
+.mp-bloco .jr-mp-trilho-marcado .jr-mp-trilho { margin-top: 0; }
+.jr-mp-marca { top: 50%; }
+/* a bolinha da posição atual, na ponta da parte cheia */
+.mp-leal-ponta { position: absolute; top: 50%; z-index: 1; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none;
+  background: #fff; border: 2px solid #b18cff; box-shadow: 0 0 6px rgba(177,140,255,.8); transition: left .5s ease; }
+.mp-bloco .jr-mp-marco { margin-top: 8px; }
+/* 🎯 Treino: roxo (o tom do Cuidar ativo), largura toda, com a seta; feito ou bloqueado = apagado */
+#jr-app .mp-treino { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 42px; padding: 4px 14px; opacity: .55; color: #fff;
+  background: linear-gradient(135deg, #6a4be0, var(--jr-roxo)); border-color: #5a3fc4; }
+#jr-app .mp-treino.pronto { opacity: 1; color: #fff; background: linear-gradient(135deg, #6a4be0, var(--jr-roxo)); border-color: #b18cff; box-shadow: 0 2px 10px rgba(124,92,252,.35); }
+.mp-treino span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.mp-treino b { flex: none; font-size: 22px; line-height: 1; }
+html.jr-deitado .mp-cartao { padding: 6px 10px; gap: 3px; }
+html.jr-deitado .mp-bloco + .mp-bloco { padding-top: 5px; }
+html.jr-deitado .mp-bloco .jr-mp-barra-topo { font-size: 14px; }
+html.jr-deitado .mp-bloco .jr-mp-trilho { height: 13px; }
+html.jr-deitado .mp-barriga-linha, html.jr-deitado .mp-bloco .jr-mp-trilho-marcado { margin-top: 3px; }
+html.jr-deitado .mp-come { margin-top: 3px; }
+html.jr-deitado .mp-bloco .jr-mp-marco { margin-top: 4px; }
+html.jr-deitado #jr-app .mp-treino { min-height: 34px; }
+
+/* ============================================================
+   🖼️ PROMPT-179: fundos do cartão do pet (Meu Pet → Visual)
+   ============================================================ */
+#jr-app .jr-mp-palco.com-fundo { background-color: #0d0f1a; background-position: center 80%; background-size: cover; background-repeat: no-repeat; }
+.jr-mp-palco.com-fundo .jr-mp-brilho { display: none; }
+.mp-fundos { display: flex; gap: 6px; overflow-x: auto; overflow-y: hidden; padding: 2px 2px 4px; scrollbar-width: thin; overscroll-behavior-x: contain; }
+.mp-fundo { position: relative; flex: 0 0 48px; height: 72px; padding: 0; border-radius: 10px; overflow: hidden; cursor: pointer;
+  border: 2px solid rgba(255,255,255,.18); background: rgba(13,15,26,.6); }
+#jr-app .mp-fundo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 80%; image-rendering: auto; }
+.mp-fundo-padrao { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(124,92,252,.22), rgba(13,15,26,.75)); }
+.mp-fundo small { position: absolute; left: 0; right: 0; bottom: 0; padding: 1px 2px; font: 700 8.5px/1.2 'Inter', sans-serif; color: #fff; text-align: center;
+  background: rgba(0,0,0,.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-fundo.sel { border-color: var(--jr-roxo); box-shadow: 0 0 0 2px rgba(177,140,255,.65); }
+.mp-fundo.bloqueado img { filter: brightness(.55) saturate(.7); }
+.mp-fundo-tranca { position: absolute; inset: 0 0 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+.mp-fundo-tranca i { font-style: normal; font-size: 14px; line-height: 1; }
+.mp-fundo-tranca b { display: inline-flex; align-items: center; gap: 2px; font: 800 10px 'Orbitron', sans-serif; color: var(--jr-ouro); text-shadow: 0 1px 2px #000; }
+#jr-app .mp-fundo-tranca .jr-item-img { width: 11px; height: 11px; object-fit: contain; }
+.mp-fundo-compra[hidden] { display: none; }
+html.jr-deitado .mp-fundo { flex-basis: 34px; height: 50px; border-radius: 8px; }
+html.jr-deitado .mp-fundo small { font-size: 7.5px; }
+html.jr-deitado .mp-fundo-tranca { inset: 0 0 10px; }
+html.jr-deitado .mp-fundo-tranca i { font-size: 11px; }
+html.jr-deitado .mp-fundo-tranca b { font-size: 8.5px; }
+html.jr-deitado #mp-aba-visual { gap: 3px; }
+html.jr-deitado #mp-aba-visual .mp-visual-rot { font-size: 11px; }
+html.jr-deitado .mp-fundo-compra { padding: 4px 8px; }
+html.jr-deitado .mp-fundo-compra span { font-size: 12.5px; }
+
+/* 🦇 PROMPT-176: o morcego tem quadro mais largo (1400 × 704, asas abertas). Nas caixas pequenas (coleção, chips, cartões) a imagem
+   fica com a proporção do quadro padrão e recorta as sobras dos lados, a partir dos pés: o corpo continua do mesmo tamanho */
+#jr-app img[data-largo] { aspect-ratio: 898 / 704; object-fit: cover; object-position: 50% 100%; max-width: none; }
+#jr-app .lj-previa img[data-largo] { width: 100%; height: auto; max-height: 100%; }
+
+/* ============================================================
+   🐾 PROMPT-180: blocos iguais, amizade em letra pequena, chave Filhote | Adulto e o adulto inteiro no truque
+   ============================================================ */
+/* Barriga e Lealdade sempre com a mesma altura (a do cartão até o Treino), o texto nunca aumenta o bloco */
+.mp-cartao { display: grid; grid-template-rows: 1fr 1fr; grid-template-columns: minmax(0, 1fr); justify-content: stretch; align-content: stretch; gap: 0; padding: 0 12px; }
+.mp-cartao > .mp-bloco { min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding: 6px 0; }
+.mp-cartao > .mp-bloco + .mp-bloco { padding-top: 6px; }
+.mp-bloco .jr-mp-barra-topo, .mp-bloco .jr-mp-barra-topo > span { white-space: nowrap; min-width: 0; }
+.mp-bloco .jr-mp-barra-topo > span:first-child { flex: none; }
+.mp-bloco .jr-mp-barra-topo > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.mp-leal-dir #mp-lealdade-rot { overflow: hidden; text-overflow: ellipsis; }
+.mp-come { flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
+.mp-bloco .jr-mp-marco > #mp-marco { font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #c9cde0; }
+html.jr-deitado .mp-cartao { padding: 0 10px; }
+html.jr-deitado .mp-cartao > .mp-bloco { padding: 3px 0; }
+html.jr-deitado .mp-bloco .jr-mp-marco > #mp-marco { font-size: 10.5px; }
+/* 🐣 | ✨ chave Filhote / Adulto (no lugar do selo "✨ Adulto") */
+.mp-evo { position: relative; gap: 0; padding: 2px; background: rgba(13,15,26,.6); border: 1px solid rgba(255,255,255,.18); }
+.mp-evo button { padding: 3px 11px; border: 0; border-radius: 999px; background: none; color: #c9cde0; font: 700 12.5px/1.2 'Inter', sans-serif; cursor: pointer; white-space: nowrap; }
+.mp-evo button.sel { color: #fff; background: linear-gradient(135deg, #6a4be0, var(--jr-roxo)); box-shadow: 0 1px 6px rgba(124,92,252,.45); }
+.mp-evo button.trancado { color: #8a8fa8; }
+.mp-evo-balao { position: absolute; left: 0; top: calc(100% + 6px); z-index: 9; width: max-content; max-width: 260px; padding: 6px 10px; border-radius: 10px;
+  background: #fff; color: #1f2937; font: 700 12.5px/1.3 'Inter', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,.4); pointer-events: none; }
+.mp-evo-balao[hidden] { display: none; }
+.mp-evo button.trancado:hover + .mp-evo-balao { display: block; }
+html.jr-deitado .mp-evo button { padding: 2px 9px; font-size: 11.5px; }
+/* adulto no truque: o desenho inteiro sai das bordas do cartão, por cima dos textos da direita (no fim volta a cortar) */
+#jr-app #meu-pet.em-truque .jr-mp-caixa, #jr-app #meu-pet.em-truque .jr-mp-palco { overflow: visible; }
+#jr-app #meu-pet.em-truque .jr-mp-esq { position: relative; z-index: 7; }

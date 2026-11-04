@@ -14,7 +14,7 @@
    "capivara": ["fruta", "maca", "banana", "cenoura", "milho", "batata", "racao"],
    "tigre": ["carne", "peixe"],
    "unicornio": ["maca", "cenoura", "fruta", "milho", "banana"],
-   "morcego": ["fruta", "banana", "maca"],
+   "morcego": ["maca", "fruta", "banana"],
    "dragao_vermelho": ["carne", "peixe"]
   },
   "nao_come": {
@@ -162,7 +162,7 @@
   "axolote": "isca",
   "tigre": "carne",
   "unicornio": "maca",
-  "morcego": "banana",
+  "morcego": "maca",
   "capivara": "milho",
   "dragao_vermelho": "carne",
   "elefante": "banana"

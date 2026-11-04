@@ -38,6 +38,16 @@ export const CORES_PET = {
 };
 export const NOME_COR_PET = { marrom: 'Marrom', cinza: 'Cinza', branco: 'Branco', roxo: 'Roxo', azul: 'Azul', rosa: 'Rosa', verde: 'Verde', dourado: 'Dourado', preto: 'Preto', vermelho: 'Vermelho' };
 export const NOME_ORIGINAL_PET = { morcego: 'Preto' };   // o chip sem cor (o resto: Original)
+// 🖼️ fundos do cartão do pet no Meu Pet (PROMPT-179): img/jogo/pets/fundos/{id}.webp (768 × 1152). Um só por aluno (pets/fundo);
+// os especiais custam `preco` moedas e ficam em pets/fundos_comprados/{id}. Ordem: grátis escuros, grátis claros, especiais.
+export const FUNDOS_PET = [
+  ['noite', 'Noite'], ['roxo', 'Roxo'], ['mata', 'Mata'], ['grafite', 'Grafite'], ['oceano', 'Oceano'], ['aurora', 'Aurora'],
+  ['dourado', 'Dourado'], ['vinho', 'Vinho'], ['palco', 'Palco'], ['chocolate', 'Chocolate'],
+  ['azul_claro', 'Azul-claro'], ['lavanda', 'Lavanda'], ['menta', 'Menta'], ['pessego', 'Pêssego'], ['creme', 'Creme'], ['rosa', 'Rosa'],
+  ['nuvem', 'Nuvem'], ['amanhecer', 'Amanhecer'],
+  ['espaco', 'Espaço', 50], ['doces', 'Terra dos doces', 50], ['lua', 'Lua cheia', 50], ['neve', 'Neve', 50], ['floresta', 'Floresta', 50],
+  ['praia', 'Praia', 50], ['jardim', 'Jardim', 50], ['quarto', 'Quarto', 50], ['ceu', 'Céu', 50], ['lilas', 'Lilás', 50],
+].map(([id, nome, preco = 0]) => ({ id, nome, preco }));
 // gato_azul → 'gato'; o resto (gato, dragao_azul, dragao_vermelho_sombra…) → null
 export const petDaCor = (forma) => { const m = /^([a-z]+)_([a-z]+)$/.exec(forma || ''); return m && CORES_PET[m[1]]?.includes(m[2]) ? m[1] : null; };
 export const coresDoPet = (pet) => (CORES_PET[pet] || []).filter(c => SPR?.pets?.[`${pet}_${c}`]);
@@ -208,8 +218,9 @@ function ritmo(anim, n, forma = '') {
   if (anim.startsWith('andar_')) return { ms: n === 2 ? 200 : 150, loop: true };   // andar_frente/andar_costas do adulto: os 8 quadros em ciclo
   if (n === 1 && EMOCOES.has(anim)) return { ms: MS_EMOCAO, loop: false };
   switch (anim) {
-    case 'correndo': return { ms: 90, loop: true };
-    case 'voando': return { ms: 110, loop: true };   // 🦇 o morcego batendo as asas (1 → 2 → 3 → 4)
+    case 'correndo': return { ms: /^morcego/.test(forma) ? 120 : 90, loop: true };   // 🦇 o morcego corre voando (8 quadros, PROMPT-176)
+    case 'voando': return { ms: 120, loop: true };   // 🦇 o morcego batendo as asas, de lado (8 quadros em loop)
+    case 'voando_frente': return { ms: 150, loop: true };   // 🦇 voando de frente, vindo na direção da tela
     case 'costas_parado': return { ms: 250, loop: true };
     case 'sentado_girando': return { ms: 400, loop: true };
     case 'sentado_2': return { ms: n === 1 ? 2000 : 300, loop: false };   // adulto: 1 quadro (sentado de lado), segura ~2 s
@@ -415,7 +426,10 @@ export class PetSeguidor {
     if (!this.reacao) {
       this.espelhar = false;
       if (andando) {
-        if (longe) { this.trocar(temAnim(this.forma, 'voando') ? 'voando' : 'correndo'); this.espelhar = dx < 0; }   // correndo (e o voando do morcego) é virado para a direita
+        // 🦇 vindo para baixo (na direção da tela): o morcego voa de frente no lugar de andar_frente (PROMPT-176)
+        const deFrente = dy > 0 && Math.abs(dy) > Math.abs(dx) && temAnim(this.forma, 'voando_frente');
+        if (deFrente) this.trocar('voando_frente');
+        else if (longe) { this.trocar(temAnim(this.forma, 'voando') ? 'voando' : 'correndo'); this.espelhar = dx < 0; }   // correndo (e o voando do morcego) é virado para a direita
         else if (Math.abs(dx) >= Math.abs(dy)) this.trocar(dx > 0 ? 'andar_direita' : 'andar_esquerda');
         else this.trocar(this.andarVertical(dy > 0 ? 'andar_frente' : 'andar_costas'));
         this.proxOcioso = 6000 + Math.random() * 1000;   // parado há mais de ~6 s: a 1ª variação

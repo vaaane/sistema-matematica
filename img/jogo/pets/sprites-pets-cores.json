@@ -3239,18 +3239,14 @@
    ],
    "sentado_2": [
     "pets/gaviao_marrom/sentado_2_1.webp",
-    "pets/gaviao_marrom/sentado_2_2.webp",
-    "pets/gaviao_marrom/sentado_2_3.webp"
+    "pets/gaviao_marrom/sentado_2_2.webp"
    ],
    "dormindo": [
-    "pets/gaviao_marrom/dormindo_1.webp",
-    "pets/gaviao_marrom/dormindo_2.webp",
-    "pets/gaviao_marrom/dormindo_3.webp"
+    "pets/gaviao_marrom/dormindo_1.webp"
    ],
    "feliz": [
     "pets/gaviao_marrom/feliz_1.webp",
-    "pets/gaviao_marrom/feliz_2.webp",
-    "pets/gaviao_marrom/feliz_3.webp"
+    "pets/gaviao_marrom/feliz_2.webp"
    ],
    "busto_sorrindo": [
     "pets/gaviao_marrom/busto_sorrindo_1.webp"
@@ -3264,18 +3260,10 @@
    "lamber_beicos": [
     "pets/gaviao_marrom/lamber_beicos_1.webp"
    ],
-   "pulo_cambalhota": [
-    "pets/gaviao_marrom/pulo_cambalhota_1.webp",
-    "pets/gaviao_marrom/pulo_cambalhota_2.webp",
-    "pets/gaviao_marrom/pulo_cambalhota_3.webp"
-   ],
-   "salto_pouso": [
-    "pets/gaviao_marrom/salto_pouso_1.webp"
-   ],
    "correndo": [
-    "pets/gaviao_marrom/pulo_cambalhota_1.webp",
-    "pets/gaviao_marrom/pulo_cambalhota_2.webp",
-    "pets/gaviao_marrom/pulo_cambalhota_3.webp"
+    "pets/gaviao_marrom/andar_direita_1.webp",
+    "pets/gaviao_marrom/andar_direita_2.webp",
+    "pets/gaviao_marrom/andar_direita_3.webp"
    ]
   },
   "gaviao_branco": {
@@ -3312,18 +3300,14 @@
    ],
    "sentado_2": [
     "pets/gaviao_branco/sentado_2_1.webp",
-    "pets/gaviao_branco/sentado_2_2.webp",
-    "pets/gaviao_branco/sentado_2_3.webp"
+    "pets/gaviao_branco/sentado_2_2.webp"
    ],
    "dormindo": [
-    "pets/gaviao_branco/dormindo_1.webp",
-    "pets/gaviao_branco/dormindo_2.webp",
-    "pets/gaviao_branco/dormindo_3.webp"
+    "pets/gaviao_branco/dormindo_1.webp"
    ],
    "feliz": [
     "pets/gaviao_branco/feliz_1.webp",
-    "pets/gaviao_branco/feliz_2.webp",
-    "pets/gaviao_branco/feliz_3.webp"
+    "pets/gaviao_branco/feliz_2.webp"
    ],
    "busto_sorrindo": [
     "pets/gaviao_branco/busto_sorrindo_1.webp"
@@ -3337,18 +3321,10 @@
    "lamber_beicos": [
     "pets/gaviao_branco/lamber_beicos_1.webp"
    ],
-   "pulo_cambalhota": [
-    "pets/gaviao_branco/pulo_cambalhota_1.webp",
-    "pets/gaviao_branco/pulo_cambalhota_2.webp",
-    "pets/gaviao_branco/pulo_cambalhota_3.webp"
-   ],
-   "salto_pouso": [
-    "pets/gaviao_branco/salto_pouso_1.webp"
-   ],
    "correndo": [
-    "pets/gaviao_branco/pulo_cambalhota_1.webp",
-    "pets/gaviao_branco/pulo_cambalhota_2.webp",
-    "pets/gaviao_branco/pulo_cambalhota_3.webp"
+    "pets/gaviao_branco/andar_direita_1.webp",
+    "pets/gaviao_branco/andar_direita_2.webp",
+    "pets/gaviao_branco/andar_direita_3.webp"
    ]
   },
   "gaviao_roxo": {
@@ -3385,18 +3361,14 @@
    ],
    "sentado_2": [
     "pets/gaviao_roxo/sentado_2_1.webp",
-    "pets/gaviao_roxo/sentado_2_2.webp",
-    "pets/gaviao_roxo/sentado_2_3.webp"
+    "pets/gaviao_roxo/sentado_2_2.webp"
    ],
    "dormindo": [
-    "pets/gaviao_roxo/dormindo_1.webp",
-    "pets/gaviao_roxo/dormindo_2.webp",
-    "pets/gaviao_roxo/dormindo_3.webp"
+    "pets/gaviao_roxo/dormindo_1.webp"
    ],
    "feliz": [
     "pets/gaviao_roxo/feliz_1.webp",
-    "pets/gaviao_roxo/feliz_2.webp",
-    "pets/gaviao_roxo/feliz_3.webp"
+    "pets/gaviao_roxo/feliz_2.webp"
    ],
    "busto_sorrindo": [
     "pets/gaviao_roxo/busto_sorrindo_1.webp"
@@ -3410,18 +3382,10 @@
    "lamber_beicos": [
     "pets/gaviao_roxo/lamber_beicos_1.webp"
    ],
-   "pulo_cambalhota": [
-    "pets/gaviao_roxo/pulo_cambalhota_1.webp",
-    "pets/gaviao_roxo/pulo_cambalhota_2.webp",
-    "pets/gaviao_roxo/pulo_cambalhota_3.webp"
-   ],
-   "salto_pouso": [
-    "pets/gaviao_roxo/salto_pouso_1.webp"
-   ],
    "correndo": [
-    "pets/gaviao_roxo/pulo_cambalhota_1.webp",
-    "pets/gaviao_roxo/pulo_cambalhota_2.webp",
-    "pets/gaviao_roxo/pulo_cambalhota_3.webp"
+    "pets/gaviao_roxo/andar_direita_1.webp",
+    "pets/gaviao_roxo/andar_direita_2.webp",
+    "pets/gaviao_roxo/andar_direita_3.webp"
    ]
   },
   "gaviao_azul": {
@@ -3458,18 +3422,14 @@
    ],
    "sentado_2": [
     "pets/gaviao_azul/sentado_2_1.webp",
-    "pets/gaviao_azul/sentado_2_2.webp",
-    "pets/gaviao_azul/sentado_2_3.webp"
+    "pets/gaviao_azul/sentado_2_2.webp"
    ],
    "dormindo": [
-    "pets/gaviao_azul/dormindo_1.webp",
-    "pets/gaviao_azul/dormindo_2.webp",
-    "pets/gaviao_azul/dormindo_3.webp"
+    "pets/gaviao_azul/dormindo_1.webp"
    ],
    "feliz": [
     "pets/gaviao_azul/feliz_1.webp",
-    "pets/gaviao_azul/feliz_2.webp",
-    "pets/gaviao_azul/feliz_3.webp"
+    "pets/gaviao_azul/feliz_2.webp"
    ],
    "busto_sorrindo": [
     "pets/gaviao_azul/busto_sorrindo_1.webp"
@@ -3483,18 +3443,10 @@
    "lamber_beicos": [
     "pets/gaviao_azul/lamber_beicos_1.webp"
    ],
-   "pulo_cambalhota": [
-    "pets/gaviao_azul/pulo_cambalhota_1.webp",
-    "pets/gaviao_azul/pulo_cambalhota_2.webp",
-    "pets/gaviao_azul/pulo_cambalhota_3.webp"
-   ],
-   "salto_pouso": [
-    "pets/gaviao_azul/salto_pouso_1.webp"
-   ],
    "correndo": [
-    "pets/gaviao_azul/pulo_cambalhota_1.webp",
-    "pets/gaviao_azul/pulo_cambalhota_2.webp",
-    "pets/gaviao_azul/pulo_cambalhota_3.webp"
+    "pets/gaviao_azul/andar_direita_1.webp",
+    "pets/gaviao_azul/andar_direita_2.webp",
+    "pets/gaviao_azul/andar_direita_3.webp"
    ]
   },
   "gaviao_rosa": {
@@ -3531,18 +3483,14 @@
    ],
    "sentado_2": [
     "pets/gaviao_rosa/sentado_2_1.webp",
-    "pets/gaviao_rosa/sentado_2_2.webp",
-    "pets/gaviao_rosa/sentado_2_3.webp"
+    "pets/gaviao_rosa/sentado_2_2.webp"
    ],
    "dormindo": [
-    "pets/gaviao_rosa/dormindo_1.webp",
-    "pets/gaviao_rosa/dormindo_2.webp",
-    "pets/gaviao_rosa/dormindo_3.webp"
+    "pets/gaviao_rosa/dormindo_1.webp"
    ],
    "feliz": [
     "pets/gaviao_rosa/feliz_1.webp",
-    "pets/gaviao_rosa/feliz_2.webp",
-    "pets/gaviao_rosa/feliz_3.webp"
+    "pets/gaviao_rosa/feliz_2.webp"
    ],
    "busto_sorrindo": [
     "pets/gaviao_rosa/busto_sorrindo_1.webp"
@@ -3556,18 +3504,10 @@
    "lamber_beicos": [
     "pets/gaviao_rosa/lamber_beicos_1.webp"
    ],
-   "pulo_cambalhota": [
-    "pets/gaviao_rosa/pulo_cambalhota_1.webp",
-    "pets/gaviao_rosa/pulo_cambalhota_2.webp",
-    "pets/gaviao_rosa/pulo_cambalhota_3.webp"
-   ],
-   "salto_pouso": [
-    "pets/gaviao_rosa/salto_pouso_1.webp"
-   ],
    "correndo": [
-    "pets/gaviao_rosa/pulo_cambalhota_1.webp",
-    "pets/gaviao_rosa/pulo_cambalhota_2.webp",
-    "pets/gaviao_rosa/pulo_cambalhota_3.webp"
+    "pets/gaviao_rosa/andar_direita_1.webp",
+    "pets/gaviao_rosa/andar_direita_2.webp",
+    "pets/gaviao_rosa/andar_direita_3.webp"
    ]
   },
   "gaviao_verde": {
@@ -3604,18 +3544,14 @@
    ],
    "sentado_2": [
     "pets/gaviao_verde/sentado_2_1.webp",
-    "pets/gaviao_verde/sentado_2_2.webp",
-    "pets/gaviao_verde/sentado_2_3.webp"
+    "pets/gaviao_verde/sentado_2_2.webp"
    ],
    "dormindo": [
-    "pets/gaviao_verde/dormindo_1.webp",
-    "pets/gaviao_verde/dormindo_2.webp",
-    "pets/gaviao_verde/dormindo_3.webp"
+    "pets/gaviao_verde/dormindo_1.webp"
    ],
    "feliz": [
     "pets/gaviao_verde/feliz_1.webp",
-    "pets/gaviao_verde/feliz_2.webp",
-    "pets/gaviao_verde/feliz_3.webp"
+    "pets/gaviao_verde/feliz_2.webp"
    ],
    "busto_sorrindo": [
     "pets/gaviao_verde/busto_sorrindo_1.webp"
@@ -3629,18 +3565,10 @@
    "lamber_beicos": [
     "pets/gaviao_verde/lamber_beicos_1.webp"
    ],
-   "pulo_cambalhota": [
-    "pets/gaviao_verde/pulo_cambalhota_1.webp",
-    "pets/gaviao_verde/pulo_cambalhota_2.webp",
-    "pets/gaviao_verde/pulo_cambalhota_3.webp"
-   ],
-   "salto_pouso": [
-    "pets/gaviao_verde/salto_pouso_1.webp"
-   ],
    "correndo": [
-    "pets/gaviao_verde/pulo_cambalhota_1.webp",
-    "pets/gaviao_verde/pulo_cambalhota_2.webp",
-    "pets/gaviao_verde/pulo_cambalhota_3.webp"
+    "pets/gaviao_verde/andar_direita_1.webp",
+    "pets/gaviao_verde/andar_direita_2.webp",
+    "pets/gaviao_verde/andar_direita_3.webp"
    ]
   },
   "gaviao_dourado": {
@@ -3677,18 +3605,14 @@
    ],
    "sentado_2": [
     "pets/gaviao_dourado/sentado_2_1.webp",
-    "pets/gaviao_dourado/sentado_2_2.webp",
-    "pets/gaviao_dourado/sentado_2_3.webp"
+    "pets/gaviao_dourado/sentado_2_2.webp"
    ],
    "dormindo": [
-    "pets/gaviao_dourado/dormindo_1.webp",
-    "pets/gaviao_dourado/dormindo_2.webp",
-    "pets/gaviao_dourado/dormindo_3.webp"
+    "pets/gaviao_dourado/dormindo_1.webp"
    ],
    "feliz": [
     "pets/gaviao_dourado/feliz_1.webp",
-    "pets/gaviao_dourado/feliz_2.webp",
-    "pets/gaviao_dourado/feliz_3.webp"
+    "pets/gaviao_dourado/feliz_2.webp"
    ],
    "busto_sorrindo": [
     "pets/gaviao_dourado/busto_sorrindo_1.webp"
@@ -3702,18 +3626,10 @@
    "lamber_beicos": [
     "pets/gaviao_dourado/lamber_beicos_1.webp"
    ],
-   "pulo_cambalhota": [
-    "pets/gaviao_dourado/pulo_cambalhota_1.webp",
-    "pets/gaviao_dourado/pulo_cambalhota_2.webp",
-    "pets/gaviao_dourado/pulo_cambalhota_3.webp"
-   ],
-   "salto_pouso": [
-    "pets/gaviao_dourado/salto_pouso_1.webp"
-   ],
    "correndo": [
-    "pets/gaviao_dourado/pulo_cambalhota_1.webp",
-    "pets/gaviao_dourado/pulo_cambalhota_2.webp",
-    "pets/gaviao_dourado/pulo_cambalhota_3.webp"
+    "pets/gaviao_dourado/andar_direita_1.webp",
+    "pets/gaviao_dourado/andar_direita_2.webp",
+    "pets/gaviao_dourado/andar_direita_3.webp"
    ]
   },
   "gaviao_preto": {
@@ -3750,18 +3666,14 @@
    ],
    "sentado_2": [
     "pets/gaviao_preto/sentado_2_1.webp",
-    "pets/gaviao_preto/sentado_2_2.webp",
-    "pets/gaviao_preto/sentado_2_3.webp"
+    "pets/gaviao_preto/sentado_2_2.webp"
    ],
    "dormindo": [
-    "pets/gaviao_preto/dormindo_1.webp",
-    "pets/gaviao_preto/dormindo_2.webp",
-    "pets/gaviao_preto/dormindo_3.webp"
+    "pets/gaviao_preto/dormindo_1.webp"
    ],
    "feliz": [
     "pets/gaviao_preto/feliz_1.webp",
-    "pets/gaviao_preto/feliz_2.webp",
-    "pets/gaviao_preto/feliz_3.webp"
+    "pets/gaviao_preto/feliz_2.webp"
    ],
    "busto_sorrindo": [
     "pets/gaviao_preto/busto_sorrindo_1.webp"
@@ -3775,18 +3687,10 @@
    "lamber_beicos": [
     "pets/gaviao_preto/lamber_beicos_1.webp"
    ],
-   "pulo_cambalhota": [
-    "pets/gaviao_preto/pulo_cambalhota_1.webp",
-    "pets/gaviao_preto/pulo_cambalhota_2.webp",
-    "pets/gaviao_preto/pulo_cambalhota_3.webp"
-   ],
-   "salto_pouso": [
-    "pets/gaviao_preto/salto_pouso_1.webp"
-   ],
    "correndo": [
-    "pets/gaviao_preto/pulo_cambalhota_1.webp",
-    "pets/gaviao_preto/pulo_cambalhota_2.webp",
-    "pets/gaviao_preto/pulo_cambalhota_3.webp"
+    "pets/gaviao_preto/andar_direita_1.webp",
+    "pets/gaviao_preto/andar_direita_2.webp",
+    "pets/gaviao_preto/andar_direita_3.webp"
    ]
   },
   "axolote_marrom": {
@@ -4380,20 +4284,24 @@
    "comendo": [
     "pets/morcego_marrom/comendo_1.webp",
     "pets/morcego_marrom/comendo_2.webp",
-    "pets/morcego_marrom/comendo_3.webp"
+    "pets/morcego_marrom/comendo_3.webp",
+    "pets/morcego_marrom/comendo_4.webp"
    ],
    "correndo": [
     "pets/morcego_marrom/correndo_1.webp",
     "pets/morcego_marrom/correndo_2.webp",
-    "pets/morcego_marrom/correndo_3.webp"
+    "pets/morcego_marrom/correndo_3.webp",
+    "pets/morcego_marrom/correndo_4.webp",
+    "pets/morcego_marrom/correndo_5.webp",
+    "pets/morcego_marrom/correndo_6.webp",
+    "pets/morcego_marrom/correndo_7.webp",
+    "pets/morcego_marrom/correndo_8.webp"
    ],
    "costas_parado": [
     "pets/morcego_marrom/costas_parado_1.webp"
    ],
    "dormindo": [
-    "pets/morcego_marrom/dormindo_1.webp",
-    "pets/morcego_marrom/dormindo_2.webp",
-    "pets/morcego_marrom/dormindo_3.webp"
+    "pets/morcego_marrom/pendurado_1.webp"
    ],
    "enrolado": [
     "pets/morcego_marrom/enrolado_1.webp"
@@ -4426,7 +4334,23 @@
     "pets/morcego_marrom/voando_1.webp",
     "pets/morcego_marrom/voando_2.webp",
     "pets/morcego_marrom/voando_3.webp",
-    "pets/morcego_marrom/voando_4.webp"
+    "pets/morcego_marrom/voando_4.webp",
+    "pets/morcego_marrom/voando_5.webp",
+    "pets/morcego_marrom/voando_6.webp",
+    "pets/morcego_marrom/voando_7.webp",
+    "pets/morcego_marrom/voando_8.webp"
+   ],
+   "lamber_beicos": [
+    "pets/morcego_marrom/lamber_beicos_1.webp"
+   ],
+   "pendurado": [
+    "pets/morcego_marrom/pendurado_1.webp"
+   ],
+   "voando_frente": [
+    "pets/morcego_marrom/voando_frente_1.webp",
+    "pets/morcego_marrom/voando_frente_2.webp",
+    "pets/morcego_marrom/voando_frente_3.webp",
+    "pets/morcego_marrom/voando_frente_4.webp"
    ]
   },
   "morcego_cinza": {
@@ -4468,20 +4392,24 @@
    "comendo": [
     "pets/morcego_cinza/comendo_1.webp",
     "pets/morcego_cinza/comendo_2.webp",
-    "pets/morcego_cinza/comendo_3.webp"
+    "pets/morcego_cinza/comendo_3.webp",
+    "pets/morcego_cinza/comendo_4.webp"
    ],
    "correndo": [
     "pets/morcego_cinza/correndo_1.webp",
     "pets/morcego_cinza/correndo_2.webp",
-    "pets/morcego_cinza/correndo_3.webp"
+    "pets/morcego_cinza/correndo_3.webp",
+    "pets/morcego_cinza/correndo_4.webp",
+    "pets/morcego_cinza/correndo_5.webp",
+    "pets/morcego_cinza/correndo_6.webp",
+    "pets/morcego_cinza/correndo_7.webp",
+    "pets/morcego_cinza/correndo_8.webp"
    ],
    "costas_parado": [
     "pets/morcego_cinza/costas_parado_1.webp"
    ],
    "dormindo": [
-    "pets/morcego_cinza/dormindo_1.webp",
-    "pets/morcego_cinza/dormindo_2.webp",
-    "pets/morcego_cinza/dormindo_3.webp"
+    "pets/morcego_cinza/pendurado_1.webp"
    ],
    "enrolado": [
     "pets/morcego_cinza/enrolado_1.webp"
@@ -4514,7 +4442,23 @@
     "pets/morcego_cinza/voando_1.webp",
     "pets/morcego_cinza/voando_2.webp",
     "pets/morcego_cinza/voando_3.webp",
-    "pets/morcego_cinza/voando_4.webp"
+    "pets/morcego_cinza/voando_4.webp",
+    "pets/morcego_cinza/voando_5.webp",
+    "pets/morcego_cinza/voando_6.webp",
+    "pets/morcego_cinza/voando_7.webp",
+    "pets/morcego_cinza/voando_8.webp"
+   ],
+   "lamber_beicos": [
+    "pets/morcego_cinza/lamber_beicos_1.webp"
+   ],
+   "pendurado": [
+    "pets/morcego_cinza/pendurado_1.webp"
+   ],
+   "voando_frente": [
+    "pets/morcego_cinza/voando_frente_1.webp",
+    "pets/morcego_cinza/voando_frente_2.webp",
+    "pets/morcego_cinza/voando_frente_3.webp",
+    "pets/morcego_cinza/voando_frente_4.webp"
    ]
   },
   "morcego_branco": {
@@ -4556,20 +4500,24 @@
    "comendo": [
     "pets/morcego_branco/comendo_1.webp",
     "pets/morcego_branco/comendo_2.webp",
-    "pets/morcego_branco/comendo_3.webp"
+    "pets/morcego_branco/comendo_3.webp",
+    "pets/morcego_branco/comendo_4.webp"
    ],
    "correndo": [
     "pets/morcego_branco/correndo_1.webp",
     "pets/morcego_branco/correndo_2.webp",
-    "pets/morcego_branco/correndo_3.webp"
+    "pets/morcego_branco/correndo_3.webp",
+    "pets/morcego_branco/correndo_4.webp",
+    "pets/morcego_branco/correndo_5.webp",
+    "pets/morcego_branco/correndo_6.webp",
+    "pets/morcego_branco/correndo_7.webp",
+    "pets/morcego_branco/correndo_8.webp"
    ],
    "costas_parado": [
     "pets/morcego_branco/costas_parado_1.webp"
    ],
    "dormindo": [
-    "pets/morcego_branco/dormindo_1.webp",
-    "pets/morcego_branco/dormindo_2.webp",
-    "pets/morcego_branco/dormindo_3.webp"
+    "pets/morcego_branco/pendurado_1.webp"
    ],
    "enrolado": [
     "pets/morcego_branco/enrolado_1.webp"
@@ -4602,7 +4550,23 @@
     "pets/morcego_branco/voando_1.webp",
     "pets/morcego_branco/voando_2.webp",
     "pets/morcego_branco/voando_3.webp",
-    "pets/morcego_branco/voando_4.webp"
+    "pets/morcego_branco/voando_4.webp",
+    "pets/morcego_branco/voando_5.webp",
+    "pets/morcego_branco/voando_6.webp",
+    "pets/morcego_branco/voando_7.webp",
+    "pets/morcego_branco/voando_8.webp"
+   ],
+   "lamber_beicos": [
+    "pets/morcego_branco/lamber_beicos_1.webp"
+   ],
+   "pendurado": [
+    "pets/morcego_branco/pendurado_1.webp"
+   ],
+   "voando_frente": [
+    "pets/morcego_branco/voando_frente_1.webp",
+    "pets/morcego_branco/voando_frente_2.webp",
+    "pets/morcego_branco/voando_frente_3.webp",
+    "pets/morcego_branco/voando_frente_4.webp"
    ]
   },
   "morcego_roxo": {
@@ -4644,20 +4608,24 @@
    "comendo": [
     "pets/morcego_roxo/comendo_1.webp",
     "pets/morcego_roxo/comendo_2.webp",
-    "pets/morcego_roxo/comendo_3.webp"
+    "pets/morcego_roxo/comendo_3.webp",
+    "pets/morcego_roxo/comendo_4.webp"
    ],
    "correndo": [
     "pets/morcego_roxo/correndo_1.webp",
     "pets/morcego_roxo/correndo_2.webp",
-    "pets/morcego_roxo/correndo_3.webp"
+    "pets/morcego_roxo/correndo_3.webp",
+    "pets/morcego_roxo/correndo_4.webp",
+    "pets/morcego_roxo/correndo_5.webp",
+    "pets/morcego_roxo/correndo_6.webp",
+    "pets/morcego_roxo/correndo_7.webp",
+    "pets/morcego_roxo/correndo_8.webp"
    ],
    "costas_parado": [
     "pets/morcego_roxo/costas_parado_1.webp"
    ],
    "dormindo": [
-    "pets/morcego_roxo/dormindo_1.webp",
-    "pets/morcego_roxo/dormindo_2.webp",
-    "pets/morcego_roxo/dormindo_3.webp"
+    "pets/morcego_roxo/pendurado_1.webp"
    ],
    "enrolado": [
     "pets/morcego_roxo/enrolado_1.webp"
@@ -4690,7 +4658,23 @@
     "pets/morcego_roxo/voando_1.webp",
     "pets/morcego_roxo/voando_2.webp",
     "pets/morcego_roxo/voando_3.webp",
-    "pets/morcego_roxo/voando_4.webp"
+    "pets/morcego_roxo/voando_4.webp",
+    "pets/morcego_roxo/voando_5.webp",
+    "pets/morcego_roxo/voando_6.webp",
+    "pets/morcego_roxo/voando_7.webp",
+    "pets/morcego_roxo/voando_8.webp"
+   ],
+   "lamber_beicos": [
+    "pets/morcego_roxo/lamber_beicos_1.webp"
+   ],
+   "pendurado": [
+    "pets/morcego_roxo/pendurado_1.webp"
+   ],
+   "voando_frente": [
+    "pets/morcego_roxo/voando_frente_1.webp",
+    "pets/morcego_roxo/voando_frente_2.webp",
+    "pets/morcego_roxo/voando_frente_3.webp",
+    "pets/morcego_roxo/voando_frente_4.webp"
    ]
   },
   "morcego_azul": {
@@ -4732,20 +4716,24 @@
    "comendo": [
     "pets/morcego_azul/comendo_1.webp",
     "pets/morcego_azul/comendo_2.webp",
-    "pets/morcego_azul/comendo_3.webp"
+    "pets/morcego_azul/comendo_3.webp",
+    "pets/morcego_azul/comendo_4.webp"
    ],
    "correndo": [
     "pets/morcego_azul/correndo_1.webp",
     "pets/morcego_azul/correndo_2.webp",
-    "pets/morcego_azul/correndo_3.webp"
+    "pets/morcego_azul/correndo_3.webp",
+    "pets/morcego_azul/correndo_4.webp",
+    "pets/morcego_azul/correndo_5.webp",
+    "pets/morcego_azul/correndo_6.webp",
+    "pets/morcego_azul/correndo_7.webp",
+    "pets/morcego_azul/correndo_8.webp"
    ],
    "costas_parado": [
     "pets/morcego_azul/costas_parado_1.webp"
    ],
    "dormindo": [
-    "pets/morcego_azul/dormindo_1.webp",
-    "pets/morcego_azul/dormindo_2.webp",
-    "pets/morcego_azul/dormindo_3.webp"
+    "pets/morcego_azul/pendurado_1.webp"
    ],
    "enrolado": [
     "pets/morcego_azul/enrolado_1.webp"
@@ -4778,7 +4766,23 @@
     "pets/morcego_azul/voando_1.webp",
     "pets/morcego_azul/voando_2.webp",
     "pets/morcego_azul/voando_3.webp",
-    "pets/morcego_azul/voando_4.webp"
+    "pets/morcego_azul/voando_4.webp",
+    "pets/morcego_azul/voando_5.webp",
+    "pets/morcego_azul/voando_6.webp",
+    "pets/morcego_azul/voando_7.webp",
+    "pets/morcego_azul/voando_8.webp"
+   ],
+   "lamber_beicos": [
+    "pets/morcego_azul/lamber_beicos_1.webp"
+   ],
+   "pendurado": [
+    "pets/morcego_azul/pendurado_1.webp"
+   ],
+   "voando_frente": [
+    "pets/morcego_azul/voando_frente_1.webp",
+    "pets/morcego_azul/voando_frente_2.webp",
+    "pets/morcego_azul/voando_frente_3.webp",
+    "pets/morcego_azul/voando_frente_4.webp"
    ]
   },
   "morcego_vermelho": {
@@ -4820,20 +4824,24 @@
    "comendo": [
     "pets/morcego_vermelho/comendo_1.webp",
     "pets/morcego_vermelho/comendo_2.webp",
-    "pets/morcego_vermelho/comendo_3.webp"
+    "pets/morcego_vermelho/comendo_3.webp",
+    "pets/morcego_vermelho/comendo_4.webp"
    ],
    "correndo": [
     "pets/morcego_vermelho/correndo_1.webp",
     "pets/morcego_vermelho/correndo_2.webp",
-    "pets/morcego_vermelho/correndo_3.webp"
+    "pets/morcego_vermelho/correndo_3.webp",
+    "pets/morcego_vermelho/correndo_4.webp",
+    "pets/morcego_vermelho/correndo_5.webp",
+    "pets/morcego_vermelho/correndo_6.webp",
+    "pets/morcego_vermelho/correndo_7.webp",
+    "pets/morcego_vermelho/correndo_8.webp"
    ],
    "costas_parado": [
     "pets/morcego_vermelho/costas_parado_1.webp"
    ],
    "dormindo": [
-    "pets/morcego_vermelho/dormindo_1.webp",
-    "pets/morcego_vermelho/dormindo_2.webp",
-    "pets/morcego_vermelho/dormindo_3.webp"
+    "pets/morcego_vermelho/pendurado_1.webp"
    ],
    "enrolado": [
     "pets/morcego_vermelho/enrolado_1.webp"
@@ -4866,7 +4874,23 @@
     "pets/morcego_vermelho/voando_1.webp",
     "pets/morcego_vermelho/voando_2.webp",
     "pets/morcego_vermelho/voando_3.webp",
-    "pets/morcego_vermelho/voando_4.webp"
+    "pets/morcego_vermelho/voando_4.webp",
+    "pets/morcego_vermelho/voando_5.webp",
+    "pets/morcego_vermelho/voando_6.webp",
+    "pets/morcego_vermelho/voando_7.webp",
+    "pets/morcego_vermelho/voando_8.webp"
+   ],
+   "lamber_beicos": [
+    "pets/morcego_vermelho/lamber_beicos_1.webp"
+   ],
+   "pendurado": [
+    "pets/morcego_vermelho/pendurado_1.webp"
+   ],
+   "voando_frente": [
+    "pets/morcego_vermelho/voando_frente_1.webp",
+    "pets/morcego_vermelho/voando_frente_2.webp",
+    "pets/morcego_vermelho/voando_frente_3.webp",
+    "pets/morcego_vermelho/voando_frente_4.webp"
    ]
   },
   "morcego_dourado": {
@@ -4908,20 +4932,24 @@
    "comendo": [
     "pets/morcego_dourado/comendo_1.webp",
     "pets/morcego_dourado/comendo_2.webp",
-    "pets/morcego_dourado/comendo_3.webp"
+    "pets/morcego_dourado/comendo_3.webp",
+    "pets/morcego_dourado/comendo_4.webp"
    ],
    "correndo": [
     "pets/morcego_dourado/correndo_1.webp",
     "pets/morcego_dourado/correndo_2.webp",
-    "pets/morcego_dourado/correndo_3.webp"
+    "pets/morcego_dourado/correndo_3.webp",
+    "pets/morcego_dourado/correndo_4.webp",
+    "pets/morcego_dourado/correndo_5.webp",
+    "pets/morcego_dourado/correndo_6.webp",
+    "pets/morcego_dourado/correndo_7.webp",
+    "pets/morcego_dourado/correndo_8.webp"
    ],
    "costas_parado": [
     "pets/morcego_dourado/costas_parado_1.webp"
    ],
    "dormindo": [
-    "pets/morcego_dourado/dormindo_1.webp",
-    "pets/morcego_dourado/dormindo_2.webp",
-    "pets/morcego_dourado/dormindo_3.webp"
+    "pets/morcego_dourado/pendurado_1.webp"
    ],
    "enrolado": [
     "pets/morcego_dourado/enrolado_1.webp"
@@ -4954,7 +4982,23 @@
     "pets/morcego_dourado/voando_1.webp",
     "pets/morcego_dourado/voando_2.webp",
     "pets/morcego_dourado/voando_3.webp",
-    "pets/morcego_dourado/voando_4.webp"
+    "pets/morcego_dourado/voando_4.webp",
+    "pets/morcego_dourado/voando_5.webp",
+    "pets/morcego_dourado/voando_6.webp",
+    "pets/morcego_dourado/voando_7.webp",
+    "pets/morcego_dourado/voando_8.webp"
+   ],
+   "lamber_beicos": [
+    "pets/morcego_dourado/lamber_beicos_1.webp"
+   ],
+   "pendurado": [
+    "pets/morcego_dourado/pendurado_1.webp"
+   ],
+   "voando_frente": [
+    "pets/morcego_dourado/voando_frente_1.webp",
+    "pets/morcego_dourado/voando_frente_2.webp",
+    "pets/morcego_dourado/voando_frente_3.webp",
+    "pets/morcego_dourado/voando_frente_4.webp"
    ]
   }
  }
