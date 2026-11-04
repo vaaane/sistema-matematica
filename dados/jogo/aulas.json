@@ -111,6 +111,215 @@
      "lousa": [{ "t": "enunciado", "v": "3 cadernos de R$ 4, paguei com R$ 20" }, { "t": "expressao", "v": "20 − 3 × 4" }, { "t": "texto", "v": "Sobrou R$ 8" }]
     }
    ]
+  },
+  "mapa2-A": {
+   "titulo": "× e ÷ por 10, 100 e 1000",
+   "paginas": [
+    {
+     "texto": "Multiplicar por 10 é deixar o número 10 vezes maior: o 7 anda uma casa e entra um 0.",
+     "por_personalidade": {
+      "gato": "× 10? Moleza. O número fica 10 vezes maior: o 7 anda uma casa e entra um 0.",
+      "tigre": "× 10, CAMPEÃO! O número fica 10 VEZES MAIOR: o 7 anda uma casa e entra um 0!",
+      "capivara": "Com calma: × 10 deixa o número 10 vezes maior. O 7 anda uma casa e entra um 0."
+     },
+     "lousa": [{"t": "virgula", "v": "7", "op": "×", "k": 10}, {"t": "texto", "v": "7 × 10 = 70"}]
+    },
+    {
+     "texto": "Conte os zeros: é quantas casas a vírgula anda. O 100 tem 2 zeros, então a vírgula pula 2 casas para a direita.",
+     "por_personalidade": {
+      "gato": "Conta os zeros, é só isso. O 100 tem 2, então a vírgula pula 2 casas para a direita. Fácil.",
+      "tigre": "CONTA OS ZEROS! O 100 tem 2: a vírgula pula 2 casas para a direita! Hop, hop!",
+      "capivara": "Conte os zeros devagarinho: o 100 tem 2. Então a vírgula pula 2 casas para a direita, uma de cada vez."
+     },
+     "lousa": [{"t": "virgula", "v": "3,5", "op": "×", "k": 100}]
+    },
+    {
+     "texto": "Para dividir, a vírgula anda para a esquerda. No 48 ela fica escondida no fim, e aparece para pular.",
+     "por_personalidade": {
+      "gato": "Dividir? A vírgula vai para a esquerda. No 48 ela estava escondida no fim, tipo eu atrás do sofá.",
+      "tigre": "DIVIDIR É PARA A ESQUERDA! No 48 a vírgula estava escondida no fim. Agora ela pula!",
+      "capivara": "Para dividir, a vírgula anda para a esquerda. No 48 ela estava quietinha no fim, escondida."
+     },
+     "lousa": [{"t": "virgula", "v": "48", "op": "÷", "k": 10}]
+    },
+    {
+     "texto": "Se faltar casa, entram zeros na frente: 5 ÷ 100 = 0,05.",
+     "por_personalidade": {
+      "gato": "Faltou casa? Bota zero na frente. 5 ÷ 100 = 0,05. Nem precisei pensar.",
+      "tigre": "FALTOU CASA? ZERO NA FRENTE! 5 ÷ 100 = 0,05!",
+      "capivara": "Se faltar casa, sem problema: entram zeros na frente. 5 ÷ 100 = 0,05."
+     },
+     "lousa": [{"t": "virgula", "v": "5", "op": "÷", "k": 100}]
+    },
+    {
+     "texto": "Resumindo: × manda a vírgula para a direita (o número cresce) e ÷ manda para a esquerda (o número diminui). Cada zero, uma casa.",
+     "por_personalidade": {
+      "gato": "Resumo, que eu não repito: × é direita, ÷ é esquerda. Cada zero, uma casa.",
+      "tigre": "RESUMO DO TREINO: × é DIREITA, ÷ é ESQUERDA! Cada zero, uma casa!",
+      "capivara": "Resumindo com calma: × vai para a direita, ÷ vai para a esquerda. Cada zero, uma casa."
+     },
+     "lousa": [{"t": "linha", "v": "× 10, 100, 1000 → direita"}, {"t": "linha", "v": "÷ 10, 100, 1000 → esquerda"}, {"t": "texto", "v": "1 zero = 1 casa"}]
+    },
+    {
+     "texto": "Pegadinha! 25 × 100 não é 25,00. É 2500: no número inteiro, os zeros entram no fim.",
+     "por_personalidade": {
+      "gato": "Pegadinha: 25 × 100 não é 25,00. É 2500. Eu jamais cairia nessa.",
+      "tigre": "ARMADILHA! 25 × 100 NÃO é 25,00! É 2500!",
+      "capivara": "Cuidado: 25 × 100 não é 25,00. É 2500, os zeros entram no fim."
+     },
+     "lousa": [{"t": "linha", "v": "25 × 100 = 25,00", "classe": "errado"}, {"t": "linha", "v": "25 × 100 = 2500", "classe": "certo"}, {"t": "texto", "v": "No inteiro, os zeros entram no fim"}]
+    }
+   ]
+  },
+  "mapa2-B": {
+   "titulo": "Decimais e medidas",
+   "paginas": [
+    {
+     "texto": "Esta é a escada das medidas. Cada degrau vale 10 vezes o de baixo. Peso e volume têm escadas iguais: kg → g e L → mL.",
+     "por_personalidade": {
+      "gato": "A escada das medidas. Cada degrau vale 10 do de baixo. Peso e volume são iguais. Simples.",
+      "tigre": "A ESCADA DAS MEDIDAS! Cada degrau vale 10 vezes o de baixo! Peso e volume também!",
+      "capivara": "Olha a escada das medidas, com calma. Cada degrau vale 10 vezes o de baixo. Peso e volume têm escadas iguais."
+     },
+     "lousa": [{"t": "escada", "degraus": ["km", "hm", "dam", "m", "dm", "cm", "mm"]}, {"t": "texto", "v": "kg → g · L → mL"}]
+    },
+    {
+     "texto": "Descer a escada (unidade menor) é multiplicar: a vírgula anda para a direita, uma casa por degrau. De m para cm são 2 degraus.",
+     "por_personalidade": {
+      "gato": "Descer é multiplicar. A vírgula vai para a direita, uma casa por degrau. m para cm: 2 degraus. Pronto.",
+      "tigre": "DESCER É MULTIPLICAR! Vírgula para a direita, uma casa por degrau! m → cm: 2 DEGRAUS!",
+      "capivara": "Descendo devagar: cada degrau, a vírgula anda uma casa para a direita. De m para cm são 2 degraus."
+     },
+     "lousa": [{"t": "escada", "degraus": ["km", "hm", "dam", "m", "dm", "cm", "mm"], "de": "m", "para": "cm", "v": "2,5"}]
+    },
+    {
+     "texto": "Subir a escada (unidade maior) é dividir: a vírgula anda para a esquerda. De g para kg são 3 degraus.",
+     "por_personalidade": {
+      "gato": "Subir é dividir. A vírgula vai para a esquerda. g para kg: 3 degraus. Até eu subo isso.",
+      "tigre": "SUBIR É DIVIDIR! Vírgula para a esquerda! g → kg: 3 DEGRAUS!",
+      "capivara": "Subindo com calma: a vírgula anda para a esquerda. De g para kg são 3 degraus."
+     },
+     "lousa": [{"t": "escada", "degraus": ["kg", "hg", "dag", "g"], "de": "g", "para": "kg", "v": "1500"}]
+    },
+    {
+     "texto": "Com decimais é igual: a vírgula pula as casas. 3,5 × 10 = 35 e 37 ÷ 10 = 3,7.",
+     "por_personalidade": {
+      "gato": "Decimal não muda nada: a vírgula pula. 3,5 × 10 = 35. 37 ÷ 10 = 3,7.",
+      "tigre": "DECIMAL TAMBÉM! A vírgula pula! 3,5 × 10 = 35 e 37 ÷ 10 = 3,7!",
+      "capivara": "Com decimais é igualzinho: a vírgula pula. 3,5 × 10 = 35 e 37 ÷ 10 = 3,7."
+     },
+     "lousa": [{"t": "virgula", "v": "3,5", "op": "×", "k": 10}, {"t": "pausa", "ms": 700}, {"t": "virgula", "v": "37", "op": "÷", "k": 10}]
+    },
+    {
+     "texto": "Dica de ouro: unidade menor, número maior!",
+     "por_personalidade": {
+      "gato": "Dica de gato: unidade menor, número maior. Anota.",
+      "tigre": "DICA DE CAMPEÃO: UNIDADE MENOR, NÚMERO MAIOR!",
+      "capivara": "Uma dica tranquila: unidade menor, número maior."
+     },
+     "lousa": [{"t": "linha", "v": "1 m = 100 cm"}, {"t": "linha", "v": "1 kg = 1000 g"}, {"t": "linha", "v": "1 L = 1000 mL"}, {"t": "texto", "v": "Unidade menor → número maior"}]
+    }
+   ]
+  },
+  "mapa3-A": {
+   "titulo": "Negativos: comparar, somar e subtrair",
+   "paginas": [
+    {
+     "texto": "Esta é a reta numérica, com o 0 no meio. Quanto mais à esquerda, menor o número.",
+     "por_personalidade": {
+      "gato": "A reta numérica. O 0 no meio. Mais à esquerda, menor. Até um gato entende.",
+      "tigre": "A RETA NUMÉRICA! O 0 no meio! Mais à ESQUERDA, MENOR!",
+      "capivara": "Olha a reta numérica, com o 0 no meio. Quanto mais à esquerda, menor o número."
+     },
+     "lousa": [{"t": "reta", "min": -10, "max": 10}, {"t": "texto", "v": "← menor · maior →"}]
+    },
+    {
+     "texto": "Para comparar −5 e −2, olhe na reta: o mais à esquerda é o menor. −5 < −2.",
+     "por_personalidade": {
+      "gato": "−5 ou −2? Olha a reta: o mais à esquerda é menor. −5 < −2. Óbvio.",
+      "tigre": "−5 OU −2? O mais à esquerda PERDE! −5 < −2!",
+      "capivara": "Para comparar −5 e −2, com calma, olhe na reta: o mais à esquerda é o menor. −5 < −2."
+     },
+     "lousa": [{"t": "reta", "bolas": [-5, -2], "destaca": "menor", "min": -10, "max": 10}, {"t": "linha", "v": "−5 < −2"}]
+    },
+    {
+     "texto": "Somar um positivo é andar para a direita. −5 + 8: sai do −5 e anda 8 casinhas. Chega no 3.",
+     "por_personalidade": {
+      "gato": "Somar positivo é ir para a direita. −5 + 8: anda 8 casinhas. Dá 3. Contei pra você.",
+      "tigre": "SOMAR POSITIVO É IR PARA A DIREITA! −5 + 8: ANDA 8! Chegou no 3!",
+      "capivara": "Somar um positivo é andar para a direita, devagarinho. −5 + 8: anda 8 casinhas e chega no 3."
+     },
+     "lousa": [{"t": "linha", "v": "−5 + 8"}, {"t": "reta", "de": -5, "anda": [8], "min": -10, "max": 10}, {"t": "linha", "v": "−5 + 8 = 3", "classe": "certo"}]
+    },
+    {
+     "texto": "Somar um negativo é andar para a esquerda. −3 + (−4) = −7. Sinais iguais: soma e mantém o sinal.",
+     "por_personalidade": {
+      "gato": "Somar negativo é ir para a esquerda. −3 + (−4) = −7. Sinais iguais: soma e mantém o sinal.",
+      "tigre": "SOMAR NEGATIVO É IR PARA A ESQUERDA! −3 + (−4) = −7! Sinais iguais: SOMA E MANTÉM!",
+      "capivara": "Somar um negativo é andar para a esquerda. −3 + (−4) = −7. Sinais iguais: soma e mantém o sinal."
+     },
+     "lousa": [{"t": "linha", "v": "−3 + (−4)"}, {"t": "reta", "de": -3, "anda": [-4], "min": -10, "max": 10}, {"t": "linha", "v": "−3 + (−4) = −7", "classe": "certo"}, {"t": "texto", "v": "Sinais iguais: soma e mantém o sinal"}]
+    },
+    {
+     "texto": "Sinais diferentes: subtrai e fica o sinal do maior. −8 + 5: 8 − 5 = 3, fica o sinal do 8: −3.",
+     "por_personalidade": {
+      "gato": "Sinais diferentes: subtrai e fica o sinal do maior. −8 + 5 = −3. O 8 manda, que nem eu.",
+      "tigre": "SINAIS DIFERENTES: SUBTRAI e fica o sinal do MAIOR! −8 + 5 = −3!",
+      "capivara": "Sinais diferentes: subtrai, e fica o sinal do maior. −8 + 5: 8 − 5 = 3, fica o sinal do 8: −3."
+     },
+     "lousa": [{"t": "linha", "v": "−8 + 5"}, {"t": "reta", "de": -8, "anda": [5], "min": -10, "max": 10}, {"t": "linha", "v": "−8 + 5 = −3", "classe": "certo"}, {"t": "texto", "v": "8 − 5 = 3, fica o sinal do 8"}]
+    },
+    {
+     "texto": "Subtrair é somar o oposto: − (−3) vira + 3. Então 4 − (−3) = 4 + 3 = 7.",
+     "por_personalidade": {
+      "gato": "Subtrair negativo? Vira soma. − (−3) é + 3. 4 − (−3) = 7. Menos com menos, mais.",
+      "tigre": "SUBTRAIR É SOMAR O OPOSTO! − (−3) VIRA + 3! 4 − (−3) = 7!",
+      "capivara": "Subtrair é somar o oposto: − (−3) vira + 3. Então 4 − (−3) = 4 + 3 = 7."
+     },
+     "lousa": [{"t": "linha", "v": "4 − (−3)"}, {"t": "marca", "v": "− (−3)"}, {"t": "resolve", "v": "+ 3", "linha": "4 + 3"}, {"t": "marca", "v": "4 + 3"}, {"t": "resolve", "v": "7", "linha": "7"}, {"t": "texto", "v": "− (−) vira +"}]
+    }
+   ]
+  },
+  "mapa3-B": {
+   "titulo": "Negativos: multiplicar e dividir",
+   "paginas": [
+    {
+     "texto": "Na multiplicação e na divisão, primeiro decida o sinal. Sinais iguais dão +, sinais diferentes dão −.",
+     "por_personalidade": {
+      "gato": "Primeiro o sinal, depois a conta. Iguais dão +, diferentes dão −. Decora.",
+      "tigre": "PRIMEIRO O SINAL! IGUAIS dão +, DIFERENTES dão −!",
+      "capivara": "Primeiro, com calma, decida o sinal. Sinais iguais dão +, sinais diferentes dão −."
+     },
+     "lousa": [{"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "texto", "v": "iguais → + · diferentes → −"}]
+    },
+    {
+     "texto": "(−4) × (−5): sinais iguais, dá positivo. Depois 4 × 5 = 20. Resposta: +20.",
+     "por_personalidade": {
+      "gato": "(−4) × (−5): sinais iguais, positivo. 4 × 5 = 20. Então +20. Fácil.",
+      "tigre": "(−4) × (−5): SINAIS IGUAIS, POSITIVO! 4 × 5 = 20: +20!",
+      "capivara": "(−4) × (−5): sinais iguais, então positivo. Depois 4 × 5 = 20. Fica +20."
+     },
+     "lousa": [{"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "acende", "i": 1}, {"t": "linha", "v": "4 × 5 = 20"}, {"t": "linha", "v": "(−4) × (−5) = +20", "classe": "certo"}]
+    },
+    {
+     "texto": "5 × (−2): sinais diferentes, dá negativo. 5 × 2 = 10, então −10.",
+     "por_personalidade": {
+      "gato": "5 × (−2): sinais diferentes, negativo. 5 × 2 = 10. Então −10.",
+      "tigre": "5 × (−2): SINAIS DIFERENTES, NEGATIVO! 5 × 2 = 10: −10!",
+      "capivara": "5 × (−2): sinais diferentes, então negativo. 5 × 2 = 10, fica −10."
+     },
+     "lousa": [{"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "acende", "i": 2}, {"t": "linha", "v": "5 × 2 = 10"}, {"t": "linha", "v": "5 × (−2) = −10", "classe": "certo"}]
+    },
+    {
+     "texto": "Na divisão é igual: (−12) ÷ 3, sinais diferentes, dá negativo. 12 ÷ 3 = 4, então −4.",
+     "por_personalidade": {
+      "gato": "Divisão? Mesma regra. (−12) ÷ 3: diferentes, negativo. −4. Viu como é fácil?",
+      "tigre": "NA DIVISÃO É IGUAL! (−12) ÷ 3: DIFERENTES, NEGATIVO! −4!",
+      "capivara": "Na divisão é igualzinho: (−12) ÷ 3, sinais diferentes, negativo. 12 ÷ 3 = 4, fica −4."
+     },
+     "lousa": [{"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "acende", "i": 3}, {"t": "linha", "v": "12 ÷ 3 = 4"}, {"t": "linha", "v": "(−12) ÷ 3 = −4", "classe": "certo"}]
+    }
+   ]
   }
  }
 }

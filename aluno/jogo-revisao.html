@@ -95,7 +95,7 @@
       <button class="jr-btn-hud jr-btn-decorar" id="btn-expo-decorar" hidden aria-label="Decorar a sala">✏️<span>Decorar</span></button>
       <button class="jr-btn-hud jr-btn-missoes" id="btn-missoes" hidden aria-label="Missões do dia">📜<span id="missoes-cont">0/3</span></button>
       <button class="jr-btn-pet" id="btn-pet" hidden aria-label="Meus pets"><img alt="" draggable="false"/></button>
-      <button class="jr-btn-hud jr-btn-batalhar" id="btn-batalhar" hidden aria-label="Treinadores">⚔️<span>Treinadores</span></button>
+      <button class="jr-btn-hud jr-btn-batalhar" id="btn-batalhar" hidden aria-label="Duelos">⚔️<span>Duelos</span></button>
       <button class="jr-btn-som jr-btn-ajuda" id="btn-ajuda" data-ajuda aria-label="Como jogar" title="Como jogar">❓</button>
       <button class="jr-btn-som jr-btn-config" id="btn-config" data-config aria-label="Configuração" title="Configuração">⚙️</button>
       <span class="jr-moedas jr-moedas-topo" data-moedas-topo aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span data-moedas-n>0</span></span>
@@ -673,10 +673,10 @@
   </div>
 
   <!-- Batalha de Pets: lista dos treinadores -->
-  <div id="bt-lista" class="jr-pet-escolha" hidden role="dialog" aria-label="Treinadores">
+  <div id="bt-lista" class="jr-pet-escolha" hidden role="dialog" aria-label="Duelos">
     <div class="jr-pet-escolha-caixa bt-lista-caixa">
       <div class="bt-lista-topo">
-        <div class="jr-pet-escolha-titulo">⚔️ Treinadores</div>
+        <div class="jr-pet-escolha-titulo">⚔️ Duelos</div>
         <div class="bt-lista-dia" id="bt-lista-dia"></div>
         <button class="bt-lista-x" id="bt-lista-fechar" aria-label="Fechar">✕</button>
       </div>
@@ -940,7 +940,8 @@
   <div id="online-lista" class="jr-pet-escolha" hidden role="dialog" aria-label="Colegas online">
     <div class="jr-pet-escolha-caixa jr-online-caixa">
       <div class="jr-pet-escolha-titulo" id="online-titulo"></div>
-      <div class="jr-online-abas" id="online-abas" hidden><button data-online-aba="todos">👥 Online</button><button data-online-aba="amigos">🤝 Amigos <b id="online-ped-n" hidden></b></button></div>
+      <div class="jr-online-abas" id="online-abas" hidden><button data-online-aba="todos">👥 Online</button><button data-online-aba="amigos">🤝 Amigos <b id="online-ped-n" hidden></b></button><button data-online-aba="site" hidden>🎮 Outros jogos</button><button data-online-aba="busca" hidden>🔎 Alunos</button></div>
+      <input type="search" class="jr-online-busca" id="online-busca" hidden placeholder="Nome do aluno ou turma (ex.: 8D)" autocomplete="off" aria-label="Pesquisar aluno">
       <ul class="jr-online-itens" id="online-itens"></ul>
       <div class="jr-online-bloq" id="online-bloqueado" hidden>🔒 Vença o mapa anterior para entrar</div>
       <div class="jr-mp-botoes">

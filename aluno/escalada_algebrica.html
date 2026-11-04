@@ -438,6 +438,21 @@ const _rankingPath = _bimJogo <= 2 ? `escalada_ranking/${uid}` : `escalada_ranki
 const niveisRef  = _modoTeste ? null : ref(db, _niveisPath);
 const rankingRef = _modoTeste ? null : ref(db, _rankingPath);
 
+// 🟢 presença: a professora vê no Jogo de Revisão (aba 🎮 Outros jogos) quem está jogando aqui
+if (!_modoTeste) (async () => { try {
+  const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _perfil = await getPerfil(uid).catch(() => ({}));
+  await iniciarPresenca(uid, {
+    nome:    nomeAluno,
+    apelido: _perfil?.apelido_ativo || nomeAluno,
+    turma,
+    status:  'ocupado',
+    pagina:  'escalada',
+  });
+  window.addEventListener('beforeunload', () => encerrarPresenca());
+} catch(e) { console.warn('[Presença]', e); } })();
+
 async function loadProg(){
   if (niveisRef) {
     try { const s = await get(niveisRef); if (s.exists()) return s.val(); } catch(e){}

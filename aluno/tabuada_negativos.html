@@ -278,6 +278,21 @@ const _isReplay  = !!_replayN;
 
 const niveisRef = ref(db, _isProfMode ? `prof_neg_niveis/${uid}` : _negPath);
 
+// 🟢 presença: a professora vê no Jogo de Revisão (aba 🎮 Outros jogos) quem está jogando aqui
+if (!_isProfMode && !isModoTeste()) (async () => { try {
+  const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _perfil = await getPerfil(uid).catch(() => ({}));
+  await iniciarPresenca(uid, {
+    nome:    nomeAluno,
+    apelido: _perfil?.apelido_ativo || nomeAluno,
+    turma,
+    status:  'ocupado',
+    pagina:  'tabuada_negativos',
+  });
+  window.addEventListener('beforeunload', () => encerrarPresenca());
+} catch(e) { console.warn('[Presença]', e); } })();
+
 // ── Level config (150 níveis) ──────────────────────────────────
 function getLvlCfg(lvl) {
   // ── Fase 1-5: original (1-50) ──────────────────────────────

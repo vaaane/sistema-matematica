@@ -30,6 +30,7 @@ export async function iniciarPresenca(uid, dados) {
     turma:    dados.turma    || '',
     status:   dados.status   || 'disponivel',
     pagina:   dados.pagina   || 'menu',
+    rota:     location.pathname || '',   // em qual página/jogo está (a professora vê no Jogo de Revisão)
     em_duelo: false,
     ts:       Date.now(),
     ...(_parceiroNome ? { parceiro_nome: _parceiroNome, parceiro_turma: _parceiroTurma } : {}),

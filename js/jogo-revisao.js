@@ -6,7 +6,8 @@ import { isModoTeste, getSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, get, update, push, set, remove, increment, onValue, onChildAdded, onChildChanged, onChildRemoved, runTransaction, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { prepararFoto, analisarMoldura } from '/js/jogo-revisao/exposicao-img.js';
-import { criarLousa, passosExpressao } from '/js/jogo-revisao/lousa.js';
+import { criarLousa } from '/js/jogo-revisao/lousa.js';
+import { comoFaz } from '/js/jogo-revisao/aulas-como.js';
 import { urlSprite as spriteComCor, coresValidas, semCor, CORES_CABELO, CORES_BLUSA, CORES_DIVERTIDAS, PRECO_COR_DIVERTIDA, NOME_COR } from '/js/jogo-revisao/cores-pers.js';
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE, ALUNOS_POR_TURMA, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
@@ -3761,8 +3762,11 @@ async function lerVistoAmigos() {
 function mostrarAbaOnline(aba) {
   $('online-lista').dataset.modo = aba;
   for (const b of $('online-abas').querySelectorAll('[data-online-aba]')) b.classList.toggle('ativa', b.dataset.onlineAba === aba);
-  $('online-titulo').textContent = aba === 'amigos' ? '🤝 Amigos' : '👥 Online agora';
-  if (aba === 'amigos') { renderListaAmigos(); lerVistoAmigos().then(mudou => { if (mudou && $('online-lista').dataset.modo === 'amigos') renderListaAmigos(); }); }
+  $('online-titulo').textContent = aba === 'amigos' ? '🤝 Amigos' : aba === 'site' ? '🎮 No site agora' : aba === 'busca' ? '🔎 Pesquisar aluno' : '👥 Online agora';
+  $('online-busca').hidden = aba !== 'busca';
+  if (aba === 'site') { renderListaSite(); lerPresencaSite().then(leu => { if (leu && $('online-lista').dataset.modo === 'site') renderListaSite(); }); }
+  else if (aba === 'busca') { renderBuscaAluno(); $('online-busca').focus(); lerPresencaSite().then(leu => { if (leu && $('online-lista').dataset.modo === 'busca') renderBuscaAluno(); }); }
+  else if (aba === 'amigos') { renderListaAmigos(); lerVistoAmigos().then(mudou => { if (mudou && $('online-lista').dataset.modo === 'amigos') renderListaAmigos(); }); }
   else renderListaTodos();
 }
 function renderListaAmigos() {
@@ -3780,6 +3784,77 @@ function renderListaAmigos() {
     `<li class="jr-online-grupo">🤝 Seus amigos · ${lista.length}/${MAX_AMIGOS}</li>` +
     (lista.map(linha).join('') || '<li class="jr-online-vazio">Você ainda não tem amigos. Toque num colega e em ➕ Amigo!</li>');
   pintarRostos($('online-itens'));
+}
+
+// ── 🎓 só a conta da professora: quem está no site (outros jogos) e a busca de alunos (com 🏠 Visitar) ──
+// presenca_online/{uid}: { nome, turma, status, pagina, rota (js/presenca.js), ts } — o heartbeat renova ts a cada 10 s
+const PRESENCA_VALIDADE_MS = 60000;
+const NOMES_ROTA = {
+  'menu': 'Menu inicial', 'a-atividades': 'Atividades', 'atividade_plus': 'Fazendo atividade', 'atividade_equacoes': 'Atividade de equações', 'jogar': 'Quiz',
+  'resultado': 'Resultado do quiz', 'a-aula': 'Aula', 'a-aulas': 'Aulas', 'a-jogos': 'Hub de jogos', 'jogo-revisao': 'Jogo de Revisão', 'tabuada': 'Tabuada',
+  'tabuada_negativos': 'Tabuada de negativos', 'jogos_negativos': 'Jogos de negativos', 'escalada_algebrica': 'Escalada algébrica', 'labirinto': 'Labirinto',
+  'a-runner': 'Runner', 'duelos': 'Duelos', 'a-robotica': 'Robótica', 'guia_robotica': 'Robótica', 'a-torneio': 'Torneio', 'torneios': 'Torneio',
+  'treino-equacoes': 'Treino de equações', 'treino-regra-de-tres': 'Treino de regra de três', 'a-ranking': 'Ranking', 'a-historico': 'Histórico',
+  'a-notas': 'Notas', 'a-progresso': 'Progresso', 'a-certificados': 'Certificados', 'a-config': 'Configurações', 'perfil': 'Perfil', 'a-ficha': 'Ficha',
+};
+const NOMES_PAGINA = { menu: 'Menu inicial', atividades: 'Atividades', robotica: 'Robótica', jogos: 'Hub de jogos', tabuada: 'Tabuada', duelos: 'Duelos', navegando: 'Navegando no site' };
+function ondeNoSite(p) {
+  const pag = String(p?.rota || '').replace(/\/+$/, '').split('/').pop().replace(/\.html$/, '');
+  return NOMES_ROTA[pag] || NOMES_PAGINA[p?.pagina] || (pag ? pag.replace(/[-_]/g, ' ') : 'No site');
+}
+const alunoDeVerdade = (uid, nome, turma) => !!uid && uid !== UID_PROFESSORA && TURMAS_PLACAR.includes(turma) && !ALUNOS_TESTE.includes(uid) &&
+  !/PROFESSOR|TESTE/i.test(`${uid} ${nome || ''}`) && !contaEscondida(uid, nome);
+let presencaSite = {}, presencaSiteT = 0;
+async function lerPresencaSite(forca = false) {   // true = leu agora
+  if (!ehProfessora() || (!forca && presencaSiteT && performance.now() - presencaSiteT < 15000)) return false;
+  presencaSiteT = performance.now();
+  try { const s = await get(ref(db, 'presenca_online')); presencaSite = s.exists() ? s.val() || {} : {}; return true; }
+  catch (e) { console.warn('[jogo-revisao] presença do site indisponível', e?.code || e); return false; }
+}
+// sem nome/turma (o heartbeat recriou o nó só com ts depois de uma queda): tirados do uid
+const noSiteAgora = (uid) => { const p = presencaSite[uid]; return p && Date.now() - (Number(p.ts) || 0) < PRESENCA_VALIDADE_MS ? { ...p, turma: p.turma || turmaDoUid(uid), nome: p.nome || nomeDoUid(uid) } : null; };
+const botaoVisitarProf = (uid) => `<button class="jr-online-acao" data-visitar-online="${esc(uid)}">🏠 Visitar</button>`;
+function renderListaSite() {
+  const noJogo = regsOnline();
+  const lista = Object.entries(presencaSite).map(([uid, p]) => ({ uid, p: noSiteAgora(uid) }))
+    .filter(({ uid, p }) => p && alunoDeVerdade(uid, p.nome, p.turma) && !colegaVisivel(uid, noJogo[uid]))   // quem está no Jogo de Revisão fica na aba 👥 Online
+    .map(({ uid, p }) => ({ uid, p, onde: ondeNoSite(p) }))
+    .filter(a => a.onde !== 'Jogo de Revisão');
+  const grupos = {};
+  for (const a of lista) (grupos[a.onde] ||= []).push(a);
+  const ordem = Object.entries(grupos).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+  const linha = ({ uid, p }) => `<li><span class="jr-rosto">${p.status === 'ocupado' ? '🎮' : '👤'}</span>
+      <span class="jr-online-nome">${esc(nomeVisivel(p.apelido || p.nome) || nomeDoUid(uid))}</span>
+      <span class="jr-online-det">${esc(p.turma || turmaDoUid(uid))}${p.apelido && p.apelido !== p.nome ? ' · ' + esc(p.nome) : ''}${p.status === 'ocupado' ? ' · jogando agora' : ''}</span>
+      ${botaoVisitarProf(uid)}</li>`;
+  $('online-itens').innerHTML = ordem.length
+    ? ordem.map(([onde, l]) => `<li class="jr-online-grupo">${esc(onde)} · ${l.length}</li>` +
+        l.sort((a, b) => String(a.p.turma).localeCompare(String(b.p.turma)) || String(a.p.nome).localeCompare(String(b.p.nome))).map(linha).join('')).join('')
+    : '<li class="jr-online-vazio">Ninguém em outras páginas do site agora.</li>';
+}
+function renderBuscaAluno() {
+  const sem = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const q = sem($('online-busca').value.trim()), turmaQ = q.toUpperCase();
+  const noJogo = regsOnline(), lista = [];
+  if (q.length >= 2) for (const [turma, nomes] of Object.entries(ALUNOS_POR_TURMA)) {
+    if (!TURMAS_PLACAR.includes(turma)) continue;
+    const turmaToda = turma === turmaQ;   // "8D": a turma inteira
+    for (const nome of nomes) {
+      const uid = uidAluno(turma, nome);
+      if (!alunoDeVerdade(uid, nome, turma) || (!turmaToda && !sem(nome).includes(q))) continue;
+      lista.push({ uid, nome, turma });
+    }
+  }
+  const status = (uid) => {
+    if (colegaVisivel(uid, noJogo[uid])) return `🟢 no Jogo · ${lugarDe(noJogo[uid])}`;
+    const p = noSiteAgora(uid);
+    return p ? `🔵 ${ondeNoSite(p)}${p.status === 'ocupado' ? ' · jogando' : ''}` : '⚪ offline';
+  };
+  $('online-itens').innerHTML = q.length < 2 ? '<li class="jr-online-vazio">Digite pelo menos 2 letras do nome (ou a turma, ex.: 8D).</li>'
+    : lista.slice(0, 60).map(a => `<li><span class="jr-rosto">👤</span>
+        <span class="jr-online-nome">${esc(a.nome)}</span>
+        <span class="jr-online-det">${esc(a.turma)} · ${esc(status(a.uid))}</span>
+        ${botaoVisitarProf(a.uid)}</li>`).join('') || '<li class="jr-online-vazio">Ninguém com esse nome.</li>';
 }
 
 // ── 🏠 a casinha de um amigo sem a cópia pública: montada do registro dele (só olhar) ──
@@ -4264,7 +4339,7 @@ function desenharOnlineGeral() {
 function abrirListaOnline(n) {
   const lista = onlinePorMapa()[n] || [];
   $('online-lista').dataset.modo = 'regiao';
-  $('online-abas').hidden = true;
+  $('online-abas').hidden = $('online-busca').hidden = true;
   const reg = D.geral.regioes.find(r => r.mapa === n);
   $('online-titulo').textContent = `${n}. ${reg?.nome || ''}`;
   $('online-itens').innerHTML = lista.map(r => `
@@ -4333,6 +4408,8 @@ async function atualizarOnlineTodos() {
   atualizarBotaoOnline();
   if (!$('online-lista').hidden && $('online-lista').dataset.modo === 'todos') renderListaTodos();
   if (!$('online-lista').hidden && $('online-lista').dataset.modo === 'amigos') renderListaAmigos();
+  const m = $('online-lista').dataset.modo;
+  if (!$('online-lista').hidden && (m === 'site' || m === 'busca') && await lerPresencaSite()) { if (m === 'site') renderListaSite(); else renderBuscaAluno(); }
 }
 function atualizarBotaoOnline() {
   $('online-n').textContent = Object.entries(regsOnline()).filter(([u, r]) => colegaVisivel(u, r)).length;
@@ -4340,11 +4417,17 @@ function atualizarBotaoOnline() {
 function abrirListaTodos(aba = 'todos') {
   tLista = 0;
   if ($('tela-geral').hidden) atualizarOnlineTodos();
-  $('online-abas').hidden = !usaAmigos();   // 🤝 a aba Amigos (PROMPT-183)
+  const prof = ehProfessora();   // 🎓 só a conta da professora: 🎮 Outros jogos e 🔎 Alunos
+  $('online-abas').hidden = !usaAmigos() && !prof;   // 🤝 a aba Amigos (PROMPT-183)
+  for (const b of $('online-abas').querySelectorAll('[data-online-aba]')) {
+    const a = b.dataset.onlineAba;
+    b.hidden = a === 'amigos' ? !usaAmigos() : (a === 'site' || a === 'busca') ? !prof : false;
+  }
   $('online-ir').hidden = true;
   $('online-bloqueado').hidden = true;
   atualizarAmizadeNaTela();
-  mostrarAbaOnline(usaAmigos() ? aba : 'todos');
+  if (typeof aba !== 'string') aba = 'todos';   // veio do clique (o evento)
+  mostrarAbaOnline(usaAmigos() || (prof && aba !== 'amigos') ? aba : 'todos');
   $('online-lista').hidden = false;
 }
 function renderListaTodos() {
@@ -4362,7 +4445,7 @@ function linhaOnline(r) {
   return `<li><span class="jr-rosto">${rostoPet(pet, r.pet_tinta, r.pet_forma)}</span>
     <span class="jr-online-nome">${nomeT(r.uid, rotuloColega(r.uid, r), r)}</span>
     <span class="jr-online-det">${esc(nomeVisivel(r.turma))}${petValido(pet) ? ' · ' + esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[pet]) : ''} · ${esc(lugarDe(r))}</span>
-    ${botaoOnline(r)}${casaPub(r.uid) ? `<button class="jr-online-acao" data-visitar-online="${esc(r.uid)}">🏠 Visitar</button>` : ''}</li>`;
+    ${botaoOnline(r)}${casaPub(r.uid) || (ehProfessora() && r.uid !== sessao.uid) ? `<button class="jr-online-acao" data-visitar-online="${esc(r.uid)}">🏠 Visitar</button>` : ''}</li>`;
 }
 // na Praça (eu também lá): ⚔️ Desafiar; senão 📨 Chamar pra Praça
 function botaoOnline(r) {
@@ -11257,9 +11340,9 @@ async function visitarCasinha(uid, volta = null) {   // volta: { n: 'vila', lado
   let d = null;
   try { const s = await get(ref(db, `${basePraca()}/casinhas/${uid}`)); d = s.exists() ? s.val() : null; }
   catch (e) { console.warn('[jogo-revisao] casinha do colega indisponível', e?.code || e); }
-  if ((!d?.moveis || !visivelNoRanking(uid, d)) && ehAmigo(uid)) {   // 🤝 amigo: a casinha do jeito que ele deixou, mesmo sem publicar (PROMPT-183)
+  if ((!d?.moveis || !visivelNoRanking(uid, d)) && (ehAmigo(uid) || ehProfessora())) {   // 🤝 amigo (e 🎓 a professora): a casinha do jeito que ele deixou, mesmo sem publicar (PROMPT-183)
     try { d = await casaDoAmigo(uid); } catch (e) { console.warn('[jogo-revisao] casinha do amigo indisponível', e?.code || e); }
-    if (!d) { avisoPet('Seu amigo ainda não arrumou a casinha.'); return; }
+    if (!d) { avisoPet(ehProfessora() ? 'Esse aluno ainda não arrumou a casinha.' : 'Seu amigo ainda não arrumou a casinha.'); return; }
   } else if (!d?.moveis || !visivelNoRanking(uid, d)) { avisoPet('Essa casinha não está aberta para visitas agora.'); return; }
   $('cs-menu').hidden = $('online-lista').hidden = true;
   fecharCartaoColega();
@@ -12525,16 +12608,18 @@ function abrirListaBatalha() {
   btSel = (ts.find(t => !desafioCom(t.id).vitorias) || ts[0])?.id || null;
   $('bt-lista').hidden = false;
   renderListaBatalha();
+  if ($('tela-geral').hidden) atualizarOnlineTodos().then(() => { if (!$('bt-lista').hidden) renderListaBatalha(); });   // 👥 os colegas online
   clearInterval(btTimerLista);
-  btTimerLista = setInterval(() => { if ($('bt-lista').hidden) clearInterval(btTimerLista); else renderListaBatalha(); }, 20000);   // contador do descanso
+  btTimerLista = setInterval(() => { if ($('bt-lista').hidden) clearInterval(btTimerLista); else renderListaBatalha(); }, 20000);   // contador do descanso (e os colegas, lidos a cada 20 s)
 }
 
 function renderListaBatalha() {
   const dia = diaBatalhas(), lim = limitesBatalhaDia();
   $('bt-lista-dia').innerHTML = `prêmios de hoje ${dia.moedas}/${lim.moedas != null ? comMult(lim.moedas) : '∞'} ${moedaHtml()}`;
-  const agora = Date.now(), ts = treinadores();
-  if (!ts.some(t => t.id === btSel)) btSel = ts[0]?.id || null;
-  $('bt-cards').innerHTML = ts.map(t => {
+  const agora = Date.now(), ts = treinadores(), cols = colegasDuelo();
+  if (!ts.some(t => t.id === btSel) && !cols.some(r => `on:${r.uid}` === btSel)) btSel = ts[0]?.id || null;
+  $('bt-cards').classList.toggle('com-colegas', cols.length > 0);
+  $('bt-cards').innerHTML = (cols.length ? '<div class="bt-grupo">🧭 Treinadores dos mapas</div>' : '') + ts.map(t => {
     const d = desafioCom(t.id), sit = situacao(d, agora);
     const icone = sit === 'descansando' ? `😴<small>${horasFalta(d.descansa_ate - agora)}</small>` : sit === 'revanche' ? '🔁' : d.vitorias > 0 ? '🏆' : '';
     return `<button class="bt-linha ${sit}${t.id === btSel ? ' sel' : ''}" data-sel="${esc(t.id)}" aria-pressed="${t.id === btSel}">
@@ -12543,8 +12628,45 @@ function renderListaBatalha() {
       <span class="bt-linha-est">${'⭐'.repeat(t.nivel)}</span>
       <span class="bt-linha-ic">${icone}</span>
     </button>`;
-  }).join('');
-  renderDetalheTreinador();
+  }).join('') + (cols.length ? `<div class="bt-grupo">👥 Colegas online · ${cols.length}</div>` + cols.map(r => {
+    const id = `on:${r.uid}`;
+    return `<button class="bt-linha${id === btSel ? ' sel' : ''}" data-sel="${esc(id)}" aria-pressed="${id === btSel}">
+      <span class="bt-rosto bt-rosto-pet">${rostoPet(petAtual(r.pet), r.pet_tinta, r.pet_forma)}</span>
+      <span class="bt-linha-nome">${nomeT(r.uid, rotuloColega(r.uid, r), r)}</span>
+      <span class="bt-linha-ic">${naPracaReg(r) ? '🏛️' : ''}</span>
+    </button>`;
+  }).join('') : '');
+  pintarRostos($('bt-cards'));
+  if (String(btSel).startsWith('on:')) renderDetalheColega(); else renderDetalheTreinador();
+}
+// ⚔️ Duelos: os colegas online (os mesmos da lista 👥), a minha turma primeiro
+function colegasDuelo() {
+  if (!onlineAtivo()) return [];
+  const minha = (r) => (r.turma === sessao.turma ? 0 : 1);
+  return Object.entries(regsOnline()).filter(([u, r]) => colegaVisivel(u, r)).map(([uid, r]) => ({ uid, ...r }))
+    .sort((a, b) => minha(a) - minha(b) || String(a.turma || '').localeCompare(String(b.turma || '')) || rotuloColega(a.uid, a).localeCompare(rotuloColega(b.uid, b)));
+}
+// o colega escolhido: na Praça (eu também lá) ⚔️ Desafiar; senão 📨 Chamar pra Praça (o duelo entre colegas é na Praça)
+function renderDetalheColega() {
+  const uid = String(btSel).slice(3), r = colegasDuelo().find(x => x.uid === uid), el = $('bt-det');
+  if (!r) { el.innerHTML = '<div class="bt-det-linhas">Esse colega saiu do jogo.</div>'; return; }
+  const pet = petAtual(r.pet), praca = naPracaReg(r) && ehPraca();
+  const acoes = botaoOnline(r) + (casaPub(r.uid) || (ehProfessora() && r.uid !== sessao.uid) ? `<button class="jr-online-acao" data-visitar-online="${esc(r.uid)}">🏠 Visitar</button>` : '');
+  el.innerHTML = `
+    <div class="bt-det-topo">
+      <span class="jr-busto bt-det-busto bt-rosto-pet">${rostoPet(pet, r.pet_tinta, r.pet_forma)}</span>
+      <div class="bt-det-quem">
+        <div class="bt-det-nome">${nomeT(r.uid, rotuloColega(r.uid, r), r)}</div>
+        <div class="bt-det-sub">${esc(nomeVisivel(r.turma || ''))} · ${esc(lugarDe(r))}</div>
+        ${petValido(pet) ? `<div class="bt-det-pet">${esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[pet])}${r.pet_nivel ? ` <span>nível ${Number(r.pet_nivel) || ''}</span>` : ''}</div>` : ''}
+      </div>
+    </div>
+    <div class="bt-det-linhas">
+      <div>${praca ? '⚔️ Vocês dois estão na Praça: dá para desafiar agora.' : '🏛️ O duelo entre colegas é na Praça. Chame para lá!'}</div>
+      ${r.sem_convites ? '<div class="bt-det-estado descansando">Não está recebendo convites agora.</div>' : ''}
+    </div>
+    <div class="bt-det-acoes">${acoes || '<span class="bt-det-estado descansando">Os desafios estão pausados agora.</span>'}</div>`;
+  pintarRostos(el);
 }
 
 const horasFalta = (ms) => { const h = Math.ceil(ms / 3600e3); return h > 1 ? `${h} h` : `${Math.max(1, Math.ceil(ms / 60000))} min`; };
@@ -16362,20 +16484,11 @@ function fecharAula(peloBotao = false) {
   if (!!r.ocultar !== ocultar) { r.ocultar = ocultar; gravar({ [`relembre/${chave}/ocultar`]: ocultar || null }); }
 }
 
-// ── ▶ Ver como faz: a lousa com os números da questão errada. null = não deu para montar (o botão não aparece) ──
-const soExpressao = (s) => /^[\d\s,+−×÷()[\]{}-]+$/.test(s) && /[+−×÷]/.test(s) && /\d/.test(s);
+// ── ▶ Ver como faz: a lousa com os números da questão errada (aulas-como.js, por ginásio). null = o botão não aparece ──
 function comoFazDe(q) {
   if (!q) return null;
   const chave = q.relembre !== undefined ? q.relembre : chaveGinasio(q.mapa ?? pg?.mapa, q.lado ?? pg?.G);
-  if (!/^mapa1-[AB]$/.test(chave || '')) return null;   // ginásio 1 (PROMPT-185); 2 a 4: PROMPT-186/187
-  let e = String(q.enunciado || '').replace(/\s*=\s*\??\s*$/, '').replace(/^Quanto (é|dá)\s+/i, '').replace(/\?$/, '').trim(), problema = null;
-  if (!soExpressao(e)) {   // problema com texto: a expressão do começo da explicação
-    const x = String(q.explicacao || '').split(' = ')[0].trim();
-    if (!soExpressao(x)) return null;
-    problema = q.enunciado; e = x;
-  }
-  try { if (!passosExpressao(e).length) return null; } catch (_) { return null; }
-  return [...(problema ? [{ t: 'enunciado', v: problema }] : []), { t: 'expressao', v: e }];
+  return comoFaz(chave, q);
 }
 function abrirComoFaz(passos, titulo = 'Ver como faz') {
   if (!passos?.length) return;
@@ -16493,6 +16606,8 @@ function ligarEventos() {
   $('geral-marcadores').addEventListener('click', (e) => { const b = e.target.closest('.jr-marc-online'); if (b) { e.stopPropagation(); abrirListaOnline(Number(b.dataset.mapa)); } }, true);
   $('online-fechar').addEventListener('click', () => { $('online-lista').hidden = true; });
   $('online-itens').addEventListener('click', cliqueListaOnline);
+  $('online-abas').addEventListener('click', cliqueListaOnline);   // as abas ficam fora da lista
+  $('online-busca').addEventListener('input', () => { if ($('online-lista').dataset.modo === 'busca') renderBuscaAluno(); });
   $('btn-online').addEventListener('click', abrirListaTodos);
   $('selo-online').addEventListener('click', abrirListaTodos);
   $('chamado-ir').addEventListener('click', (e) => { e.stopPropagation(); responderChamado(true); });
@@ -16681,7 +16796,11 @@ function ligarEventos() {
   $('btn-batalhar').addEventListener('click', abrirListaBatalha);
   $('bt-lista-fechar').addEventListener('click', () => { $('bt-lista').hidden = true; });
   $('bt-cards').addEventListener('click', (e) => { const b = e.target.closest('[data-sel]'); if (b) { btSel = b.dataset.sel; renderListaBatalha(); } });
-  $('bt-det').addEventListener('click', (e) => { const b = e.target.closest('[data-ir]'); if (b && !b.disabled) irAteTreinador(b.dataset.ir); });
+  $('bt-det').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-ir]'); if (b && !b.disabled) { irAteTreinador(b.dataset.ir); return; }
+    const c = e.target.closest('[data-chamar],[data-desafiar-online],[data-presentear-online],[data-visitar-online]');   // ⚔️ Duelos: um colega online
+    if (c && !c.disabled) { $('bt-lista').hidden = true; cliqueListaOnline(e); }
+  });
   $('colega-cartao').addEventListener('click', (e) => {
     e.stopPropagation();
     if (e.target.closest('[data-oi]')) { fecharCartaoColega(); reagirCom('👋'); return; }
