@@ -1155,6 +1155,7 @@ function lerPets(v) {
     bolsa: { ...(v.pets?.bolsa || {}) }, tintas: { ...(v.pets?.tintas || {}) }, efeitos: { ...(v.pets?.efeitos || {}) }, cuidadosV2: !!v.pets?.cuidados_v2,
     tinhaExpedicoes: v.pets?.expedicoes_dia != null, migrouMorcego: !!v.pets?.migrou_morcego, migrouCapivara: !!v.pets?.migrou_capivara,
     coresPet: { ...(v.pets?.cores_pet || {}) }, coresTodas: { ...(v.pets?.cores_todas || {}) }, migrouTintas: !!v.pets?.migrou_tintas,   // 🎨 PROMPT-170
+    devolveuCoresGaviao: !!v.pets?.devolveu_cores_gaviao,   // 🦅 PROMPT-190
     fundo: v.pets?.fundo || null, fundosComprados: { ...(v.pets?.fundos_comprados || {}) } };   // 🖼️ PROMPT-179
 }
 
@@ -1180,6 +1181,7 @@ function iniciarPet() {
   migrarCapivara(ps);
   migrarMorcego(ps);
   migrarTintas(ps);   // 🎨 PROMPT-170
+  devolverCoresGaviao(ps);   // 🦅 PROMPT-190
   limparExpedicao(ps);   // 🧭 PROMPT-177
   for (const p of Object.keys(ps.conquistados)) if (!petValido(p)) delete ps.conquistados[p];
   liberarPetsProfessora(ps);
@@ -2369,6 +2371,28 @@ function migrarTintas(ps) {
   for (const cor of ganhou) { ps.coresTodas[cor] = true; patch[`pets/cores_todas/${cor}`] = true; }
   if (Object.keys(patch).length) gravar(patch);
   if (primeira && ganhou.size) setTimeout(avisarTintasViraramCores, 4000);
+}
+// 🦅 PROMPT-190: o gavião ficou sem cores. A cor vestida sai; as compradas (pets/cores_pet/gaviao) voltam em moedas, uma vez só
+// (pets/devolveu_cores_gaviao). Não voltam as de graça: as de pets/cores_todas (das tintas) e as da professora/contas de teste.
+function devolverCoresGaviao(ps) {
+  const patch = {}, c = ps.conquistados?.gaviao;
+  if (c?.cor) { c.cor = null; patch['pets/conquistados/gaviao/cor'] = null; }
+  let total = 0;
+  if (!ps.devolveuCoresGaviao && ps.coresPet?.gaviao) {
+    if (!todasAsCoresPet()) for (const [cor, sim] of Object.entries(ps.coresPet.gaviao)) if (sim === true && !ps.coresTodas?.[cor]) total += precoCorPet(cor);
+    delete ps.coresPet.gaviao;
+    patch['pets/cores_pet/gaviao'] = null;
+    ps.devolveuCoresGaviao = true;
+    patch['pets/devolveu_cores_gaviao'] = true;
+    if (total > 0) { ps.moedas = (Number(ps.moedas) || 0) + total; patch['pets/moedas'] = ps.moedas; }
+  }
+  if (Object.keys(patch).length) gravar(patch);
+  if (total > 0) setTimeout(() => avisarCoresGaviao(total), 4000);
+}
+function avisarCoresGaviao(n) {   // depois do tutorial (e do cartão de pet entregue), como o aviso das tintas
+  if (tutorialPendente() || !$('tutorial').hidden || petEntregue) { setTimeout(() => avisarCoresGaviao(n), 2000); return; }
+  avisoPet(`🦅 As cores do gavião saíram do jogo. Suas ${n} 🪙 voltaram!`, true);
+  pintarMoedasTopo();
 }
 function avisarTintasViraramCores() {   // depois do tutorial (e do cartão de pet entregue)
   const tutorialVem = tutorialPendente();

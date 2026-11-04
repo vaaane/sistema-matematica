@@ -36,7 +36,7 @@ export async function carregarSprites() {
 const CORES_TODAS = ['marrom', 'cinza', 'branco', 'roxo', 'azul', 'rosa', 'verde', 'dourado', 'preto'];
 export const CORES_PET = {
   elefante: CORES_TODAS, gato: CORES_TODAS, tigre: CORES_TODAS, unicornio: CORES_TODAS, capivara: CORES_TODAS,
-  gaviao: CORES_TODAS.filter(c => c !== 'cinza'),
+  gaviao: [],   // 🦅 PROMPT-190: o gavião só no desenho original (as cores compradas voltaram em moedas)
   axolote: CORES_TODAS.filter(c => c !== 'rosa'),
   morcego: ['marrom', 'cinza', 'branco', 'roxo', 'azul', 'vermelho', 'dourado'],
 };
