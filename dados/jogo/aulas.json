@@ -1,64 +1,46 @@
 {
- "_nota": "Aula do pet na entrada dos ginásios (PROMPT-185). aulas.{chave}.paginas: cada página = uma fala do pet + uma animação na lousa (js/jogo-revisao/lousa.js: linha, enunciado, marca, resolve, expressao, seta, texto, armada, divisao, reta, virgula, figura, pausa). texto = a fala neutra; por_personalidade.{pet} = a fala no jeito daquele pet (sem ela: jeito.{pet}.abre antes do texto e, na última página, jeito.{pet}.fecha depois).",
+ "_nota": "Aula do pet na entrada dos ginásios (PROMPT-185). aulas.{chave}.paginas: cada página = uma fala do pet + uma animação na lousa (js/jogo-revisao/lousa.js: linha, enunciado, marca, resolve, expressao, seta, texto, armada, divisao, reta, virgula, escada, tabela, acende, figura, fracao, fracoes, barras, compara, pausa). PROMPT-191: cada página resolve a conta inteira (as linhas ficam na lousa) e a fala explica a conta toda; as pegadinhas usam 'compara' (✖ jeito errado × ✔ jeito certo, lado a lado). texto = a fala neutra; por_personalidade.{pet} = a fala no jeito daquele pet (sem ela: jeito.{pet}.abre antes do texto e, na última página, jeito.{pet}.fecha depois).",
  "jeito": {
-  "gato": { "abre": ["Hmm… olha só, é fácil:", "Presta atenção, que eu não repito:", "Óbvio, mas vou explicar:"], "fecha": ["Fácil, né? Até um gato faz.", "Pronto. Agora vai lá e me orgulha."] },
-  "tigre": { "abre": ["Presta atenção, campeão!", "FOCO! Olha só:", "Treino de cabeça:"], "fecha": ["AGORA É COM VOCÊ, CAMPEÃO! 💪", "Bora vencer esse ginásio!"] },
-  "capivara": { "abre": ["Calma… respira… olha só:", "Sem pressa:", "Devagarinho:"], "fecha": ["Viu? Com calma tudo dá certo.", "Tranquilo. Você consegue."] },
-  "gaviao": { "abre": ["Do alto dá pra ver:", "Olho de gavião:", "Mira aqui:"], "fecha": ["Mira certa, acerto certo!", "Agora voa nesse ginásio!"] },
-  "axolote": { "abre": ["Uiii, olha que legal:", "Psiu, olha isso:", "Sabia que…"], "fecha": ["Uiii, você vai arrasar!", "Fácil fácil, né?"] },
-  "unicornio": { "abre": ["Uma estrelinha me mostrou:", "Olha que mágico:", "✨ Repara:"], "fecha": ["Brilha, que você consegue! ✨", "Magia pura!"] },
-  "morcego": { "abre": ["Meu eco me contou:", "Escuta bem:", "No escuro eu vi:"], "fecha": ["Agora voa nessa conta!", "Eco confirmado: você consegue."] },
-  "dragao_vermelho": { "abre": ["EU, O MAGNÍFICO, explico:", "Escuta o dragão:", "Atenção, aprendiz:"], "fecha": ["Até um dragão aprovaria! 🔥", "Agora queima esse ginásio! 🔥"] },
-  "elefante": { "abre": ["Eu nunca esqueço, e lembro que:", "Guarda na memória:", "Anota na cabeça:"], "fecha": ["Guardou? Eu guardei!", "Memória de elefante: você consegue!"] }
+  "gato": {"abre": ["Hmm… olha só, é fácil:", "Presta atenção, que eu não repito:", "Óbvio, mas vou explicar:"], "fecha": ["Fácil, né? Até um gato faz.", "Pronto. Agora vai lá e me orgulha."]},
+  "tigre": {"abre": ["Presta atenção, campeão!", "FOCO! Olha só:", "Treino de cabeça:"], "fecha": ["AGORA É COM VOCÊ, CAMPEÃO! 💪", "Bora vencer esse ginásio!"]},
+  "capivara": {"abre": ["Calma… respira… olha só:", "Sem pressa:", "Devagarinho:"], "fecha": ["Viu? Com calma tudo dá certo.", "Tranquilo. Você consegue."]},
+  "gaviao": {"abre": ["Do alto dá pra ver:", "Olho de gavião:", "Mira aqui:"], "fecha": ["Mira certa, acerto certo!", "Agora voa nesse ginásio!"]},
+  "axolote": {"abre": ["Uiii, olha que legal:", "Psiu, olha isso:", "Sabia que…"], "fecha": ["Uiii, você vai arrasar!", "Fácil fácil, né?"]},
+  "unicornio": {"abre": ["Uma estrelinha me mostrou:", "Olha que mágico:", "✨ Repara:"], "fecha": ["Brilha, que você consegue! ✨", "Magia pura!"]},
+  "morcego": {"abre": ["Meu eco me contou:", "Escuta bem:", "No escuro eu vi:"], "fecha": ["Agora voa nessa conta!", "Eco confirmado: você consegue."]},
+  "dragao_vermelho": {"abre": ["EU, O MAGNÍFICO, explico:", "Escuta o dragão:", "Atenção, aprendiz:"], "fecha": ["Até um dragão aprovaria! 🔥", "Agora queima esse ginásio! 🔥"]},
+  "elefante": {"abre": ["Eu nunca esqueço, e lembro que:", "Guarda na memória:", "Anota na cabeça:"], "fecha": ["Guardou? Eu guardei!", "Memória de elefante: você consegue!"]}
  },
  "aulas": {
   "mapa1-A": {
    "titulo": "Expressões sem parênteses",
    "paginas": [
     {
-     "texto": "Quando a conta tem + e ×, existe uma ordem certa para resolver. Olha esta:",
+     "texto": "Quando a conta tem + e ×, existe uma ordem. Primeiro o × e o ÷: 2 × 3 = 6. Depois o + e o −: 5 + 6 = 11.",
      "por_personalidade": {
-      "gato": "Hmpf, todo mundo erra isso. Quando a conta tem + e ×, tem uma ordem certa. Olha:",
-      "tigre": "PRESTA ATENÇÃO, CAMPEÃO! Conta com + e × tem ordem certa! Olha esta:",
-      "capivara": "Calma… quando a conta tem + e ×, existe uma ordem certinha. Olha esta aqui:"
+      "gato": "Hmpf, todo mundo erra isso. Primeiro o × e o ÷: 2 × 3 = 6. Depois o + e o −: 5 + 6 = 11. Pronto.",
+      "tigre": "PRESTA ATENÇÃO, CAMPEÃO! Primeiro o × e o ÷: 2 × 3 = 6! Depois o + e o −: 5 + 6 = 11! VALEU!",
+      "capivara": "Calma… a conta tem uma ordem. Primeiro o × e o ÷: 2 × 3 dá 6. Só depois o + e o −: 5 + 6 dá 11."
      },
-     "lousa": [{ "t": "linha", "v": "5 + 2 × 3" }, { "t": "texto", "v": "+ e × na mesma conta" }]
+     "lousa": [{"t": "expressao", "v": "5 + 2 × 3"}, {"t": "texto", "v": "1º: × e ÷ · 2º: + e −"}]
     },
     {
-     "texto": "Primeiro fazemos × e ÷, da esquerda para a direita. Aqui é o 2 × 3, que dá 6.",
+     "texto": "Numa conta maior, é linha por linha. Primeiro os × e ÷: 6 ÷ 2 = 3 e 3 × 4 = 12. Depois os + e −, da esquerda para a direita: 20 − 3 = 17 e 17 + 12 = 29.",
      "por_personalidade": {
-      "gato": "Primeiro × e ÷, da esquerda pra direita. Óbvio. 2 × 3 dá 6.",
-      "tigre": "PRIMEIRO × E ÷, da esquerda para a direita! 2 × 3 = 6. Pá!",
-      "capivara": "Primeiro, com calma, o × e o ÷, da esquerda para a direita. 2 × 3 dá 6."
+      "gato": "Conta grande não me assusta. Primeiro 6 ÷ 2 = 3 e 3 × 4 = 12. Depois da esquerda pra direita: 20 − 3 = 17 e 17 + 12 = 29.",
+      "tigre": "CONTA GRANDE? SEM MEDO! Primeiro 6 ÷ 2 = 3 e 3 × 4 = 12! Depois 20 − 3 = 17 e 17 + 12 = 29!",
+      "capivara": "Uma linha de cada vez: primeiro 6 ÷ 2 = 3 e 3 × 4 = 12. Depois, da esquerda para a direita: 20 − 3 = 17 e 17 + 12 = 29."
      },
-     "lousa": [{ "t": "linha", "v": "5 + 2 × 3" }, { "t": "marca", "v": "2 × 3" }, { "t": "resolve", "v": "6", "linha": "5 + 6" }, { "t": "texto", "v": "1º: × e ÷" }]
+     "lousa": [{"t": "expressao", "v": "20 − 6 ÷ 2 + 3 × 4"}, {"t": "texto", "v": "× e ÷ primeiro, depois + e −"}]
     },
     {
-     "texto": "Depois vêm o + e o −, também da esquerda para a direita. 5 + 6 dá 11.",
+     "texto": "Cuidado com a pegadinha! Quem faz 5 + 2 primeiro chega em 7 × 3 = 21, e está errado. O certo é o × primeiro: 2 × 3 = 6 e 5 + 6 = 11.",
      "por_personalidade": {
-      "gato": "Depois o + e o −, da esquerda pra direita. 5 + 6 = 11. Viu? Nem cansei.",
-      "tigre": "Agora o + e o −, da esquerda para a direita! 5 + 6 = 11. VALEU!",
-      "capivara": "Só depois o + e o −, também da esquerda para a direita. 5 + 6 dá 11. Tranquilo."
+      "gato": "Pegadinha clássica: fazer 5 + 2 primeiro dá 7 × 3 = 21. Errado. Eu nunca cairia nessa. O × primeiro: 5 + 6 = 11.",
+      "tigre": "CUIDADO COM A ARMADILHA! 5 + 2 primeiro dá 7 × 3 = 21: ERRADO! O × primeiro: 5 + 6 = 11!",
+      "capivara": "Cuidado, sem pressa: quem faz 5 + 2 primeiro chega em 7 × 3 = 21, e está errado. O × vem primeiro: 5 + 6 = 11."
      },
-     "lousa": [{ "t": "linha", "v": "5 + 2 × 3" }, { "t": "linha", "v": "5 + 6" }, { "t": "marca", "v": "5 + 6" }, { "t": "resolve", "v": "11", "linha": "11" }, { "t": "texto", "v": "2º: + e −" }]
-    },
-    {
-     "texto": "Numa conta maior, é linha por linha: primeiro todos os × e ÷, depois os + e −, sempre da esquerda para a direita.",
-     "por_personalidade": {
-      "gato": "Conta grande não me assusta. Linha por linha: todos os × e ÷ primeiro, depois + e −.",
-      "tigre": "CONTA GRANDE? SEM MEDO! Linha por linha: × e ÷ primeiro, depois + e −!",
-      "capivara": "Conta grande? Uma linha de cada vez: primeiro os × e ÷, depois os + e −."
-     },
-     "lousa": [{ "t": "expressao", "v": "20 − 6 ÷ 2 + 3 × 4" }]
-    },
-    {
-     "texto": "Cuidado com a pegadinha! Se fizer o 5 + 2 primeiro, dá 21, e está errado. O certo é 11.",
-     "por_personalidade": {
-      "gato": "Pegadinha clássica: fazer 5 + 2 primeiro dá 21. Errado. Eu nunca cairia nessa. O certo é 11.",
-      "tigre": "CUIDADO COM A ARMADILHA! 5 + 2 primeiro dá 21: ERRADO! O certo é 11!",
-      "capivara": "Cuidado, sem pressa: se fizer 5 + 2 primeiro, dá 21, e está errado. O certo é 11."
-     },
-     "lousa": [{ "t": "linha", "v": "5 + 2 × 3" }, { "t": "linha", "v": "7 × 3 = 21", "classe": "errado" }, { "t": "linha", "v": "5 + 6 = 11", "classe": "certo" }, { "t": "texto", "v": "Primeiro o ×!" }]
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "5 + 2 × 3"}, {"t": "marca", "v": "5 + 2"}, {"t": "resolve", "v": "7", "linha": "7 × 3"}, {"t": "marca", "v": "7 × 3"}, {"t": "resolve", "v": "21", "linha": "21"}]}, "dir": {"passos": [{"t": "expressao", "v": "5 + 2 × 3"}]}}, {"t": "texto", "v": "Primeiro o ×!"}]
     }
    ]
   },
@@ -66,49 +48,40 @@
    "titulo": "Expressões com parênteses",
    "paginas": [
     {
-     "texto": "Os parênteses mandam: o que está dentro deles vem primeiro.",
+     "texto": "Os parênteses mandam: o que está dentro deles vem primeiro. Sem parênteses, 5 + 3 × 2 = 5 + 6 = 11. Com parênteses, (5 + 3) × 2 = 8 × 2 = 16. Mesmos números, resultados diferentes!",
      "por_personalidade": {
-      "gato": "Os parênteses mandam. Tipo eu nesta casa. O que está dentro vem primeiro.",
-      "tigre": "OS PARÊNTESES MANDAM! O que está dentro deles vem PRIMEIRO!",
-      "capivara": "Os parênteses dizem: comece por aqui. O que está dentro deles vem primeiro."
+      "gato": "Os parênteses mandam. Tipo eu nesta casa. Sem eles, 5 + 6 = 11. Com eles, 8 × 2 = 16. Impressionante, né? Eu já sabia.",
+      "tigre": "OS PARÊNTESES MANDAM! Sem eles: 5 + 6 = 11! Com eles: 8 × 2 = 16! Mesmos números, resultados diferentes!",
+      "capivara": "Os parênteses dizem: comece por aqui. Sem eles, 5 + 3 × 2 = 11. Com eles, (5 + 3) × 2 = 8 × 2 = 16."
      },
-     "lousa": [{ "t": "expressao", "v": "(5 + 3) × 2" }, { "t": "texto", "v": "( ) primeiro" }]
+     "lousa": [{"t": "compara", "esq": {"titulo": "sem parênteses", "tipo": "neutro", "passos": [{"t": "expressao", "v": "5 + 3 × 2"}]}, "dir": {"titulo": "com parênteses", "tipo": "neutro", "passos": [{"t": "expressao", "v": "(5 + 3) × 2"}]}}, {"t": "texto", "v": "Os parênteses mudam a ordem!"}]
     },
     {
-     "texto": "Olha a diferença que os parênteses fazem: os mesmos números, resultados diferentes!",
+     "texto": "E os colchetes? Primeiro os ( ): 2 + 3 = 5. Depois os [ ]: 10 − 5 = 5. Por último, o resto: 5 × 2 = 10.",
      "por_personalidade": {
-      "gato": "Mesmos números, resultados diferentes. Impressionante, né? Eu já sabia.",
-      "tigre": "OLHA ISSO! Mesmos números, resultados diferentes! Os parênteses mudam tudo!",
-      "capivara": "Repara: os mesmos números, mas resultados diferentes. Os parênteses mudam a ordem."
+      "gato": "Colchetes? Fácil: primeiro ( ), 2 + 3 = 5. Depois [ ], 10 − 5 = 5. Depois o resto: 5 × 2 = 10. Igual eu como: primeiro o peixe.",
+      "tigre": "COLCHETES! Primeiro ( ): 2 + 3 = 5! Depois [ ]: 10 − 5 = 5! Por último: 5 × 2 = 10!",
+      "capivara": "Com colchetes, vai de dentro para fora: ( ) primeiro, 2 + 3 = 5. Depois [ ], 10 − 5 = 5. E por fim 5 × 2 = 10."
      },
-     "lousa": [{ "t": "linha", "v": "5 + 3 × 2 = 11" }, { "t": "linha", "v": "(5 + 3) × 2 = 16" }, { "t": "marca", "v": "(5 + 3)" }, { "t": "texto", "v": "Os parênteses mudam a ordem!" }]
+     "lousa": [{"t": "expressao", "v": "[10 − (2 + 3)] × 2"}, {"t": "texto", "v": "( ) → [ ] → resto"}]
     },
     {
-     "texto": "E os colchetes? Primeiro os ( ), depois os [ ], depois o resto.",
+     "texto": "Dentro dos parênteses também vale a ordem: 3 × 4 = 12, depois 2 + 12 = 14. Saindo dos parênteses: 14 − 5 = 9.",
      "por_personalidade": {
-      "gato": "Colchetes? Fácil: primeiro ( ), depois [ ], depois o resto. Igual eu como: primeiro o peixe, depois o resto.",
-      "tigre": "COLCHETES! Primeiro ( ), depois [ ], depois o resto! Em ordem, campeão!",
-      "capivara": "Com colchetes, vai de dentro para fora: primeiro ( ), depois [ ], depois o resto."
+      "gato": "Dentro dos parênteses a regra continua, tá? 3 × 4 = 12, depois 2 + 12 = 14. E 14 − 5 = 9.",
+      "tigre": "ATENÇÃO! Dentro dos parênteses também: × ANTES do +! 3 × 4 = 12, 2 + 12 = 14, 14 − 5 = 9!",
+      "capivara": "Dentro dos parênteses, a mesma calma de sempre: 3 × 4 = 12, depois 2 + 12 = 14. Saindo deles: 14 − 5 = 9."
      },
-     "lousa": [{ "t": "expressao", "v": "[10 − (2 + 3)] × 2" }, { "t": "texto", "v": "( ) → [ ] → resto" }]
+     "lousa": [{"t": "expressao", "v": "(2 + 3 × 4) − 5"}, {"t": "texto", "v": "Dentro: × antes do +"}]
     },
     {
-     "texto": "Dentro dos parênteses também vale a ordem: o × vem antes do +.",
+     "texto": "Um problema também vira expressão. Comprei 3 cadernos de R$ 4 e paguei com R$ 20: 20 − 3 × 4. Primeiro 3 × 4 = 12, depois 20 − 12 = 8. Sobrou R$ 8.",
      "por_personalidade": {
-      "gato": "Dentro dos parênteses a regra continua, tá? O × vem antes do +. Sempre.",
-      "tigre": "ATENÇÃO! Dentro dos parênteses também: × ANTES do +!",
-      "capivara": "Dentro dos parênteses, a mesma calma de sempre: o × vem antes do +."
+      "gato": "Problema? Vira conta. 3 cadernos de R$ 4, paguei com R$ 20: 20 − 3 × 4. 3 × 4 = 12 e 20 − 12 = 8. Sobrou R$ 8.",
+      "tigre": "PROBLEMA VIRA CONTA! 20 − 3 × 4: primeiro 3 × 4 = 12, depois 20 − 12 = 8! SOBROU R$ 8!",
+      "capivara": "Um problema vira expressão, com calma: 20 − 3 × 4. Primeiro 3 × 4 = 12, depois 20 − 12 = 8. Sobrou R$ 8."
      },
-     "lousa": [{ "t": "expressao", "v": "(2 + 3 × 4) − 5" }, { "t": "texto", "v": "Dentro: × antes do +" }]
-    },
-    {
-     "texto": "Um problema também vira expressão. Comprei 3 cadernos de R$ 4 e paguei com R$ 20. Quanto sobrou?",
-     "por_personalidade": {
-      "gato": "Problema? Vira conta. Comprei 3 cadernos de R$ 4 e paguei com R$ 20. Sobrou quanto? Eu sei, mas faz aí.",
-      "tigre": "PROBLEMA VIRA CONTA! 3 cadernos de R$ 4, paguei com R$ 20. Quanto sobrou? VAMOS!",
-      "capivara": "Um problema vira expressão, com calma: 3 cadernos de R$ 4, paguei com R$ 20. Quanto sobrou?"
-     },
-     "lousa": [{ "t": "enunciado", "v": "3 cadernos de R$ 4, paguei com R$ 20" }, { "t": "expressao", "v": "20 − 3 × 4" }, { "t": "texto", "v": "Sobrou R$ 8" }]
+     "lousa": [{"t": "enunciado", "v": "3 cadernos de R$ 4, paguei com R$ 20"}, {"t": "expressao", "v": "20 − 3 × 4"}, {"t": "texto", "v": "Sobrou R$ 8"}]
     }
    ]
   },
@@ -167,7 +140,7 @@
       "tigre": "ARMADILHA! 25 × 100 NÃO é 25,00! É 2500!",
       "capivara": "Cuidado: 25 × 100 não é 25,00. É 2500, os zeros entram no fim."
      },
-     "lousa": [{"t": "linha", "v": "25 × 100 = 25,00", "classe": "errado"}, {"t": "linha", "v": "25 × 100 = 2500", "classe": "certo"}, {"t": "texto", "v": "No inteiro, os zeros entram no fim"}]
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "25 × 100"}, {"t": "linha", "v": "25,00"}, {"t": "texto", "v": "zeros depois da vírgula não mudam nada"}]}, "dir": {"passos": [{"t": "virgula", "v": "25", "op": "×", "k": 100}]}}, {"t": "texto", "v": "No inteiro, os zeros entram no fim"}]
     }
    ]
   },
@@ -261,13 +234,13 @@
      "lousa": [{"t": "linha", "v": "−3 + (−4)"}, {"t": "reta", "de": -3, "anda": [-4], "min": -10, "max": 10}, {"t": "linha", "v": "−3 + (−4) = −7", "classe": "certo"}, {"t": "texto", "v": "Sinais iguais: soma e mantém o sinal"}]
     },
     {
-     "texto": "Sinais diferentes: subtrai e fica o sinal do maior. −8 + 5: 8 − 5 = 3, fica o sinal do 8: −3.",
+     "texto": "Sinais diferentes: subtrai e fica o sinal do maior. −8 + 5: 8 − 5 = 3, fica o sinal do 8: −3. Somar tudo e dar −13 está errado!",
      "por_personalidade": {
-      "gato": "Sinais diferentes: subtrai e fica o sinal do maior. −8 + 5 = −3. O 8 manda, que nem eu.",
-      "tigre": "SINAIS DIFERENTES: SUBTRAI e fica o sinal do MAIOR! −8 + 5 = −3!",
-      "capivara": "Sinais diferentes: subtrai, e fica o sinal do maior. −8 + 5: 8 − 5 = 3, fica o sinal do 8: −3."
+      "gato": "Sinais diferentes: subtrai e fica o sinal do maior. 8 − 5 = 3, o 8 manda: −3. Quem soma tudo e dá −13… não sou eu.",
+      "tigre": "SINAIS DIFERENTES: SUBTRAI e fica o sinal do MAIOR! 8 − 5 = 3: −3! −13 é ERRADO!",
+      "capivara": "Sinais diferentes: subtrai, e fica o sinal do maior. 8 − 5 = 3, fica o sinal do 8: −3. Somar tudo, −13, está errado."
      },
-     "lousa": [{"t": "linha", "v": "−8 + 5"}, {"t": "reta", "de": -8, "anda": [5], "min": -10, "max": 10}, {"t": "linha", "v": "−8 + 5 = −3", "classe": "certo"}, {"t": "texto", "v": "8 − 5 = 3, fica o sinal do 8"}]
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "−8 + 5"}, {"t": "linha", "v": "−(8 + 5)"}, {"t": "linha", "v": "−13"}, {"t": "texto", "v": "somou e manteve o sinal"}]}, "dir": {"passos": [{"t": "linha", "v": "−8 + 5"}, {"t": "reta", "de": -8, "anda": [5], "min": -9, "max": 1}, {"t": "linha", "v": "−3"}, {"t": "texto", "v": "8 − 5 = 3, fica o sinal do 8"}]}}]
     },
     {
      "texto": "Subtrair é somar o oposto: − (−3) vira + 3. Então 4 − (−3) = 4 + 3 = 7.",
@@ -318,6 +291,169 @@
       "capivara": "Na divisão é igualzinho: (−12) ÷ 3, sinais diferentes, negativo. 12 ÷ 3 = 4, fica −4."
      },
      "lousa": [{"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "acende", "i": 3}, {"t": "linha", "v": "12 ÷ 3 = 4"}, {"t": "linha", "v": "(−12) ÷ 3 = −4", "classe": "certo"}]
+    }
+   ]
+  },
+  "mapa4-A": {
+   "titulo": "Frações",
+   "paginas": [
+    {
+     "texto": "Fração é um inteiro dividido em partes iguais. Esta barra foi dividida em 4 partes e 1 está pintada: 1/4. Em cima, as partes pintadas; embaixo, em quantas partes o inteiro foi dividido.",
+     "por_personalidade": {
+      "gato": "Fração? Um inteiro em partes iguais. 4 partes, 1 pintada: 1/4. Em cima as pintadas, embaixo o total de partes. Simples.",
+      "tigre": "FRAÇÃO, CAMPEÃO! Inteiro em PARTES IGUAIS! 4 partes, 1 pintada: 1/4! Em cima as pintadas, embaixo o total!",
+      "capivara": "Com calma: fração é um inteiro dividido em partes iguais. 4 partes, 1 pintada: 1/4. Em cima, as pintadas; embaixo, quantas partes ao todo."
+     },
+     "lousa": [{"t": "barras", "fr": [[1, 4]], "rotulos": [""]}, {"t": "fracao", "p": 1, "q": 4, "explica": true}]
+    },
+    {
+     "texto": "Frações equivalentes valem o mesmo. Multiplique em cima e embaixo pelo mesmo número: 1/2 com × 2 vira 2/4, e com × 2 de novo vira 4/8. Nas barras, a parte pintada é do mesmo tamanho!",
+     "por_personalidade": {
+      "gato": "Equivalente é fração disfarçada. × 2 em cima e embaixo: 1/2 = 2/4 = 4/8. Olha as barras: o mesmo tanto pintado.",
+      "tigre": "MESMO VALOR, OUTRA ROUPA! × 2 em cima E embaixo: 1/2 = 2/4 = 4/8! As barras não mentem!",
+      "capivara": "Frações equivalentes valem o mesmo. Multiplique em cima e embaixo pelo mesmo número: 1/2 = 2/4 = 4/8. Repara nas barras: o mesmo tanto pintado."
+     },
+     "lousa": [{"t": "fracoes", "fr": [[1, 2], [2, 4], [4, 8]], "op": "×"}, {"t": "barras", "fr": [[1, 2], [2, 4], [4, 8]]}, {"t": "texto", "v": "em cima e embaixo, o mesmo ×"}]
+    },
+    {
+     "texto": "Para simplificar, divida em cima e embaixo pelo mesmo número até não dar mais: 6/12 com ÷ 2 vira 3/6, e com ÷ 3 vira 1/2.",
+     "por_personalidade": {
+      "gato": "Simplificar é deixar a fração magrinha. ÷ 2: 6/12 = 3/6. ÷ 3: 3/6 = 1/2. Não dá mais? Acabou.",
+      "tigre": "SIMPLIFICA! ÷ 2 em cima e embaixo: 3/6! ÷ 3: 1/2! Até não dar mais!",
+      "capivara": "Para simplificar, divida em cima e embaixo pelo mesmo número, devagarinho: 6/12 ÷ 2 = 3/6, e 3/6 ÷ 3 = 1/2."
+     },
+     "lousa": [{"t": "fracoes", "fr": [[6, 12], [3, 6], [1, 2]], "op": "÷", "k": [2, 3]}, {"t": "barras", "fr": [[6, 12], [1, 2]]}, {"t": "texto", "v": "divida até não dar mais"}]
+    },
+    {
+     "texto": "Com o mesmo número embaixo, some só os de cima e repita o de baixo: 1/5 + 2/5 = 3/5. Cuidado: somar os de baixo também e dar 3/10 está errado!",
+     "por_personalidade": {
+      "gato": "Mesmo de baixo? Soma só os de cima: 1/5 + 2/5 = 3/5. Quem soma o de baixo e acha 3/10… não estudou comigo.",
+      "tigre": "MESMO DE BAIXO: SOMA SÓ OS DE CIMA! 1/5 + 2/5 = 3/5! 3/10 é ERRADO!",
+      "capivara": "Com o mesmo número embaixo, some só os de cima e repita o de baixo: 1/5 + 2/5 = 3/5. Somar o de baixo também, 3/10, está errado."
+     },
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "1/5 + 2/5"}, {"t": "texto", "v": "somou os de baixo também"}, {"t": "linha", "v": "3/10"}]}, "dir": {"passos": [{"t": "linha", "v": "1/5 + 2/5"}, {"t": "barras", "fr": [[1, 5], [2, 5], [3, 5]]}, {"t": "linha", "v": "3/5"}]}}, {"t": "texto", "v": "o de baixo fica: 5"}]
+    },
+    {
+     "texto": "Na subtração é igual: 5/6 − 1/6 = 4/6, o de baixo fica. E o resultado ainda simplifica: 4/6 com ÷ 2 vira 2/3.",
+     "por_personalidade": {
+      "gato": "Subtração, mesma regra: 5/6 − 1/6 = 4/6. E simplifica: ÷ 2, dá 2/3. Elegante, tipo eu.",
+      "tigre": "SUBTRAÇÃO, MESMA REGRA! 5/6 − 1/6 = 4/6! E SIMPLIFICA: ÷ 2 = 2/3!",
+      "capivara": "Na subtração é igualzinho: 5/6 − 1/6 = 4/6, o de baixo fica. E ainda dá para simplificar: 4/6 ÷ 2 = 2/3."
+     },
+     "lousa": [{"t": "linha", "v": "5/6 − 1/6"}, {"t": "linha", "v": "5/6 − 1/6 = 4/6"}, {"t": "fracoes", "fr": [[4, 6], [2, 3]], "op": "÷"}, {"t": "texto", "v": "4/6 = 2/3"}]
+    },
+    {
+     "texto": "1/4 de 20: separe as 20 bolachas em 4 grupos iguais. 20 ÷ 4 = 5: cada grupo tem 5. Um grupo, 5.",
+     "por_personalidade": {
+      "gato": "1/4 de 20? Divide em 4 grupos: 20 ÷ 4 = 5. Um grupo, 5. Eu comeria os 4.",
+      "tigre": "1/4 DE 20! 4 GRUPOS IGUAIS: 20 ÷ 4 = 5! Um grupo: 5!",
+      "capivara": "1/4 de 20: separe as 20 em 4 grupos iguais, com calma. 20 ÷ 4 = 5. Um grupo tem 5."
+     },
+     "lousa": [{"t": "figura", "figura": {"tipo": "parte_de", "num": 1, "den": 4, "total": 20}}, {"t": "linha", "v": "20 ÷ 4 = 5", "classe": "certo"}]
+    },
+    {
+     "texto": "E 3/4 de 20? São 3 grupos: divida pelo de baixo e multiplique pelo de cima. 20 ÷ 4 = 5 e 5 × 3 = 15.",
+     "por_personalidade": {
+      "gato": "3/4 de 20: 3 grupos de 5. 20 ÷ 4 × 3 = 15. Divide pelo de baixo, multiplica pelo de cima.",
+      "tigre": "3/4 DE 20: 3 GRUPOS! 20 ÷ 4 = 5, 5 × 3 = 15! DIVIDE E MULTIPLICA!",
+      "capivara": "3/4 de 20 são 3 grupos. Divida pelo de baixo e multiplique pelo de cima: 20 ÷ 4 = 5 e 5 × 3 = 15."
+     },
+     "lousa": [{"t": "figura", "figura": {"tipo": "parte_de", "num": 3, "den": 4, "total": 20}}, {"t": "expressao", "v": "20 ÷ 4 × 3"}]
+    },
+    {
+     "texto": "Para comparar frações com o 1 em cima: quanto menos partes, maior cada pedaço. 1/3 é maior que 1/5.",
+     "por_personalidade": {
+      "gato": "Com o 1 em cima, menos partes = pedaço maior. 1/3 > 1/5. Eu escolho sempre o maior pedaço.",
+      "tigre": "1 EM CIMA: MENOS PARTES, PEDAÇO MAIOR! 1/3 > 1/5!",
+      "capivara": "Com o 1 em cima, quanto menos partes, maior cada pedaço. Repara: 1/3 é maior que 1/5."
+     },
+     "lousa": [{"t": "figura", "figura": {"tipo": "compara_fracoes", "fracoes": [[1, 3], [1, 5]]}}, {"t": "linha", "v": "1/3 > 1/5", "classe": "certo"}]
+    }
+   ]
+  },
+  "mapa4-B": {
+   "titulo": "Decimais",
+   "paginas": [
+    {
+     "texto": "Vírgula embaixo de vírgula! 1,3 + 4,1: arma a conta com as vírgulas alinhadas e soma coluna por coluna: 5,4. Quem esquece a vírgula acha 54, e erra.",
+     "por_personalidade": {
+      "gato": "Vírgula embaixo de vírgula. 1,3 + 4,1 = 5,4. Quem esquece a vírgula acha 54. Vergonhoso.",
+      "tigre": "VÍRGULA EMBAIXO DE VÍRGULA! 1,3 + 4,1 = 5,4! Sem a vírgula dá 54: ERRADO!",
+      "capivara": "Vírgula embaixo de vírgula, com calma: 1,3 + 4,1, coluna por coluna, dá 5,4. Sem a vírgula, 54, está errado."
+     },
+     "lousa": [{"t": "compara", "esq": {"titulo": "✖ vírgula fora do lugar", "passos": [{"t": "armada", "a": "1,3", "op": "+", "b": "4,1", "sem_virgula": true}, {"t": "texto", "v": "esqueceu a vírgula"}]}, "dir": {"passos": [{"t": "armada", "a": "1,3", "op": "+", "b": "4,1"}]}}]
+    },
+    {
+     "texto": "Se as casas forem diferentes, iguale com zeros: 2,5 vira 2,50. Agora arma, vírgula embaixo de vírgula: 2,50 + 1,25 = 3,75.",
+     "por_personalidade": {
+      "gato": "Casas diferentes? Põe zero: 2,5 = 2,50. Depois arma: 2,50 + 1,25 = 3,75. Zero no fim não muda nada.",
+      "tigre": "IGUALA AS CASAS! 2,5 VIRA 2,50! Arma: 2,50 + 1,25 = 3,75!",
+      "capivara": "Se as casas forem diferentes, iguale com zeros: 2,5 vira 2,50. Depois arme, vírgula embaixo de vírgula: 3,75."
+     },
+     "lousa": [{"t": "linha", "v": "2,5 + 1,25"}, {"t": "armada", "a": "2,5", "op": "+", "b": "1,25"}, {"t": "texto", "v": "2,5 = 2,50"}]
+    },
+    {
+     "texto": "Na subtração também: 3 − 1,25. O 3 vira 3,00. Arma e subtrai, emprestando quando precisa: 3,00 − 1,25 = 1,75.",
+     "por_personalidade": {
+      "gato": "3 − 1,25? O 3 vira 3,00. Arma e subtrai: 1,75. Até eu empresto, às vezes.",
+      "tigre": "3 − 1,25: O 3 VIRA 3,00! ARMA E SUBTRAI: 1,75!",
+      "capivara": "Na subtração também: o 3 vira 3,00. Arme e subtraia, emprestando com calma: 3,00 − 1,25 = 1,75."
+     },
+     "lousa": [{"t": "linha", "v": "3 − 1,25"}, {"t": "armada", "a": "3", "op": "−", "b": "1,25"}, {"t": "texto", "v": "3 = 3,00"}]
+    },
+    {
+     "texto": "Qual é maior, 0,5 ou 0,14? Iguale as casas: 0,50 e 0,14. Agora é só comparar 50 com 14: 0,5 é maior. Achar que 0,14 é maior porque tem mais números é a pegadinha!",
+     "por_personalidade": {
+      "gato": "0,5 ou 0,14? Iguala: 0,50 e 0,14. 50 > 14, então 0,5 ganha. \"Tem mais números\" não quer dizer nada.",
+      "tigre": "0,5 OU 0,14? IGUALA AS CASAS: 0,50 e 0,14! 50 > 14: 0,5 É MAIOR!",
+      "capivara": "Para comparar, iguale as casas: 0,50 e 0,14. Agora compare 50 com 14: 0,5 é maior. Ter mais números não faz ser maior."
+     },
+     "lousa": [{"t": "compara", "esq": {"linhas": ["0,5 ou 0,14?", "14 > 5", "0,14 é maior"]}, "dir": {"passos": [{"t": "linha", "v": "0,5 ou 0,14?"}, {"t": "linha", "v": "0,50 e 0,14"}, {"t": "linha", "v": "50 > 14"}, {"t": "linha", "v": "0,5 é maior"}]}}, {"t": "texto", "v": "iguale as casas antes de comparar"}]
+    },
+    {
+     "texto": "Para multiplicar, faça a conta sem a vírgula: 3 × 2 = 6. Depois conte as casas depois da vírgula: 1 + 1 = 2. O resultado tem 2 casas: 0,06.",
+     "por_personalidade": {
+      "gato": "Multiplicar decimal: esquece a vírgula, 3 × 2 = 6. Conta as casas: 2. Então 0,06. Fácil.",
+      "tigre": "MULTIPLICA SEM A VÍRGULA: 3 × 2 = 6! CONTA AS CASAS: 2! RESULTADO: 0,06!",
+      "capivara": "Para multiplicar, faça sem a vírgula: 3 × 2 = 6. Depois conte as casas depois da vírgula, 1 + 1 = 2. Fica 0,06."
+     },
+     "lousa": [{"t": "linha", "v": "0,3 × 0,2"}, {"t": "armada", "a": "0,3", "op": "×", "b": "0,2"}, {"t": "linha", "v": "0,3 × 0,2 = 0,06", "classe": "certo"}]
+    },
+    {
+     "texto": "Fração vira decimal com uma divisão: 1/2 = 1 ÷ 2. O 1 não dá para dividir por 2: põe 0, no resultado e um 0 ao lado do 1. 10 ÷ 2 = 5. Fica 0,5.",
+     "por_personalidade": {
+      "gato": "1/2 é 1 ÷ 2. O 1 não cabe no 2: 0, e um zero ao lado. 10 ÷ 2 = 5. Então 0,5.",
+      "tigre": "FRAÇÃO É DIVISÃO! 1 ÷ 2: O 1 NÃO DÁ, põe 0, e um zero! 10 ÷ 2 = 5: 0,5!",
+      "capivara": "Fração vira decimal com uma divisão: 1 ÷ 2. O 1 não dá para dividir por 2, então põe 0, e um 0 ao lado do 1. 10 ÷ 2 = 5: 0,5."
+     },
+     "lousa": [{"t": "linha", "v": "1/2 = 1 ÷ 2"}, {"t": "divisao", "a": 1, "b": 2, "casas": 1}]
+    },
+    {
+     "texto": "1/10 = 1 ÷ 10 = 0,1. E tem um macete: dividir por 10 é andar a vírgula 1 casa para a esquerda.",
+     "por_personalidade": {
+      "gato": "1 ÷ 10 = 0,1. Macete: ÷ 10 é a vírgula andar 1 casa para a esquerda. Nem preciso armar.",
+      "tigre": "1 ÷ 10 = 0,1! MACETE: ÷ 10, A VÍRGULA ANDA 1 CASA PARA A ESQUERDA!",
+      "capivara": "1/10 é 1 ÷ 10 = 0,1. E um macete tranquilo: dividir por 10 é andar a vírgula 1 casa para a esquerda."
+     },
+     "lousa": [{"t": "linha", "v": "1/10 = 1 ÷ 10"}, {"t": "divisao", "a": 1, "b": 10, "casas": 1}, {"t": "virgula", "v": "1", "op": "÷", "k": 10, "manter": true}]
+    },
+    {
+     "texto": "E 1/100? Dividir por 100 é andar a vírgula 2 casas para a esquerda. Os zeros que faltam entram na frente: 0,01.",
+     "por_personalidade": {
+      "gato": "1/100: 2 zeros, 2 casas para a esquerda. Faltou casa, bota zero: 0,01.",
+      "tigre": "1/100: 2 ZEROS, 2 CASAS! ZERO NA FRENTE: 0,01!",
+      "capivara": "1/100: são 2 zeros, então a vírgula anda 2 casas para a esquerda. Faltou casa, entra zero na frente: 0,01."
+     },
+     "lousa": [{"t": "linha", "v": "1/100 = 1 ÷ 100"}, {"t": "virgula", "v": "1", "op": "÷", "k": 100}]
+    },
+    {
+     "texto": "Decimais que todo mundo usa: 0,5 é a metade (1/2), 0,25 é um quarto (1/4) e 0,75 são três quartos (3/4).",
+     "por_personalidade": {
+      "gato": "Decora esses: 0,5 = 1/2, 0,25 = 1/4, 0,75 = 3/4. Eu sei de cor.",
+      "tigre": "OS CAMPEÕES: 0,5 = 1/2, 0,25 = 1/4, 0,75 = 3/4!",
+      "capivara": "Esses aparecem sempre: 0,5 é a metade, 1/2; 0,25 é um quarto, 1/4; e 0,75 são três quartos, 3/4."
+     },
+     "lousa": [{"t": "barras", "fr": [[1, 2], [1, 4], [3, 4]], "rotulos": ["0,5 = 1/2", "0,25 = 1/4", "0,75 = 3/4"]}]
     }
    ]
   }

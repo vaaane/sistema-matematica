@@ -13244,7 +13244,7 @@ function abrirRevisaoBatalha() {
       </div>
       <div class="bt-rev-explica">${esc(x.explica)}</div>
       ${x.relembre && explicacaoDe(x.relembre) ? `<button class="jr-btn-relembre" data-relembre="${x.relembre}">📖 Relembre</button>` : ''}
-      ${comoFazDe({ enunciado: x.conta, explicacao: x.explica, relembre: x.relembre }) ? `<button class="jr-btn-relembre" data-como="${esc(x.conta)}" data-como-rel="${esc(x.relembre || '')}" data-como-exp="${esc(x.explica || '')}">▶ Ver como faz</button>` : ''}
+      ${comoFazDe({ enunciado: x.conta, explicacao: x.explica, relembre: x.relembre }) ? `<button class="jr-btn-relembre" data-como="${esc(x.conta)}" data-como-rel="${esc(x.relembre || '')}" data-como-exp="${esc(x.explica || '')}" data-como-certa="${esc(x.certa ?? '')}" data-como-sua="${esc(x.resposta ?? '')}">▶ Ver como faz</button>` : ''}
     </div>`).join('');
   $('bt-revisao').hidden = false;
   $('bt-rev-lista').scrollTop = 0;
@@ -14434,7 +14434,7 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   const rel = q.relembre !== undefined ? q.relembre : chaveGinasio(q.mapa ?? pg.mapa, q.lado ?? pg.G);   // na revisão cada pergunta é de um ginásio; conta de batalha: pelo tipo
   $('erro-relembre').hidden = !explicacaoDe(rel);
   $('erro-relembre').dataset.relembre = rel;
-  erroComoFaz = comoFazDe(q);   // ▶ (PROMPT-185)
+  erroComoFaz = comoFazDe(q, sua);   // ▶ (PROMPT-185; PROMPT-191: ✖ sua resposta × ✔ certo)
   $('erro-ver').hidden = !erroComoFaz;
   $('erro-linha-dica').hidden = !mostraDica && $('erro-relembre').hidden && $('erro-ver').hidden;
   $('erro-volta').textContent = pg.modo === 'treino' ? `🔁 ${comOutrosNumeros ? 'Ela volta daqui a pouco, com outros números, e de novo amanhã.' : 'Ela volta daqui a pouco e de novo amanhã.'}` : `🔁 ${comOutrosNumeros ? 'Essa pergunta volta daqui a pouco, com outros números.' : 'Essa pergunta volta daqui a pouco.'}`;
@@ -16509,10 +16509,10 @@ function fecharAula(peloBotao = false) {
 }
 
 // ── ▶ Ver como faz: a lousa com os números da questão errada (aulas-como.js, por ginásio). null = o botão não aparece ──
-function comoFazDe(q) {
+function comoFazDe(q, sua) {
   if (!q) return null;
   const chave = q.relembre !== undefined ? q.relembre : chaveGinasio(q.mapa ?? pg?.mapa, q.lado ?? pg?.G);
-  return comoFaz(chave, q);
+  return comoFaz(chave, q, sua);
 }
 function abrirComoFaz(passos, titulo = 'Ver como faz') {
   if (!passos?.length) return;
@@ -16984,7 +16984,7 @@ function ligarEventos() {
   $('erro-continuar').addEventListener('click', continuarDoErro);
   $('bt-rev-lista').addEventListener('click', (e) => {
     const c = e.target.closest('[data-como]');   // ▶ (PROMPT-185)
-    if (c) { abrirComoFaz(comoFazDe({ enunciado: c.dataset.como, explicacao: c.dataset.comoExp, relembre: c.dataset.comoRel }), c.dataset.como); return; }
+    if (c) { abrirComoFaz(comoFazDe({ enunciado: c.dataset.como, explicacao: c.dataset.comoExp, relembre: c.dataset.comoRel, resposta: c.dataset.comoCerta || undefined }, c.dataset.comoSua || undefined), c.dataset.como); return; }
     const b = e.target.closest('[data-relembre]'); if (b) abrirRelembre(b.dataset.relembre, 'batalha');
   });
   $('cartao').addEventListener('click', (e) => { if (e.target.id === 'cartao') $('cartao').hidden = true; });

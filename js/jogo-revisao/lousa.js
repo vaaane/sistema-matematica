@@ -4,6 +4,9 @@
 //   await l.tocar(passos)         limpa e anima os passos, um por vez (~1,2 s cada); ↺: tocar de novo os mesmos
 //   l.cancelar() · l.pausar(sim)
 //
+// PROMPT-191: a conta fica inteira na lousa (as linhas não saem); se não couber, a letra diminui (até --lz-k = 0,62) e só
+// então as linhas mais antigas saem. Frações "a/b" numa linha aparecem empilhadas.
+//
 // Passos (o campo `lousa` das páginas de dados/jogo/aulas.json, ou montados pelo "Ver como faz"):
 //   { t: 'linha', v: '5 + 2 × 3', classe?: 'certo' | 'errado' }   escreve uma linha (certo: ✔ verde · errado: riscado com ✖)
 //   { t: 'enunciado', v: '…' }                                    uma linha de texto menor (o problema)
@@ -24,6 +27,13 @@
 //                                                                  (× 10 por degrau) ou sobe (÷ 10) e a vírgula pula junto
 //   { t: 'tabela', linhas: ['+ · + = +', …] } · { t: 'acende', i: 1 }   a tabela de sinais e a linha que acende
 //   { t: 'figura', figura: { tipo: 'pizza' | 'barras_iguais' | … } }      as figuras das frações (figuras.js)
+//   { t: 'compara', esq: { titulo?, tipo?: 'errado' | 'certo' | 'neutro', passos | linhas }, dir: { … } }   PROMPT-191: duas colunas
+//                                                                  animadas juntas, passo por passo (esq padrão: ✖ jeito errado ·
+//                                                                  dir: ✔ jeito certo); no fim, o resultado errado riscado e o certo ✔
+//   { t: 'fracao', p: 1, q: 4, explica?: true }                   a fração grande, empilhada (explica: o que é cada parte)
+//   { t: 'fracoes', fr: [[1, 2], [2, 4]], op: '×' | '÷', k?: 2 | [2, 2] }   equivalentes: setas curvas em cima e embaixo
+//   { t: 'barras', fr: [[1, 2], [2, 4]], rotulos?: ['0,5', …] }   barras do mesmo tamanho, uma embaixo da outra, com a parte pintada
+//   { t: 'armada', …, sem_virgula: true }                         a conta armada sem as vírgulas (o engano "esqueceu a vírgula")
 //   { t: 'pausa', ms: 800 }
 import { tokU, num, arred } from './base.js';
 import { criarFigura } from './figuras.js';
@@ -33,7 +43,7 @@ const calmo = () => typeof matchMedia === 'function' && matchMedia('(prefers-red
 const CANCELADA = Symbol('lousa cancelada');
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 // termos de uma linha: números (com vírgula), operações, = , parênteses e palavras
-const termos = (s) => String(s).match(/\(−\d+(?:,\d+)?\)|(?<![\d)\]}])−\d+(?:,\d+)?|\d+(?:,\d+)?|[−+×÷=()[\]{}]|[^\s\d−+×÷=()[\]{}]+/g) || [];   // −5 colado: um número só
+const termos = (s) => String(s).match(/\d+\/\d+|\(−\d+(?:,\d+)?\)|(?<![\d)\]}])−\d+(?:,\d+)?|\d+(?:,\d+)?|[−+×÷=()[\]{}]|[^\s\d−+×÷=()[\]{}]+/g) || [];   // −5 colado: um número só
 
 // ── a expressão resolvida passo a passo (a mesma regra de base.js → passos): cada passo { antes, de, ate, depois, novo }
 // (termos para mostrar; de..ate = o trecho marcado; novo = onde o resultado fica na linha de baixo)
@@ -63,11 +73,45 @@ export function passosExpressao(expr) {
   return out;
 }
 
+// da esquerda para a direita, sem a ordem das operações e sem os parênteses (o engano mais comum) — mesmo formato
+export function passosSemOrdem(expr) {
+  let t = tokU(expr).filter(x => typeof x === 'number' || !'()[]{}'.includes(x));
+  const out = [];
+  for (let guarda = 0; t.length >= 3 && guarda < 40; guarda++) {
+    const [x, o, y] = t;
+    if (typeof x !== 'number' || typeof y !== 'number') throw new Error('expressão inválida: ' + expr);
+    const v = arred(o === '+' ? x + y : o === '−' ? x - y : o === '×' ? x * y : x / y), t2 = [v, ...t.slice(3)];
+    out.push({ antes: vis(t), de: 0, ate: 2, depois: vis(t2), novo: 0, valor: v });
+    t = t2;
+  }
+  return out;
+}
+// os passos de uma expressão (passosExpressao / passosSemOrdem) em passos da lousa, um por linha: a linha, a marca, a nova
+export function lousaDePassos(ps, inicio) {
+  if (!ps?.length) return inicio ? [{ t: 'linha', v: inicio }] : [];
+  const out = [{ t: '_linha', ts: ps[0].antes }];
+  for (const s of ps) out.push({ t: '_marca', de: s.de, ate: s.ate }, { t: '_nova', ts: s.depois, de: s.novo, n: 1 });
+  return out;
+}
+// 'expressao' vira passos de uma linha cada (para as colunas do compara andarem juntas)
+function expandir(passos) {
+  const out = [];
+  for (const p of passos || []) {
+    if (p?.t !== 'expressao') { out.push(p); continue; }
+    let ps = [];
+    try { ps = passosExpressao(p.v); } catch (_) {}
+    out.push(...lousaDePassos(ps, p.v));
+  }
+  return out;
+}
+const fracHtml = (p, q, cls = '') => `<span class="lz-fr${cls}"><b>${esc(p)}</b><i></i><b>${esc(q)}</b></span>`;
+const KMIN = 0.62;   // a menor letra (× o tamanho normal): ainda legível no celular deitado
+
 export function criarLousa(raiz) {
   raiz.classList.add('lz');
   raiz.innerHTML = '<div class="lz-quadro"></div><div class="lz-rotulo"></div>';
-  const Q = raiz.querySelector('.lz-quadro'), ROT = raiz.querySelector('.lz-rotulo');
-  const L = { token: 0, pausado: false, passos: [], fig: null };
+  const Q0 = raiz.querySelector('.lz-quadro'), ROT0 = raiz.querySelector('.lz-rotulo');
+  const L = { token: 0, pausado: false, passos: [], figs: [], k: 1 };
   const vivo = (t) => t === L.token;
   const dorme = async (ms, t) => {
     if (calmo()) ms = Math.min(ms, 150);
@@ -75,19 +119,38 @@ export function criarLousa(raiz) {
     while (p < ms) { if (!vivo(t)) throw CANCELADA; await new Promise(r => setTimeout(r, 40)); if (!L.pausado) p += 40; }
     if (!vivo(t)) throw CANCELADA;
   };
-  const div = (cls, html = '', pai = Q) => { const e = document.createElement('div'); e.className = cls; e.innerHTML = html; pai.appendChild(e); return e; };
-  const ultima = () => [...Q.querySelectorAll('.lz-linha:not(.lz-enun)')].pop() || null;
-  // no máximo 5 linhas: as de cima saem
-  const caber = () => { const ls = Q.querySelectorAll('.lz-linha, .lz-bloco'); for (let i = 0; i < ls.length - 5; i++) ls[i].remove(); };
-  function linha(ts, cls = '') {
-    const e = div('lz-linha ' + cls, ts.map((x, i) => `<span class="lz-t${/^[−+×÷=]$/.test(x) ? ' op' : ''}" data-i="${i}">${esc(x)}</span>`).join(''));
-    caber();
-    return e;
+  // ── não coube: a letra diminui (até KMIN); só depois as linhas mais antigas saem ──
+  function ajustar() {
+    // cabe = a altura dos blocos cabe no quadro e nenhum bloco é mais largo que ele (os tracinhos soltos da reta não contam)
+    const cabeEm = (box) => {
+      const r = box.getBoundingClientRect(), fs = [...box.children].filter(e => getComputedStyle(e).position !== 'absolute');
+      if (!fs.length || !r.height) return true;
+      const rs = fs.map(e => e.getBoundingClientRect()), top = Math.min(...rs.map(x => x.top)), fim = Math.max(...rs.map(x => x.bottom));
+      return fim - top <= r.height + 1 && rs.every(x => x.width <= r.width + 2);
+    };
+    const cabe = () => cabeEm(Q0) && [...Q0.querySelectorAll('.lz-col-q')].every(cabeEm);
+    for (let g = 0; g < 12 && !cabe() && L.k > KMIN; g++) { L.k = Math.max(KMIN, Math.round((L.k - 0.06) * 100) / 100); raiz.style.setProperty('--lz-k', L.k); }
+    for (let g = 0; g < 20 && !cabe(); g++) {
+      const velho = Q0.querySelector(':scope > .lz-linha, :scope > .lz-bloco');
+      if (!velho || Q0.children.length <= 1) break;
+      velho.remove();
+    }
   }
-  const spans = (l) => [...l.querySelectorAll('.lz-t')];
+  new MutationObserver(() => ajustar()).observe(Q0, { childList: true, subtree: true });
+
+  function motor(Q, ROT) {
+  const div = (cls, html = '', pai = Q) => { const e = document.createElement('div'); e.className = cls; e.innerHTML = html; pai.appendChild(e); return e; };
+  const ultima = () => [...Q.querySelectorAll(':scope > .lz-linha:not(.lz-enun)')].pop() || null;
+  const termoHtml = (x) => { const f = /^(\d+)\/(\d+)$/.exec(x); return f ? fracHtml(f[1], f[2], ' lz-fr-in') : esc(x); };
+  function linha(ts, cls = '') {
+    const ant = ultima();   // a marca fica só na operação da vez (a linha logo acima da nova); as de antes se apagam
+    for (const s of Q.querySelectorAll(':scope > .lz-linha .lz-t.marca')) if (s.parentElement !== ant) s.classList.remove('marca');
+    return div('lz-linha ' + cls, ts.map((x, i) => `<span class="lz-t${/^[−+×÷=]$/.test(x) ? ' op' : ''}" data-i="${i}" data-v="${esc(x)}">${termoHtml(x)}</span>`).join(''));
+  }
+  const spans = (l) => [...l.querySelectorAll(':scope > .lz-t')];
   // o trecho (em termos) dentro da linha: índice do 1º termo, ou -1
   function acha(l, trecho) {
-    const tl = spans(l).map(s => s.textContent), tt = termos(trecho);
+    const tl = spans(l).map(s => s.dataset.v ?? s.textContent), tt = termos(trecho);
     for (let i = 0; i + tt.length <= tl.length; i++) if (tt.every((x, j) => tl[i + j] === x)) return i;
     return -1;
   }
@@ -116,6 +179,7 @@ export function criarLousa(raiz) {
   // ── conta armada: casas alinhadas pela vírgula; + − (com vai um / empresta) e × ──
   async function armada(p, t) {
     const op = p.op === '-' ? '−' : p.op;
+    if (p.sem_virgula) p = { ...p, sem_virgula: false, a: String(p.a).replace(',', ''), b: String(p.b).replace(',', '') };   // o engano: as vírgulas somem
     const [ai, ad = ''] = String(p.a).split(','), [bi, bd = ''] = String(p.b).split(',');
     if (op === '×') return multiplicar(p, t);
     const dec = Math.max(ad.length, bd.length);
@@ -128,7 +192,7 @@ export function criarLousa(raiz) {
     const virg = (linhaEl) => { const s = document.createElement('span'); s.className = 'lz-c lz-v'; s.textContent = dec ? ',' : ''; linhaEl.appendChild(s); return s; };
     const ca = [], cb = [], cr = [], cv = [];
     for (let i = 0; i < n; i++) {
-      if (dec && i === n - dec) { virg(vai); virg(la); virg(lb); virg(lr); }
+      if (dec && i === n - dec) { virg(vai).textContent = ''; virg(la); virg(lb); virg(lr); }   // na linha do "vai um", só o espaço da vírgula
       const zA = i >= n - dec && i - (n - dec) >= ad.length, zB = i >= n - dec && i - (n - dec) >= bd.length;   // zeros que completam casas
       cv.push(cel(vai, ''));
       ca.push(cel(la, da[i] === ' ' ? '' : da[i], zA ? 'zero' : ''));
@@ -161,7 +225,7 @@ export function criarLousa(raiz) {
   }
   async function multiplicar(p, t) {
     const [ai, ad = ''] = String(p.a).split(','), [bi, bd = ''] = String(p.b).split(',');
-    const A = ai + ad, B = bi + bd, dec = ad.length + bd.length;
+    const A = (ai + ad).replace(/^0+(?=\d)/, ''), B = (bi + bd).replace(/^0+(?=\d)/, ''), dec = ad.length + bd.length;   // 0,3 → 3
     const parciais = [...B].reverse().map((d, k) => String(BigInt(A) * BigInt(d)) + '0'.repeat(k));
     const total = String(BigInt(A) * BigInt(B));
     const w = Math.max(A.length, B.length + 1, ...parciais.map(s => s.length), total.length) + 1;
@@ -328,19 +392,81 @@ export function criarLousa(raiz) {
   function acende(p) { const tb = [...Q.querySelectorAll('.lz-tabela')].pop(); if (tb) tb.querySelectorAll('.lz-tab-linha').forEach((l, i) => l.classList.toggle('aceso', i === Number(p.i))); }
 
   async function figura(p, t) {
-    const caixa = div('lz-bloco lz-figura', '<svg></svg>');
-    L.fig = criarFigura(caixa.querySelector('svg'));
-    if (!L.fig.mostrar(p.figura)) { caixa.remove(); return; }
+    const caixa = div('lz-bloco lz-figura', '<svg></svg>'), fig = criarFigura(caixa.querySelector('svg'));
+    L.figs.push(fig);
+    if (!fig.mostrar(p.figura)) { caixa.remove(); return; }
     await dorme(MS_PASSO * 0.6, t);
-    await L.fig.animar().catch(() => {});
+    await fig.animar().catch(() => {});
   }
-  const rotulo = (s) => { ROT.textContent = s || ''; ROT.classList.toggle('vazio', !s); };
-  const limparBlocos = () => { for (const b of Q.querySelectorAll('.lz-bloco, .lz-seta')) b.remove(); };
+  const rotulo = (s) => { ROT.textContent = s || ''; ROT.classList.toggle('vazio', !s); ajustar(); };   // o rótulo tira altura do quadro
+  const limparBlocos = () => { for (const b of Q.querySelectorAll(':scope > .lz-bloco, :scope > .lz-seta')) b.remove(); };
+
+  // ── 🍕 frações: a grande (com o que é cada parte), as equivalentes com setas ×n / ÷n e as barras ──
+  async function fracao(p, t) {
+    const b = div('lz-bloco lz-fracao', fracHtml(p.p, p.q, ' grande'));
+    await dorme(MS_PASSO, t);
+    if (!p.explica) return;
+    b.insertAdjacentHTML('beforeend', '<span class="lz-fr-exp"><span class="novo">← partes pintadas</span><span class="lz-fr-exp-b">← partes iguais do inteiro</span></span>');
+    await dorme(MS_PASSO * 0.7, t);
+    b.querySelector('.lz-fr-exp-b').classList.add('novo');
+    await dorme(MS_PASSO * 0.6, t);
+  }
+  const arco = (baixo) => `<svg class="lz-arco${baixo ? ' baixo' : ''}" viewBox="0 0 60 22" preserveAspectRatio="none"><path d="${baixo ? 'M4,2 Q30,24 54,4' : 'M4,20 Q30,-2 54,18'}" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="${baixo ? 'M54,4 l-9,1 m9,-1 l-3,8' : 'M54,18 l-9,-1 m9,1 l-3,-8'}" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>`;
+  const nFr = (x) => Number(String(x).replace(',', '.'));
+  async function fracoes(p, t) {
+    const fr = (p.fr || []).map(([a, b]) => [num(a), num(b)]), op = p.op === '÷' || p.op === '/' ? '÷' : '×';
+    if (!fr.length) return;
+    const b = div('lz-bloco lz-fracoes', fracHtml(...fr[0]));
+    await dorme(MS_PASSO * 0.8, t);
+    for (let i = 1; i < fr.length; i++) {
+      const k = Array.isArray(p.k) ? p.k[i - 1] : p.k ?? arred(op === '×' ? nFr(fr[i][1]) / nFr(fr[i - 1][1]) : nFr(fr[i - 1][1]) / nFr(fr[i][1]));
+      b.insertAdjacentHTML('beforeend', `<span class="lz-fr-passo"><span class="lz-fr-rot">${op}${esc(num(k))}</span>${arco(false)}${arco(true)}<span class="lz-fr-rot">${op}${esc(num(k))}</span></span>${fracHtml(fr[i][0], fr[i][1], ' lz-fr-nova')}`);
+      const passo = [...b.querySelectorAll('.lz-fr-passo')].pop(), nova = [...b.querySelectorAll('.lz-fr-nova')].pop(), [cima, baixo] = nova.querySelectorAll('b');
+      const rot = passo.querySelectorAll('.lz-fr-rot'), arcos = passo.querySelectorAll('.lz-arco');
+      rot[0].classList.add('aceso'); arcos[0].classList.add('aceso'); cima.classList.add('novo', 'visto');
+      await dorme(MS_PASSO * 0.8, t);
+      rot[1].classList.add('aceso'); arcos[1].classList.add('aceso'); baixo.classList.add('novo', 'visto'); nova.classList.add('cheia');
+      await dorme(MS_PASSO * 0.8, t);
+    }
+  }
+  async function barras(p, t) {
+    const b = div('lz-bloco lz-barras');
+    for (const [i, [a, q]] of (p.fr || []).entries()) {
+      const l = div('lz-barra-linha', `<span class="lz-barra">${Array.from({ length: q }, () => '<i></i>').join('')}</span><span class="lz-barra-rot">${p.rotulos?.[i] != null ? esc(p.rotulos[i]) : fracHtml(a, q)}</span>`, b);
+      const cs = l.querySelectorAll('.lz-barra i');
+      await dorme(MS_PASSO * 0.3, t);
+      for (let k = 0; k < a; k++) { cs[k].classList.add('pinta'); await dorme(Math.min(260, 1200 / Math.max(1, a)), t); }
+      await dorme(MS_PASSO * 0.35, t);
+    }
+  }
+
+  // ── ✖ errado × ✔ certo: duas colunas, cada uma com o próprio "motor", andando juntas um passo por vez ──
+  async function compara(p, t) {
+    const bloco = div('lz-compara');
+    const lado = (c, def) => {
+      const tipo = c?.tipo || def, tit = c?.titulo ?? (tipo === 'errado' ? '✖ jeito errado' : tipo === 'certo' ? '✔ jeito certo' : '');
+      const col = div(`lz-col ${tipo}`, `<div class="lz-col-tit">${esc(tit)}</div><div class="lz-col-q"></div><div class="lz-col-rot vazio"></div>`, bloco);
+      return { tipo, col, m: motor(col.querySelector('.lz-col-q'), col.querySelector('.lz-col-rot')), ps: expandir(c?.passos || (c?.linhas || []).map(v => ({ t: 'linha', v }))) };
+    };
+    const A = lado(p.esq, 'errado'), B = lado(p.dir, 'certo');
+    await dorme(MS_PASSO * 0.5, t);
+    for (let i = 0; i < Math.max(A.ps.length, B.ps.length); i++) await Promise.all([A, B].map(s => (s.ps[i] ? s.m.passo(s.ps[i], t) : null)));
+    for (const s of [A, B]) {   // o resultado: errado riscado (✖), certo com ✔
+      if (s.tipo !== 'errado' && s.tipo !== 'certo') continue;
+      const fim = [...s.col.querySelectorAll('.lz-col-q > .lz-linha:not(.lz-enun), .lz-res, .lz-esc-num, .lz-vlinha .lz-vnum, .lz-div-q, .lz-fr-nova.cheia')].pop();
+      if (!fim || fim.matches('.lz-certo, .lz-errado')) continue;
+      fim.classList.add(fim.matches('.lz-linha') ? `lz-${s.tipo}` : s.tipo === 'errado' ? 'lz-riscado' : 'lz-ok');
+    }
+    await dorme(MS_PASSO * 0.6, t);
+  }
 
   async function passo(p, t) {
     switch (p.t) {
       case 'linha': linha(termos(p.v), p.classe ? 'lz-' + p.classe : ''); return dorme(MS_PASSO, t);
-      case 'enunciado': div('lz-linha lz-enun', esc(p.v)); caber(); return dorme(MS_PASSO, t);
+      case '_linha': linha(p.ts); return dorme(MS_PASSO, t);
+      case '_marca': { const l = ultima(); if (l) marcar(l, p.de, p.ate); return dorme(MS_PASSO, t); }
+      case '_nova': novaLinha(p.ts, p.de, p.n ?? 1); return dorme(MS_PASSO, t);
+      case 'enunciado': div('lz-linha lz-enun', esc(p.v)); return dorme(MS_PASSO, t);
       case 'marca': { const l = ultima(); if (!l) return; const i = acha(l, p.v); if (i >= 0) marcar(l, i, i + termos(p.v).length - 1); return dorme(MS_PASSO, t); }
       case 'resolve': {
         const l = ultima(), tr = termos(String(p.v)), m = l ? spans(l).findIndex(s => s.classList.contains('marca')) : -1;
@@ -348,43 +474,40 @@ export function criarLousa(raiz) {
         novaLinha(nova, de, tr.length);
         return dorme(MS_PASSO, t);
       }
-      case 'expressao': {
-        const ps = passosExpressao(p.v);
-        let l = linha(ps.length ? ps[0].antes : termos(p.v));
-        await dorme(MS_PASSO, t);
-        for (const s of ps) {
-          marcar(l, s.de, s.ate);
-          await dorme(MS_PASSO, t);
-          l = novaLinha(s.depois, s.novo, 1);
-          await dorme(MS_PASSO, t);
-        }
-        return;
-      }
+      case 'expressao': for (const s of expandir([p])) await passo(s, t); return;
       case 'seta': seta(p); return dorme(MS_PASSO, t);
       case 'texto': rotulo(p.v); return dorme(MS_PASSO * 0.6, t);
-      case 'armada': limparBlocos(); return armada(p, t);
-      case 'divisao': limparBlocos(); return divisao(p, t);
-      case 'reta': limparBlocos(); return reta(p, t);
-      case 'virgula': limparBlocos(); return virgula(p, t);
-      case 'escada': limparBlocos(); return escada(p, t);
-      case 'tabela': limparBlocos(); tabela(p); return dorme(MS_PASSO, t);
+      case 'armada': if (!p.manter) limparBlocos(); return armada(p, t);   // manter: a conta de antes fica (PROMPT-191)
+      case 'divisao': if (!p.manter) limparBlocos(); return divisao(p, t);
+      case 'reta': if (!p.manter) limparBlocos(); return reta(p, t);
+      case 'virgula': if (!p.manter) limparBlocos(); return virgula(p, t);
+      case 'escada': if (!p.manter) limparBlocos(); return escada(p, t);
+      case 'tabela': if (!p.manter) limparBlocos(); tabela(p); return dorme(MS_PASSO, t);
       case 'acende': acende(p); return dorme(MS_PASSO, t);
       case 'figura': limparBlocos(); return figura(p, t);
+      case 'fracao': return fracao(p, t);
+      case 'fracoes': return fracoes(p, t);
+      case 'barras': return barras(p, t);
+      case 'compara': return compara(p, t);
       case 'pausa': return dorme(Number(p.ms) || MS_PASSO, t);
       default: return undefined;
     }
   }
+  return { passo };
+  }   // motor
 
+  const M = motor(Q0, ROT0);
   return {
     async tocar(passos = L.passos) {
       const t = ++L.token;
-      L.passos = passos || []; L.pausado = false; L.fig?.cancelar(); L.fig = null;
-      Q.innerHTML = ''; rotulo('');
-      try { for (const p of L.passos) { if (!vivo(t)) return false; await passo(p, t); } } catch (e) { if (e !== CANCELADA) console.warn('[lousa]', e); return false; }
+      L.passos = passos || []; L.pausado = false; for (const f of L.figs) f.cancelar(); L.figs = [];
+      L.k = 1; raiz.style.setProperty('--lz-k', 1);
+      Q0.innerHTML = ''; ROT0.textContent = ''; ROT0.classList.add('vazio');
+      try { for (const p of expandir(L.passos)) { if (!vivo(t)) return false; await M.passo(p, t); } } catch (e) { if (e !== CANCELADA) console.warn('[lousa]', e); return false; }
       return true;
     },
-    cancelar() { L.token++; L.pausado = false; L.fig?.cancelar(); },
-    pausar(sim = !L.pausado) { L.pausado = sim; L.fig?.pausar(sim); return L.pausado; },
+    cancelar() { L.token++; L.pausado = false; for (const f of L.figs) f.cancelar(); },
+    pausar(sim = !L.pausado) { L.pausado = sim; for (const f of L.figs) f.pausar(sim); return L.pausado; },
     get pausado() { return L.pausado; },
   };
 }
