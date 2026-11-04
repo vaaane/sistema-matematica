@@ -101,7 +101,7 @@ function engano2(q, sua) {
 const ehComparar = (q) => /^Qual é (maior|menor)\??$/i.exec(String(q.enunciado || '').trim());
 function contaGin3a(q) {
   let e = limpa(q.enunciado), problema = null;
-  if (!soExpressao(e)) { e = expressaoNoTexto(q.explicacao); problema = q.enunciado; }
+  if (!soExpressao(e)) { e = expressaoNoTexto(q.explicacao) || problemaConta(q.enunciado)?.conta; problema = q.enunciado; }   // PROMPT-202
   if (!e) return null;
   const t = semParen(tokU(e));   // a ± b ± c (sem × ÷)
   if (t.length < 3 || t.length % 2 === 0 || t.some((x, i) => (i % 2 ? !['+', '−'].includes(x) : typeof x !== 'number'))) return null;
@@ -134,7 +134,7 @@ function gin3a(q) {
   passos.push({ t: 'reta', de: t[0], anda, min: Math.min(...pts, 0) - 1, max: Math.max(...pts, 0) + 1 }, { t: 'linha', v: `${atual} = ${num(v)}`, classe: 'certo' });
   if (anda.length === 1) {
     const a = t[0], b = anda[0], A = Math.abs(a), B = Math.abs(b);
-    passos.push({ t: 'texto', v: Math.sign(a) === Math.sign(b) || !a ? `Sinais iguais: soma ${A} + ${B} e mantém o sinal` : A === B ? 'Números opostos: dá 0' : `Sinais diferentes: ${Math.max(A, B)} − ${Math.min(A, B)} = ${Math.abs(A - B)}, fica o sinal do maior` });
+    passos.push({ t: 'texto', v: Math.sign(a) === Math.sign(b) || !a ? 'Sinais iguais: soma e mantém o sinal' : A === B ? 'Números opostos: dá 0' : 'Sinais diferentes: subtrai e fica o sinal do maior' });   // PROMPT-198: só a regra
   }
   return passos;
 }
@@ -191,18 +191,18 @@ function gin4a(q) {
   const f = q.figura;
   if (!f?.tipo) return null;
   switch (f.tipo) {
-    case 'barras_iguais': return [{ t: 'fracoes', fr: [f.de, f.para], op: '×' }, { t: 'barras', fr: [f.de, f.para] }, { t: 'texto', v: `${f.de.join('/')} = ${f.para.join('/')}: em cima e embaixo × ${f.para[1] / f.de[1]}` }];
+    case 'barras_iguais': return [{ t: 'fracoes', fr: [f.de, f.para], op: '×' }, { t: 'barras', fr: [f.de, f.para] }, { t: 'texto', v: 'Em cima e embaixo, o mesmo ×' }];
     case 'simplificar': {
       const fim = f.fim || (() => { const d = mdc(...f.fr); return [f.fr[0] / d, f.fr[1] / d]; })();
-      return [{ t: 'fracoes', fr: [f.fr, fim], op: '÷' }, { t: 'barras', fr: [f.fr, fim] }, { t: 'texto', v: `em cima e embaixo ÷ ${f.fr[1] / fim[1]}` }];
+      return [{ t: 'fracoes', fr: [f.fr, fim], op: '÷' }, { t: 'barras', fr: [f.fr, fim] }, { t: 'texto', v: 'Em cima e embaixo, o mesmo ÷' }];
     }
     case 'soma_fracao': {
       const [a, d] = f.a, [b, db] = f.b, op = f.op === '−' ? '−' : '+', ps = [{ t: 'linha', v: `${a}/${d} ${op} ${b}/${db}` }];
       let D = d, A = a, B = b;
       if (f.converte) { [[A, D], [B]] = f.converte; ps.push({ t: 'linha', v: `${A}/${D} ${op} ${B}/${D}` }, { t: 'texto', v: 'deixe os de baixo iguais' }); }
       const n = op === '+' ? A + B : A - B;
-      ps.push({ t: 'linha', v: `${A} ${op} ${B} = ${n}` }, { t: 'texto', v: `o de baixo fica: ${D}` }, { t: 'linha', v: `${A}/${D} ${op} ${B}/${D} = ${n}/${D}`, classe: f.res?.[0] === n && f.res?.[1] === D ? 'certo' : '' });
-      if (f.res && (f.res[0] !== n || f.res[1] !== D)) ps.push({ t: 'fracoes', fr: [[n, D], f.res], op: '÷' }, { t: 'texto', v: `simplificando: ${n}/${D} = ${f.res.join('/')}` });
+      ps.push({ t: 'linha', v: `${A} ${op} ${B} = ${n}` }, { t: 'texto', v: 'O de baixo fica igual' }, { t: 'linha', v: `${A}/${D} ${op} ${B}/${D} = ${n}/${D}`, classe: f.res?.[0] === n && f.res?.[1] === D ? 'certo' : '' });
+      if (f.res && (f.res[0] !== n || f.res[1] !== D)) ps.push({ t: 'fracoes', fr: [[n, D], f.res], op: '÷' }, { t: 'texto', v: 'Depois simplifica' });
       return ps;
     }
     case 'parte_de': {
@@ -245,7 +245,9 @@ function contaDec(q) {
 }
 function gin4b(q) {
   const c = contaDec(q);
-  if (c) return [...(c.problema ? [{ t: 'enunciado', v: c.problema }] : []), { t: 'linha', v: c.e }, { t: 'armada', a: c.a, op: c.op, b: c.b }];
+  if (c) return [...(c.problema ? [{ t: 'enunciado', v: c.problema }] : []), { t: 'linha', v: c.e }, { t: 'armada', a: c.a, op: c.op, b: c.b },
+    // PROMPT-198: a legenda só com a regra
+    ...(c.op === '×' ? [] : [{ t: 'texto', v: casasDe(c.a) !== casasDe(c.b) ? 'Casas diferentes? Completa com zero. Zero no fim não muda nada.' : 'Vírgula embaixo de vírgula' }])];
   const fd = /^(\d+)\/(\d+) em número decimal$/i.exec(String(q.enunciado || '').trim());
   if (fd) {
     const p = Number(fd[1]), d = Number(fd[2]);
@@ -257,7 +259,7 @@ function gin4b(q) {
   if (df) {
     const c2 = casasDe(df[1]), den = 10 ** c2, n = Math.round(numero(df[1]) * den), r = lerFrac(q.resposta), ps = [{ t: 'linha', v: `${df[1]} = ${n}/${den}` }];
     if (r && (r[0] !== n || r[1] !== den)) ps.push({ t: 'fracoes', fr: [[n, den], r], op: '÷' });
-    ps.push({ t: 'texto', v: `${c2} ${c2 === 1 ? 'casa' : 'casas'} depois da vírgula: ${den} embaixo` });
+    ps.push({ t: 'texto', v: 'Casas da vírgula = zeros embaixo' });
     return ps;
   }
   if (/^Qual é maior\??$/i.test(String(q.enunciado || '').trim())) {
@@ -292,14 +294,311 @@ function engano4b(q, sua) {
   return null;
 }
 
-const GERA = { 'mapa1-A': gin1, 'mapa1-B': gin1, 'mapa2-A': gin2, 'mapa2-B': gin2, 'mapa3-A': gin3a, 'mapa3-B': gin3b, 'mapa4-A': gin4a, 'mapa4-B': gin4b };
+// ═══════════════ PROMPT-197: mapas 5 a 8 (o "como faz" do cartão do erro, só o jeito certo, com os números da questão) ═══════════════
+const SUPS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+const deSup = (s) => Number([...String(s)].map(c => SUPS.indexOf(c)).join(''));
+const sup = (n) => [...String(n)].map(d => SUPS[+d]).join('');
+const certo = (v) => ({ t: 'linha', v: String(v), classe: 'certo' });
+const vezes = (b, k) => Array(k).fill(b).join(' × ');
+const RX_POT = /^(\(−\d+\)|\d+)([⁰¹²³⁴⁵⁶⁷⁸⁹]+)$/;   // 2³ · (−2)²
+const valorPot = (b, k) => { let v = 1; for (let i = 0; i < k; i++) v *= b; return v; };
+const lerBase = (s) => Number(String(s).replace(/[()]/g, '').replace('−', '-'));
+
+// ── 5-A / 5-B: potências e raízes ──
+function potencia(tb, ts) {   // "2³": a base repetida e a conta crescendo (de dois em dois)
+  const b = lerBase(tb), k = deSup(ts);
+  if (k === 0) return [{ t: 'linha', v: `${tb}${ts}` }, certo(`${tb}${ts} = 1`), { t: 'texto', v: 'Elevado a 0 dá 1' }];
+  if (k === 1) return [{ t: 'linha', v: `${tb}${ts}` }, certo(`${tb}${ts} = ${num(b)}`), { t: 'texto', v: 'Elevado a 1 é ele mesmo' }];
+  if (b === 10) return [{ t: 'linha', v: `10${ts}` }, { t: 'linha', v: `1 e ${k} zeros` }, certo(`1${'0'.repeat(k)}`)];
+  const ps = [{ t: 'linha', v: `${tb}${ts}` }];
+  if (k <= 5) ps.push({ t: 'bloco', titulo: `1º Escreve a base ${k} vezes` }, { t: 'linha', v: vezes(tb, k) },
+    { t: 'bloco', titulo: '2º Multiplica de dois em dois' }, { t: 'expressao', v: vezes(tb, k) });   // PROMPT-203
+  else ps.push({ t: 'linha', v: vezes(tb, k) }, certo(num(valorPot(b, k))));
+  if (b < 0) ps.push({ t: 'texto', v: k % 2 ? 'Expoente ímpar: fica −' : 'Expoente par: fica +' });
+  return ps;
+}
+function gin5(q) {
+  const E = String(q.enunciado || '').trim(), e = limpa(E).replace(/:$/, '').trim();
+  let m = RX_POT.exec(e);
+  if (m) return potencia(m[1], m[2]);
+  if ((m = /^√(\d+)$/.exec(e))) {
+    const n = Number(m[1]), r = Math.round(Math.sqrt(n));
+    if (r * r !== n) return null;
+    if (r <= 12) return [{ t: 'linha', v: `√${n}` }, { t: 'linha', v: `? × ? = ${n}` }, { t: 'tabuada', quadrados: true, procura: [n] }, { t: 'linha', v: `${r} × ${r} = ${n}` }, certo(`√${n} = ${r}`)];   // PROMPT-203
+    return [{ t: 'linha', v: `√${n}` }, { t: 'linha', v: `? × ? = ${n}` }, ...(r > 1 ? [{ t: 'linha', v: `${r - 1} × ${r - 1} = ${(r - 1) ** 2}`, classe: 'errado' }] : []), { t: 'linha', v: `${r} × ${r} = ${n}` }, certo(`√${n} = ${r}`)];
+  }
+  if ((m = /^(\S+) é o mesmo que$/.exec(e)) && (m = RX_POT.exec(m[1]))) {
+    const k = deSup(m[2]);
+    return [{ t: 'linha', v: m[1] + m[2] }, { t: 'texto', v: 'O expoente diz quantas vezes' }, certo(vezes(m[1], k))];
+  }
+  if ((m = /^([\d ×]+) em forma de potência$/.exec(e))) {
+    const fs = m[1].split('×').map(s => s.trim()).filter(Boolean);
+    if (!fs.length || fs.some(f => f !== fs[0])) return null;
+    return [{ t: 'linha', v: m[1].trim() }, { t: 'texto', v: 'Quantas vezes? Esse é o expoente' }, certo(`${fs[0]}${sup(fs.length)}`)];
+  }
+  if ((m = /potência (\d+)([⁰¹²³⁴⁵⁶⁷⁸⁹]+), qual número é a base/.exec(E)))
+    return [{ t: 'linha', v: m[1] + m[2] }, { t: 'texto', v: 'base: o grande · expoente: o pequeno' }, certo(`base = ${m[1]}`)];
+  // duas partes: 3² + 2³ · √49 − 2³ (cada uma vira número, depois a conta)
+  const t = e.split(/\s+/);
+  if (t.length === 3 && ['+', '−'].includes(t[1])) {
+    const val = (x) => { let r; if ((r = RX_POT.exec(x))) return valorPot(lerBase(r[1]), deSup(r[2])); if ((r = /^√(\d+)$/.exec(x))) { const s = Math.sqrt(+r[1]); return Number.isInteger(s) ? s : NaN; } return NaN; };
+    const a = val(t[0]), b = val(t[2]);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+    const r = t[1] === '+' ? a + b : a - b;
+    const parte = (x, v) => {   // PROMPT-203: cada potência / raiz no seu bloco
+      let q2;
+      if ((q2 = RX_POT.exec(x))) { const k = deSup(q2[2]); return k >= 2 && k <= 5 ? [{ t: 'expressao', v: vezes(q2[1], k) }, certo(`${x} = ${num(v)}`)] : [certo(`${x} = ${num(v)}`)]; }
+      if ((q2 = /^√(\d+)$/.exec(x)) && v <= 12) return [{ t: 'tabuada', quadrados: true, procura: [Number(q2[1])] }, certo(`${x} = ${num(v)}`)];
+      return [certo(`${x} = ${num(v)}`)];
+    };
+    return [{ t: 'linha', v: e }, { t: 'bloco', titulo: `1º ${t[0]}` }, ...parte(t[0], a), { t: 'bloco', titulo: `2º ${t[2]}` }, ...parte(t[2], b),
+      { t: 'bloco', titulo: `3º ${t[1] === '+' ? 'Soma' : 'Subtrai'}` }, certo(`${num(a)} ${t[1]} ${num(b)} = ${num(r)}`)];
+  }
+  return null;
+}
+
+// ── 6-A / 6-B: múltiplos e divisores (a divisão armada mostra o resto) ──
+const somaAlg = (x) => [...String(x)].reduce((s, d) => s + +d, 0);
+const regrinha = (n, x) => (n === 2 ? `termina em ${String(x).slice(-1)}: ${x % 2 ? 'ímpar' : 'par'}` : n === 5 || n === 10 ? `termina em ${String(x).slice(-1)}` :
+  n === 3 || n === 9 ? `${[...String(x)].join(' + ')} = ${somaAlg(x)}` : '');
+const divisores = (n) => { const d = []; for (let i = 1; i <= n; i++) if (n % i === 0) d.push(i); return d; };
+const paresDiv = (n) => { const p = []; for (let i = 1; i * i <= n; i++) if (n % i === 0) p.push(`${i} × ${n / i}`); return p; };
+function gin6(q) {
+  const E = String(q.enunciado || '').trim(), R = String(q.resposta ?? '');
+  let m;
+  if ((m = /^(\d+) é (múltiplo|divisor) de (\d+)\?$/.exec(E))) {
+    const [a, b] = m[2] === 'múltiplo' ? [+m[1], +m[3]] : [+m[3], +m[1]], resto = a % b, rg = m[2] === 'múltiplo' ? regrinha(b, a) : '';
+    if (!b) return null;
+    return [{ t: 'divisao', a, b }, ...(rg ? [{ t: 'linha', v: rg }] : []), certo(resto ? `sobra ${resto}: Não` : 'resto 0: Sim')];
+  }
+  if ((m = /^Qual (NÃO )?é divisor de (\d+)\?$/.exec(E))) {
+    const n = +m[2], ops = [R, ...(q.erradas || [])].map(Number).filter(x => Number.isFinite(x) && x > 0).sort((a, b) => a - b);
+    if (ops.length < 2 || !ops.includes(Number(R))) return null;
+    return [{ t: 'linha', v: `${n} ÷ ?` }, { t: 'tabela', linhas: ops.map(o => (n % o ? `${n} ÷ ${o}: sobra ${n % o}` : `${n} ÷ ${o} = ${n / o}`)) }, { t: 'acende', i: ops.indexOf(Number(R)) }, certo(R)];
+  }
+  if ((m = /^Qual é múltiplo de (\d+) e de (\d+) ao mesmo tempo\?$/.exec(E))) {
+    const r = Number(R), a = +m[1], b = +m[2];
+    if (!Number.isFinite(r) || r % a || r % b) return null;
+    return [{ t: 'linha', v: `${r} ÷ ${a} = ${r / a}` }, { t: 'linha', v: `${r} ÷ ${b} = ${r / b}` }, certo(`${r}: não sobra nos dois`)];
+  }
+  if ((m = /^Qual é múltiplo de (\d+)\?$/.exec(E))) {
+    const n = +m[1], r = Number(R), k = r / n;
+    if (!Number.isInteger(k) || k < 1) return null;
+    return [{ t: 'linha', v: `tabuada do ${n}` }, ...(k <= 10 ? [{ t: 'linha', v: Array.from({ length: k }, (_, i) => n * (i + 1)).join(', ') }] : []), certo(`${n} × ${k} = ${r}`)];
+  }
+  if ((m = /^Quais são os (\d+) primeiros múltiplos de (\d+)/.exec(E))) {
+    const k = +m[1], n = +m[2];
+    if (k > 10) return null;
+    return [{ t: 'tabela', linhas: Array.from({ length: k }, (_, i) => `${n} × ${i + 1} = ${n * (i + 1)}`) }, ...Array.from({ length: k }, (_, i) => ({ t: 'acende', i, soma: true, ms: 450 })), certo(R)];
+  }
+  if (/^1 é divisor de qualquer número\?$/.test(E)) return [{ t: 'linha', v: '7 ÷ 1 = 7' }, { t: 'linha', v: '12 ÷ 1 = 12' }, certo('Sim: nunca sobra')];
+  if ((m = /^(Quais são todos os divisores de|Quantos divisores tem o número) (\d+)\?$/.exec(E))) {
+    const n = +m[2];
+    if (!n || n > 200) return null;
+    const ds = divisores(n);
+    return [{ t: 'linha', v: `divisores de ${n}` }, { t: 'tabela', linhas: paresDiv(n) }, ...(/^Quantos/.test(E) ? [{ t: 'linha', v: ds.join(', ') }, certo(`${ds.length} divisores`)] : [certo(ds.join(', '))])];
+  }
+  return null;
+}
+
+// ── 7-A / 7-B: porcentagem (o atalho que serve; senão valor × decimal) ──
+const dec100 = (p) => num(p / 100);
+function atalhoPct(p, v) {   // passos de "p% de v"
+  const r = arred(v * p / 100);
+  if (p === 50) return [{ t: 'linha', v: '50% é a metade' }, { t: 'linha', v: `${num(v)} ÷ 2 = ${num(r)}` }];
+  if (p === 10) return [{ t: 'linha', v: '10% é ÷ 10' }, { t: 'virgula', v: num(v), op: '÷', k: 10 }];   // PROMPT-200: a vírgula andando, com as frases
+  if (p === 25) return [{ t: 'linha', v: '25% é ÷ 4' }, { t: 'linha', v: `${num(v)} ÷ 4 = ${num(r)}` }];
+  if (p === 1) return [{ t: 'linha', v: '1% é ÷ 100' }, { t: 'virgula', v: num(v), op: '÷', k: 100 }];
+  if (p === 100) return [{ t: 'linha', v: '100% é tudo' }, { t: 'linha', v: num(v) }];
+  if (p % 10 === 0) { const d = arred(v / 10); return [{ t: 'linha', v: `10% = ${num(v)} ÷ 10 = ${num(d)}` }, { t: 'linha', v: `${p}% = ${num(d)} × ${p / 10} = ${num(r)}` }]; }
+  if (p === 75) { const d = arred(v / 4); return [{ t: 'linha', v: `25% = ${num(v)} ÷ 4 = ${num(d)}` }, { t: 'linha', v: `75% = ${num(d)} × 3 = ${num(r)}` }]; }
+  return [{ t: 'linha', v: `${p}% = ${dec100(p)}` }, { t: 'linha', v: `${num(v)} × ${dec100(p)} = ${num(r)}` }];
+}
+function lerPctDe(E) {   // "20% de 50", "de R$ 110 tem 50% de desconto", "turma de 32 alunos, 50% são…", "Comi 25% de uma pizza de 8 pedaços"
+  let m = /(\d+)% de (?:R\$\s*)?(\d+(?:,\d+)?)/.exec(E);
+  if (m) return { p: +m[1], v: numero(m[2]) };
+  m = /(\d+)% de (?:uma|um) \S+ de (\d+)/.exec(E);
+  if (m) return { p: +m[1], v: numero(m[2]) };
+  m = /(?:R\$\s*|de |com )(\d+(?:,\d+)?)\b[^%]*?(\d+)%/.exec(E);
+  return m ? { p: +m[2], v: numero(m[1]) } : null;
+}
+function gin7a(q) {
+  const E = String(q.enunciado || '').trim(), R = String(q.resposta ?? '');
+  let m;
+  if ((m = /^(\d+)% é igual a qual fração\?$/.exec(E))) { const p = +m[1], d = mdc(p, 100); return [{ t: 'linha', v: `${p}% = ${p}/100` }, ...(d > 1 ? [{ t: 'linha', v: `÷ ${d} em cima e embaixo` }] : []), certo(`${p}/100 = ${p / d}/${100 / d}`)]; }
+  if ((m = /^(\d+)\/(\d+) é igual a quantos por cento\?$/.exec(E))) { const a = +m[1], b = +m[2], k = 100 / b; if (!Number.isInteger(k)) return null; return [{ t: 'linha', v: `${a}/${b} = ?/100` }, { t: 'linha', v: `× ${k} em cima e embaixo` }, certo(`${a * k}/100 = ${a * k}%`)]; }
+  if ((m = /^(\d+)% de algo significa/.exec(E))) { const p = +m[1]; return [{ t: 'grade100', n: p }, certo(`${p}% = ${p}/100: ${R}`)]; }
+  if ((m = /turma de (\d+) alunos, (\d+) faltaram/.exec(E))) {
+    const n = +m[1], k = +m[2], d = arred(k / n), f = 100 / n;
+    if (Number.isInteger(f)) return [{ t: 'bloco', titulo: '1º Vira fração' }, { t: 'linha', v: `${k} de ${n} = ${k}/${n}` },   // PROMPT-203: parte ÷ todo, e o de baixo vira 100
+      { t: 'bloco', titulo: '2º Deixa o de baixo 100' }, ...(n === 10 ? [{ t: 'tabuada', b: n, procura: [100] }] : []), { t: 'linha', v: `${n} × ${f} = 100` }, { t: 'fracoes', fr: [[k, n], [k * f, 100]], op: '×' },
+      { t: 'bloco', titulo: '3º De cada 100 = %' }, certo(`${k * f}/100 = ${k * f}%`)];
+    return [{ t: 'linha', v: `${k} ÷ ${n} = ${num(d)}` }, certo(`${num(d)} = ${num(arred(d * 100))}/100 = ${num(arred(d * 100))}%`)];
+  }
+  const pv = lerPctDe(E);
+  if (!pv) return null;
+  const { p, v } = pv, d = arred(v * p / 100), ps = [{ t: 'linha', v: `${p}% de ${num(v)}` }, ...atalhoPct(p, v)];
+  ps.push(/preço final/i.test(E) ? certo(`${num(v)} − ${num(d)} = ${num(arred(v - d))}`) : certo(R));
+  return ps;
+}
+function gin7b(q) {
+  const E = String(q.enunciado || '').trim().replace(/"/g, ''), R = String(q.resposta ?? '');
+  let m;
+  if ((m = /^(\d+)% em número decimal/.exec(E))) { const p = +m[1]; return [{ t: 'linha', v: `${p}% = ${p} ÷ 100` }, { t: 'virgula', v: String(p), op: '÷', k: 100, fim: false }, { t: 'escreve', v: `${p}% = ${dec100(p)}`, cor: 'certo', n: true }]; }
+  if ((m = /^A conta (\d+) × (\d+,\d+) calcula/.exec(E))) {   // PROMPT-203: o decimal vira % (a vírgula anda 2 casas para a direita)
+    const p = num(arred(numero(m[2]) * 100));
+    return [{ t: 'linha', v: `${m[1]} × ${m[2]}` }, { t: 'bloco', titulo: `1º ${m[2]} vira %` }, { t: 'virgula', v: m[2], op: '×', k: 100, fim: false },
+      { t: 'escreve', v: `${m[2]} = ${p}%` }, { t: 'bloco', titulo: '2º Lê a conta' }, certo(R)];
+  }
+  const pv = lerPctDe(E);
+  if (!pv) return null;
+  const { p, v } = pv, ps = [{ t: 'bloco', titulo: '1º % vira decimal' }, { t: 'linha', v: `${p}% = ${p} ÷ 100` }, { t: 'virgula', v: String(p), op: '÷', k: 100 }, { t: 'bloco', titulo: '2º A conta' }];   // PROMPT-200/201
+  if (/direto o preço final/i.test(E)) {   // PROMPT-203: paga o que sobra do 100%
+    ps.splice(-1, 1, { t: 'bloco', titulo: '2º Quanto paga' }, { t: 'grade100', n: 100 - p, riscados: p }, { t: 'linha', v: `paga 100% − ${p}% = ${100 - p}%` }, { t: 'linha', v: `${100 - p}% = ${dec100(100 - p)}` }, { t: 'bloco', titulo: '3º A conta' });
+  } else if (/preço final|mesada|aumento/i.test(E)) {
+    const au = /aumento|mesada/i.test(E);
+    ps.splice(-1, 1, { t: 'bloco', titulo: au ? '2º O aumento' : '2º O desconto' }, { t: 'linha', v: `${au ? 'aumento' : 'desconto'} = ${num(v)} × ${dec100(p)}` },
+      { t: 'bloco', titulo: au ? '3º Aumento soma' : '3º Desconto tira' });
+  } else ps.push({ t: 'texto', v: '"de" vira ×' });
+  ps.push(certo(R));
+  return ps;
+}
+
+// ── 8-A: tradução (palavra → símbolo) e valor numérico (a letra vira o número) ──
+const TRADUZ = [[/dobro/i, 'dobro → 2x'], [/triplo/i, 'triplo → 3x'], [/quádruplo/i, 'quádruplo → 4x'], [/metade/i, 'metade → x ÷ 2'], [/ao quadrado/i, 'ao quadrado → x × x'],
+  [/mais (\d+)/i, (m) => `mais ${m[1]} → + ${m[1]}`], [/menos (\d+)/i, (m) => `menos ${m[1]} → − ${m[1]}`], [/custa x reais\. Quanto custam (\d+)/i, (m) => `${m[1]} vezes x → ${m[1]} × x`]];
+// PROMPT-203: a tabela de tradução fixa na lateral (a mesma das páginas do 8-A), acendendo a palavra da vez
+export const TRADUZ_LAT = [[/um número/i, 'um número → x'], [/dobro/i, 'o dobro → 2x'], [/triplo/i, 'o triplo → 3x'], [/quádruplo/i, 'o quádruplo → 4x'], [/metade/i, 'a metade → x ÷ 2'],
+  [/mais \d/i, 'mais 5 → + 5'], [/menos \d/i, 'menos 5 → − 5'], [/ao quadrado/i, 'ao quadrado → x²']];
+function trocaLetra(expr, vals) {   // 3x − 1 (x = 6) → 3 × 6 − 1 · x² → 6 × 6 · x com x = −2 → (−2)
+  const v = (l) => { const n = vals[l]; return n < 0 ? `(${num(n)})` : num(n); };
+  return expr.replace(/(\d*)([a-z])²/g, (s, c, l) => `${c ? c + ' × ' : ''}${v(l)} × ${v(l)}`)
+    .replace(/(\d+)([a-z])\b/g, (s, c, l) => `${c} × ${v(l)}`)
+    .replace(/\b([a-z])\b/g, (s, l) => (l in vals ? v(l) : s));
+}
+function gin8a(q) {
+  const E = String(q.enunciado || '').trim(), R = String(q.resposta ?? '');
+  const m = /^Valor de (.+?) quando (.+)$/.exec(E);
+  if (m) {
+    const vals = {};
+    for (const [, l, n] of m[2].matchAll(/([a-z]) = (−?\d+)/g)) vals[l] = numero(n);
+    if (!Object.keys(vals).length) return null;
+    const sub = trocaLetra(m[1].trim(), vals);
+    if (/[a-z]/.test(sub)) return null;
+    let ps = [];
+    try { ps = passosExpressao(sub); } catch (_) { return null; }
+    return [{ t: 'bloco', titulo: '1º Troca a letra' }, { t: 'linha', v: m[1].trim() }, { t: 'linha', v: Object.entries(vals).map(([l, n]) => `${l} = ${num(n)}`).join('   ') },
+      { t: 'texto', v: 'Troca a letra pelo número' }, { t: 'linha', v: sub }, { t: 'bloco', titulo: '2º Calcula' }, ...(ps.length ? [{ t: 'expressao', v: sub }] : [certo(sub)])];   // PROMPT-203
+  }
+  const ts = TRADUZ.map(([rx, f]) => { const x = rx.exec(E); return x && (typeof f === 'function' ? f(x) : f); }).filter(Boolean);
+  if (!ts.length) return null;
+  const ac = TRADUZ_LAT.map(([rx], i) => (rx.test(E) ? i : -1)).filter(i => i >= 0);
+  return [{ t: 'lateral', linhas: TRADUZ_LAT.map(x => x[1]), acende: ac }, { t: 'enunciado', v: E.replace(/"/g, '') }, ...ts.map(v => ({ t: 'linha', v })), certo(R)];
+}
+
+// ── 8-B: termos semelhantes (mesma letra: só os números; a letra repete) ──
+function lerTermos(expr) {   // "5x − 3x + 4 + 9" → [{ s: 1, c: 5, l: 'x' }, …]
+  const out = [];
+  for (const m of String(expr).replace(/\s+/g, '').matchAll(/([+−-]?)(\d*)([a-z]?)(²?)/g)) {
+    if (!m[2] && !m[3]) continue;
+    out.push({ s: m[1] === '−' || m[1] === '-' ? -1 : 1, c: m[2] ? +m[2] : 1, l: m[3] + m[4] });
+  }
+  return out;
+}
+const juntaTermo = (c, l) => (!l ? num(c) : c === 1 ? l : `${num(c)}${l}`);
+function gin8b(q) {
+  const E = String(q.enunciado || '').trim(), R = String(q.resposta ?? '');
+  let m;
+  if ((m = /^(.+?) e (.+?) são termos semelhantes\?$/.exec(E))) {
+    const L = (s) => s.replace(/^−?\d*/, '');
+    return [{ t: 'linha', v: `${m[1]}  e  ${m[2]}` }, { t: 'linha', v: `letras: ${L(m[1])} e ${L(m[2])}` }, certo(L(m[1]) === L(m[2]) ? 'mesma letra: Sim' : 'letras diferentes: Não')];
+  }
+  if (/^Perímetro de um quadrado de lado x/.test(E)) return [{ t: 'perimetro', lados: ['x', 'x', 'x', 'x'] }, { t: 'linha', v: 'x + x + x + x' }, { t: 'linha', v: '(1 + 1 + 1 + 1)x' }, certo('4x')];
+  if ((m = /^Perímetro de um retângulo de lados x e (\d+)/.exec(E))) return [{ t: 'perimetro', lados: ['x', m[1], 'x', m[1]] }, { t: 'linha', v: `x + ${m[1]} + x + ${m[1]}` }, { t: 'linha', v: `(1 + 1)x + ${m[1]} + ${m[1]}` }, certo(R)];
+  const e = E.replace(/^Simplifique\s+/i, '');
+  if (!/^[\d\sa-z²+−-]+$/.test(e) || !/[a-z]/.test(e)) return null;
+  const ts = lerTermos(e);
+  if (ts.length < 2) return null;
+  const grupos = [];
+  for (const t of ts) { let g = grupos.find(x => x.l === t.l); if (!g) grupos.push(g = { l: t.l, ts: [] }); g.ts.push(t); }
+  const parte = (g, i) => {   // a 1ª do grupo leva o sinal para fora quando não é o começo: " − 2 + 6", nunca " + −2"
+    const fora = i > 0 && !(g.l && g.ts.length > 1) ? (g.ts[0].s < 0 ? ' − ' : ' + ') : i > 0 ? ' + ' : '';
+    const ns = g.ts.map((t, k) => `${k === 0 ? (t.s < 0 && !(fora && !(g.l && g.ts.length > 1)) ? '−' : '') : t.s < 0 ? ' − ' : ' + '}${t.c}`).join('');
+    return `${fora}${g.l ? (g.ts.length > 1 ? `(${ns})${g.l}` : `${g.ts[0].s < 0 && !fora ? '−' : ''}${juntaTermo(g.ts[0].c, g.l)}`) : ns}`;
+  };
+  const agrupada = grupos.map(parte).join('');
+  const total = grupos.map(g => ({ l: g.l, c: g.ts.reduce((s, t) => s + t.s * t.c, 0) })).filter(g => g.c !== 0);
+  const final = total.length ? total.map((g, i) => `${i === 0 ? (g.c < 0 ? '−' : '') : g.c < 0 ? ' − ' : ' + '}${juntaTermo(Math.abs(g.c), g.l)}`).join('') : '0';
+  return [{ t: 'bloco', titulo: '1º Pinta os iguais' }, { t: 'termos', v: e, cores: true }, { t: 'bloco', titulo: '2º Junta' }, { t: 'linha', v: agrupada }, { t: 'bloco', titulo: '3º Resposta' }, certo(final)];   // PROMPT-203
+}
+
+const GERA = { 'mapa1-A': gin1, 'mapa1-B': gin1, 'mapa2-A': gin2, 'mapa2-B': gin2, 'mapa3-A': gin3a, 'mapa3-B': gin3b, 'mapa4-A': gin4a, 'mapa4-B': gin4b,
+  'mapa5-A': gin5, 'mapa5-B': gin5, 'mapa6-A': gin6, 'mapa6-B': gin6, 'mapa7-A': gin7a, 'mapa7-B': gin7b, 'mapa8-A': gin8a, 'mapa8-B': gin8b };   // PROMPT-197
 const ENGANO = { 'mapa1-A': engano1, 'mapa1-B': engano1, 'mapa2-A': engano2, 'mapa2-B': engano2, 'mapa3-A': engano3a, 'mapa3-B': engano3b, 'mapa4-A': engano4a, 'mapa4-B': engano4b };
 const normResp = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
+
+// ═══ PROMPT-202: problema com texto → "1º Vira conta" (as palavras-chave sublinhadas viram a conta) e depois resolve ═══
+// problemaConta(enunciado) → { conta, marcas: [[trecho, vira, fala?], …], k? (× 10/100/1000) } ou null
+const N_ = '(−?\\d+(?:,\\d+)?)';
+const PROBLEMAS = [
+  [new RegExp(`Comprei ${N_} (\\S+) de R\\$ ${N_} e ${N_} (\\S+) de R\\$ ${N_}\\. Quanto gastei`), (m) => ({ conta: `${m[1]} × ${m[3]} + ${m[4]} × ${m[6]}`,
+    marcas: [[`${m[1]} ${m[2]} de R$ ${m[3]}`, `${m[1]} × ${m[3]}`, `${m[1]} ${m[2]} de ${m[3]} reais: ${m[1]} vezes ${m[3]}.`], [`${m[4]} ${m[5]} de R$ ${m[6]}`, `${m[4]} × ${m[6]}`], ['gastei', '+', 'Quanto gastei ao todo: junta tudo com +.']] })],
+  [new RegExp(`Tinha R\\$ ${N_} e comprei ${N_} (\\S+) de R\\$ ${N_}\\. Quanto sobrou`), (m) => ({ conta: `${m[1]} − ${m[2]} × ${m[4]}`,
+    marcas: [[`Tinha R$ ${m[1]}`, m[1], `Começa com ${m[1]} reais.`], [`${m[2]} ${m[3]} de R$ ${m[4]}`, `${m[2]} × ${m[4]}`, `${m[2]} ${m[3]} de ${m[4]} reais: ${m[2]} vezes ${m[4]}.`], ['sobrou', '−', 'Sobrou: é conta de menos.']] })],
+  [new RegExp(`São ${N_} caixas com ${N_} lápis cada e mais ${N_} lápis soltos`), (m) => ({ conta: `${m[1]} × ${m[2]} + ${m[3]}`,
+    marcas: [[`${m[1]} caixas com ${m[2]} lápis cada`, `${m[1]} × ${m[2]}`, `"Cada": ${m[1]} vezes ${m[2]}.`], [`mais ${m[3]}`, `+ ${m[3]}`]] })],
+  [new RegExp(`${N_} balas foram divididas entre ${N_} amigos e cada um ganhou mais ${N_}`), (m) => ({ conta: `${m[1]} ÷ ${m[2]} + ${m[3]}`,
+    marcas: [[`divididas entre ${m[2]}`, `${m[1]} ÷ ${m[2]}`, `Dividir entre ${m[2]} amigos: ${m[1]} ÷ ${m[2]}.`], [`mais ${m[3]}`, `+ ${m[3]}`, `Ganhou mais ${m[3]}: + ${m[3]}.`]] })],
+  [new RegExp(`Comprei ${N_} pacotes de R\\$ ${N_} e paguei com R\\$ ${N_}\\. Qual o troco`), (m) => ({ conta: `${m[3]} − ${m[1]} × ${m[2]}`,
+    marcas: [[`${m[1]} pacotes de R$ ${m[2]}`, `${m[1]} × ${m[2]}`], [`paguei com R$ ${m[3]}`, m[3], `Paguei com ${m[3]}: começa com ${m[3]}.`], ['troco', '−', 'Troco: é conta de menos.']] })],
+  [new RegExp(`Ganhei R\\$ ${N_} por dia durante ${N_} dias e gastei R\\$ ${N_}`), (m) => ({ conta: `${m[1]} × ${m[2]} − ${m[3]}`,
+    marcas: [[`R$ ${m[1]} por dia durante ${m[2]} dias`, `${m[1]} × ${m[2]}`], [`gastei R$ ${m[3]}`, `− ${m[3]}`, `Gastei: é conta de menos.`]] })],
+  [new RegExp(`${N_} adultos compraram ingressos de R\\$ ${N_} cada e ganharam R\\$ ${N_} de desconto`), (m) => ({ conta: `${m[1]} × ${m[2]} − ${m[3]}`,
+    marcas: [[`ingressos de R$ ${m[2]} cada`, `${m[1]} × ${m[2]}`, `${m[1]} ingressos de ${m[2]} reais: ${m[1]} vezes ${m[2]}.`], [`R$ ${m[3]} de desconto`, `− ${m[3]}`, 'Desconto: é conta de menos.']] })],
+  [new RegExp(`temperatura era ${N_} °C e (subiu|desceu|caiu) ${N_} graus`), (m) => ({ conta: `${m[1]} ${m[2] === 'subiu' ? '+' : '−'} ${m[3]}`,
+    marcas: [[`era ${m[1]} °C`, m[1]], [`${m[2]} ${m[3]} graus`, `${m[2] === 'subiu' ? '+' : '−'} ${m[3]}`, m[2] === 'subiu' ? 'Subiu: é conta de mais.' : 'Desceu: é conta de menos.']] })],
+  [new RegExp(`Tinha R\\$ ${N_} na conta e gastei R\\$ ${N_}`), (m) => ({ conta: `${m[1]} − ${m[2]}`,
+    marcas: [[`Tinha R$ ${m[1]}`, m[1]], [`gastei R$ ${m[2]}`, `− ${m[2]}`, 'Gastei: é conta de menos.']] })],
+  [new RegExp(`Estou no andar ${N_}.*?e (subo|desço) ${N_} andares`), (m) => ({ conta: `${m[1]} ${m[2] === 'subo' ? '+' : '−'} ${m[3]}`,
+    marcas: [[`andar ${m[1]}`, m[1]], [`${m[2]} ${m[3]} andares`, `${m[2] === 'subo' ? '+' : '−'} ${m[3]}`, m[2] === 'subo' ? 'Subo: é conta de mais.' : 'Desço: é conta de menos.']] })],
+  [new RegExp(`custa R\\$ ${N_}\\. Quanto custam (\\d+) (\\S+)\\?`), (m) => ({ conta: `${m[1]} × ${m[2]}`, k: { v: m[1], op: '×', k: Number(m[2]) },
+    marcas: [[`custa R$ ${m[1]}`, m[1]], [`Quanto custam ${m[2]}`, `× ${m[2]}`, `${m[2]} de ${m[1]} reais: ${m[1]} vezes ${m[2]}.`]] })],
+  [new RegExp(`Paguei R\\$ ${N_} por um lanche de R\\$ ${N_}\\. Qual o troco`), (m) => ({ conta: `${m[1]} − ${m[2]}`,
+    marcas: [[`Paguei R$ ${m[1]}`, m[1]], [`lanche de R$ ${m[2]}`, `− ${m[2]}`], ['troco', '−', 'Troco é conta de menos.']] })],
+];
+export function problemaConta(enunciado) {
+  const E = String(enunciado || '');
+  for (const [rx, f] of PROBLEMAS) { const m = rx.exec(E); if (m) return f(m); }
+  return null;
+}
+// a parte "resolve" de um problema (quando o gerador do ginásio não achou): a expressão ou a vírgula
+function resolveProblema(pc) {
+  if (pc.k && [10, 100, 1000].includes(pc.k.k)) return [{ t: 'virgula', ...pc.k }];
+  try { if (passosExpressao(pc.conta).length) return [{ t: 'expressao', v: pc.conta }]; } catch (_) {}
+  return null;
+}
+const fazBlocos = (s) => s.t === 'armada' && ((s.op === '×' && /,/.test(`${s.a}${s.b}`)) || (s.op !== '×' && casasDe(s.a) !== casasDe(s.b)));
+function comBlocosDoProblema(q, certo) {
+  const pc = problemaConta(q.enunciado);
+  const eProblema = pc || certo?.[0]?.t === 'enunciado';
+  if (!eProblema) return certo;
+  let rest = (certo || []).filter(s => s.t !== 'enunciado');
+  if (!rest.length && pc) rest = resolveProblema(pc) || [];
+  if (!rest.length) return certo;
+  const conta = pc?.conta;
+  if (conta && rest[0]?.t === 'linha' && rest[0].v === conta) rest = rest.slice(1);
+  const auto = rest.some(fazBlocos);   // a conta armada já abre os próprios blocos: começa no 2º
+  if (auto) rest = rest.map(s => (fazBlocos(s) ? { ...s, n0: 2 } : s));
+  return [{ t: 'bloco', titulo: '1º Vira conta' }, pc ? { t: 'palavras', v: q.enunciado, marcas: pc.marcas } : { t: 'enunciado', v: q.enunciado },
+    ...(conta ? [{ t: 'linha', v: conta }] : []), ...(auto ? [] : [{ t: 'bloco', titulo: '2º Resolve' }]), ...rest];
+}
+
 export function comoFaz(chave, q, sua) {
   const f = GERA[chave];
   if (!f || !q) return null;
   let certo;
-  try { certo = f(q); } catch (_) { return null; }
+  try { certo = f(q); } catch (_) { certo = null; }
+  try { certo = comBlocosDoProblema(q, certo); } catch (_) {}   // PROMPT-202
   if (!certo?.length) return null;
   if (sua == null || normResp(sua) === '' || q.resposta == null || normResp(sua) === normResp(q.resposta)) return certo;
   // ✖ sua resposta × ✔ certo: o problema (enunciado) fica em cima das duas colunas
@@ -307,4 +606,43 @@ export function comoFaz(chave, q, sua) {
   let esq = null;
   try { esq = ENGANO[chave]?.(q, sua) || null; } catch (_) { esq = null; }
   return [...topo, { t: 'compara', esq: { titulo: '✖ sua resposta', tipo: 'errado', passos: esq?.length ? esq : [{ t: 'linha', v: String(sua) }] }, dir: { titulo: '✔ certo', tipo: 'certo', passos: dir } }];
+}
+
+// 💡 PROMPT-196: a dica curta (máx. ~6 palavras) do cartão do erro, pelo tipo de conta de cada ginásio. null = fora dos mapas 1 a 4
+export function dicaCurta(chave, q) {
+  const e = String(q?.enunciado || '');
+  switch (chave) {
+    case 'mapa1-A': return '× e ÷ antes de + e −';
+    case 'mapa1-B': return '( ) primeiro, depois [ ]';
+    case 'mapa2-A': return 'Cada zero, uma casa da vírgula';
+    case 'mapa2-B': return 'Unidade menor, número maior';
+    case 'mapa3-A': return /maior|menor/i.test(e) ? 'Mais à esquerda, menor' : 'Sinais diferentes: subtrai';
+    case 'mapa3-B': return 'Iguais +, diferentes −';
+    case 'mapa4-A':
+      if (/maior|menor/i.test(e)) return 'Mais partes, pedaço menor';
+      if (/\d+\/\d+\s*[+−-]\s*\d+\/\d+/.test(e)) return 'Mesmo embaixo: só o de cima';
+      if (/ de \d|metade/i.test(e)) return '÷ embaixo, × em cima';
+      if (/pizza|pedaços/i.test(e)) return 'Em cima as partes, embaixo o total';
+      return 'Mesma conta em cima e embaixo';
+    // PROMPT-197: mapas 5 a 8
+    case 'mapa5-A': return 'Base × ela mesma, expoente vezes';
+    case 'mapa5-B':
+      if (/⁰/.test(e) && !/[¹²³⁴⁵⁶⁷⁸⁹]/.test(e)) return 'Elevado a 0 dá 1';
+      if (/^\d+¹$/.test(e.trim())) return 'Elevado a 1 é ele mesmo';
+      if (/^\(−/.test(e.trim())) return 'Par: +, ímpar: −';
+      return 'Qual número × ele mesmo?';
+    case 'mapa6-A': return 'Está na tabuada? É múltiplo!';
+    case 'mapa6-B': return 'Resto 0? É divisor!';
+    case 'mapa7-A': { const p = /(\d+)%/.exec(e)?.[1]; return p === '50' ? '50% é a metade' : p === '25' ? '25% é ÷ 4' : '10% é ÷ 10'; }
+    case 'mapa7-B': return '% ÷ 100: vírgula anda 2 casas';
+    case 'mapa8-A': return /^Valor de/i.test(e) ? 'Troca a letra pelo número' : 'Dobro = 2x';
+    case 'mapa8-B': return 'Mesma letra: só soma os números';
+    case 'mapa4-B':
+      if (/maior|menor/i.test(e)) return 'Iguala as casas';
+      if (/em número decimal/i.test(e)) return 'É uma divisão';
+      if (/em fração/i.test(e)) return 'Casas da vírgula = zeros embaixo';
+      if (/×/.test(e)) return 'Conta as casas da vírgula';
+      return 'Vírgula embaixo de vírgula';
+  }
+  return null;
 }

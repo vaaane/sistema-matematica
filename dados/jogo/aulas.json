@@ -1,46 +1,46 @@
 {
- "_nota": "Aula do pet na entrada dos ginásios (PROMPT-185). aulas.{chave}.paginas: cada página = uma fala do pet + uma animação na lousa (js/jogo-revisao/lousa.js: linha, enunciado, marca, resolve, expressao, seta, texto, armada, divisao, reta, virgula, escada, tabela, acende, figura, fracao, fracoes, barras, compara, pausa). PROMPT-191: cada página resolve a conta inteira (as linhas ficam na lousa) e a fala explica a conta toda; as pegadinhas usam 'compara' (✖ jeito errado × ✔ jeito certo, lado a lado). texto = a fala neutra; por_personalidade.{pet} = a fala no jeito daquele pet (sem ela: jeito.{pet}.abre antes do texto e, na última página, jeito.{pet}.fecha depois).",
+ "_nota": "Aula do pet na entrada dos ginásios (PROMPT-185). aulas.{chave}.paginas: cada página = uma fala do pet + uma animação na lousa (js/jogo-revisao/lousa.js: linha, enunciado, marca, resolve, expressao, seta, texto, armada, divisao, reta, virgula, escada, tabela, acende, figura, fracao, fracoes, barras, compara, pausa). PROMPT-191: cada página resolve a conta inteira (as linhas ficam na lousa) e a fala explica a conta toda; as pegadinhas usam 'compara' (✖ jeito errado × ✔ jeito certo, lado a lado). PROMPT-196: texto = a fala, bem curta (máx. ~10 palavras: a lousa já mostra a conta, a fala só aponta o que olhar); o jeito do pet entra só como uma palavrinha antes, sorteada de jeito.{pet}.abre (máx. 3 palavras). PROMPT-197: ginásios 5-A a 8-B; passos novos na lousa: grade100 (100 quadradinhos, n pintados) e acende com soma (as de antes continuam acesas) e ms. PROMPT-198: a fala só com a regra (os números ficam na lousa); compara em duas etapas (o ✔ certo primeiro, depois o ✖ errado entra à esquerda); barras com mais de 20 partes enchem como uma barra contínua. PROMPT-200: escreve (frases que ficam embaixo da conta; n: numerada; cor: certo/aviso/errado), zeros (zeros que entram no fim), contazeros; virgula com surge/casas 0/frases/fim; as contas, a vírgula, a escada e as expressões escrevem as próprias frases (frases: false desliga). Uma ideia por página. PROMPT-201: bloco (título \"1º …\": os passos seguintes desenham dentro dele; até 3 por página), casas (as casas depois da vírgula acendem numeradas), semvirgula; as frases e legendas vão para o balão do pet; a fala da página é o título no alto da lousa; no compara o certo fica à esquerda. PROMPT-202: tabuada (a tabuada na lateral: op/a/b ou b/procura; nas expressões entra sozinha no × e ÷ de tabuada), lese (o nome do símbolo no canto), palavras (o problema com as palavras-chave virando conta), caixinhas; página pode ter \"titulo\" (a regra no alto da lousa) diferente da fala; armada/× com vírgula: n0 = o número do 1º bloco. PROMPT-203: escondido (a parte escondida surge piscando), lateral (tabela fixa ao lado: a tradução do 8-A), tabuada com quadrados/alvo/col 2, bolinhas, algarismos, termos (com cores), perimetro; grade100 com faixas e riscados.",
  "jeito": {
-  "gato": {"abre": ["Hmm… olha só, é fácil:", "Presta atenção, que eu não repito:", "Óbvio, mas vou explicar:"], "fecha": ["Fácil, né? Até um gato faz.", "Pronto. Agora vai lá e me orgulha."]},
-  "tigre": {"abre": ["Presta atenção, campeão!", "FOCO! Olha só:", "Treino de cabeça:"], "fecha": ["AGORA É COM VOCÊ, CAMPEÃO! 💪", "Bora vencer esse ginásio!"]},
-  "capivara": {"abre": ["Calma… respira… olha só:", "Sem pressa:", "Devagarinho:"], "fecha": ["Viu? Com calma tudo dá certo.", "Tranquilo. Você consegue."]},
-  "gaviao": {"abre": ["Do alto dá pra ver:", "Olho de gavião:", "Mira aqui:"], "fecha": ["Mira certa, acerto certo!", "Agora voa nesse ginásio!"]},
-  "axolote": {"abre": ["Uiii, olha que legal:", "Psiu, olha isso:", "Sabia que…"], "fecha": ["Uiii, você vai arrasar!", "Fácil fácil, né?"]},
-  "unicornio": {"abre": ["Uma estrelinha me mostrou:", "Olha que mágico:", "✨ Repara:"], "fecha": ["Brilha, que você consegue! ✨", "Magia pura!"]},
-  "morcego": {"abre": ["Meu eco me contou:", "Escuta bem:", "No escuro eu vi:"], "fecha": ["Agora voa nessa conta!", "Eco confirmado: você consegue."]},
-  "dragao_vermelho": {"abre": ["EU, O MAGNÍFICO, explico:", "Escuta o dragão:", "Atenção, aprendiz:"], "fecha": ["Até um dragão aprovaria! 🔥", "Agora queima esse ginásio! 🔥"]},
-  "elefante": {"abre": ["Eu nunca esqueço, e lembro que:", "Guarda na memória:", "Anota na cabeça:"], "fecha": ["Guardou? Eu guardei!", "Memória de elefante: você consegue!"]}
+  "gato": {"abre": ["Hmm…", "Olha só:", "Presta atenção:"]},
+  "tigre": {"abre": ["FOCO!", "Bora, campeão!", "Olha só!"]},
+  "capivara": {"abre": ["Calma…", "Sem pressa:", "Devagar:"]},
+  "gaviao": {"abre": ["Mira aqui:", "Do alto:", "Olha:"]},
+  "axolote": {"abre": ["Uiii!", "Psiu!", "Olha que legal:"]},
+  "unicornio": {"abre": ["✨ Olha:", "Que mágico:", "Repara:"]},
+  "morcego": {"abre": ["Escuta:", "Meu eco diz:", "Psst:"]},
+  "dragao_vermelho": {"abre": ["Aprendiz!", "Escuta o dragão:", "Atenção:"]},
+  "elefante": {"abre": ["Lembra:", "Anota aí:", "Guarda isso:"]}
  },
  "aulas": {
   "mapa1-A": {
    "titulo": "Expressões sem parênteses",
    "paginas": [
     {
-     "texto": "Quando a conta tem + e ×, existe uma ordem. Primeiro o × e o ÷: 2 × 3 = 6. Depois o + e o −: 5 + 6 = 11.",
-     "por_personalidade": {
-      "gato": "Hmpf, todo mundo erra isso. Primeiro o × e o ÷: 2 × 3 = 6. Depois o + e o −: 5 + 6 = 11. Pronto.",
-      "tigre": "PRESTA ATENÇÃO, CAMPEÃO! Primeiro o × e o ÷: 2 × 3 = 6! Depois o + e o −: 5 + 6 = 11! VALEU!",
-      "capivara": "Calma… a conta tem uma ordem. Primeiro o × e o ÷: 2 × 3 dá 6. Só depois o + e o −: 5 + 6 dá 11."
-     },
+     "texto": "Toda expressão tem uma ordem!",
+     "titulo": "O que é expressão",
+     "lousa": [{"t": "linha", "v": "5 + 2 × 3"}, {"t": "lese", "s": "+", "v": "mais"}, {"t": "lese", "s": "×", "v": "vezes"}, {"t": "escreve", "v": "Expressão é uma conta com várias continhas juntas."}, {"t": "escreve", "v": "Elas têm uma ordem para resolver."}]
+    },
+    {
+     "texto": "× e ÷ antes de + e −.",
      "lousa": [{"t": "expressao", "v": "5 + 2 × 3"}, {"t": "texto", "v": "1º: × e ÷ · 2º: + e −"}]
     },
     {
-     "texto": "Numa conta maior, é linha por linha. Primeiro os × e ÷: 6 ÷ 2 = 3 e 3 × 4 = 12. Depois os + e −, da esquerda para a direita: 20 − 3 = 17 e 17 + 12 = 29.",
-     "por_personalidade": {
-      "gato": "Conta grande não me assusta. Primeiro 6 ÷ 2 = 3 e 3 × 4 = 12. Depois da esquerda pra direita: 20 − 3 = 17 e 17 + 12 = 29.",
-      "tigre": "CONTA GRANDE? SEM MEDO! Primeiro 6 ÷ 2 = 3 e 3 × 4 = 12! Depois 20 − 3 = 17 e 17 + 12 = 29!",
-      "capivara": "Uma linha de cada vez: primeiro 6 ÷ 2 = 3 e 3 × 4 = 12. Depois, da esquerda para a direita: 20 − 3 = 17 e 17 + 12 = 29."
-     },
+     "texto": "Conta grande? Uma operação por linha.",
      "lousa": [{"t": "expressao", "v": "20 − 6 ÷ 2 + 3 × 4"}, {"t": "texto", "v": "× e ÷ primeiro, depois + e −"}]
     },
     {
-     "texto": "Cuidado com a pegadinha! Quem faz 5 + 2 primeiro chega em 7 × 3 = 21, e está errado. O certo é o × primeiro: 2 × 3 = 6 e 5 + 6 = 11.",
-     "por_personalidade": {
-      "gato": "Pegadinha clássica: fazer 5 + 2 primeiro dá 7 × 3 = 21. Errado. Eu nunca cairia nessa. O × primeiro: 5 + 6 = 11.",
-      "tigre": "CUIDADO COM A ARMADILHA! 5 + 2 primeiro dá 7 × 3 = 21: ERRADO! O × primeiro: 5 + 6 = 11!",
-      "capivara": "Cuidado, sem pressa: quem faz 5 + 2 primeiro chega em 7 × 3 = 21, e está errado. O × vem primeiro: 5 + 6 = 11."
-     },
-     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "5 + 2 × 3"}, {"t": "marca", "v": "5 + 2"}, {"t": "resolve", "v": "7", "linha": "7 × 3"}, {"t": "marca", "v": "7 × 3"}, {"t": "resolve", "v": "21", "linha": "21"}]}, "dir": {"passos": [{"t": "expressao", "v": "5 + 2 × 3"}]}}, {"t": "texto", "v": "Primeiro o ×!"}]
+     "texto": "Mesma força? Vai da esquerda para a direita!",
+     "titulo": "× e ÷: da esquerda para a direita",
+     "lousa": [{"t": "lese", "s": "÷", "v": "dividido por"}, {"t": "escreve", "v": "× e ÷ têm a mesma força."}, {"t": "escreve", "v": "Quem aparece primeiro, da esquerda para a direita, vai primeiro."}, {"t": "expressao", "v": "24 ÷ 4 × 2"}]
+    },
+    {
+     "texto": "Da esquerda para a direita!",
+     "titulo": "+ e − também: da esquerda para a direita",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "10 − 2 + 3"}, {"t": "marca", "v": "2 + 3"}, {"t": "resolve", "v": "5", "linha": "10 − 5"}, {"t": "marca", "v": "10 − 5"}, {"t": "resolve", "v": "5", "linha": "5"}]}, "dir": {"passos": [{"t": "expressao", "v": "10 − 2 + 3"}]}}, {"t": "escreve", "v": "Não pode pular para o + primeiro!", "cor": "errado"}]
+    },
+    {
+     "texto": "Pegadinha: somar primeiro dá errado!",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "5 + 2 × 3"}, {"t": "marca", "v": "5 + 2"}, {"t": "resolve", "v": "7", "linha": "7 × 3"}, {"t": "marca", "v": "7 × 3"}, {"t": "resolve", "v": "21", "linha": "21"}]}, "dir": {"passos": [{"t": "expressao", "v": "5 + 2 × 3"}]}}, {"t": "texto", "v": "Primeiro o ×!"}, {"t": "escreve", "v": "Somar primeiro (7 × 3 = 21) está errado!", "cor": "errado"}]
     }
    ]
   },
@@ -48,40 +48,36 @@
    "titulo": "Expressões com parênteses",
    "paginas": [
     {
-     "texto": "Os parênteses mandam: o que está dentro deles vem primeiro. Sem parênteses, 5 + 3 × 2 = 5 + 6 = 11. Com parênteses, (5 + 3) × 2 = 8 × 2 = 16. Mesmos números, resultados diferentes!",
-     "por_personalidade": {
-      "gato": "Os parênteses mandam. Tipo eu nesta casa. Sem eles, 5 + 6 = 11. Com eles, 8 × 2 = 16. Impressionante, né? Eu já sabia.",
-      "tigre": "OS PARÊNTESES MANDAM! Sem eles: 5 + 6 = 11! Com eles: 8 × 2 = 16! Mesmos números, resultados diferentes!",
-      "capivara": "Os parênteses dizem: comece por aqui. Sem eles, 5 + 3 × 2 = 11. Com eles, (5 + 3) × 2 = 8 × 2 = 16."
-     },
+     "texto": "O que está nos ( ) vem primeiro!",
      "lousa": [{"t": "compara", "esq": {"titulo": "sem parênteses", "tipo": "neutro", "passos": [{"t": "expressao", "v": "5 + 3 × 2"}]}, "dir": {"titulo": "com parênteses", "tipo": "neutro", "passos": [{"t": "expressao", "v": "(5 + 3) × 2"}]}}, {"t": "texto", "v": "Os parênteses mudam a ordem!"}]
     },
     {
-     "texto": "E os colchetes? Primeiro os ( ): 2 + 3 = 5. Depois os [ ]: 10 − 5 = 5. Por último, o resto: 5 × 2 = 10.",
-     "por_personalidade": {
-      "gato": "Colchetes? Fácil: primeiro ( ), 2 + 3 = 5. Depois [ ], 10 − 5 = 5. Depois o resto: 5 × 2 = 10. Igual eu como: primeiro o peixe.",
-      "tigre": "COLCHETES! Primeiro ( ): 2 + 3 = 5! Depois [ ]: 10 − 5 = 5! Por último: 5 × 2 = 10!",
-      "capivara": "Com colchetes, vai de dentro para fora: ( ) primeiro, 2 + 3 = 5. Depois [ ], 10 − 5 = 5. E por fim 5 × 2 = 10."
-     },
+     "texto": "Primeiro ( ), depois [ ], depois o resto.",
      "lousa": [{"t": "expressao", "v": "[10 − (2 + 3)] × 2"}, {"t": "texto", "v": "( ) → [ ] → resto"}]
     },
     {
-     "texto": "Dentro dos parênteses também vale a ordem: 3 × 4 = 12, depois 2 + 12 = 14. Saindo dos parênteses: 14 − 5 = 9.",
-     "por_personalidade": {
-      "gato": "Dentro dos parênteses a regra continua, tá? 3 × 4 = 12, depois 2 + 12 = 14. E 14 − 5 = 9.",
-      "tigre": "ATENÇÃO! Dentro dos parênteses também: × ANTES do +! 3 × 4 = 12, 2 + 12 = 14, 14 − 5 = 9!",
-      "capivara": "Dentro dos parênteses, a mesma calma de sempre: 3 × 4 = 12, depois 2 + 12 = 14. Saindo deles: 14 − 5 = 9."
-     },
+     "texto": "De dentro para fora!",
+     "titulo": "( ) → [ ] → { }",
+     "lousa": [{"t": "caixinhas"}, {"t": "lese", "s": "{ }", "v": "chaves"}, {"t": "escreve", "v": "Parênteses é a caixinha de dentro. Ela vai primeiro."}, {"t": "escreve", "v": "Depois os colchetes."}, {"t": "escreve", "v": "Depois as chaves."}, {"t": "escreve", "v": "Por último, o que sobrou fora."}, {"t": "expressao", "v": "{20 − [2 × (3 + 1)]} ÷ 4"}]
+    },
+    {
+     "texto": "Dentro dos ( ), × antes do +.",
      "lousa": [{"t": "expressao", "v": "(2 + 3 × 4) − 5"}, {"t": "texto", "v": "Dentro: × antes do +"}]
     },
     {
-     "texto": "Um problema também vira expressão. Comprei 3 cadernos de R$ 4 e paguei com R$ 20: 20 − 3 × 4. Primeiro 3 × 4 = 12, depois 20 − 12 = 8. Sobrou R$ 8.",
-     "por_personalidade": {
-      "gato": "Problema? Vira conta. 3 cadernos de R$ 4, paguei com R$ 20: 20 − 3 × 4. 3 × 4 = 12 e 20 − 12 = 8. Sobrou R$ 8.",
-      "tigre": "PROBLEMA VIRA CONTA! 20 − 3 × 4: primeiro 3 × 4 = 12, depois 20 − 12 = 8! SOBROU R$ 8!",
-      "capivara": "Um problema vira expressão, com calma: 20 − 3 × 4. Primeiro 3 × 4 = 12, depois 20 − 12 = 8. Sobrou R$ 8."
-     },
-     "lousa": [{"t": "enunciado", "v": "3 cadernos de R$ 4, paguei com R$ 20"}, {"t": "expressao", "v": "20 − 3 × 4"}, {"t": "texto", "v": "Sobrou R$ 8"}]
+     "texto": "Procure as palavras da conta!",
+     "titulo": "As palavras que viram conta",
+     "lousa": [{"t": "tabela", "linhas": ["cada, vezes → ×", "dividido entre, repartir → ÷", "sobrou, troco, gastei, desconto → −", "ao todo, mais, junto → +"]}, {"t": "escreve", "v": "Algumas palavras dizem qual é a conta."}, {"t": "acende", "i": 0, "soma": true}, {"t": "escreve", "v": "\"Cada\" e \"vezes\": conta de vezes."}, {"t": "acende", "i": 1, "soma": true}, {"t": "escreve", "v": "\"Dividido entre\" e \"repartir\": conta de dividir."}, {"t": "acende", "i": 2, "soma": true}, {"t": "escreve", "v": "\"Sobrou\", \"troco\", \"gastei\", \"desconto\": conta de menos."}, {"t": "acende", "i": 3, "soma": true}, {"t": "escreve", "v": "\"Ao todo\", \"mais\", \"junto\": conta de mais."}]
+    },
+    {
+     "texto": "Problema vira conta. Depois resolve igual!",
+     "titulo": "Comprei e paguei",
+     "lousa": [{"t": "bloco", "titulo": "1º Acha as palavras"}, {"t": "palavras", "v": "Comprei 3 cadernos de R$ 4 e paguei com R$ 20. Quanto sobrou?", "marcas": [["3 cadernos de R$ 4", "3 × 4", "3 cadernos de 4 reais: 3 vezes 4."], ["paguei com R$ 20", "20", "Paguei com 20 reais: a conta começa no 20."], ["sobrou", "−", "Sobrou: é conta de menos."]]}, {"t": "bloco", "titulo": "2º Monta a conta"}, {"t": "linha", "v": "20 − 3 × 4"}, {"t": "bloco", "titulo": "3º Resolve"}, {"t": "expressao", "v": "20 − 3 × 4"}, {"t": "linha", "v": "Sobrou R$ 8", "classe": "certo"}]
+    },
+    {
+     "texto": "Repartir é dividir!",
+     "titulo": "Repartir",
+     "lousa": [{"t": "bloco", "titulo": "1º Acha as palavras"}, {"t": "palavras", "v": "24 balas divididas entre 4 amigos, e cada um ganhou mais 2. Com quantas cada um ficou?", "marcas": [["divididas entre 4", "24 ÷ 4", "Dividir entre 4 amigos: 24 ÷ 4."], ["mais 2", "+ 2", "Ganhou mais 2: + 2."]]}, {"t": "bloco", "titulo": "2º Monta a conta"}, {"t": "linha", "v": "24 ÷ 4 + 2"}, {"t": "bloco", "titulo": "3º Resolve"}, {"t": "expressao", "v": "24 ÷ 4 + 2"}, {"t": "linha", "v": "8 balas", "classe": "certo"}]
     }
    ]
   },
@@ -89,58 +85,58 @@
    "titulo": "× e ÷ por 10, 100 e 1000",
    "paginas": [
     {
-     "texto": "Multiplicar por 10 é deixar o número 10 vezes maior: o 7 anda uma casa e entra um 0.",
-     "por_personalidade": {
-      "gato": "× 10? Moleza. O número fica 10 vezes maior: o 7 anda uma casa e entra um 0.",
-      "tigre": "× 10, CAMPEÃO! O número fica 10 VEZES MAIOR: o 7 anda uma casa e entra um 0!",
-      "capivara": "Com calma: × 10 deixa o número 10 vezes maior. O 7 anda uma casa e entra um 0."
-     },
-     "lousa": [{"t": "virgula", "v": "7", "op": "×", "k": 10}, {"t": "texto", "v": "7 × 10 = 70"}]
+     "texto": "A vírgula separa inteiros e pedaços.",
+     "lousa": [{"t": "linha", "v": "2,5"}, {"t": "barras", "fr": [[10, 10], [10, 10], [5, 10]], "rotulos": ["1 inteiro", "1 inteiro", "meio"]}, {"t": "escreve", "v": "Antes da vírgula: os inteiros (2)."}, {"t": "escreve", "v": "Depois da vírgula: os pedaços (5)."}, {"t": "escreve", "v": "Inteiro: número sem vírgula."}, {"t": "escreve", "v": "R$ 2,50 = 2 reais e 50 centavos."}]
     },
     {
-     "texto": "Conte os zeros: é quantas casas a vírgula anda. O 100 tem 2 zeros, então a vírgula pula 2 casas para a direita.",
-     "por_personalidade": {
-      "gato": "Conta os zeros, é só isso. O 100 tem 2, então a vírgula pula 2 casas para a direita. Fácil.",
-      "tigre": "CONTA OS ZEROS! O 100 tem 2: a vírgula pula 2 casas para a direita! Hop, hop!",
-      "capivara": "Conte os zeros devagarinho: o 100 tem 2. Então a vírgula pula 2 casas para a direita, uma de cada vez."
-     },
+     "texto": "A vírgula se esconde no fim!",
+     "lousa": [{"t": "virgula", "v": "7", "surge": true, "casas": 0, "frases": false}, {"t": "escreve", "v": "Quando a vírgula não aparece…"}, {"t": "escreve", "v": "…ela está escondida no fim do número."}, {"t": "virgula", "v": "48", "surge": true, "casas": 0, "frases": false, "manter": true}, {"t": "virgula", "v": "350", "surge": true, "casas": 0, "frases": false, "manter": true}, {"t": "escreve", "v": "7 = 7,  ·  48 = 48,  ·  350 = 350,"}]
+    },
+    {
+     "texto": "Zero no fim não muda nada!",
+     "lousa": [{"t": "zeros", "v": "48", "n": 2}, {"t": "linha", "v": "48 = 48,0 = 48,00", "classe": "certo"}, {"t": "linha", "v": "R$ 48 = R$ 48,00"}, {"t": "escreve", "v": "Zeros no fim, depois da vírgula, não mudam o número."}, {"t": "escreve", "v": "48 reais e 48,00 reais é o mesmo dinheiro."}]
+    },
+    {
+     "texto": "Esse zero muda tudo!",
+     "lousa": [{"t": "linha", "v": "R$ 48", "classe": "certo"}, {"t": "linha", "v": "R$ 480 ≠ R$ 48", "classe": "errado"}, {"t": "escreve", "v": "Zero antes da vírgula muda o número!", "cor": "aviso"}, {"t": "escreve", "v": "480 é 10 vezes 48."}]
+    },
+    {
+     "texto": "Conte os zeros!",
+     "lousa": [{"t": "contazeros", "ks": [10, 100, 1000]}, {"t": "escreve", "v": "10 tem 1 zero."}, {"t": "escreve", "v": "100 tem 2 zeros."}, {"t": "escreve", "v": "1000 tem 3 zeros."}, {"t": "escreve", "v": "Cada zero = a vírgula anda 1 casa.", "cor": "aviso"}]
+    },
+    {
+     "texto": "Vezes: a vírgula vai para a direita!",
+     "lousa": [{"t": "virgula", "v": "7", "op": "×", "k": 10}]
+    },
+    {
+     "texto": "Dois zeros, dois pulos!",
      "lousa": [{"t": "virgula", "v": "3,5", "op": "×", "k": 100}]
     },
     {
-     "texto": "Para dividir, a vírgula anda para a esquerda. No 48 ela fica escondida no fim, e aparece para pular.",
-     "por_personalidade": {
-      "gato": "Dividir? A vírgula vai para a esquerda. No 48 ela estava escondida no fim, tipo eu atrás do sofá.",
-      "tigre": "DIVIDIR É PARA A ESQUERDA! No 48 a vírgula estava escondida no fim. Agora ela pula!",
-      "capivara": "Para dividir, a vírgula anda para a esquerda. No 48 ela estava quietinha no fim, escondida."
-     },
+     "texto": "Dividir: a vírgula vai para a esquerda!",
      "lousa": [{"t": "virgula", "v": "48", "op": "÷", "k": 10}]
     },
     {
-     "texto": "Se faltar casa, entram zeros na frente: 5 ÷ 100 = 0,05.",
-     "por_personalidade": {
-      "gato": "Faltou casa? Bota zero na frente. 5 ÷ 100 = 0,05. Nem precisei pensar.",
-      "tigre": "FALTOU CASA? ZERO NA FRENTE! 5 ÷ 100 = 0,05!",
-      "capivara": "Se faltar casa, sem problema: entram zeros na frente. 5 ÷ 100 = 0,05."
-     },
+     "texto": "Faltou número? Põe zero!",
      "lousa": [{"t": "virgula", "v": "5", "op": "÷", "k": 100}]
     },
     {
-     "texto": "Resumindo: × manda a vírgula para a direita (o número cresce) e ÷ manda para a esquerda (o número diminui). Cada zero, uma casa.",
-     "por_personalidade": {
-      "gato": "Resumo, que eu não repito: × é direita, ÷ é esquerda. Cada zero, uma casa.",
-      "tigre": "RESUMO DO TREINO: × é DIREITA, ÷ é ESQUERDA! Cada zero, uma casa!",
-      "capivara": "Resumindo com calma: × vai para a direita, ÷ vai para a esquerda. Cada zero, uma casa."
-     },
-     "lousa": [{"t": "linha", "v": "× 10, 100, 1000 → direita"}, {"t": "linha", "v": "÷ 10, 100, 1000 → esquerda"}, {"t": "texto", "v": "1 zero = 1 casa"}]
+     "texto": "Uma conta de cada vez!",
+     "titulo": "Uma conta de cada vez",
+     "lousa": [{"t": "linha", "v": "35 × 10 × 10"}, {"t": "bloco", "titulo": "1º 35 × 10"}, {"t": "virgula", "v": "35", "op": "×", "k": 10}, {"t": "bloco", "titulo": "2º 350 × 10"}, {"t": "virgula", "v": "350", "op": "×", "k": 10}, {"t": "escreve", "v": "× 10 duas vezes é o mesmo que × 100!", "cor": "aviso"}]
     },
     {
-     "texto": "Pegadinha! 25 × 100 não é 25,00. É 2500: no número inteiro, os zeros entram no fim.",
-     "por_personalidade": {
-      "gato": "Pegadinha: 25 × 100 não é 25,00. É 2500. Eu jamais cairia nessa.",
-      "tigre": "ARMADILHA! 25 × 100 NÃO é 25,00! É 2500!",
-      "capivara": "Cuidado: 25 × 100 não é 25,00. É 2500, os zeros entram no fim."
-     },
-     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "25 × 100"}, {"t": "linha", "v": "25,00"}, {"t": "texto", "v": "zeros depois da vírgula não mudam nada"}]}, "dir": {"passos": [{"t": "virgula", "v": "25", "op": "×", "k": 100}]}}, {"t": "texto", "v": "No inteiro, os zeros entram no fim"}]
+     "texto": "Os vezes primeiro, depois o mais!",
+     "titulo": "Duas contas e uma soma",
+     "lousa": [{"t": "linha", "v": "3 × 100 + 4 × 10"}, {"t": "bloco", "titulo": "1º 3 × 100"}, {"t": "virgula", "v": "3", "op": "×", "k": 100}, {"t": "bloco", "titulo": "2º 4 × 10"}, {"t": "virgula", "v": "4", "op": "×", "k": 10}, {"t": "bloco", "titulo": "3º Soma"}, {"t": "expressao", "v": "300 + 40"}]
+    },
+    {
+     "texto": "Vezes direita, dividir esquerda!",
+     "lousa": [{"t": "tabela", "linhas": ["× 10, 100, 1000 → vírgula para a DIREITA → número MAIOR", "÷ 10, 100, 1000 ← vírgula para a ESQUERDA → número MENOR", "1 zero = 1 casa"]}, {"t": "acende", "i": 0, "soma": true, "ms": 1300}, {"t": "acende", "i": 1, "soma": true, "ms": 1300}, {"t": "acende", "i": 2, "soma": true, "ms": 1300}]
+    },
+    {
+     "texto": "Pegadinha: a vírgula tem que andar!",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "25 × 100"}, {"t": "linha", "v": "25,00"}]}, "dir": {"passos": [{"t": "virgula", "v": "25", "op": "×", "k": 100}]}}, {"t": "escreve", "v": "25,00 é o mesmo 25! O zero depois da vírgula não muda nada.", "cor": "errado"}]
     }
    ]
   },
@@ -148,49 +144,37 @@
    "titulo": "Decimais e medidas",
    "paginas": [
     {
-     "texto": "Esta é a escada das medidas. Cada degrau vale 10 vezes o de baixo. Peso e volume têm escadas iguais: kg → g e L → mL.",
-     "por_personalidade": {
-      "gato": "A escada das medidas. Cada degrau vale 10 do de baixo. Peso e volume são iguais. Simples.",
-      "tigre": "A ESCADA DAS MEDIDAS! Cada degrau vale 10 vezes o de baixo! Peso e volume também!",
-      "capivara": "Olha a escada das medidas, com calma. Cada degrau vale 10 vezes o de baixo. Peso e volume têm escadas iguais."
-     },
-     "lousa": [{"t": "escada", "degraus": ["km", "hm", "dam", "m", "dm", "cm", "mm"]}, {"t": "texto", "v": "kg → g · L → mL"}]
+     "texto": "Cada degrau, uma casa da vírgula.",
+     "lousa": [{"t": "escada", "degraus": ["km", "hm", "dam", "m", "dm", "cm", "mm"]}, {"t": "escreve", "v": "Cada degrau vale 10 vezes o de baixo."}, {"t": "escreve", "v": "Descer um degrau = × 10."}, {"t": "escreve", "v": "Subir um degrau = ÷ 10."}, {"t": "escreve", "v": "Peso: kg … g  ·  Líquido: L … mL"}]
     },
     {
-     "texto": "Descer a escada (unidade menor) é multiplicar: a vírgula anda para a direita, uma casa por degrau. De m para cm são 2 degraus.",
-     "por_personalidade": {
-      "gato": "Descer é multiplicar. A vírgula vai para a direita, uma casa por degrau. m para cm: 2 degraus. Pronto.",
-      "tigre": "DESCER É MULTIPLICAR! Vírgula para a direita, uma casa por degrau! m → cm: 2 DEGRAUS!",
-      "capivara": "Descendo devagar: cada degrau, a vírgula anda uma casa para a direita. De m para cm são 2 degraus."
-     },
+     "texto": "Unidade grande, coisa grande!",
+     "lousa": [{"t": "tabela", "linhas": ["km: estrada", "m: sala de aula", "cm: régua", "mm: formiga", "kg: arroz", "g: bala", "L: garrafa de refrigerante", "mL: colher"]}, {"t": "acende", "i": 0, "soma": true, "ms": 600}, {"t": "acende", "i": 1, "soma": true, "ms": 600}, {"t": "acende", "i": 2, "soma": true, "ms": 600}, {"t": "acende", "i": 3, "soma": true, "ms": 600}, {"t": "acende", "i": 4, "soma": true, "ms": 600}, {"t": "acende", "i": 5, "soma": true, "ms": 600}, {"t": "acende", "i": 6, "soma": true, "ms": 600}, {"t": "acende", "i": 7, "soma": true, "ms": 600}]
+    },
+    {
+     "texto": "Desceu? Multiplica!",
      "lousa": [{"t": "escada", "degraus": ["km", "hm", "dam", "m", "dm", "cm", "mm"], "de": "m", "para": "cm", "v": "2,5"}]
     },
     {
-     "texto": "Subir a escada (unidade maior) é dividir: a vírgula anda para a esquerda. De g para kg são 3 degraus.",
-     "por_personalidade": {
-      "gato": "Subir é dividir. A vírgula vai para a esquerda. g para kg: 3 degraus. Até eu subo isso.",
-      "tigre": "SUBIR É DIVIDIR! Vírgula para a esquerda! g → kg: 3 DEGRAUS!",
-      "capivara": "Subindo com calma: a vírgula anda para a esquerda. De g para kg são 3 degraus."
-     },
+     "texto": "Subiu? Divide!",
      "lousa": [{"t": "escada", "degraus": ["kg", "hg", "dag", "g"], "de": "g", "para": "kg", "v": "1500"}]
     },
     {
-     "texto": "Com decimais é igual: a vírgula pula as casas. 3,5 × 10 = 35 e 37 ÷ 10 = 3,7.",
-     "por_personalidade": {
-      "gato": "Decimal não muda nada: a vírgula pula. 3,5 × 10 = 35. 37 ÷ 10 = 3,7.",
-      "tigre": "DECIMAL TAMBÉM! A vírgula pula! 3,5 × 10 = 35 e 37 ÷ 10 = 3,7!",
-      "capivara": "Com decimais é igualzinho: a vírgula pula. 3,5 × 10 = 35 e 37 ÷ 10 = 3,7."
-     },
-     "lousa": [{"t": "virgula", "v": "3,5", "op": "×", "k": 10}, {"t": "pausa", "ms": 700}, {"t": "virgula", "v": "37", "op": "÷", "k": 10}]
+     "texto": "Um degrau, uma casa.",
+     "lousa": [{"t": "escada", "degraus": ["cm", "mm"], "de": "mm", "para": "cm", "v": "37"}]
     },
     {
-     "texto": "Dica de ouro: unidade menor, número maior!",
-     "por_personalidade": {
-      "gato": "Dica de gato: unidade menor, número maior. Anota.",
-      "tigre": "DICA DE CAMPEÃO: UNIDADE MENOR, NÚMERO MAIOR!",
-      "capivara": "Uma dica tranquila: unidade menor, número maior."
-     },
-     "lousa": [{"t": "linha", "v": "1 m = 100 cm"}, {"t": "linha", "v": "1 kg = 1000 g"}, {"t": "linha", "v": "1 L = 1000 mL"}, {"t": "texto", "v": "Unidade menor → número maior"}]
+     "texto": "Unidade menor, número maior!",
+     "lousa": [{"t": "barras", "fr": [[1, 1], [100, 100]], "rotulos": ["1 m", "100 cm"]}, {"t": "linha", "v": "1 kg = 1000 g"}, {"t": "linha", "v": "1 L = 1000 mL"}, {"t": "escreve", "v": "O tamanho é o mesmo!"}, {"t": "escreve", "v": "Em cm, o número fica maior porque o cm é pequeno."}]
+    },
+    {
+     "texto": "Conte os degraus!",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "2,5 m"}, {"t": "linha", "v": "só 1 casa"}, {"t": "linha", "v": "25 cm"}]}, "dir": {"passos": [{"t": "escada", "degraus": ["km", "hm", "dam", "m", "dm", "cm", "mm"], "de": "m", "para": "cm", "v": "2,5"}]}}, {"t": "escreve", "v": "m → cm são 2 degraus: a vírgula anda 2 casas, não 1.", "cor": "errado"}]
+    },
+    {
+     "texto": "Dinheiro: duas casas depois da vírgula!",
+     "titulo": "Dinheiro tem sempre 2 casas",
+     "lousa": [{"t": "linha", "v": "R$ 0,25 × 10"}, {"t": "virgula", "v": "0,25", "op": "×", "k": 10}, {"t": "zeros", "v": "2,5", "n": 1}, {"t": "linha", "v": "R$ 2,50", "classe": "certo"}, {"t": "escreve", "v": "No dinheiro, escrevemos sempre 2 casas depois da vírgula."}, {"t": "escreve", "v": "2,5 = 2,50. Zero no fim não muda o valor, só deixa do jeito do dinheiro."}]
     }
    ]
   },
@@ -198,58 +182,53 @@
    "titulo": "Negativos: comparar, somar e subtrair",
    "paginas": [
     {
-     "texto": "Esta é a reta numérica, com o 0 no meio. Quanto mais à esquerda, menor o número.",
-     "por_personalidade": {
-      "gato": "A reta numérica. O 0 no meio. Mais à esquerda, menor. Até um gato entende.",
-      "tigre": "A RETA NUMÉRICA! O 0 no meio! Mais à ESQUERDA, MENOR!",
-      "capivara": "Olha a reta numérica, com o 0 no meio. Quanto mais à esquerda, menor o número."
-     },
-     "lousa": [{"t": "reta", "min": -10, "max": 10}, {"t": "texto", "v": "← menor · maior →"}]
+     "texto": "Negativo é abaixo do zero!",
+     "titulo": "O que é número negativo",
+     "lousa": [{"t": "escreve", "v": "Negativo é o que fica abaixo do zero."}, {"t": "linha", "v": "🌡️ −3 °C"}, {"t": "escreve", "v": "Frio abaixo de zero: −3 graus."}, {"t": "linha", "v": "🏢 andar −1 (garagem)"}, {"t": "escreve", "v": "Garagem embaixo do térreo: andar −1."}, {"t": "linha", "v": "🏦 −R$ 10"}, {"t": "escreve", "v": "Devendo dinheiro: −10 reais."}, {"t": "lese", "s": "−5", "v": "menos cinco"}]
     },
     {
-     "texto": "Para comparar −5 e −2, olhe na reta: o mais à esquerda é o menor. −5 < −2.",
-     "por_personalidade": {
-      "gato": "−5 ou −2? Olha a reta: o mais à esquerda é menor. −5 < −2. Óbvio.",
-      "tigre": "−5 OU −2? O mais à esquerda PERDE! −5 < −2!",
-      "capivara": "Para comparar −5 e −2, com calma, olhe na reta: o mais à esquerda é o menor. −5 < −2."
-     },
-     "lousa": [{"t": "reta", "bolas": [-5, -2], "destaca": "menor", "min": -10, "max": 10}, {"t": "linha", "v": "−5 < −2"}]
+     "texto": "O menos tem dois trabalhos!",
+     "titulo": "O − tem dois trabalhos",
+     "lousa": [{"t": "linha", "v": "−5"}, {"t": "escreve", "v": "Grudado no número, o − diz que ele é negativo."}, {"t": "linha", "v": "8 − 3"}, {"t": "escreve", "v": "Entre dois números, o − é a conta de menos."}, {"t": "linha", "v": "4 − (−3)"}, {"t": "escreve", "v": "Por isso o negativo vem entre parênteses: 4 − (−3)."}]
     },
     {
-     "texto": "Somar um positivo é andar para a direita. −5 + 8: sai do −5 e anda 8 casinhas. Chega no 3.",
-     "por_personalidade": {
-      "gato": "Somar positivo é ir para a direita. −5 + 8: anda 8 casinhas. Dá 3. Contei pra você.",
-      "tigre": "SOMAR POSITIVO É IR PARA A DIREITA! −5 + 8: ANDA 8! Chegou no 3!",
-      "capivara": "Somar um positivo é andar para a direita, devagarinho. −5 + 8: anda 8 casinhas e chega no 3."
-     },
-     "lousa": [{"t": "linha", "v": "−5 + 8"}, {"t": "reta", "de": -5, "anda": [8], "min": -10, "max": 10}, {"t": "linha", "v": "−5 + 8 = 3", "classe": "certo"}]
+     "texto": "Na reta, mais à esquerda é menor.",
+     "lousa": [{"t": "reta", "min": -10, "max": 10}, {"t": "texto", "v": "← menor · maior →"}, {"t": "escreve", "v": "Na reta, os números crescem para a direita."}, {"t": "escreve", "v": "Mais à esquerda = menor."}]
     },
     {
-     "texto": "Somar um negativo é andar para a esquerda. −3 + (−4) = −7. Sinais iguais: soma e mantém o sinal.",
-     "por_personalidade": {
-      "gato": "Somar negativo é ir para a esquerda. −3 + (−4) = −7. Sinais iguais: soma e mantém o sinal.",
-      "tigre": "SOMAR NEGATIVO É IR PARA A ESQUERDA! −3 + (−4) = −7! Sinais iguais: SOMA E MANTÉM!",
-      "capivara": "Somar um negativo é andar para a esquerda. −3 + (−4) = −7. Sinais iguais: soma e mantém o sinal."
-     },
-     "lousa": [{"t": "linha", "v": "−3 + (−4)"}, {"t": "reta", "de": -3, "anda": [-4], "min": -10, "max": 10}, {"t": "linha", "v": "−3 + (−4) = −7", "classe": "certo"}, {"t": "texto", "v": "Sinais iguais: soma e mantém o sinal"}]
+     "texto": "Mais à esquerda na reta: é o menor!",
+     "lousa": [{"t": "reta", "bolas": [-5, -2], "destaca": "menor", "min": -10, "max": 10}, {"t": "linha", "v": "−5 < −2"}, {"t": "escreve", "v": "−5 está mais à esquerda que −2."}, {"t": "escreve", "v": "Então −5 < −2.", "cor": "certo"}]
     },
     {
-     "texto": "Sinais diferentes: subtrai e fica o sinal do maior. −8 + 5: 8 − 5 = 3, fica o sinal do 8: −3. Somar tudo e dar −13 está errado!",
-     "por_personalidade": {
-      "gato": "Sinais diferentes: subtrai e fica o sinal do maior. 8 − 5 = 3, o 8 manda: −3. Quem soma tudo e dá −13… não sou eu.",
-      "tigre": "SINAIS DIFERENTES: SUBTRAI e fica o sinal do MAIOR! 8 − 5 = 3: −3! −13 é ERRADO!",
-      "capivara": "Sinais diferentes: subtrai, e fica o sinal do maior. 8 − 5 = 3, fica o sinal do 8: −3. Somar tudo, −13, está errado."
-     },
-     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "−8 + 5"}, {"t": "linha", "v": "−(8 + 5)"}, {"t": "linha", "v": "−13"}, {"t": "texto", "v": "somou e manteve o sinal"}]}, "dir": {"passos": [{"t": "linha", "v": "−8 + 5"}, {"t": "reta", "de": -8, "anda": [5], "min": -9, "max": 1}, {"t": "linha", "v": "−3"}, {"t": "texto", "v": "8 − 5 = 3, fica o sinal do 8"}]}}]
+     "texto": "A boca abre para o maior!",
+     "titulo": "< e >",
+     "lousa": [{"t": "lese", "s": "<", "v": "menor que"}, {"t": "lese", "s": ">", "v": "maior que"}, {"t": "linha", "v": "2 < 7"}, {"t": "linha", "v": "7 > 2"}, {"t": "escreve", "v": "A boca abre para o maior número."}, {"t": "linha", "v": "−5 < −2"}, {"t": "escreve", "v": "−5 < −2: na reta, −5 está mais à esquerda."}]
     },
     {
-     "texto": "Subtrair é somar o oposto: − (−3) vira + 3. Então 4 − (−3) = 4 + 3 = 7.",
-     "por_personalidade": {
-      "gato": "Subtrair negativo? Vira soma. − (−3) é + 3. 4 − (−3) = 7. Menos com menos, mais.",
-      "tigre": "SUBTRAIR É SOMAR O OPOSTO! − (−3) VIRA + 3! 4 − (−3) = 7!",
-      "capivara": "Subtrair é somar o oposto: − (−3) vira + 3. Então 4 − (−3) = 4 + 3 = 7."
-     },
-     "lousa": [{"t": "linha", "v": "4 − (−3)"}, {"t": "marca", "v": "− (−3)"}, {"t": "resolve", "v": "+ 3", "linha": "4 + 3"}, {"t": "marca", "v": "4 + 3"}, {"t": "resolve", "v": "7", "linha": "7"}, {"t": "texto", "v": "− (−) vira +"}]
+     "texto": "+ positivo: anda para a direita.",
+     "lousa": [{"t": "linha", "v": "−5 + 8"}, {"t": "reta", "de": -5, "anda": [8], "min": -10, "max": 10}, {"t": "linha", "v": "−5 + 8 = 3", "classe": "certo"}, {"t": "escreve", "v": "+ 8: anda 8 casinhas para a direita.", "n": true}, {"t": "escreve", "v": "−5 + 8 = 3", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "+ negativo: anda para a esquerda.",
+     "lousa": [{"t": "linha", "v": "−3 + (−4)"}, {"t": "reta", "de": -3, "anda": [-4], "min": -10, "max": 10}, {"t": "linha", "v": "−3 + (−4) = −7", "classe": "certo"}, {"t": "texto", "v": "Sinais iguais: soma e mantém o sinal"}, {"t": "escreve", "v": "+ (−4): anda 4 casinhas para a esquerda.", "n": true}, {"t": "escreve", "v": "−3 + (−4) = −7", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "Sinais diferentes: subtrai e fica o sinal do maior.",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "−8 + 5"}, {"t": "linha", "v": "−(8 + 5)"}, {"t": "linha", "v": "−13"}, {"t": "texto", "v": "somou e manteve o sinal"}]}, "dir": {"passos": [{"t": "linha", "v": "−8 + 5"}, {"t": "reta", "de": -8, "anda": [5], "min": -9, "max": 1}, {"t": "linha", "v": "−3"}, {"t": "texto", "v": "Sinais diferentes: subtrai"}]}}, {"t": "escreve", "v": "Sinais diferentes: 8 − 5 = 3, fica o sinal do 8: −3", "cor": "certo"}, {"t": "escreve", "v": "Somar tudo e dar −13 está errado!", "cor": "errado"}]
+    },
+    {
+     "texto": "Tirou mais do que tinha? Ficou negativo!",
+     "titulo": "Menos o maior: fica negativo",
+     "lousa": [{"t": "linha", "v": "3 − 8"}, {"t": "escreve", "v": "Tenho 3 e tiro 8."}, {"t": "reta", "de": 3, "anda": [-8], "min": -6, "max": 4}, {"t": "escreve", "v": "Andando 8 para a esquerda, passo do zero."}, {"t": "linha", "v": "3 − 8 = −5", "classe": "certo"}]
+    },
+    {
+     "texto": "Negativo menos: vai mais para a esquerda!",
+     "titulo": "Dois para a esquerda",
+     "lousa": [{"t": "linha", "v": "−5 − 3"}, {"t": "escreve", "v": "Já estou no −5."}, {"t": "reta", "de": -5, "anda": [-3], "min": -10, "max": 1}, {"t": "escreve", "v": "Menos 3: ando mais 3 para a esquerda."}, {"t": "linha", "v": "−5 − 3 = −8", "classe": "certo"}]
+    },
+    {
+     "texto": "Menos com menos vira mais!",
+     "lousa": [{"t": "linha", "v": "4 − (−3)"}, {"t": "marca", "v": "− (−3)"}, {"t": "resolve", "v": "+ 3", "linha": "4 + 3"}, {"t": "marca", "v": "4 + 3"}, {"t": "resolve", "v": "7", "linha": "7"}, {"t": "texto", "v": "− (−) vira +"}, {"t": "escreve", "v": "− (−3) vira + 3.", "n": true}, {"t": "escreve", "v": "4 + 3 = 7", "cor": "certo", "n": true}]
     }
    ]
   },
@@ -257,40 +236,45 @@
    "titulo": "Negativos: multiplicar e dividir",
    "paginas": [
     {
-     "texto": "Na multiplicação e na divisão, primeiro decida o sinal. Sinais iguais dão +, sinais diferentes dão −.",
-     "por_personalidade": {
-      "gato": "Primeiro o sinal, depois a conta. Iguais dão +, diferentes dão −. Decora.",
-      "tigre": "PRIMEIRO O SINAL! IGUAIS dão +, DIFERENTES dão −!",
-      "capivara": "Primeiro, com calma, decida o sinal. Sinais iguais dão +, sinais diferentes dão −."
-     },
-     "lousa": [{"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "texto", "v": "iguais → + · diferentes → −"}]
+     "texto": "Sem sinal? É positivo!",
+     "titulo": "O + escondido",
+     "lousa": [{"t": "linha", "v": "5"}, {"t": "linha", "v": "5 = +5", "classe": "certo"}, {"t": "escreve", "v": "Número sem sinal é positivo."}, {"t": "escreve", "v": "O + está escondido na frente: 5 = +5."}]
     },
     {
-     "texto": "(−4) × (−5): sinais iguais, dá positivo. Depois 4 × 5 = 20. Resposta: +20.",
-     "por_personalidade": {
-      "gato": "(−4) × (−5): sinais iguais, positivo. 4 × 5 = 20. Então +20. Fácil.",
-      "tigre": "(−4) × (−5): SINAIS IGUAIS, POSITIVO! 4 × 5 = 20: +20!",
-      "capivara": "(−4) × (−5): sinais iguais, então positivo. Depois 4 × 5 = 20. Fica +20."
-     },
-     "lousa": [{"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "acende", "i": 1}, {"t": "linha", "v": "4 × 5 = 20"}, {"t": "linha", "v": "(−4) × (−5) = +20", "classe": "certo"}]
+     "texto": "Primeiro o sinal: iguais +, diferentes −.",
+     "lousa": [{"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "texto", "v": "iguais → + · diferentes → −"}, {"t": "escreve", "v": "Sinais iguais: dá +."}, {"t": "escreve", "v": "Sinais diferentes: dá −."}]
     },
     {
-     "texto": "5 × (−2): sinais diferentes, dá negativo. 5 × 2 = 10, então −10.",
-     "por_personalidade": {
-      "gato": "5 × (−2): sinais diferentes, negativo. 5 × 2 = 10. Então −10.",
-      "tigre": "5 × (−2): SINAIS DIFERENTES, NEGATIVO! 5 × 2 = 10: −10!",
-      "capivara": "5 × (−2): sinais diferentes, então negativo. 5 × 2 = 10, fica −10."
-     },
-     "lousa": [{"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "acende", "i": 2}, {"t": "linha", "v": "5 × 2 = 10"}, {"t": "linha", "v": "5 × (−2) = −10", "classe": "certo"}]
+     "texto": "− com −: dá +!",
+     "lousa": [{"t": "bloco", "titulo": "1º O sinal"}, {"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "acende", "i": 1}, {"t": "escreve", "v": "− com − dá +."}, {"t": "bloco", "titulo": "2º A conta"}, {"t": "tabuada", "op": "×", "a": 4, "b": 5}, {"t": "linha", "v": "4 × 5 = 20"}, {"t": "bloco", "titulo": "3º Junta"}, {"t": "linha", "v": "(−4) × (−5) = +20", "classe": "certo"}]
     },
     {
-     "texto": "Na divisão é igual: (−12) ÷ 3, sinais diferentes, dá negativo. 12 ÷ 3 = 4, então −4.",
-     "por_personalidade": {
-      "gato": "Divisão? Mesma regra. (−12) ÷ 3: diferentes, negativo. −4. Viu como é fácil?",
-      "tigre": "NA DIVISÃO É IGUAL! (−12) ÷ 3: DIFERENTES, NEGATIVO! −4!",
-      "capivara": "Na divisão é igualzinho: (−12) ÷ 3, sinais diferentes, negativo. 12 ÷ 3 = 4, fica −4."
-     },
-     "lousa": [{"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "acende", "i": 3}, {"t": "linha", "v": "12 ÷ 3 = 4"}, {"t": "linha", "v": "(−12) ÷ 3 = −4", "classe": "certo"}]
+     "texto": "+ com −: dá −!",
+     "lousa": [{"t": "bloco", "titulo": "1º O sinal"}, {"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "acende", "i": 2}, {"t": "escreve", "v": "+ com − dá −."}, {"t": "bloco", "titulo": "2º A conta"}, {"t": "tabuada", "op": "×", "a": 5, "b": 2}, {"t": "linha", "v": "5 × 2 = 10"}, {"t": "bloco", "titulo": "3º Junta"}, {"t": "linha", "v": "5 × (−2) = −10", "classe": "certo"}]
+    },
+    {
+     "texto": "Na divisão é igualzinho.",
+     "lousa": [{"t": "bloco", "titulo": "1º O sinal"}, {"t": "tabela", "linhas": ["+ · + = +", "− · − = +", "+ · − = −", "− · + = −"]}, {"t": "acende", "i": 3}, {"t": "escreve", "v": "− com + dá −."}, {"t": "bloco", "titulo": "2º A conta"}, {"t": "tabuada", "op": "÷", "a": 12, "b": 3}, {"t": "linha", "v": "12 ÷ 3 = 4"}, {"t": "bloco", "titulo": "3º Junta"}, {"t": "linha", "v": "(−12) ÷ 3 = −4", "classe": "certo"}]
+    },
+    {
+     "texto": "Vezes zero? Zero!",
+     "titulo": "Vezes zero dá zero",
+     "lousa": [{"t": "linha", "v": "(−7) × 0"}, {"t": "linha", "v": "(−7) × 0 = 0", "classe": "certo"}, {"t": "linha", "v": "0 caixas de 7 balas = 0 balas"}, {"t": "escreve", "v": "Qualquer número vezes zero dá zero."}, {"t": "escreve", "v": "Zero não tem sinal: nem + nem −."}]
+    },
+    {
+     "texto": "Par de menos vira mais!",
+     "titulo": "Três números: conta os −",
+     "lousa": [{"t": "linha", "v": "(−2) × (−3) × (−1)"}, {"t": "bloco", "titulo": "1º O sinal"}, {"t": "escreve", "v": "Conta quantos − tem: 3."}, {"t": "linha", "v": "(−)(−) → +   e sobra um (−)"}, {"t": "escreve", "v": "Cada par de − vira +. Sobrou um −: o resultado é negativo."}, {"t": "bloco", "titulo": "2º A conta"}, {"t": "expressao", "v": "2 × 3 × 1"}, {"t": "bloco", "titulo": "3º Junta"}, {"t": "linha", "v": "(−2) × (−3) × (−1) = −6", "classe": "certo"}]
+    },
+    {
+     "texto": "Menos com menos dá mais só no × e no ÷!",
+     "titulo": "Pegadinha: na soma é diferente",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "−3 + (−4)"}, {"t": "linha", "v": "+7"}]}, "dir": {"passos": [{"t": "linha", "v": "−3 + (−4)"}, {"t": "reta", "de": -3, "anda": [-4], "min": -8, "max": 1}, {"t": "linha", "v": "−7"}]}}, {"t": "escreve", "v": "Na soma, usa a reta: −3 + (−4) = −7.", "cor": "certo"}, {"t": "escreve", "v": "Menos com menos dá mais é só no × e no ÷!", "cor": "errado"}]
+    },
+    {
+     "texto": "Primeiro o ÷, depois a soma!",
+     "titulo": "Expressão com negativos",
+     "lousa": [{"t": "linha", "v": "(−12) ÷ 3 + 5"}, {"t": "bloco", "titulo": "1º O ÷ primeiro, com o sinal"}, {"t": "escreve", "v": "− com + dá −."}, {"t": "tabuada", "op": "÷", "a": 12, "b": 3}, {"t": "linha", "v": "(−12) ÷ 3 = −4"}, {"t": "bloco", "titulo": "2º A soma, na reta"}, {"t": "linha", "v": "−4 + 5"}, {"t": "reta", "de": -4, "anda": [5], "min": -6, "max": 3}, {"t": "linha", "v": "(−12) ÷ 3 + 5 = 1", "classe": "certo"}]
     }
    ]
   },
@@ -298,76 +282,51 @@
    "titulo": "Frações",
    "paginas": [
     {
-     "texto": "Fração é um inteiro dividido em partes iguais. Esta barra foi dividida em 4 partes e 1 está pintada: 1/4. Em cima, as partes pintadas; embaixo, em quantas partes o inteiro foi dividido.",
-     "por_personalidade": {
-      "gato": "Fração? Um inteiro em partes iguais. 4 partes, 1 pintada: 1/4. Em cima as pintadas, embaixo o total de partes. Simples.",
-      "tigre": "FRAÇÃO, CAMPEÃO! Inteiro em PARTES IGUAIS! 4 partes, 1 pintada: 1/4! Em cima as pintadas, embaixo o total!",
-      "capivara": "Com calma: fração é um inteiro dividido em partes iguais. 4 partes, 1 pintada: 1/4. Em cima, as pintadas; embaixo, quantas partes ao todo."
-     },
-     "lousa": [{"t": "barras", "fr": [[1, 4]], "rotulos": [""]}, {"t": "fracao", "p": 1, "q": 4, "explica": true}]
+     "texto": "Em cima: pintadas. Embaixo: partes do inteiro.",
+     "lousa": [{"t": "barras", "fr": [[1, 4]], "rotulos": [""]}, {"t": "fracao", "p": 1, "q": 4, "explica": true}, {"t": "escreve", "v": "Embaixo: em quantas partes iguais o inteiro foi dividido (4)."}, {"t": "escreve", "v": "Em cima: quantas partes estão pintadas (1)."}, {"t": "escreve", "v": "1/4 = 1 parte de 4.", "cor": "certo"}]
     },
     {
-     "texto": "Frações equivalentes valem o mesmo. Multiplique em cima e embaixo pelo mesmo número: 1/2 com × 2 vira 2/4, e com × 2 de novo vira 4/8. Nas barras, a parte pintada é do mesmo tamanho!",
-     "por_personalidade": {
-      "gato": "Equivalente é fração disfarçada. × 2 em cima e embaixo: 1/2 = 2/4 = 4/8. Olha as barras: o mesmo tanto pintado.",
-      "tigre": "MESMO VALOR, OUTRA ROUPA! × 2 em cima E embaixo: 1/2 = 2/4 = 4/8! As barras não mentem!",
-      "capivara": "Frações equivalentes valem o mesmo. Multiplique em cima e embaixo pelo mesmo número: 1/2 = 2/4 = 4/8. Repara nas barras: o mesmo tanto pintado."
-     },
-     "lousa": [{"t": "fracoes", "fr": [[1, 2], [2, 4], [4, 8]], "op": "×"}, {"t": "barras", "fr": [[1, 2], [2, 4], [4, 8]]}, {"t": "texto", "v": "em cima e embaixo, o mesmo ×"}]
+     "texto": "Embaixo, o nome; em cima, quantos!",
+     "titulo": "Como se lê",
+     "lousa": [{"t": "barras", "fr": [[1, 2], [1, 3], [1, 4], [3, 4], [2, 5], [7, 10]], "rotulos": ["1/2 um meio", "1/3 um terço", "1/4 um quarto", "3/4 três quartos", "2/5 dois quintos", "7/10 sete décimos"]}, {"t": "lese", "s": "1/4", "v": "um quarto"}, {"t": "escreve", "v": "O de baixo diz o nome do pedaço."}, {"t": "escreve", "v": "O de cima diz quantos pedaços."}]
     },
     {
-     "texto": "Para simplificar, divida em cima e embaixo pelo mesmo número até não dar mais: 6/12 com ÷ 2 vira 3/6, e com ÷ 3 vira 1/2.",
-     "por_personalidade": {
-      "gato": "Simplificar é deixar a fração magrinha. ÷ 2: 6/12 = 3/6. ÷ 3: 3/6 = 1/2. Não dá mais? Acabou.",
-      "tigre": "SIMPLIFICA! ÷ 2 em cima e embaixo: 3/6! ÷ 3: 1/2! Até não dar mais!",
-      "capivara": "Para simplificar, divida em cima e embaixo pelo mesmo número, devagarinho: 6/12 ÷ 2 = 3/6, e 3/6 ÷ 3 = 1/2."
-     },
-     "lousa": [{"t": "fracoes", "fr": [[6, 12], [3, 6], [1, 2]], "op": "÷", "k": [2, 3]}, {"t": "barras", "fr": [[6, 12], [1, 2]]}, {"t": "texto", "v": "divida até não dar mais"}]
+     "texto": "× em cima e embaixo: vale o mesmo!",
+     "lousa": [{"t": "fracoes", "fr": [[1, 2], [2, 4], [4, 8]], "op": "×"}, {"t": "barras", "fr": [[1, 2], [2, 4], [4, 8]]}, {"t": "texto", "v": "em cima e embaixo, o mesmo ×"}, {"t": "escreve", "v": "1/2 com × 2 em cima e embaixo = 2/4", "n": true}, {"t": "escreve", "v": "2/4 com × 2 em cima e embaixo = 4/8", "n": true}, {"t": "escreve", "v": "As barras mostram: é o mesmo tanto!", "cor": "certo"}]
     },
     {
-     "texto": "Com o mesmo número embaixo, some só os de cima e repita o de baixo: 1/5 + 2/5 = 3/5. Cuidado: somar os de baixo também e dar 3/10 está errado!",
-     "por_personalidade": {
-      "gato": "Mesmo de baixo? Soma só os de cima: 1/5 + 2/5 = 3/5. Quem soma o de baixo e acha 3/10… não estudou comigo.",
-      "tigre": "MESMO DE BAIXO: SOMA SÓ OS DE CIMA! 1/5 + 2/5 = 3/5! 3/10 é ERRADO!",
-      "capivara": "Com o mesmo número embaixo, some só os de cima e repita o de baixo: 1/5 + 2/5 = 3/5. Somar o de baixo também, 3/10, está errado."
-     },
-     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "1/5 + 2/5"}, {"t": "texto", "v": "somou os de baixo também"}, {"t": "linha", "v": "3/10"}]}, "dir": {"passos": [{"t": "linha", "v": "1/5 + 2/5"}, {"t": "barras", "fr": [[1, 5], [2, 5], [3, 5]]}, {"t": "linha", "v": "3/5"}]}}, {"t": "texto", "v": "o de baixo fica: 5"}]
+     "texto": "Simplificar: ÷ em cima e embaixo.",
+     "lousa": [{"t": "bloco", "titulo": "1º Acha um número que divide os dois"}, {"t": "tabuada", "b": 2, "procura": [6, 12]}, {"t": "escreve", "v": "6 e 12 estão na tabuada do 2? Sim! Divide os dois por 2."}, {"t": "bloco", "titulo": "2º Divide em cima e embaixo"}, {"t": "fracoes", "fr": [[6, 12], [3, 6], [1, 2]], "op": "÷", "k": [2, 3]}, {"t": "barras", "fr": [[6, 12], [1, 2]]}, {"t": "texto", "v": "divida até não dar mais"}, {"t": "escreve", "v": "6/12 com ÷ 2 em cima e embaixo = 3/6", "n": true}, {"t": "escreve", "v": "3/6 com ÷ 3 em cima e embaixo = 1/2", "n": true}, {"t": "escreve", "v": "6/12 = 1/2", "cor": "certo", "n": true}]
     },
     {
-     "texto": "Na subtração é igual: 5/6 − 1/6 = 4/6, o de baixo fica. E o resultado ainda simplifica: 4/6 com ÷ 2 vira 2/3.",
-     "por_personalidade": {
-      "gato": "Subtração, mesma regra: 5/6 − 1/6 = 4/6. E simplifica: ÷ 2, dá 2/3. Elegante, tipo eu.",
-      "tigre": "SUBTRAÇÃO, MESMA REGRA! 5/6 − 1/6 = 4/6! E SIMPLIFICA: ÷ 2 = 2/3!",
-      "capivara": "Na subtração é igualzinho: 5/6 − 1/6 = 4/6, o de baixo fica. E ainda dá para simplificar: 4/6 ÷ 2 = 2/3."
-     },
-     "lousa": [{"t": "linha", "v": "5/6 − 1/6"}, {"t": "linha", "v": "5/6 − 1/6 = 4/6"}, {"t": "fracoes", "fr": [[4, 6], [2, 3]], "op": "÷"}, {"t": "texto", "v": "4/6 = 2/3"}]
+     "texto": "Mesmo embaixo? Soma só os de cima.",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "1/5 + 2/5"}, {"t": "texto", "v": "somou os de baixo também"}, {"t": "linha", "v": "3/10"}]}, "dir": {"passos": [{"t": "linha", "v": "1/5 + 2/5"}, {"t": "barras", "fr": [[1, 5], [2, 5], [3, 5]]}, {"t": "linha", "v": "3/5"}]}}, {"t": "texto", "v": "O de baixo fica igual"}, {"t": "escreve", "v": "O de baixo fica igual: 1 + 2 = 3 → 3/5", "cor": "certo"}, {"t": "escreve", "v": "Somar os de baixo também (3/10) está errado!", "cor": "errado"}]
     },
     {
-     "texto": "1/4 de 20: separe as 20 bolachas em 4 grupos iguais. 20 ÷ 4 = 5: cada grupo tem 5. Um grupo, 5.",
-     "por_personalidade": {
-      "gato": "1/4 de 20? Divide em 4 grupos: 20 ÷ 4 = 5. Um grupo, 5. Eu comeria os 4.",
-      "tigre": "1/4 DE 20! 4 GRUPOS IGUAIS: 20 ÷ 4 = 5! Um grupo: 5!",
-      "capivara": "1/4 de 20: separe as 20 em 4 grupos iguais, com calma. 20 ÷ 4 = 5. Um grupo tem 5."
-     },
-     "lousa": [{"t": "figura", "figura": {"tipo": "parte_de", "num": 1, "den": 4, "total": 20}}, {"t": "linha", "v": "20 ÷ 4 = 5", "classe": "certo"}]
+     "texto": "Subtrai em cima e simplifica.",
+     "lousa": [{"t": "linha", "v": "5/6 − 1/6"}, {"t": "linha", "v": "5/6 − 1/6 = 4/6"}, {"t": "fracoes", "fr": [[4, 6], [2, 3]], "op": "÷"}, {"t": "texto", "v": "Depois simplifica"}, {"t": "escreve", "v": "O de baixo fica: 5 − 1 = 4 → 4/6", "n": true}, {"t": "escreve", "v": "Simplifica com ÷ 2: 4/6 = 2/3", "cor": "certo", "n": true}]
     },
     {
-     "texto": "E 3/4 de 20? São 3 grupos: divida pelo de baixo e multiplique pelo de cima. 20 ÷ 4 = 5 e 5 × 3 = 15.",
-     "por_personalidade": {
-      "gato": "3/4 de 20: 3 grupos de 5. 20 ÷ 4 × 3 = 15. Divide pelo de baixo, multiplica pelo de cima.",
-      "tigre": "3/4 DE 20: 3 GRUPOS! 20 ÷ 4 = 5, 5 × 3 = 15! DIVIDE E MULTIPLICA!",
-      "capivara": "3/4 de 20 são 3 grupos. Divida pelo de baixo e multiplique pelo de cima: 20 ÷ 4 = 5 e 5 × 3 = 15."
-     },
-     "lousa": [{"t": "figura", "figura": {"tipo": "parte_de", "num": 3, "den": 4, "total": 20}}, {"t": "expressao", "v": "20 ÷ 4 × 3"}]
+     "texto": "Embaixo diferente? Iguala primeiro!",
+     "titulo": "Embaixo diferente? Iguala primeiro!",
+     "lousa": [{"t": "linha", "v": "1/2 + 1/4"}, {"t": "barras", "fr": [[1, 2], [1, 4]]}, {"t": "escreve", "v": "Pedaços de tamanhos diferentes não somam direto."}, {"t": "bloco", "titulo": "1º Procura o 4 na tabuada do 2"}, {"t": "tabuada", "b": 2, "procura": [4]}, {"t": "escreve", "v": "Quero o 2 virando 4: 2 × 2 = 4."}, {"t": "bloco", "titulo": "2º Multiplica em cima e embaixo"}, {"t": "fracoes", "fr": [[1, 2], [2, 4]], "op": "×"}, {"t": "barras", "fr": [[1, 2], [2, 4]]}, {"t": "escreve", "v": "O que faz embaixo, faz em cima: 1/2 = 2/4."}]
     },
     {
-     "texto": "Para comparar frações com o 1 em cima: quanto menos partes, maior cada pedaço. 1/3 é maior que 1/5.",
-     "por_personalidade": {
-      "gato": "Com o 1 em cima, menos partes = pedaço maior. 1/3 > 1/5. Eu escolho sempre o maior pedaço.",
-      "tigre": "1 EM CIMA: MENOS PARTES, PEDAÇO MAIOR! 1/3 > 1/5!",
-      "capivara": "Com o 1 em cima, quanto menos partes, maior cada pedaço. Repara: 1/3 é maior que 1/5."
-     },
-     "lousa": [{"t": "figura", "figura": {"tipo": "compara_fracoes", "fracoes": [[1, 3], [1, 5]]}}, {"t": "linha", "v": "1/3 > 1/5", "classe": "certo"}]
+     "texto": "Agora sim: soma os de cima!",
+     "titulo": "Agora soma",
+     "lousa": [{"t": "linha", "v": "2/4 + 1/4"}, {"t": "barras", "fr": [[2, 4], [1, 4], [3, 4]]}, {"t": "escreve", "v": "Agora os de baixo são iguais."}, {"t": "escreve", "v": "Soma só os de cima: 2 + 1 = 3."}, {"t": "linha", "v": "1/2 + 1/4 = 3/4", "classe": "certo"}]
+    },
+    {
+     "texto": "Fração de um número: divide pelo de baixo.",
+     "lousa": [{"t": "figura", "figura": {"tipo": "parte_de", "num": 1, "den": 4, "total": 20}}, {"t": "tabuada", "op": "÷", "a": 20, "b": 4}, {"t": "linha", "v": "20 ÷ 4 = 5", "classe": "certo"}, {"t": "escreve", "v": "1/4 de 20: separa 20 em 4 grupos iguais.", "n": true}, {"t": "escreve", "v": "20 ÷ 4 = 5", "cor": "certo", "n": true}, {"t": "linha", "v": "metade de 20 = 1/2 de 20 = 20 ÷ 2"}, {"t": "escreve", "v": "Metade de 20 = 1/2 de 20 = 20 ÷ 2 = 10."}]
+    },
+    {
+     "texto": "Divide pelo de baixo, multiplica pelo de cima.",
+     "lousa": [{"t": "escreve", "v": "3/4 de 20: divide pelo de baixo (4) e multiplica pelo de cima (3)."}, {"t": "figura", "figura": {"tipo": "parte_de", "num": 3, "den": 4, "total": 20}}, {"t": "expressao", "v": "20 ÷ 4 × 3"}]
+    },
+    {
+     "texto": "Mais partes, pedaço menor!",
+     "lousa": [{"t": "figura", "figura": {"tipo": "compara_fracoes", "fracoes": [[1, 3], [1, 5]]}}, {"t": "linha", "v": "1/3 > 1/5", "classe": "certo"}, {"t": "escreve", "v": "1/3: o inteiro dividido em 3 pedaços."}, {"t": "escreve", "v": "1/5: dividido em 5 pedaços, menores."}, {"t": "escreve", "v": "1/3 > 1/5", "cor": "certo"}]
     }
    ]
   },
@@ -375,85 +334,481 @@
    "titulo": "Decimais",
    "paginas": [
     {
-     "texto": "Vírgula embaixo de vírgula! 1,3 + 4,1: arma a conta com as vírgulas alinhadas e soma coluna por coluna: 5,4. Quem esquece a vírgula acha 54, e erra.",
-     "por_personalidade": {
-      "gato": "Vírgula embaixo de vírgula. 1,3 + 4,1 = 5,4. Quem esquece a vírgula acha 54. Vergonhoso.",
-      "tigre": "VÍRGULA EMBAIXO DE VÍRGULA! 1,3 + 4,1 = 5,4! Sem a vírgula dá 54: ERRADO!",
-      "capivara": "Vírgula embaixo de vírgula, com calma: 1,3 + 4,1, coluna por coluna, dá 5,4. Sem a vírgula, 54, está errado."
-     },
-     "lousa": [{"t": "compara", "esq": {"titulo": "✖ vírgula fora do lugar", "passos": [{"t": "armada", "a": "1,3", "op": "+", "b": "4,1", "sem_virgula": true}, {"t": "texto", "v": "esqueceu a vírgula"}]}, "dir": {"passos": [{"t": "armada", "a": "1,3", "op": "+", "b": "4,1"}]}}]
+     "texto": "A vírgula separa inteiros e pedaços.",
+     "lousa": [{"t": "linha", "v": "2,5"}, {"t": "barras", "fr": [[10, 10], [10, 10], [5, 10]], "rotulos": ["1", "1", "5 de 10"]}, {"t": "escreve", "v": "Antes da vírgula: inteiros."}, {"t": "escreve", "v": "Depois da vírgula: pedaços do inteiro."}, {"t": "escreve", "v": "2,5 = 2 inteiros e 5 pedaços de 10."}]
     },
     {
-     "texto": "Se as casas forem diferentes, iguale com zeros: 2,5 vira 2,50. Agora arma, vírgula embaixo de vírgula: 2,50 + 1,25 = 3,75.",
-     "por_personalidade": {
-      "gato": "Casas diferentes? Põe zero: 2,5 = 2,50. Depois arma: 2,50 + 1,25 = 3,75. Zero no fim não muda nada.",
-      "tigre": "IGUALA AS CASAS! 2,5 VIRA 2,50! Arma: 2,50 + 1,25 = 3,75!",
-      "capivara": "Se as casas forem diferentes, iguale com zeros: 2,5 vira 2,50. Depois arme, vírgula embaixo de vírgula: 3,75."
-     },
-     "lousa": [{"t": "linha", "v": "2,5 + 1,25"}, {"t": "armada", "a": "2,5", "op": "+", "b": "1,25"}, {"t": "texto", "v": "2,5 = 2,50"}]
+     "texto": "Dinheiro é decimal!",
+     "lousa": [{"t": "linha", "v": "R$ 1,25"}, {"t": "linha", "v": "🪙 1 real  +  🪙 25 centavos"}, {"t": "escreve", "v": "1ª casa depois da vírgula: décimos (pedaços de 10)."}, {"t": "escreve", "v": "2ª casa: centésimos (pedaços de 100)."}, {"t": "escreve", "v": "R$ 1,25 = 1 real e 25 centavos."}]
     },
     {
-     "texto": "Na subtração também: 3 − 1,25. O 3 vira 3,00. Arma e subtrai, emprestando quando precisa: 3,00 − 1,25 = 1,75.",
-     "por_personalidade": {
-      "gato": "3 − 1,25? O 3 vira 3,00. Arma e subtrai: 1,75. Até eu empresto, às vezes.",
-      "tigre": "3 − 1,25: O 3 VIRA 3,00! ARMA E SUBTRAI: 1,75!",
-      "capivara": "Na subtração também: o 3 vira 3,00. Arme e subtraia, emprestando com calma: 3,00 − 1,25 = 1,75."
-     },
-     "lousa": [{"t": "linha", "v": "3 − 1,25"}, {"t": "armada", "a": "3", "op": "−", "b": "1,25"}, {"t": "texto", "v": "3 = 3,00"}]
+     "texto": "A vírgula se esconde no fim!",
+     "lousa": [{"t": "virgula", "v": "3", "surge": true, "casas": 0}, {"t": "escreve", "v": "3 = 3,"}]
     },
     {
-     "texto": "Qual é maior, 0,5 ou 0,14? Iguale as casas: 0,50 e 0,14. Agora é só comparar 50 com 14: 0,5 é maior. Achar que 0,14 é maior porque tem mais números é a pegadinha!",
-     "por_personalidade": {
-      "gato": "0,5 ou 0,14? Iguala: 0,50 e 0,14. 50 > 14, então 0,5 ganha. \"Tem mais números\" não quer dizer nada.",
-      "tigre": "0,5 OU 0,14? IGUALA AS CASAS: 0,50 e 0,14! 50 > 14: 0,5 É MAIOR!",
-      "capivara": "Para comparar, iguale as casas: 0,50 e 0,14. Agora compare 50 com 14: 0,5 é maior. Ter mais números não faz ser maior."
-     },
-     "lousa": [{"t": "compara", "esq": {"linhas": ["0,5 ou 0,14?", "14 > 5", "0,14 é maior"]}, "dir": {"passos": [{"t": "linha", "v": "0,5 ou 0,14?"}, {"t": "linha", "v": "0,50 e 0,14"}, {"t": "linha", "v": "50 > 14"}, {"t": "linha", "v": "0,5 é maior"}]}}, {"t": "texto", "v": "iguale as casas antes de comparar"}]
+     "texto": "Zero no fim não muda o número!",
+     "lousa": [{"t": "linha", "v": "0,5 = 0,50 = 0,500"}, {"t": "barras", "fr": [[5, 10], [50, 100], [500, 1000]], "rotulos": ["5 de 10", "50 de 100", "500 de 1000"]}, {"t": "escreve", "v": "As três barras têm o mesmo tanto pintado."}, {"t": "escreve", "v": "Zero no fim, depois da vírgula, não muda o número."}]
     },
     {
-     "texto": "Para multiplicar, faça a conta sem a vírgula: 3 × 2 = 6. Depois conte as casas depois da vírgula: 1 + 1 = 2. O resultado tem 2 casas: 0,06.",
-     "por_personalidade": {
-      "gato": "Multiplicar decimal: esquece a vírgula, 3 × 2 = 6. Conta as casas: 2. Então 0,06. Fácil.",
-      "tigre": "MULTIPLICA SEM A VÍRGULA: 3 × 2 = 6! CONTA AS CASAS: 2! RESULTADO: 0,06!",
-      "capivara": "Para multiplicar, faça sem a vírgula: 3 × 2 = 6. Depois conte as casas depois da vírgula, 1 + 1 = 2. Fica 0,06."
-     },
-     "lousa": [{"t": "linha", "v": "0,3 × 0,2"}, {"t": "armada", "a": "0,3", "op": "×", "b": "0,2"}, {"t": "linha", "v": "0,3 × 0,2 = 0,06", "classe": "certo"}]
+     "texto": "Vírgula embaixo de vírgula!",
+     "lousa": [{"t": "armada", "a": "1,3", "op": "+", "b": "4,1"}]
     },
     {
-     "texto": "Fração vira decimal com uma divisão: 1/2 = 1 ÷ 2. O 1 não dá para dividir por 2: põe 0, no resultado e um 0 ao lado do 1. 10 ÷ 2 = 5. Fica 0,5.",
-     "por_personalidade": {
-      "gato": "1/2 é 1 ÷ 2. O 1 não cabe no 2: 0, e um zero ao lado. 10 ÷ 2 = 5. Então 0,5.",
-      "tigre": "FRAÇÃO É DIVISÃO! 1 ÷ 2: O 1 NÃO DÁ, põe 0, e um zero! 10 ÷ 2 = 5: 0,5!",
-      "capivara": "Fração vira decimal com uma divisão: 1 ÷ 2. O 1 não dá para dividir por 2, então põe 0, e um 0 ao lado do 1. 10 ÷ 2 = 5: 0,5."
-     },
-     "lousa": [{"t": "linha", "v": "1/2 = 1 ÷ 2"}, {"t": "divisao", "a": 1, "b": 2, "casas": 1}]
+     "texto": "Pegadinha: vírgula fora do lugar!",
+     "lousa": [{"t": "compara", "esq": {"titulo": "✖ vírgula fora do lugar", "passos": [{"t": "linha", "v": "1,3 + 4,1"}, {"t": "linha", "v": "13 + 41"}, {"t": "armada", "a": "1,3", "op": "+", "b": "4,1", "sem_virgula": true}, {"t": "texto", "v": "A vírgula sumiu"}]}, "dir": {"passos": [{"t": "linha", "v": "1,3 + 4,1"}, {"t": "armada", "a": "1,3", "op": "+", "b": "4,1"}]}}, {"t": "escreve", "v": "Sem a vírgula, 1,3 virou 13: é outro número!", "cor": "errado"}]
     },
     {
-     "texto": "1/10 = 1 ÷ 10 = 0,1. E tem um macete: dividir por 10 é andar a vírgula 1 casa para a esquerda.",
-     "por_personalidade": {
-      "gato": "1 ÷ 10 = 0,1. Macete: ÷ 10 é a vírgula andar 1 casa para a esquerda. Nem preciso armar.",
-      "tigre": "1 ÷ 10 = 0,1! MACETE: ÷ 10, A VÍRGULA ANDA 1 CASA PARA A ESQUERDA!",
-      "capivara": "1/10 é 1 ÷ 10 = 0,1. E um macete tranquilo: dividir por 10 é andar a vírgula 1 casa para a esquerda."
-     },
-     "lousa": [{"t": "linha", "v": "1/10 = 1 ÷ 10"}, {"t": "divisao", "a": 1, "b": 10, "casas": 1}, {"t": "virgula", "v": "1", "op": "÷", "k": 10, "manter": true}]
+     "texto": "Casas diferentes? Completa com zero.",
+     "lousa": [{"t": "linha", "v": "2,5 + 1,25"}, {"t": "armada", "a": "2,5", "op": "+", "b": "1,25"}]
     },
     {
-     "texto": "E 1/100? Dividir por 100 é andar a vírgula 2 casas para a esquerda. Os zeros que faltam entram na frente: 0,01.",
-     "por_personalidade": {
-      "gato": "1/100: 2 zeros, 2 casas para a esquerda. Faltou casa, bota zero: 0,01.",
-      "tigre": "1/100: 2 ZEROS, 2 CASAS! ZERO NA FRENTE: 0,01!",
-      "capivara": "1/100: são 2 zeros, então a vírgula anda 2 casas para a esquerda. Faltou casa, entra zero na frente: 0,01."
-     },
-     "lousa": [{"t": "linha", "v": "1/100 = 1 ÷ 100"}, {"t": "virgula", "v": "1", "op": "÷", "k": 100}]
+     "texto": "Na subtração, também completa!",
+     "lousa": [{"t": "linha", "v": "3 − 1,25"}, {"t": "armada", "a": "3", "op": "−", "b": "1,25"}]
     },
     {
-     "texto": "Decimais que todo mundo usa: 0,5 é a metade (1/2), 0,25 é um quarto (1/4) e 0,75 são três quartos (3/4).",
-     "por_personalidade": {
-      "gato": "Decora esses: 0,5 = 1/2, 0,25 = 1/4, 0,75 = 3/4. Eu sei de cor.",
-      "tigre": "OS CAMPEÕES: 0,5 = 1/2, 0,25 = 1/4, 0,75 = 3/4!",
-      "capivara": "Esses aparecem sempre: 0,5 é a metade, 1/2; 0,25 é um quarto, 1/4; e 0,75 são três quartos, 3/4."
-     },
-     "lousa": [{"t": "barras", "fr": [[1, 2], [1, 4], [3, 4]], "rotulos": ["0,5 = 1/2", "0,25 = 1/4", "0,75 = 3/4"]}]
+     "texto": "Qual é o maior: 0,5 ou 0,14?",
+     "lousa": [{"t": "bloco", "titulo": "1º Iguala as casas"}, {"t": "casas", "v": ["0,5", "0,14"]}, {"t": "escreve", "v": "Primeiro iguala as casas. 0,5 tem 1, 0,14 tem 2."}, {"t": "zeros", "v": "0,5", "n": 1}, {"t": "escreve", "v": "Completa com zero: 0,5 = 0,50. Zero no fim não muda nada."}, {"t": "bloco", "titulo": "2º Compara"}, {"t": "semvirgula", "v": ["0,50", "0,14"]}, {"t": "escreve", "v": "Agora compara os números sem a vírgula: 50 e 14."}, {"t": "linha", "v": "50 > 14"}, {"t": "barras", "fr": [[50, 100], [14, 100]], "rotulos": ["0,50", "0,14"]}, {"t": "escreve", "v": "50 é maior. Então 0,5 é o maior!"}, {"t": "linha", "v": "0,5 é o maior", "classe": "certo"}]
+    },
+    {
+     "texto": "Mais números não quer dizer maior!",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "0,14 tem mais números"}, {"t": "linha", "v": "0,14 > 0,5"}]}, "dir": {"passos": [{"t": "linha", "v": "0,50 e 0,14"}, {"t": "linha", "v": "50 > 14"}, {"t": "linha", "v": "0,5 > 0,14"}]}}, {"t": "escreve", "v": "Mais números não quer dizer maior!", "cor": "errado"}]
+    },
+    {
+     "texto": "Conta as casas, multiplica e anda a vírgula.",
+     "lousa": [{"t": "armada", "a": "0,3", "op": "×", "b": "0,2"}]
+    },
+    {
+     "texto": "Conta as casas, multiplica e anda a vírgula.",
+     "titulo": "× por 1,5",
+     "lousa": [{"t": "armada", "a": "6", "op": "×", "b": "1,5"}, {"t": "escreve", "v": "Atalho: 1,5 = 1 + meio. 6 + 3 = 9."}]
+    },
+    {
+     "texto": "Fração vira decimal dividindo!",
+     "lousa": [{"t": "linha", "v": "1/2 = 1 ÷ 2"}, {"t": "escreve", "v": "O tracinho da fração é uma divisão: 1/2 = 1 ÷ 2", "n": true}, {"t": "divisao", "a": 1, "b": 2, "casas": 1}]
+    },
+    {
+     "texto": "Sobrou? Põe outro zero!",
+     "titulo": "3/4 em decimal: duas casas",
+     "lousa": [{"t": "linha", "v": "3/4 = 3 ÷ 4"}, {"t": "divisao", "a": 3, "b": 4, "casas": 2}, {"t": "linha", "v": "3/4 = 0,75", "classe": "certo"}]
+    },
+    {
+     "texto": "Conta as casas: 1 casa é 10, 2 casas é 100!",
+     "titulo": "Lê o decimal e escreve a fração",
+     "lousa": [{"t": "bloco", "titulo": "1º Conta as casas"}, {"t": "casas", "v": ["0,3", "0,25"]}, {"t": "escreve", "v": "1 casa depois da vírgula: décimos. Embaixo vai 10."}, {"t": "escreve", "v": "2 casas: centésimos. Embaixo vai 100."}, {"t": "bloco", "titulo": "2º Escreve a fração"}, {"t": "linha", "v": "0,3 = 3/10"}, {"t": "linha", "v": "0,25 = 25/100"}, {"t": "bloco", "titulo": "3º Simplifica"}, {"t": "fracoes", "fr": [[25, 100], [1, 4]], "op": "÷", "k": 25}, {"t": "escreve", "v": "25/100 dá para simplificar: ÷ 25 em cima e embaixo = 1/4."}, {"t": "linha", "v": "0,25 = 1/4", "classe": "certo"}]
+    },
+    {
+     "texto": "Fração com 10 embaixo também é divisão.",
+     "lousa": [{"t": "linha", "v": "1/10 = 1 ÷ 10"}, {"t": "divisao", "a": 1, "b": 10, "casas": 1}]
+    },
+    {
+     "texto": "Dividir por 10: a vírgula anda uma casa.",
+     "lousa": [{"t": "virgula", "v": "1", "op": "÷", "k": 10}]
+    },
+    {
+     "texto": "Dividir por 100: a vírgula anda duas casas.",
+     "lousa": [{"t": "virgula", "v": "1", "op": "÷", "k": 100}]
+    },
+    {
+     "texto": "Pensa no dinheiro!",
+     "lousa": [{"t": "barras", "fr": [[1, 2], [1, 4], [3, 4]], "rotulos": ["0,5 = 1/2", "0,25 = 1/4", "0,75 = 3/4"]}, {"t": "linha", "v": "50 centavos · 25 centavos · 75 centavos"}, {"t": "escreve", "v": "0,5 = metade · 0,25 = um quarto · 0,75 = três quartos"}]
+    },
+    {
+     "texto": "Troco é conta de menos!",
+     "titulo": "Troco com centavos",
+     "lousa": [{"t": "bloco", "titulo": "1º Vira conta"}, {"t": "palavras", "v": "Paguei R$ 10 por um lanche de R$ 3,50. Qual o troco?", "marcas": [["Paguei R$ 10", "10", "Paguei com 10: a conta começa no 10."], ["lanche de R$ 3,50", "− 3,50"], ["troco", "−", "Troco é conta de menos: 10 − 3,50."]]}, {"t": "linha", "v": "10 − 3,50"}, {"t": "armada", "a": "10", "op": "−", "b": "3,50", "n0": 2}, {"t": "linha", "v": "Troco: R$ 6,50", "classe": "certo"}]
+    }
+   ]
+  },
+  "mapa5-A": {
+   "titulo": "Potências",
+   "paginas": [
+    {
+     "texto": "Base embaixo, expoente em cima!",
+     "titulo": "Base e expoente",
+     "lousa": [{"t": "linha", "v": "2³"}, {"t": "escreve", "v": "O número grande é a base."}, {"t": "escreve", "v": "O numerinho em cima é o expoente."}, {"t": "escreve", "v": "Ele diz quantas vezes a base aparece."}, {"t": "lese", "s": "³", "v": "ao cubo"}, {"t": "lese", "s": "²", "v": "ao quadrado"}, {"t": "linha", "v": "2³: dois ao cubo"}, {"t": "linha", "v": "5²: cinco ao quadrado"}, {"t": "linha", "v": "2⁴: dois elevado a quatro"}]
+    },
+    {
+     "texto": "Potência é multiplicar o número por ele mesmo.",
+     "lousa": [{"t": "linha", "v": "2³"}, {"t": "bloco", "titulo": "1º Escreve a base 3 vezes"}, {"t": "linha", "v": "2 × 2 × 2"}, {"t": "escreve", "v": "1, 2, 3: o 2 aparece 3 vezes."}, {"t": "bloco", "titulo": "2º Multiplica de dois em dois"}, {"t": "expressao", "v": "2 × 2 × 2"}]
+    },
+    {
+     "texto": "O expoente diz quantas vezes.",
+     "lousa": [{"t": "linha", "v": "5²"}, {"t": "expressao", "v": "5 × 5"}, {"t": "texto", "v": "O de cima diz quantas vezes"}]
+    },
+    {
+     "texto": "Pegadinha: não é base × expoente!",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "2³"}, {"t": "linha", "v": "2 × 3"}, {"t": "linha", "v": "6"}]}, "dir": {"passos": [{"t": "linha", "v": "2³"}, {"t": "expressao", "v": "2 × 2 × 2"}]}}, {"t": "texto", "v": "A base se repete"}, {"t": "escreve", "v": "2³ é 2 × 2 × 2 = 8, não 2 × 3!", "cor": "errado"}]
+    },
+    {
+     "texto": "Conta quantas vezes repete!",
+     "titulo": "De multiplicação para potência",
+     "lousa": [{"t": "linha", "v": "3 × 3 × 3 × 3"}, {"t": "escreve", "v": "Qual número se repete? O 3: é a base."}, {"t": "escreve", "v": "Quantas vezes? 4: é o expoente."}, {"t": "linha", "v": "3 × 3 × 3 × 3 = 3⁴", "classe": "certo"}]
+    },
+    {
+     "texto": "Um vezes um é sempre um!",
+     "titulo": "1 elevado a qualquer coisa",
+     "lousa": [{"t": "linha", "v": "1⁵"}, {"t": "linha", "v": "1 × 1 × 1 × 1 × 1"}, {"t": "linha", "v": "1⁵ = 1", "classe": "certo"}, {"t": "escreve", "v": "1 vezes 1 dá sempre 1."}, {"t": "escreve", "v": "Por isso 1 elevado a qualquer número é 1."}]
+    },
+    {
+     "texto": "Potência primeiro!",
+     "titulo": "Primeiro as potências, depois o + e o −",
+     "lousa": [{"t": "linha", "v": "2³ + 3²"}, {"t": "escreve", "v": "Potência vem antes de tudo."}, {"t": "bloco", "titulo": "1º 2³"}, {"t": "expressao", "v": "2 × 2 × 2"}, {"t": "bloco", "titulo": "2º 3²"}, {"t": "expressao", "v": "3 × 3"}, {"t": "bloco", "titulo": "3º Soma"}, {"t": "linha", "v": "8 + 9 = 17", "classe": "certo"}]
+    },
+    {
+     "texto": "Expoente não multiplica a base!",
+     "titulo": "Pegadinha: potência dentro da conta",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "2³ + 3²"}, {"t": "linha", "v": "2 × 3 + 3 × 2"}, {"t": "linha", "v": "12"}]}, "dir": {"passos": [{"t": "linha", "v": "2³ + 3²"}, {"t": "linha", "v": "8 + 9"}, {"t": "linha", "v": "17"}]}}, {"t": "escreve", "v": "Expoente não multiplica a base!", "cor": "errado"}]
+    },
+    {
+     "texto": "Potência de 10: conta os zeros!",
+     "lousa": [{"t": "linha", "v": "10⁴"}, {"t": "linha", "v": "10 × 10 × 10 × 10"}, {"t": "linha", "v": "4 zeros"}, {"t": "linha", "v": "10000", "classe": "certo"}, {"t": "escreve", "v": "O expoente do 10 diz quantos zeros."}]
+    }
+   ]
+  },
+  "mapa5-B": {
+   "titulo": "Raízes e casos especiais",
+   "paginas": [
+    {
+     "texto": "Raiz: qual número vezes ele mesmo dá isso?",
+     "lousa": [{"t": "linha", "v": "√16"}, {"t": "linha", "v": "? × ? = 16"}, {"t": "linha", "v": "4 × 4 = 16"}, {"t": "linha", "v": "√16 = 4", "classe": "certo"}, {"t": "escreve", "v": "√16: qual número vezes ele mesmo dá 16?", "n": true}, {"t": "escreve", "v": "4 × 4 = 16, então √16 = 4", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "Procura na tabela de quadrados!",
+     "titulo": "A tabela de quadrados",
+     "lousa": [{"t": "linha", "v": "√81"}, {"t": "tabuada", "quadrados": true, "procura": [81]}, {"t": "linha", "v": "√81 = 9", "classe": "certo"}, {"t": "linha", "v": "√144"}, {"t": "tabuada", "quadrados": true, "procura": [144]}, {"t": "linha", "v": "√144 = 12", "classe": "certo"}]
+    },
+    {
+     "texto": "Todo número tem expoente um!",
+     "titulo": "O expoente 1 escondido",
+     "lousa": [{"t": "escondido", "v": "5", "mostra": "5¹", "onde": 0, "fala": "Todo número tem um expoente 1 escondido."}, {"t": "escreve", "v": "5¹ = 5: aparece uma vez só."}]
+    },
+    {
+     "texto": "Elevado a 1 é ele mesmo.",
+     "lousa": [{"t": "linha", "v": "5¹ = 5", "classe": "certo"}, {"t": "linha", "v": "12¹ = 12", "classe": "certo"}, {"t": "escreve", "v": "Elevado a 1: o número aparece 1 vez."}, {"t": "escreve", "v": "5¹ = 5 · 12¹ = 12", "cor": "certo"}]
+    },
+    {
+     "texto": "Elevado a 0 é sempre 1!",
+     "lousa": [{"t": "linha", "v": "7⁰ = 1", "classe": "certo"}, {"t": "linha", "v": "25⁰ = 1", "classe": "certo"}, {"t": "escreve", "v": "Elevado a 0 dá sempre 1 (menos o 0)."}, {"t": "escreve", "v": "7⁰ = 1 · 25⁰ = 1", "cor": "certo"}]
+    },
+    {
+     "texto": "Negativo ao quadrado fica positivo.",
+     "lousa": [{"t": "linha", "v": "(−2)²"}, {"t": "expressao", "v": "(−2) × (−2)"}, {"t": "texto", "v": "− com − dá +"}]
+    },
+    {
+     "texto": "Expoente par dá +, ímpar dá −!",
+     "titulo": "Par: +. Ímpar: −.",
+     "lousa": [{"t": "bloco", "titulo": "1º (−2)²"}, {"t": "expressao", "v": "(−2) × (−2)"}, {"t": "escreve", "v": "Expoente 2: dois −, um par: dá +."}, {"t": "bloco", "titulo": "2º (−2)³"}, {"t": "expressao", "v": "(−2) × (−2) × (−2)"}, {"t": "escreve", "v": "Expoente 3: três −. O par vira +, sobra um −."}, {"t": "linha", "v": "(−2)³ = −8", "classe": "certo"}]
+    },
+    {
+     "texto": "Primeiro a raiz e a potência!",
+     "titulo": "Raiz e potência juntas",
+     "lousa": [{"t": "linha", "v": "√25 + 2³"}, {"t": "bloco", "titulo": "1º √25"}, {"t": "tabuada", "quadrados": true, "procura": [25]}, {"t": "linha", "v": "√25 = 5"}, {"t": "bloco", "titulo": "2º 2³"}, {"t": "expressao", "v": "2 × 2 × 2"}, {"t": "bloco", "titulo": "3º Soma"}, {"t": "linha", "v": "5 + 8 = 13", "classe": "certo"}, {"t": "escreve", "v": "Depois o + e o −."}]
+    }
+   ]
+  },
+  "mapa6-A": {
+   "titulo": "Múltiplos",
+   "paginas": [
+    {
+     "texto": "Olhe o último algarismo!",
+     "titulo": "Algarismo, par e ímpar",
+     "lousa": [{"t": "algarismos", "v": "352"}, {"t": "escreve", "v": "Algarismos são os números de 0 a 9 que formam o número."}, {"t": "escreve", "v": "O último algarismo do 352 é o 2."}, {"t": "linha", "v": "0 2 4 6 8: par", "classe": "certo"}, {"t": "linha", "v": "1 3 5 7 9: ímpar"}, {"t": "escreve", "v": "Termina em 0, 2, 4, 6 ou 8? É par."}, {"t": "escreve", "v": "Termina em 1, 3, 5, 7 ou 9? É ímpar."}]
+    },
+    {
+     "texto": "Múltiplos são a tabuada do número.",
+     "lousa": [{"t": "tabela", "linhas": ["4 × 0 = 0", "4 × 1 = 4", "4 × 2 = 8", "4 × 3 = 12", "4 × 4 = 16"]}, {"t": "acende", "i": 0, "soma": true, "ms": 450}, {"t": "acende", "i": 1, "soma": true, "ms": 450}, {"t": "acende", "i": 2, "soma": true, "ms": 450}, {"t": "acende", "i": 3, "soma": true, "ms": 450}, {"t": "acende", "i": 4, "soma": true, "ms": 450}, {"t": "linha", "v": "0, 4, 8, 12, 16…"}, {"t": "escreve", "v": "Múltiplos de 4: 4 × 0, 4 × 1, 4 × 2…"}, {"t": "escreve", "v": "0, 4, 8, 12, 16… é a tabuada do 4.", "cor": "certo"}, {"t": "linha", "v": "28 é múltiplo de 4?"}, {"t": "tabuada", "b": 4, "alvo": 28}, {"t": "linha", "v": "30 é múltiplo de 4?"}, {"t": "tabuada", "b": 4, "alvo": 30}]
+    },
+    {
+     "texto": "É múltiplo de 2 se termina em par.",
+     "lousa": [{"t": "linha", "v": "18"}, {"t": "linha", "v": "termina em 8: par"}, {"t": "linha", "v": "18 é múltiplo de 2", "classe": "certo"}, {"t": "escreve", "v": "18 termina em 8.", "n": true}, {"t": "escreve", "v": "8 é par: 18 é múltiplo de 2.", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "De 5: termina em 0 ou 5.",
+     "lousa": [{"t": "linha", "v": "35: termina em 5", "classe": "certo"}, {"t": "linha", "v": "12: termina em 2", "classe": "errado"}, {"t": "escreve", "v": "35 termina em 5: é múltiplo de 5.", "cor": "certo"}, {"t": "escreve", "v": "12 termina em 2: não é.", "cor": "errado"}]
+    },
+    {
+     "texto": "De 10: termina em 0.",
+     "lousa": [{"t": "linha", "v": "30: termina em 0", "classe": "certo"}, {"t": "linha", "v": "25: termina em 5", "classe": "errado"}, {"t": "escreve", "v": "30 termina em 0: é múltiplo de 10.", "cor": "certo"}, {"t": "escreve", "v": "25 termina em 5: não é.", "cor": "errado"}]
+    },
+    {
+     "texto": "De 3: some os algarismos!",
+     "lousa": [{"t": "linha", "v": "18"}, {"t": "linha", "v": "1 + 8 = 9"}, {"t": "linha", "v": "9 está na tabuada do 3", "classe": "certo"}, {"t": "escreve", "v": "Some os algarismos do 18: 1 + 8 = 9", "n": true}, {"t": "escreve", "v": "9 está na tabuada do 3: 18 é múltiplo de 3.", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "Resto zero? É múltiplo!",
+     "titulo": "Múltiplos de 4, 6, 7, 8, 9",
+     "lousa": [{"t": "linha", "v": "42 é múltiplo de 7?"}, {"t": "bloco", "titulo": "1º Na tabuada"}, {"t": "tabuada", "b": 7, "alvo": 42}, {"t": "escreve", "v": "Para esses, procura na tabuada."}, {"t": "bloco", "titulo": "2º Ou divide"}, {"t": "divisao", "a": 42, "b": 7}, {"t": "escreve", "v": "Ou divide: se sobrar 0, é múltiplo."}, {"t": "linha", "v": "42 é múltiplo de 7: Sim", "classe": "certo"}]
+    },
+    {
+     "texto": "Nas duas tabuadas!",
+     "titulo": "Tem que estar nas duas tabuadas",
+     "lousa": [{"t": "linha", "v": "Qual é múltiplo de 2 e de 3?"}, {"t": "linha", "v": "8   9   12   15"}, {"t": "bloco", "titulo": "1º Na tabuada do 2"}, {"t": "tabuada", "b": 2, "procura": [8, 12]}, {"t": "escreve", "v": "8 e 12 estão na tabuada do 2. 9 e 15, não."}, {"t": "bloco", "titulo": "2º Na tabuada do 3"}, {"t": "tabuada", "b": 3, "procura": [12], "col": 2}, {"t": "escreve", "v": "8 não está na do 3. 12 está nas duas!"}, {"t": "linha", "v": "12 ✔✔", "classe": "certo"}]
+    }
+   ]
+  },
+  "mapa6-B": {
+   "titulo": "Divisores",
+   "paginas": [
+    {
+     "texto": "Resto é o que sobra!",
+     "titulo": "Resto",
+     "lousa": [{"t": "bolinhas", "n": 10, "grupo": 3}, {"t": "linha", "v": "10 ÷ 3 = 3 e resto 1", "classe": "certo"}, {"t": "escreve", "v": "Resto é o que sobra quando a divisão não fecha."}, {"t": "escreve", "v": "Sobrou 1 bolinha: resto 1."}]
+    },
+    {
+     "texto": "Divisor divide sem sobrar nada.",
+     "lousa": [{"t": "divisao", "a": 12, "b": 3}, {"t": "linha", "v": "resto 0: 3 é divisor de 12", "classe": "certo"}]
+    },
+    {
+     "texto": "Sobrou resto? Não é divisor.",
+     "lousa": [{"t": "divisao", "a": 10, "b": 4}, {"t": "linha", "v": "sobra 2: 4 é divisor de 10", "classe": "errado"}]
+    },
+    {
+     "texto": "1 e o próprio número sempre dividem.",
+     "lousa": [{"t": "linha", "v": "divisores de 12"}, {"t": "tabela", "linhas": ["1 × 12", "2 × 6", "3 × 4"]}, {"t": "acende", "i": 0, "soma": true, "ms": 600}, {"t": "acende", "i": 1, "soma": true, "ms": 600}, {"t": "acende", "i": 2, "soma": true, "ms": 600}, {"t": "linha", "v": "1, 2, 3, 4, 6, 12", "classe": "certo"}, {"t": "escreve", "v": "Divisores de 12: os números que dividem 12 sem sobrar."}, {"t": "escreve", "v": "Em pares: 1 × 12, 2 × 6, 3 × 4."}, {"t": "escreve", "v": "1, 2, 3, 4, 6, 12", "cor": "certo"}]
+    },
+    {
+     "texto": "Divisores vêm em pares!",
+     "titulo": "Divisores vêm em pares",
+     "lousa": [{"t": "linha", "v": "Divisores de 12"}, {"t": "tabela", "linhas": ["1 × 12", "2 × 6", "3 × 4"]}, {"t": "acende", "i": 0, "soma": true}, {"t": "escreve", "v": "Começa pelo 1: 1 × 12 = 12. Já achei dois!"}, {"t": "acende", "i": 1, "soma": true}, {"t": "escreve", "v": "2 × 6 = 12. Mais dois."}, {"t": "acende", "i": 2, "soma": true}, {"t": "escreve", "v": "3 × 4 = 12. Mais dois."}, {"t": "escreve", "v": "O 4 já apareceu: acabou!"}, {"t": "linha", "v": "1, 2, 3, 4, 6, 12", "classe": "certo"}]
+    },
+    {
+     "texto": "Primo: só 1 e ele mesmo!",
+     "titulo": "Número primo",
+     "lousa": [{"t": "linha", "v": "7"}, {"t": "tabela", "linhas": ["7 ÷ 2: sobra 1", "7 ÷ 3: sobra 1", "7 ÷ 4: sobra 3", "7 ÷ 5: sobra 2", "7 ÷ 6: sobra 1"]}, {"t": "acende", "i": 0, "soma": true, "ms": 500}, {"t": "acende", "i": 1, "soma": true, "ms": 500}, {"t": "acende", "i": 2, "soma": true, "ms": 500}, {"t": "acende", "i": 3, "soma": true, "ms": 500}, {"t": "acende", "i": 4, "soma": true, "ms": 500}, {"t": "escreve", "v": "Só 1 × 7: os divisores são 1 e 7."}, {"t": "linha", "v": "7: 2 divisores → primo", "classe": "certo"}, {"t": "linha", "v": "6: 1 × 6 e 2 × 3 → 4 divisores → não é primo"}, {"t": "escreve", "v": "Primo só divide por 1 e por ele mesmo."}, {"t": "escreve", "v": "Tem só 2 divisores."}]
+    },
+    {
+     "texto": "Testa um por um!",
+     "titulo": "Qual NÃO é divisor",
+     "lousa": [{"t": "linha", "v": "Qual NÃO é divisor de 18?"}, {"t": "tabela", "linhas": ["18 ÷ 2 = 9 ✔", "18 ÷ 3 = 6 ✔", "18 ÷ 5: sobra 3 ✖", "18 ÷ 6 = 3 ✔"]}, {"t": "escreve", "v": "Testa um por um."}, {"t": "acende", "i": 2}, {"t": "escreve", "v": "O que sobrar resto é o que NÃO é divisor."}, {"t": "linha", "v": "5 NÃO é divisor de 18", "classe": "certo"}]
+    },
+    {
+     "texto": "Pegadinha: divisor não é múltiplo!",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "3 ÷ 12"}, {"t": "linha", "v": "não cabe"}, {"t": "linha", "v": "12 é divisor de 3"}]}, "dir": {"passos": [{"t": "linha", "v": "12 ÷ 3 = 4"}, {"t": "linha", "v": "resto 0"}, {"t": "linha", "v": "3 é divisor de 12"}]}}, {"t": "escreve", "v": "12 ÷ 3 = 4, resto 0: 3 é divisor de 12.", "cor": "certo"}, {"t": "escreve", "v": "Divisor é o número pequeno que divide o grande!", "cor": "errado"}]
+    }
+   ]
+  },
+  "mapa7-A": {
+   "titulo": "Porcentagem: calcular",
+   "paginas": [
+    {
+     "texto": "Porcentagem é de cada cem!",
+     "lousa": [{"t": "grade100", "n": 20}, {"t": "escreve", "v": "% quer dizer: de cada 100."}, {"t": "escreve", "v": "20% = 20 de cada 100."}]
+    },
+    {
+     "texto": "Cem por cento é tudo!",
+     "lousa": [{"t": "grade100", "n": 100}, {"t": "escreve", "v": "100% = tudo"}, {"t": "grade100", "n": 50}, {"t": "escreve", "v": "50% = metade"}, {"t": "grade100", "n": 0}, {"t": "escreve", "v": "0% = nada"}]
+    },
+    {
+     "texto": "Cinquenta por cento é a metade.",
+     "lousa": [{"t": "linha", "v": "50% de 40"}, {"t": "escreve", "v": "50% é a metade.", "n": true}, {"t": "escreve", "v": "Metade = dividir por 2.", "n": true}, {"t": "divisao", "a": 40, "b": 2}, {"t": "escreve", "v": "50% de 40 = 20", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "Dez por cento é dividir por dez.",
+     "lousa": [{"t": "linha", "v": "10% de 80"}, {"t": "escreve", "v": "10% = dividir por 10.", "n": true}, {"t": "virgula", "v": "80", "op": "÷", "k": 10}, {"t": "escreve", "v": "10% de 80 = 8", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "O resultado pode ter vírgula!",
+     "lousa": [{"t": "linha", "v": "10% de 35"}, {"t": "virgula", "v": "35", "op": "÷", "k": 10}, {"t": "escreve", "v": "10% de 35 = 3,5: o resultado pode ter vírgula!", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "Um quarto é dividir por quatro.",
+     "lousa": [{"t": "linha", "v": "25% de 40"}, {"t": "escreve", "v": "25% = um quarto = dividir por 4.", "n": true}, {"t": "divisao", "a": 40, "b": 4}]
+    },
+    {
+     "texto": "Vinte por cento é dividir por cinco!",
+     "titulo": "20% é ÷ 5",
+     "lousa": [{"t": "linha", "v": "20% de 50"}, {"t": "grade100", "n": 20, "faixas": 5}, {"t": "escreve", "v": "20% cabe 5 vezes no 100%: divide por 5."}, {"t": "expressao", "v": "50 ÷ 5"}, {"t": "linha", "v": "20% de 50 = 10", "classe": "certo"}]
+    },
+    {
+     "texto": "Um por cento: divide por cem!",
+     "titulo": "1% é ÷ 100",
+     "lousa": [{"t": "linha", "v": "1% de 300"}, {"t": "escreve", "v": "1% é um pedacinho de 100: divide por 100."}, {"t": "virgula", "v": "300", "op": "÷", "k": 100}, {"t": "linha", "v": "1% de 300 = 3", "classe": "certo"}]
+    },
+    {
+     "texto": "Junta os dez por cento!",
+     "lousa": [{"t": "linha", "v": "20% de 50"}, {"t": "linha", "v": "10% = 50 ÷ 10 = 5"}, {"t": "escreve", "v": "10% de 50 = 5", "n": true}, {"t": "linha", "v": "20% = 2 × 10%"}, {"t": "escreve", "v": "20% = 2 vezes 10%", "n": true}, {"t": "linha", "v": "5 × 2 = 10", "classe": "certo"}, {"t": "escreve", "v": "5 × 2 = 10 → 20% de 50 = 10", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "Três pedaços de vinte e cinco!",
+     "titulo": "75% e 100%",
+     "lousa": [{"t": "linha", "v": "75% de 40"}, {"t": "bloco", "titulo": "1º 25%"}, {"t": "expressao", "v": "40 ÷ 4"}, {"t": "bloco", "titulo": "2º 75% = 3 × 25%"}, {"t": "expressao", "v": "3 × 10"}, {"t": "linha", "v": "75% de 40 = 30", "classe": "certo"}, {"t": "escreve", "v": "75% são 3 pedaços de 25%."}, {"t": "bloco", "titulo": "3º 100%"}, {"t": "linha", "v": "100% de 40 = 40", "classe": "certo"}, {"t": "escreve", "v": "100% é o todo: o próprio número."}]
+    },
+    {
+     "texto": "Porcentagem vira fração.",
+     "lousa": [{"t": "bloco", "titulo": "1º 50%"}, {"t": "linha", "v": "50% = 50/100"}, {"t": "fracoes", "fr": [[50, 100], [1, 2]], "op": "÷"}, {"t": "escreve", "v": "50% = 50/100 = 1/2", "n": true}, {"t": "bloco", "titulo": "2º 25%"}, {"t": "linha", "v": "25% = 25/100"}, {"t": "fracoes", "fr": [[25, 100], [1, 4]], "op": "÷"}, {"t": "escreve", "v": "25% = 25/100 = 1/4", "n": true}, {"t": "bloco", "titulo": "3º 40%"}, {"t": "linha", "v": "40% = 40/100"}, {"t": "tabuada", "b": 10, "procura": [40, 100]}, {"t": "escreve", "v": "40 e 100 estão na tabuada do 10: divide os dois por 10."}, {"t": "fracoes", "fr": [[40, 100], [4, 10], [2, 5]], "op": "÷", "k": [10, 2]}, {"t": "linha", "v": "40% = 2/5", "classe": "certo"}]
+    },
+    {
+     "texto": "De cada 100: é a porcentagem!",
+     "titulo": "Parte ÷ todo, e depois × 100",
+     "lousa": [{"t": "enunciado", "v": "Numa turma de 20 alunos, 5 faltaram. Qual porcentagem faltou?"}, {"t": "bloco", "titulo": "1º Vira fração"}, {"t": "linha", "v": "5 de 20 = 5/20"}, {"t": "escreve", "v": "5 de 20 vira a fração 5/20."}, {"t": "bloco", "titulo": "2º Deixa o de baixo 100"}, {"t": "linha", "v": "20 × 5 = 100"}, {"t": "escreve", "v": "Quero 100 embaixo: 20 × 5 = 100."}, {"t": "fracoes", "fr": [[5, 20], [25, 100]], "op": "×"}, {"t": "escreve", "v": "Em cima também × 5: 25."}, {"t": "bloco", "titulo": "3º De cada 100 = %"}, {"t": "linha", "v": "25/100 = 25%", "classe": "certo"}, {"t": "escreve", "v": "25 de cada 100: 25%!"}]
+    }
+   ]
+  },
+  "mapa7-B": {
+   "titulo": "Porcentagem: qual é a conta?",
+   "paginas": [
+    {
+     "texto": "Porcentagem? Divide por cem!",
+     "lousa": [{"t": "escreve", "v": "% é ÷ 100.", "n": true}, {"t": "virgula", "v": "20", "op": "÷", "k": 100}]
+    },
+    {
+     "texto": "Sempre duas casas para a esquerda!",
+     "titulo": "Mais exemplos: 15% e 100%",
+     "lousa": [{"t": "virgula", "v": "15", "op": "÷", "k": 100}, {"t": "virgula", "v": "100", "op": "÷", "k": 100}]
+    },
+    {
+     "texto": "Faltou número? Põe zero!",
+     "lousa": [{"t": "virgula", "v": "5", "op": "÷", "k": 100}]
+    },
+    {
+     "texto": "Pegadinha: dois pulos, não um!",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "barras", "fr": [[50, 100]], "rotulos": ["0,5"]}, {"t": "linha", "v": "5% = 0,5"}]}, "dir": {"passos": [{"t": "barras", "fr": [[5, 100]], "rotulos": ["0,05"]}, {"t": "linha", "v": "5% = 0,05"}]}}, {"t": "escreve", "v": "0,5 é 50%! A vírgula tem que andar 2 casas.", "cor": "errado"}]
+    },
+    {
+     "texto": "O \"de\" vira vezes!",
+     "lousa": [{"t": "linha", "v": "25% de 60"}, {"t": "bloco", "titulo": "1º % vira decimal"}, {"t": "virgula", "v": "25", "op": "÷", "k": 100}, {"t": "bloco", "titulo": "2º \"de\" vira ×"}, {"t": "linha", "v": "25% de 60 = 60 × 0,25", "classe": "certo"}, {"t": "escreve", "v": "\"de\" vira ×: 60 × 0,25"}]
+    },
+    {
+     "texto": "Agora multiplica, com a vírgula.",
+     "lousa": [{"t": "armada", "a": "60", "op": "×", "b": "0,25"}, {"t": "escreve", "v": "25% de 60 = 15", "cor": "certo"}]
+    },
+    {
+     "texto": "Decimal vira porcentagem: vezes cem!",
+     "titulo": "Ler a conta ao contrário",
+     "lousa": [{"t": "linha", "v": "40 × 0,2"}, {"t": "bloco", "titulo": "1º 0,2 vira %"}, {"t": "virgula", "v": "0,2", "op": "×", "k": 100, "fim": false}, {"t": "escreve", "v": "0,2 = 20%"}, {"t": "bloco", "titulo": "2º Lê a conta"}, {"t": "linha", "v": "40 × 0,2 = 20% de 40", "classe": "certo"}, {"t": "escreve", "v": "Então 40 × 0,2 calcula 20% de 40."}]
+    },
+    {
+     "texto": "Desconto é o que sai do preço.",
+     "lousa": [{"t": "linha", "v": "R$ 40 com 10% de desconto"}, {"t": "escreve", "v": "Desconto = quanto vai diminuir.", "n": true}, {"t": "linha", "v": "10% de 40 = 4"}, {"t": "escreve", "v": "10% de 40 = 4: esse é o desconto.", "n": true}, {"t": "linha", "v": "40 − 4 = 36", "classe": "certo"}, {"t": "escreve", "v": "Paga: 40 − 4 = R$ 36", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "Desconto tira do preço!",
+     "titulo": "Preço final com desconto",
+     "lousa": [{"t": "linha", "v": "R$ 80 com 10% de desconto. Quanto pago?"}, {"t": "bloco", "titulo": "1º O desconto"}, {"t": "linha", "v": "80 × 0,1 = 8"}, {"t": "escreve", "v": "Primeiro acha o desconto: 80 × 0,1 = 8."}, {"t": "bloco", "titulo": "2º Tira do preço"}, {"t": "linha", "v": "80 − 8 = 72", "classe": "certo"}, {"t": "escreve", "v": "Desconto sai do preço: 80 − 8 = 72."}, {"t": "linha", "v": "A conta toda: 80 − 80 × 0,1"}, {"t": "escreve", "v": "A conta toda é 80 − 80 × 0,1."}]
+    },
+    {
+     "texto": "Desconto tira, aumento soma!",
+     "titulo": "Aumento",
+     "lousa": [{"t": "linha", "v": "Mesada de R$ 50 com aumento de 20%"}, {"t": "bloco", "titulo": "1º O aumento"}, {"t": "linha", "v": "50 × 0,2 = 10"}, {"t": "bloco", "titulo": "2º Aumento soma"}, {"t": "linha", "v": "50 + 10 = 60", "classe": "certo"}, {"t": "escreve", "v": "Aumento é a mesma conta, mas soma no fim."}, {"t": "linha", "v": "A conta toda: 50 + 50 × 0,2"}]
+    },
+    {
+     "texto": "Paga o que sobra do 100%!",
+     "titulo": "Pagar direto: 100% − desconto",
+     "lousa": [{"t": "linha", "v": "R$ 80 com 10% de desconto"}, {"t": "bloco", "titulo": "1º Quanto paga"}, {"t": "grade100", "n": 90, "riscados": 10}, {"t": "escreve", "v": "Com 10% de desconto, você paga 90%."}, {"t": "bloco", "titulo": "2º 90% vira decimal"}, {"t": "linha", "v": "90% = 0,9"}, {"t": "bloco", "titulo": "3º A conta"}, {"t": "linha", "v": "80 × 0,9 = 72", "classe": "certo"}, {"t": "escreve", "v": "80 × 0,9 = 72: o mesmo preço final!"}]
+    }
+   ]
+  },
+  "mapa8-A": {
+   "titulo": "Linguagem algébrica e valor numérico",
+   "paginas": [
+    {
+     "texto": "A letra é um número escondido.",
+     "lousa": [{"t": "escondido", "v": "?", "mostra": "x", "onde": 0, "fala": "Quando a gente não sabe o número, chama ele de x."}, {"t": "escreve", "v": "Pode ser qualquer letra: x, a, y, m."}, {"t": "linha", "v": "x = ?"}, {"t": "texto", "v": "x guarda um número"}, {"t": "escreve", "v": "A letra (x) guarda um número que a gente ainda não sabe."}]
+    },
+    {
+     "texto": "Dobro = 2x, triplo = 3x.",
+     "lousa": [{"t": "lateral", "linhas": ["um número → x", "o dobro → 2x", "o triplo → 3x", "o quádruplo → 4x", "a metade → x ÷ 2", "mais 5 → + 5", "menos 5 → − 5", "ao quadrado → x²"], "acende": [1]}, {"t": "enunciado", "v": "o dobro de um número"}, {"t": "linha", "v": "dobro → 2x"}, {"t": "linha", "v": "2x", "classe": "certo"}, {"t": "escreve", "v": "Dobro = 2 vezes.", "n": true}, {"t": "escreve", "v": "O dobro de um número = 2 × x = 2x", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "Cada palavra vira um símbolo.",
+     "lousa": [{"t": "lateral", "linhas": ["um número → x", "o dobro → 2x", "o triplo → 3x", "o quádruplo → 4x", "a metade → x ÷ 2", "mais 5 → + 5", "menos 5 → − 5", "ao quadrado → x²"], "acende": [0, 1, 2, 3, 4, 5, 6, 7]}, {"t": "escreve", "v": "Cada palavra da frase vira um símbolo."}, {"t": "escreve", "v": "Dobro = 2 vezes · Triplo = 3 vezes."}, {"t": "escreve", "v": "Metade = dividir por 2."}, {"t": "escreve", "v": "Mais = +  ·  Menos = −"}]
+    },
+    {
+     "texto": "Escreve na ordem da frase!",
+     "titulo": "A ordem importa no menos",
+     "lousa": [{"t": "lateral", "linhas": ["um número → x", "o dobro → 2x", "o triplo → 3x", "o quádruplo → 4x", "a metade → x ÷ 2", "mais 5 → + 5", "menos 5 → − 5", "ao quadrado → x²"], "acende": [0, 6]}, {"t": "compara", "esq": {"passos": [{"t": "linha", "v": "\"um número menos 3\""}, {"t": "linha", "v": "3 − x"}]}, "dir": {"passos": [{"t": "linha", "v": "\"um número menos 3\""}, {"t": "linha", "v": "x − 3"}]}}, {"t": "escreve", "v": "A frase começa com \"um número\": o x vem primeiro.", "cor": "certo"}, {"t": "escreve", "v": "x − 3 e 3 − x são diferentes!", "cor": "errado"}]
+    },
+    {
+     "texto": "Lê por pedaços!",
+     "titulo": "O dobro de um número mais 5",
+     "lousa": [{"t": "lateral", "linhas": ["um número → x", "o dobro → 2x", "o triplo → 3x", "o quádruplo → 4x", "a metade → x ÷ 2", "mais 5 → + 5", "menos 5 → − 5", "ao quadrado → x²"], "acende": [1, 5]}, {"t": "bloco", "titulo": "1º \"o dobro de um número\""}, {"t": "linha", "v": "2x"}, {"t": "escreve", "v": "O dobro de um número: 2x."}, {"t": "bloco", "titulo": "2º \"mais 5\""}, {"t": "linha", "v": "2x + 5", "classe": "certo"}, {"t": "escreve", "v": "Mais 5: + 5."}]
+    },
+    {
+     "texto": "Troca a letra pelo número e calcula.",
+     "lousa": [{"t": "linha", "v": "x + 3"}, {"t": "linha", "v": "x = 4"}, {"t": "escreve", "v": "Troca o x pelo 4.", "n": true}, {"t": "expressao", "v": "4 + 3"}]
+    },
+    {
+     "texto": "Tem um vezes escondido!",
+     "titulo": "O × escondido",
+     "lousa": [{"t": "escondido", "v": "2x", "mostra": "2 × x", "onde": 1, "fala": "Número colado na letra tem um × escondido."}, {"t": "escreve", "v": "2x = 2 × x."}]
+    },
+    {
+     "texto": "Número colado na letra é vezes!",
+     "lousa": [{"t": "linha", "v": "2x"}, {"t": "linha", "v": "x = 6"}, {"t": "escreve", "v": "2x = 2 vezes x. Troca o x pelo 6.", "n": true}, {"t": "expressao", "v": "2 × 6"}]
+    },
+    {
+     "texto": "Pegadinha: número colado na letra não vira dezena!",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "2x"}, {"t": "linha", "v": "x = 6"}, {"t": "linha", "v": "26"}]}, "dir": {"passos": [{"t": "linha", "v": "2x"}, {"t": "linha", "v": "x = 6"}, {"t": "linha", "v": "2 × 6"}, {"t": "linha", "v": "12"}]}}, {"t": "escreve", "v": "2x com x = 6: 2 × 6 = 12", "cor": "certo"}, {"t": "escreve", "v": "2x não é 26: é 2 vezes 6!", "cor": "errado"}]
+    },
+    {
+     "texto": "x ao quadrado é x vezes x!",
+     "titulo": "x² com número",
+     "lousa": [{"t": "linha", "v": "x² + 3   quando x = 4"}, {"t": "bloco", "titulo": "1º Troca"}, {"t": "linha", "v": "4² + 3"}, {"t": "bloco", "titulo": "2º A potência"}, {"t": "expressao", "v": "4 × 4"}, {"t": "bloco", "titulo": "3º Soma"}, {"t": "linha", "v": "16 + 3 = 19", "classe": "certo"}]
+    },
+    {
+     "texto": "Não é vezes dois!",
+     "titulo": "Pegadinha: x²",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "4²"}, {"t": "linha", "v": "4 × 2"}, {"t": "linha", "v": "8"}]}, "dir": {"passos": [{"t": "linha", "v": "4²"}, {"t": "linha", "v": "4 × 4"}, {"t": "linha", "v": "16"}]}}, {"t": "escreve", "v": "x² é x vezes x, não x vezes 2!", "cor": "errado"}]
+    },
+    {
+     "texto": "Negativo entra entre parênteses!",
+     "titulo": "x negativo",
+     "lousa": [{"t": "linha", "v": "3x − 2   quando x = −2"}, {"t": "bloco", "titulo": "1º Troca"}, {"t": "linha", "v": "3 × (−2) − 2"}, {"t": "escreve", "v": "Troca o x pelo −2, entre parênteses."}, {"t": "bloco", "titulo": "2º O sinal"}, {"t": "linha", "v": "3 × (−2) = −6"}, {"t": "escreve", "v": "3 × (−2): sinais diferentes, dá −6."}, {"t": "bloco", "titulo": "3º A conta"}, {"t": "reta", "de": -6, "anda": [-2], "min": -10, "max": 1}, {"t": "linha", "v": "−6 − 2 = −8", "classe": "certo"}]
+    },
+    {
+     "texto": "Cada letra tem o seu número!",
+     "titulo": "Duas letras",
+     "lousa": [{"t": "linha", "v": "2a + 3b   quando a = 1 e b = 2"}, {"t": "bloco", "titulo": "1º Troca cada letra"}, {"t": "termos", "v": "2a + 3b", "cores": true}, {"t": "linha", "v": "2 × 1 + 3 × 2"}, {"t": "escreve", "v": "Cada letra tem o seu número: a = 1, b = 2."}, {"t": "bloco", "titulo": "2º Calcula"}, {"t": "expressao", "v": "2 × 1 + 3 × 2"}]
+    }
+   ]
+  },
+  "mapa8-B": {
+   "titulo": "Termos semelhantes",
+   "paginas": [
+    {
+     "texto": "Cada pedaço é um termo!",
+     "titulo": "O que é termo",
+     "lousa": [{"t": "termos", "v": "3x + 2y + 5"}, {"t": "escreve", "v": "Termo é cada pedaço separado pelo + ou pelo −."}, {"t": "escreve", "v": "No 3x, o 3 é o número da frente e o x é a letra."}]
+    },
+    {
+     "texto": "Mesma letra? Soma os números!",
+     "lousa": [{"t": "linha", "v": "3x + 2x"}, {"t": "linha", "v": "(3 + 2)x"}, {"t": "linha", "v": "5x", "classe": "certo"}, {"t": "escreve", "v": "3x e 2x: mesma letra.", "n": true}, {"t": "escreve", "v": "Soma só os números: 3 + 2 = 5", "n": true}, {"t": "escreve", "v": "3x + 2x = 5x", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "Letra sozinha tem um 1 escondido!",
+     "titulo": "O 1 escondido",
+     "lousa": [{"t": "escondido", "v": "x", "mostra": "1x", "onde": 0, "fala": "Letra sozinha tem um 1 escondido na frente."}, {"t": "escondido", "v": "−b", "mostra": "−1b", "onde": 0, "fala": "E −b = −1b."}, {"t": "linha", "v": "5x − 4x = 1x = x", "classe": "certo"}, {"t": "escreve", "v": "Deu 1x? Escreve só x."}]
+    },
+    {
+     "texto": "x sozinho vale 1x.",
+     "lousa": [{"t": "linha", "v": "4a + a"}, {"t": "linha", "v": "4a + 1a"}, {"t": "linha", "v": "(4 + 1)a"}, {"t": "linha", "v": "5a", "classe": "certo"}, {"t": "escreve", "v": "a sozinho = 1a.", "n": true}, {"t": "escreve", "v": "Soma os números: 4 + 1 = 5", "n": true}, {"t": "escreve", "v": "4a + a = 5a", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "Na subtração é igual.",
+     "lousa": [{"t": "linha", "v": "9x − 2x"}, {"t": "linha", "v": "(9 − 2)x"}, {"t": "linha", "v": "7x", "classe": "certo"}, {"t": "escreve", "v": "Subtrai só os números: 9 − 2 = 7", "n": true}, {"t": "escreve", "v": "9x − 2x = 7x", "cor": "certo", "n": true}]
+    },
+    {
+     "texto": "Letras diferentes não juntam!",
+     "lousa": [{"t": "linha", "v": "2x + 3y"}, {"t": "linha", "v": "2x + 3y", "classe": "certo"}, {"t": "texto", "v": "x e y: não juntam"}, {"t": "escreve", "v": "x e y: letras diferentes."}, {"t": "escreve", "v": "Não junta: fica 2x + 3y.", "cor": "certo"}]
+    },
+    {
+     "texto": "Mesmo expoente para juntar!",
+     "titulo": "x e x² não são semelhantes",
+     "lousa": [{"t": "linha", "v": "x  ━━━  (um tracinho)"}, {"t": "linha", "v": "x²  ■  (um quadradinho)"}, {"t": "linha", "v": "x ≠ x²", "classe": "certo"}, {"t": "escreve", "v": "Semelhantes: mesma letra e mesmo expoente."}, {"t": "escreve", "v": "x e x² são diferentes: não juntam."}]
+    },
+    {
+     "texto": "Junta os iguais!",
+     "titulo": "Simplificar com números soltos",
+     "lousa": [{"t": "bloco", "titulo": "1º Pinta os iguais"}, {"t": "termos", "v": "5x + 3 − 2x + 4", "cores": true}, {"t": "escreve", "v": "Pinta da mesma cor o que é igual."}, {"t": "bloco", "titulo": "2º Junta os x"}, {"t": "linha", "v": "5x − 2x = 3x"}, {"t": "escreve", "v": "Junta os x: 5 − 2 = 3, fica 3x."}, {"t": "bloco", "titulo": "3º Junta os números"}, {"t": "linha", "v": "3 + 4 = 7"}, {"t": "linha", "v": "3x + 7", "classe": "certo"}, {"t": "escreve", "v": "Resposta: 3x + 7."}]
+    },
+    {
+     "texto": "Perímetro: soma a volta toda!",
+     "titulo": "Perímetro",
+     "lousa": [{"t": "perimetro", "lados": ["x", "x", "x", "x"]}, {"t": "linha", "v": "x + x + x + x = 4x", "classe": "certo"}, {"t": "escreve", "v": "Perímetro é a volta inteira: soma todos os lados."}, {"t": "perimetro", "lados": ["x", "3", "x", "3"]}, {"t": "linha", "v": "x + 3 + x + 3 = 2x + 6", "classe": "certo"}, {"t": "escreve", "v": "No retângulo: junta os x e junta os números."}]
+    },
+    {
+     "texto": "Pegadinha: a letra não soma!",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "3x + 2x"}, {"t": "linha", "v": "5x²"}]}, "dir": {"passos": [{"t": "linha", "v": "3x + 2x"}, {"t": "linha", "v": "(3 + 2)x"}, {"t": "linha", "v": "5x"}]}}, {"t": "escreve", "v": "(3 + 2)x = 5x", "cor": "certo"}, {"t": "escreve", "v": "A letra não vira x²: só os números somam!", "cor": "errado"}]
     }
    ]
   }

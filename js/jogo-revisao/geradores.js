@@ -10,14 +10,15 @@ export { usarSemente, usarAleatorio } from './base.js';
 const BANCO = { ...MAPAS_1_4, ...MAPAS_5_8, ...MAPAS_9_13 };
 // Lembrete geral de cada ginásio (aparece quando o aluno erra, junto com a explicação).
 export const DICAS = {
-  '1A': 'Primeiro × e ÷ (da esquerda para a direita), depois + e −.',
-  '1B': 'Resolva primeiro o que está dentro de ( ), depois [ ], depois { }.',
-  '2A': '× 10, 100, 1000: a vírgula anda 1, 2, 3 casas para a direita. ÷: para a esquerda.',
-  '2B': '1 m = 100 cm; 1 kg = 1000 g; 1 L = 1000 mL. Para a unidade menor, multiplique.',
-  '3A': 'Somar positivo anda para a direita na reta; somar negativo anda para a esquerda.',
-  '3B': 'Sinais iguais dão positivo. Sinais diferentes dão negativo.',
-  '4A': 'Fração de um número: divida pelo de baixo e multiplique pelo de cima.',
-  '4B': 'Nas contas com decimais, coloque vírgula embaixo de vírgula.',
+  // PROMPT-196: mapas 1 a 4 com dicas curtas (máx. ~6 palavras); no cartão do erro, a dica do tipo de conta vem de aulas-como.js (dicaCurta)
+  '1A': '× e ÷ antes de + e −',
+  '1B': '( ) primeiro, depois [ ]',
+  '2A': 'Cada zero, uma casa da vírgula',
+  '2B': 'Unidade menor, número maior',
+  '3A': 'Sinais diferentes: subtrai',
+  '3B': 'Iguais +, diferentes −',
+  '4A': 'Mesma conta em cima e embaixo',
+  '4B': 'Vírgula embaixo de vírgula',
   '5A': 'O expoente diz quantas vezes a base se multiplica: 2³ = 2 × 2 × 2.',
   '5B': 'Raiz quadrada: qual número vezes ele mesmo dá o valor? Elevado a 0 dá 1.',
   '6A': 'É múltiplo se a divisão não deixa sobra (está na tabuada).',

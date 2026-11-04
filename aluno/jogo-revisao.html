@@ -464,12 +464,17 @@
             <div class="jr-erro-resp sua"><small>Você marcou</small><b><i>✘</i> <span id="erro-sua"></span></b></div>
             <div class="jr-erro-resp certa"><small>Certa</small><b><i>✔</i> <span id="erro-certa"></span></b></div>
           </div>
+          <div class="jr-erro-dica" id="erro-dica" hidden></div><!-- PROMPT-196: a dica curta embaixo dos quadros -->
+          <!-- PROMPT-199: com pet, ele dá a dica (balão com a palavrinha do jeito dele); sem pet, a 💡 de cima -->
+          <div class="jr-erro-petdica" id="erro-petdica" hidden><div class="jr-erro-pet"><img id="erro-pet-img" alt="" draggable="false"/></div><div class="jr-erro-balao" id="erro-balao"></div></div>
           <div class="jr-erro-grade" id="erro-grade" hidden></div>
         </div>
         <div class="jr-erro-dir">
-          <div class="jr-erro-tit">Como resolver</div>
+          <div class="jr-erro-tit" id="erro-tit">Como resolver</div>
           <ol class="jr-erro-passos" id="erro-passos"></ol>
-          <div class="jr-erro-linha" id="erro-linha-dica"><span class="jr-erro-dica" id="erro-dica"></span><button class="jr-btn-relembre" id="erro-relembre">📖 Relembre</button><button class="jr-btn-relembre" id="erro-ver" hidden>▶ Ver como faz</button></div>
+          <!-- PROMPT-193: a lousa já abre sozinha, resolvendo só do jeito certo (sem animação: o texto "Como resolver" de cima) -->
+          <div class="jr-erro-lousa" id="erro-lousa" aria-live="polite" hidden></div>
+          <div class="jr-erro-linha" id="erro-linha-dica"><button class="jr-btn-relembre" id="erro-rep" title="Ver a animação de novo" aria-label="Ver a animação de novo" hidden>↺</button><button class="jr-btn-relembre" id="erro-relembre">📖 Relembre</button></div>
         </div>
       </div>
       <div class="jr-erro-rodape"><span class="jr-erro-volta" id="erro-volta"></span><button class="jr-btn jr-btn-ouro" id="erro-continuar" disabled>Continuar ▶</button></div>

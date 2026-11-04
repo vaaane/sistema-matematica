@@ -7,7 +7,7 @@ import { db } from '/js/firebase-config.js';
 import { ref, get, update, push, set, remove, increment, onValue, onChildAdded, onChildChanged, onChildRemoved, runTransaction, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { prepararFoto, analisarMoldura } from '/js/jogo-revisao/exposicao-img.js';
 import { criarLousa } from '/js/jogo-revisao/lousa.js';
-import { comoFaz } from '/js/jogo-revisao/aulas-como.js';
+import { comoFaz, dicaCurta } from '/js/jogo-revisao/aulas-como.js';
 import { urlSprite as spriteComCor, coresValidas, semCor, CORES_CABELO, CORES_BLUSA, CORES_DIVERTIDAS, PRECO_COR_DIVERTIDA, NOME_COR } from '/js/jogo-revisao/cores-pers.js';
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE, ALUNOS_POR_TURMA, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
@@ -87,7 +87,9 @@ const ADULTO_ANTES = CRESCE_EVOLUCAO * 622 / 604;
 // medidos no quadro de 566.
 const ALT_BASE_PERSONAGEM = ALT_JOGADOR_MAPA / ESCALA_ATORES;   // 55
 ALT_PET.dragao_azul_adulto = ALT_PET.dragao_vermelho_adulto = ALT_BASE_PERSONAGEM;
-ALT_PET.tigre_adulto = ALT_BASE_PERSONAGEM;   // 🐯 PROMPT-181: o tigre adulto sentado na altura do personagem (sentado_altura 433 no quadro de 566)
+// 🐯 PROMPT-181: o tigre adulto sentado na altura do personagem (sentado_altura 433 no quadro de 566); PROMPT-194: 20% maior (55 → 66)
+const CRESCE_TIGRE_ADULTO = 1.2;
+ALT_PET.tigre_adulto = ALT_BASE_PERSONAGEM * CRESCE_TIGRE_ADULTO;
 const ALT_PET_PADRAO = 30;   // pet que não estiver na tabela
 // cores especiais do dragão (PROMPT-74/84): a cor é só visual; o tamanho é o do dragão de base.
 // dragao_vermelho_{cor}[_adulto] → dragao_vermelho[_adulto]; dragao_{cor}[_adulto] → dragao_azul[_adulto]
@@ -109,7 +111,7 @@ const DUELO_ADULTO = 1.3;
 const fatorDuelo = (pet, forma) => fatorForma(pet, forma) * (ehFormaAdulta(forma) ? DUELO_ADULTO : 1);
 // Duelo do ginásio e batalha (PROMPT-81): o dragão adulto fica o maior que couber na arena (o CSS calcula com cqw/cqh).
 // O de maior escala (vermelho) ocupa o máximo; os outros ficam com escala / escalaMax disso (azul = 0,75 / 1,75).
-const relDuelo = (forma) => escalaPet(forma) / escalaMax();
+const relDuelo = (forma) => escalaPet(forma) / escalaMax() * (/^tigre_adulto/.test(forma) ? CRESCE_TIGRE_ADULTO : 1);   // 🐯 PROMPT-194: tigre adulto +20%
 // caixas pequenas feitas para o filhote (coleção, HUD, chips, cartões): sem a escala, para nada ser cortado
 const fatorFormaCaixa = (pet, forma) => fatorForma(pet, forma) / (ehFormaAdulta(forma) ? escalaPet(forma) : 1);
 // Imagem pequena numa caixa feita para o filhote (coleção, HUD, chips, cartões): o quadro do adulto é mais largo
@@ -332,7 +334,7 @@ const DIST_PET = {
 };
 // cresce junto com o tamanho (mesma proporção distância/altura do filhote vermelho; distPet ainda × a escala do vermelho)
 DIST_PET.dragao_azul_adulto = DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * ALT_PET.dragao_azul_adulto / ALT_PET.dragao_vermelho;
-DIST_PET.tigre_adulto = DIST_PET.tigre * ALT_PET.tigre_adulto / ALT_PET.tigre;
+DIST_PET.tigre_adulto = DIST_PET.tigre * ALT_PET.tigre_adulto / ALT_PET.tigre;   // a distância cresce junto (PROMPT-194: 79,2)
 const DIST_PET_PADRAO = 36;
 const distPet = (pet) => (DIST_PET[pet] ?? DIST_PET[formaDeTamanho(pet)] ?? DIST_PET_PADRAO) * escalaPet(pet);
 // no ginásio tudo é o dobro da escala base (o personagem tem ALT_JOGADOR = 110 em vez de 55)
@@ -1156,6 +1158,7 @@ function lerPets(v) {
     tinhaExpedicoes: v.pets?.expedicoes_dia != null, migrouMorcego: !!v.pets?.migrou_morcego, migrouCapivara: !!v.pets?.migrou_capivara,
     coresPet: { ...(v.pets?.cores_pet || {}) }, coresTodas: { ...(v.pets?.cores_todas || {}) }, migrouTintas: !!v.pets?.migrou_tintas,   // 🎨 PROMPT-170
     devolveuCoresGaviao: !!v.pets?.devolveu_cores_gaviao,   // 🦅 PROMPT-190
+    devolveuCores194: !!v.pets?.devolveu_cores_194,   // 🐱🦄 PROMPT-194
     fundo: v.pets?.fundo || null, fundosComprados: { ...(v.pets?.fundos_comprados || {}) } };   // 🖼️ PROMPT-179
 }
 
@@ -1182,6 +1185,7 @@ function iniciarPet() {
   migrarMorcego(ps);
   migrarTintas(ps);   // 🎨 PROMPT-170
   devolverCoresGaviao(ps);   // 🦅 PROMPT-190
+  devolverCores194(ps);   // 🐱🦄 PROMPT-194
   limparExpedicao(ps);   // 🧭 PROMPT-177
   for (const p of Object.keys(ps.conquistados)) if (!petValido(p)) delete ps.conquistados[p];
   liberarPetsProfessora(ps);
@@ -2388,6 +2392,38 @@ function devolverCoresGaviao(ps) {
   }
   if (Object.keys(patch).length) gravar(patch);
   if (total > 0) setTimeout(() => avisarCoresGaviao(total), 4000);
+}
+// 🐱🦄 PROMPT-194: o gato ficou só com o preto e o unicórnio sem marrom, dourado e preto. A cor vestida que saiu volta para o
+// original; as compradas (pets/cores_pet/{pet}/{cor}) voltam em moedas, uma vez só (pets/devolveu_cores_194), como no PROMPT-190.
+const CORES_QUE_SAIRAM_194 = { gato: (c) => c !== 'preto', unicornio: (c) => ['marrom', 'dourado', 'preto'].includes(c) };
+function devolverCores194(ps) {
+  const patch = {};
+  for (const [pet, saiu] of Object.entries(CORES_QUE_SAIRAM_194)) {
+    const c = ps.conquistados?.[pet];
+    if (c?.cor && saiu(c.cor)) { c.cor = null; patch[`pets/conquistados/${pet}/cor`] = null; }
+  }
+  let total = 0;
+  if (!ps.devolveuCores194) {
+    const gratis = todasAsCoresPet();
+    for (const [pet, saiu] of Object.entries(CORES_QUE_SAIRAM_194)) {
+      for (const [cor, sim] of Object.entries(ps.coresPet?.[pet] || {})) {
+        if (!saiu(cor)) continue;
+        if (sim === true && !gratis && !ps.coresTodas?.[cor]) total += precoCorPet(cor);
+        delete ps.coresPet[pet][cor];
+        patch[`pets/cores_pet/${pet}/${cor}`] = null;
+      }
+    }
+    ps.devolveuCores194 = true;
+    patch['pets/devolveu_cores_194'] = true;
+    if (total > 0) { ps.moedas = (Number(ps.moedas) || 0) + total; patch['pets/moedas'] = ps.moedas; }
+  }
+  if (Object.keys(patch).length) gravar(patch);
+  if (total > 0) setTimeout(() => avisarCores194(total), 4000);
+}
+function avisarCores194(n) {   // depois do tutorial (e do cartão de pet entregue), como o do gavião
+  if (tutorialPendente() || !$('tutorial').hidden || petEntregue) { setTimeout(() => avisarCores194(n), 2000); return; }
+  avisoPet(`🎨 Algumas cores saíram do jogo. Suas ${n} 🪙 voltaram!`, true);
+  pintarMoedasTopo();
 }
 function avisarCoresGaviao(n) {   // depois do tutorial (e do cartão de pet entregue), como o aviso das tintas
   if (tutorialPendente() || !$('tutorial').hidden || petEntregue) { setTimeout(() => avisarCoresGaviao(n), 2000); return; }
@@ -13244,7 +13280,7 @@ function abrirRevisaoBatalha() {
       </div>
       <div class="bt-rev-explica">${esc(x.explica)}</div>
       ${x.relembre && explicacaoDe(x.relembre) ? `<button class="jr-btn-relembre" data-relembre="${x.relembre}">📖 Relembre</button>` : ''}
-      ${comoFazDe({ enunciado: x.conta, explicacao: x.explica, relembre: x.relembre }) ? `<button class="jr-btn-relembre" data-como="${esc(x.conta)}" data-como-rel="${esc(x.relembre || '')}" data-como-exp="${esc(x.explica || '')}" data-como-certa="${esc(x.certa ?? '')}" data-como-sua="${esc(x.resposta ?? '')}">▶ Ver como faz</button>` : ''}
+      ${comoFazDe({ enunciado: x.conta, explicacao: x.explica, relembre: x.relembre }) ? `<button class="jr-btn-relembre" data-como="${esc(x.conta)}" data-como-rel="${esc(x.relembre || '')}" data-como-exp="${esc(x.explica || '')}" data-como-certa="${esc(x.certa ?? '')}">▶ Ver como faz</button>` : ''}
     </div>`).join('');
   $('bt-revisao').hidden = false;
   $('bt-rev-lista').scrollTop = 0;
@@ -14416,7 +14452,7 @@ function mostrarPlanoPergunta(q) {
   if (!tem) pgPlano = null;
 }
 
-let erroComoFaz = null;
+let erroComoFaz = null, erroLousa = null;
 function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   const passos = passosDe(q.explicacao);
   const ultimo = passos[passos.length - 1] || '';
@@ -14427,16 +14463,25 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   $('erro-sua').textContent = sua;
   $('erro-certa').textContent = certa;
   $('erro-passos').innerHTML = passos.map((t, i) => `<li>${i === passos.length - 1 ? passoFinalHtml(t, certa) : esc(t)}</li>`).join('');
-  // dica: só se não repetir o que já está nos passos
-  const dica = String(q.dica || '').trim(), nd = normTxt(dica), np = normTxt(q.explicacao || '');
+  const rel = q.relembre !== undefined ? q.relembre : chaveGinasio(q.mapa ?? pg.mapa, q.lado ?? pg.G);   // na revisão cada pergunta é de um ginásio; conta de batalha: pelo tipo
+  // dica: a curta do tipo de conta (PROMPT-196, mapas 1 a 4) ou a da pergunta; só se não repetir o que já está nos passos
+  const dica = String(dicaCurta(rel, q) || q.dica || '').trim(), nd = normTxt(dica), np = normTxt(q.explicacao || '');
   const mostraDica = !!dica && !(np.includes(nd) || nd.includes(np) && np.length > 20);
   $('erro-dica').textContent = mostraDica ? `💡 ${dica}` : '';
-  const rel = q.relembre !== undefined ? q.relembre : chaveGinasio(q.mapa ?? pg.mapa, q.lado ?? pg.G);   // na revisão cada pergunta é de um ginásio; conta de batalha: pelo tipo
+  $('erro-dica').hidden = !mostraDica;
   $('erro-relembre').hidden = !explicacaoDe(rel);
   $('erro-relembre').dataset.relembre = rel;
-  erroComoFaz = comoFazDe(q, sua);   // ▶ (PROMPT-185; PROMPT-191: ✖ sua resposta × ✔ certo)
-  $('erro-ver').hidden = !erroComoFaz;
-  $('erro-linha-dica').hidden = !mostraDica && $('erro-relembre').hidden && $('erro-ver').hidden;
+  // PROMPT-193: a lousa (aulas-como.js) já abre sozinha, só com o jeito certo; não deu para montar → os passos em texto
+  erroLousa?.cancelar();
+  erroComoFaz = comoFazDe(q);
+  const comLousa = !!erroComoFaz?.length;
+  $('erro-tit').hidden = comLousa;
+  $('erro-passos').hidden = comLousa;
+  $('erro-lousa').hidden = !comLousa;
+  $('erro-rep').hidden = !comLousa;
+  $('perg-erro').classList.toggle('com-lousa', comLousa);
+  petDaDica(mostraDica ? dica : '', comLousa);   // 🐾 PROMPT-199/201: o pet dá a dica e explica a lousa no balão
+  $('erro-linha-dica').hidden = $('erro-relembre').hidden && !comLousa;
   $('erro-volta').textContent = pg.modo === 'treino' ? `🔁 ${comOutrosNumeros ? 'Ela volta daqui a pouco, com outros números, e de novo amanhã.' : 'Ela volta daqui a pouco e de novo amanhã.'}` : `🔁 ${comOutrosNumeros ? 'Essa pergunta volta daqui a pouco, com outros números.' : 'Essa pergunta volta daqui a pouco.'}`;
   // 📐 com plano (PROMPT-128): o mesmo plano da pergunta, com a animação da resposta certa; sem plano, a mini-grade de antes
   erroPlano?.cancelar(); erroPlano = null; erroFig?.cancelar(); erroFig = null;
@@ -14455,8 +14500,15 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
     setTimeout(() => { if (erroPlano === ep) animarRespostaPlano(ep, q).catch(() => {}); }, 450);
   }
   const b = $('erro-continuar');
-  b.disabled = true;
   $('perg-erro').hidden = false;
+  if (comLousa) {   // PROMPT-193: o Continuar já vem liberado; a animação toca uma vez (↺ repete)
+    b.disabled = false;
+    b.focus({ preventScroll: true });
+    erroLousa ||= criarLousa($('erro-lousa'), { aoFalar: (v) => digitar($('erro-balao'), v) });
+    tocarLousaErro();
+    return;
+  }
+  b.disabled = true;
   const pgErro = pg;
   setTimeout(() => { if (pg === pgErro && !$('perg-erro').hidden) { b.disabled = false; b.focus({ preventScroll: true }); } }, ESPERA_CONTINUAR_MS);
 }
@@ -14524,8 +14576,59 @@ function passoCalculadora(enun) {
   return `Na calculadora: ${N} × ${p} % = ${f(N * p / 100)}`;
 }
 
+// 🗨️ PROMPT-201: o balão do pet mostra só o passo atual da lousa, letra a letra (~25 ms); a letra diminui se não couber (nunca rola)
+const digitando = new Map();
+function caberBalao(el, texto) {
+  el.style.fontSize = '';
+  el.textContent = texto;
+  let fs = parseFloat(getComputedStyle(el).fontSize) || 16;
+  for (let g = 0; g < 12 && el.scrollHeight > el.clientHeight + 1 && fs > 11; g++) { fs -= 1; el.style.fontSize = `${fs}px`; }
+}
+function digitar(el, texto) {
+  if (!el) return;
+  clearInterval(digitando.get(el)); digitando.delete(el);
+  const letras = Array.from(String(texto || ''));
+  caberBalao(el, letras.join(''));   // o tamanho da letra pela frase inteira, antes de começar
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !letras.length) return;
+  let n = 0;
+  el.textContent = '';
+  const id = setInterval(() => { n++; el.textContent = letras.slice(0, n).join(''); if (n >= letras.length) { clearInterval(id); digitando.delete(el); } }, 25);
+  digitando.set(el, id);
+}
+const pararDigitar = (el) => { clearInterval(digitando.get(el)); digitando.delete(el); };
+
+// 🐾 PROMPT-199: o pet ativo do aluno (na cor dele, como na Aula) com o balão: a palavrinha do jeito dele + a dica.
+// PROMPT-201: o mesmo balão explica cada passo da lousa; sem pet (e com lousa), o balão aparece sozinho; sem os dois, a 💡
+let erroFala = '';
+const pararDigitacao = () => pararDigitar($('erro-balao'));
+function petDaDica(dica, comLousa = false) {
+  pararDigitacao();
+  const pet = petsOk && estado?.pets?.ativo;
+  const mostra = !!pet && !!dica || comLousa;
+  $('erro-petdica').hidden = !mostra;
+  if (!mostra) return;
+  $('erro-dica').hidden = true;
+  $('erro-petdica').classList.toggle('sem-pet', !pet);
+  let abre = '';
+  if (pet) {
+    const img = $('erro-pet-img'), forma = formaDe(pet), busto = ehFormaAdulta(forma) && temBusto(forma);
+    img.removeAttribute('style');
+    $('erro-petdica').classList.toggle('com-busto', busto);
+    img.src = busto ? bustoPet(forma) : quadrosDe(forma, 'sentado_girando')[0];
+    marcarForma(img, pet, busto ? pet : forma);
+    aplicarVisualPet(img, pet);
+    if (busto) encaixarIcone(img);
+    const ab = AULAS.jeito?.[pet]?.abre;
+    abre = ab?.length ? ab[Math.floor(Math.random() * ab.length)] : '';
+  }
+  erroFala = [abre, dica].filter(Boolean).join(' ') || 'Olha como faz:';
+  digitar($('erro-balao'), erroFala);
+}
+
 function continuarDoErro() {
   if ($('erro-continuar').disabled) return;
+  pararDigitacao();
+  erroLousa?.cancelar();
   $('perg-erro').hidden = true;
   const f = pg?.aoContinuar;
   if (f) f();
@@ -16431,11 +16534,11 @@ function aulaNaEntrada(chave) {
   abrirAula(chave, 'entrada');
 }
 // a fala no jeito do pet: a da personalidade, ou a neutra com o começo (e, na última página, o fim) do jeito dele
-function falaAula(p, i, n) {
-  const pet = petsOk && estado.pets?.ativo, por = pet && p.por_personalidade?.[pet];
-  if (por) return por;
-  const j = pet && AULAS.jeito?.[pet], abre = j?.abre?.length ? j.abre[i % j.abre.length] : '', fecha = i === n - 1 && j?.fecha?.length ? j.fecha[i % j.fecha.length] : '';
-  return [abre, p.texto, fecha].filter(Boolean).join(' ');
+// PROMPT-196: a fala é curta; o jeito do pet é só uma palavrinha antes, sorteada de jeito.{pet}.abre (sem frase no fim)
+function falaAula(p) {
+  const pet = petsOk && estado.pets?.ativo, ab = pet && AULAS.jeito?.[pet]?.abre;
+  const abre = ab?.length ? ab[Math.floor(Math.random() * ab.length)] : '';
+  return [abre, p.texto].filter(Boolean).join(' ');
 }
 function abrirAula(chave, origem) {
   const A = aulaDe(chave);
@@ -16462,7 +16565,8 @@ function abrirAula(chave, origem) {
 // o pet à direita: sentado, na cor e forma dele; o adulto (largo demais) só com o busto
 function mostrarPetAula(com) {
   const pet = com && petsOk && estado.pets?.ativo;
-  $('aula-pet').hidden = !pet;
+  $('aula-pet').hidden = false;   // PROMPT-201: o balão aparece sempre (sem pet, sozinho)
+  $('aula-pet').classList.toggle('sem-pet', !pet);
   if (!pet) return;
   const img = $('aula-pet-img'), forma = formaDe(pet), busto = ehFormaAdulta(forma) && temBusto(forma);
   img.removeAttribute('style');
@@ -16477,7 +16581,8 @@ function irPaginaAula(i) {
   const ps = aulaDe(aula.chave).paginas, n = ps.length;
   aula.pag = clamp(i, 0, n - 1);
   const p = ps[aula.pag], ultima = aula.pag === n - 1;
-  $('aula-fala').textContent = falaAula(p, aula.pag, n);
+  aula.fala = falaAula(p);
+  aula.titulo = p.titulo || p.texto || '';   // PROMPT-202: a página pode ter um título próprio (a regra), diferente da fala
   $('aula-n').textContent = `${aula.pag + 1} / ${n}`;
   $('aula-ant').disabled = aula.pag === 0;
   $('aula-prox').hidden = ultima;
@@ -16488,10 +16593,18 @@ function irPaginaAula(i) {
   tocarLousaAula(p.lousa || []);
   (ultima ? $('aula-ok') : $('aula-prox')).focus({ preventScroll: true });
 }
+// PROMPT-201: o balão começa com a fala da página; a cada passo da lousa troca para a frase do passo; no fim, volta para a fala
 function tocarLousaAula(passos) {
-  lousaAula ||= criarLousa($('aula-lousa'));
+  lousaAula ||= criarLousa($('aula-lousa'), { aoFalar: (v) => { if (aula) digitar($('aula-fala'), v); } });
   aula.passos = passos;
-  lousaAula.tocar(passos);
+  const a = aula;
+  digitar($('aula-fala'), a.fala || '');
+  lousaAula.tocar(passos, { titulo: a.titulo || '' }).then((ok) => { if (ok && aula === a && a.passos === passos) digitar($('aula-fala'), a.fala || ''); });
+}
+function tocarLousaErro() {
+  digitar($('erro-balao'), erroFala);
+  const ps = erroComoFaz;
+  erroLousa.tocar(ps, { titulo: '' }).then((ok) => { if (ok && erroComoFaz === ps && !$('perg-erro').hidden) digitar($('erro-balao'), erroFala); });
 }
 // ✖ / Esc / tocar fora / Bora! / Entendi — a obrigatória só fecha pelo Bora! da última página
 function fecharAula(peloBotao = false) {
@@ -16500,6 +16613,7 @@ function fecharAula(peloBotao = false) {
   const { chave, modo, obrig } = aula;
   aula = null;
   lousaAula?.cancelar();
+  pararDigitar($('aula-fala'));
   $('aula').hidden = true;
   if (modo !== 'aula') return;
   if (obrig || !estado.aulasVistas[chave]) { estado.aulasVistas[chave] = true; gravar({ [`aulas_vistas/${chave}`]: true }); }
@@ -16509,14 +16623,14 @@ function fecharAula(peloBotao = false) {
 }
 
 // ── ▶ Ver como faz: a lousa com os números da questão errada (aulas-como.js, por ginásio). null = o botão não aparece ──
-function comoFazDe(q, sua) {
+function comoFazDe(q) {   // PROMPT-193: só o jeito certo (sem a coluna "✖ sua resposta" do PROMPT-191)
   if (!q) return null;
   const chave = q.relembre !== undefined ? q.relembre : chaveGinasio(q.mapa ?? pg?.mapa, q.lado ?? pg?.G);
-  return comoFaz(chave, q, sua);
+  return comoFaz(chave, q);
 }
 function abrirComoFaz(passos, titulo = 'Ver como faz') {
   if (!passos?.length) return;
-  aula = { modo: 'como', pag: 0, obrig: false };
+  aula = { modo: 'como', pag: 0, obrig: false, fala: 'Olha como faz:', titulo };
   $('aula').classList.add('como');
   $('aula-tit').textContent = titulo;
   $('aula-sub').textContent = '▶ Ver como faz';
@@ -16965,14 +17079,14 @@ function ligarEventos() {
   $('relembre').addEventListener('click', (e) => { if (e.target.id === 'relembre') fecharRelembre(); });
   $('erro-relembre').addEventListener('click', (e) => abrirRelembre(e.currentTarget.dataset.relembre, 'erro'));
   // 🧑‍🏫 Aula e ▶ Ver como faz (PROMPT-185)
-  $('erro-ver').addEventListener('click', () => abrirComoFaz(erroComoFaz, $('erro-enun').textContent));
+  $('erro-rep').addEventListener('click', () => { if (erroComoFaz) tocarLousaErro(); });   // ↺ (PROMPT-193)
   $('aula').addEventListener('click', (e) => {
     e.stopPropagation();
     if (e.target.id === 'aula' || e.target.closest('#aula-x')) { fecharAula(); return; }
     if (e.target.closest('#aula-ok')) { fecharAula(true); return; }
     if (e.target.closest('#aula-ant')) irPaginaAula(aula.pag - 1);
     else if (e.target.closest('#aula-prox')) irPaginaAula(aula.pag + 1);
-    else if (e.target.closest('#aula-rep')) { $('aula-pausa').textContent = '⏸'; lousaAula?.tocar(aula.passos); }
+    else if (e.target.closest('#aula-rep')) { $('aula-pausa').textContent = '⏸'; if (aula?.passos) tocarLousaAula(aula.passos); }
     else if (e.target.closest('#aula-pausa')) $('aula-pausa').textContent = lousaAula?.pausar() ? '▶' : '⏸';
   });
   window.addEventListener('keydown', (e) => {
@@ -16984,7 +17098,7 @@ function ligarEventos() {
   $('erro-continuar').addEventListener('click', continuarDoErro);
   $('bt-rev-lista').addEventListener('click', (e) => {
     const c = e.target.closest('[data-como]');   // ▶ (PROMPT-185)
-    if (c) { abrirComoFaz(comoFazDe({ enunciado: c.dataset.como, explicacao: c.dataset.comoExp, relembre: c.dataset.comoRel, resposta: c.dataset.comoCerta || undefined }, c.dataset.comoSua || undefined), c.dataset.como); return; }
+    if (c) { abrirComoFaz(comoFazDe({ enunciado: c.dataset.como, explicacao: c.dataset.comoExp, relembre: c.dataset.comoRel, resposta: c.dataset.comoCerta || undefined }), c.dataset.como); return; }
     const b = e.target.closest('[data-relembre]'); if (b) abrirRelembre(b.dataset.relembre, 'batalha');
   });
   $('cartao').addEventListener('click', (e) => { if (e.target.id === 'cartao') $('cartao').hidden = true; });
