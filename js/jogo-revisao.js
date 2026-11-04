@@ -6,6 +6,7 @@ import { isModoTeste, getSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, get, update, push, set, remove, increment, onValue, onChildAdded, onChildChanged, onChildRemoved, runTransaction, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { prepararFoto, analisarMoldura } from '/js/jogo-revisao/exposicao-img.js';
+import { criarLousa, passosExpressao } from '/js/jogo-revisao/lousa.js';
 import { urlSprite as spriteComCor, coresValidas, semCor, CORES_CABELO, CORES_BLUSA, CORES_DIVERTIDAS, PRECO_COR_DIVERTIDA, NOME_COR } from '/js/jogo-revisao/cores-pers.js';
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE, ALUNOS_POR_TURMA, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
@@ -472,6 +473,7 @@ async function carregarEstado() {
     liberarCoresDaConta();
     estado.revisaoSemanal = v.revisao_semanal || {};
     estado.relembre = v.relembre && typeof v.relembre === 'object' ? { ...v.relembre } : {};
+    estado.aulasVistas = v.aulas_vistas && typeof v.aulas_vistas === 'object' ? { ...v.aulas_vistas } : {};   // 🧑‍🏫 (PROMPT-185)
     estado.programe = v.programe && typeof v.programe === 'object' ? { ...v.programe, fases: { ...(v.programe.fases || {}) } } : { fases: {} };   // PROMPT-50
     estado.mestre = v.mestre?.data ? { data: v.mestre.data } : null;   // Mestre da Revisão: as 26 insígnias (PROMPT-57)
     estado.lenda = v.lenda?.data ? { data: v.lenda.data } : null;      // Lenda da Revisão: as 26 douradas
@@ -938,6 +940,7 @@ export async function iniciarJogo(sess) {
   catch (e) { console.warn('[jogo-revisao] truques indisponíveis', e); }
   try { MISSOES = await fetch(`${DADOS}/missoes.json`).then(r => { if (!r.ok) throw new Error('missoes.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] missões do dia indisponíveis', e); }
+  try { AULAS = await fetch(`${DADOS}/aulas.json`).then(r => (r.ok ? r.json() : {})); } catch (e) { console.warn('[jogo-revisao] aulas.json indisponível', e); }   // 🧑‍🏫 (PROMPT-185)
   try { EXPLIC = (await fetch(`${DADOS}/explicacoes.json`).then(r => { if (!r.ok) throw new Error('explicacoes.json'); return r.json(); })).explicacoes || {}; }
   catch (e) { console.warn('[jogo-revisao] explicações (Relembre) indisponíveis', e); }
   try { definirPedidos(await fetch(`${DADOS}/pedidos.json`).then(r => { if (!r.ok) throw new Error('pedidos.json'); return r.json(); })); }
@@ -993,7 +996,7 @@ export async function iniciarJogo(sess) {
   setTimeout(verificarTutorial, 1500);   // 📖 PROMPT-166
   if (comecaNaPraca) abrirPraca('fonte').catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   atualizarBotaoMissoes();
-  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); avisarCoracoes(); ouvirVila(); ouvirPedidosVisita(); iniciarPraca(); publicarResumoInsignias(); publicarVencedoresAntigos(); migrarQuadrosV2(); ouvirConvitesAoVivo(); });
+  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); ouvirAmigos(); avisarCoracoes(); ouvirVila(); ouvirPedidosVisita(); iniciarPraca(); publicarResumoInsignias(); publicarVencedoresAntigos(); migrarQuadrosV2(); ouvirConvitesAoVivo(); });
   // aluno novo escolhe o personagem antes de tudo (o pet inicial vem depois, ao entrar num mapa)
   if (carregouProgresso && estado.novo && !estado.personagem) abrirEscolhaPersonagem(true);
 }
@@ -2878,6 +2881,7 @@ function escolherFundo(id) {
   fundoCompra = null;
   estado.pets.fundo = id || null;
   gravar({ 'pets/fundo': id || null });
+  if (estado.casinha?.publicada && !casaSemGravar) update(ref(db, `${basePraca()}/casinhas/${sessao.uid}`), { fundo: id || null }).catch(() => {});   // 🖼️ o quadro do pet na visita (PROMPT-184)
   pintarFundoMp();
   renderFundos();
   tocar('clique');
@@ -3541,15 +3545,32 @@ function ouvirPresentes() {
 }
 async function receberPresente(k, p) {
   if (presentesEmAndamento.has(k)) return;
+  if (p.tipo === 'movel' && !itemCasa(daChave(p.item).id)) return;   // casinha.json ainda não carregou: fica para depois
   presentesEmAndamento.add(k);
   try {
     const t = await runTransaction(ref(db, `${basePresentes()}/${sessao.uid}/${k}/recebido`), (cur) => (cur ? undefined : Date.now()));
     if (!t.committed) return;
   } catch (_) { presentesEmAndamento.delete(k); return; }
-  const id = p.item || p.peixe, item = itemPresente(id);
-  if (!item) return;
   const patch = {};
-  mudarQtdPresente(id, +1, patch);
+  let item;
+  if (p.tipo === 'moedas') {   // 🤝 de um amigo (PROMPT-183)
+    const q = clamp(Math.round(Number(p.qtd) || 0), 0, MOEDAS_AMIGO_DIA);
+    if (!q) return;
+    estado.pets.moedas = (Number(estado.pets.moedas) || 0) + q;
+    patch['pets/moedas'] = estado.pets.moedas;
+    item = { nome: `${q} moedas`, texto: `${q} moedas`, html: moedaHtml('jr-item-peixe') };
+  } else if (p.tipo === 'movel') {   // vai para os guardados da casinha
+    const it = itemCasa(daChave(p.item).id), c = estado.casinha ||= lerCasinha(null);
+    c.guardados[p.item] = (Number(c.guardados[p.item]) || 0) + 1;
+    patch[`casinha/guardados/${p.item}`] = c.guardados[p.item];
+    if (cs && !cs.visita) cs.guardados[p.item] = (Number(cs.guardados[p.item]) || 0) + 1;
+    item = { nome: it.nome, html: `<img class="jr-item-img jr-item-peixe" src="${esc(imgMovel(it.id, vistaBase(it), daChave(p.item).cor))}" alt="" draggable="false"/>`, texto: `${comArtigo(it.nome)} para a casinha` };
+  } else {
+    const id = p.item || p.peixe;
+    item = itemPresente(id);
+    if (!item) return;
+    mudarQtdPresente(id, +1, patch);
+  }
   estado.presentesRecebidos = (Number(estado.presentesRecebidos) || 0) + 1;
   patch.presentes_recebidos = estado.presentesRecebidos;
   gravar(patch);
@@ -3562,13 +3583,307 @@ function mostrarPresentesRecebidos() {
   if (sobreposicaoAberta() || perguntaAberta || transicionando || !$('pres-card').hidden) { presentesTimer = setTimeout(mostrarPresentesRecebidos, 2000); return; }
   const lista = presentesChegando; presentesChegando = [];
   const quem = (p) => `<b>${esc(nomeVisivel(p.de_nome) || 'Um colega')}</b>${nomeVisivel(p.de_turma) ? ` (${esc(nomeVisivel(p.de_turma))})` : ''}`;
-  const ic = (p) => imgItem(p.item.imagem, p.item.emoji || '🎁', 'jr-item-peixe', p.item.filtro);
+  const ic = (p) => p.item.html || imgItem(p.item.imagem, p.item.emoji || '🎁', 'jr-item-peixe', p.item.filtro);
   $('pres-tit').textContent = lista.length === 1 ? '🎁 Você ganhou um presente!' : `🎁 Você ganhou ${lista.length} presentes!`;
-  $('pres-lista').innerHTML = lista.map(p => `<li>${ic(p)}<span>${quem(p)} te deu ${esc(comArtigo(p.item.nome))}!${p.recado ? `<small>“${esc(p.recado)}”</small>` : ''}</span></li>`).join('');
+  $('pres-lista').innerHTML = lista.map(p => `<li>${ic(p)}<span>${quem(p)} te ${p.tipo ? 'mandou' : 'deu'} ${esc(p.item.texto || comArtigo(p.item.nome))}!${p.recado ? `<small>“${esc(p.recado)}”</small>` : ''}</span></li>`).join('');
   $('pres-card').hidden = false;
   tocar('vitoria');
   reagirSeguidor('rapida', 'feliz');   // dragão adulto: `carinho`
   if (mp) renderMeuPet();
+}
+
+// ============================================================
+//  🤝 AMIGOS (PROMPT-183) — jogo_revisao_amigos/{uid}/{amigo} = true (dos dois lados ao aceitar) e
+//  jogo_revisao_pedidos_amizade/{destino}/{origem} = { nome, turma, data } (modo teste: *_teste). Até 50 amigos e 10 pedidos
+//  esperando (os que eu mandei: amizade_enviados no meu registro; os que alguém recebe). Recusar só apaga o pedido (quem pediu
+//  não fica sabendo). Professora, TESTE e ALUNOS_TESTE ficam fora (no modo teste, entre as contas de teste, para testar).
+//  Amigo: 🏠 visita a casinha mesmo sem a cópia pública (montada do registro dele) e 🎁 presentes com ele offline:
+//  moedas (10/25/50, até 100 por dia), um item da mochila ou um móvel guardado; os 3 presentes do dia são os mesmos de antes.
+// ============================================================
+const baseAmigos = () => (teste ? 'jogo_revisao_amigos_teste' : 'jogo_revisao_amigos');
+const basePedAmizade = () => (teste ? 'jogo_revisao_pedidos_amizade_teste' : 'jogo_revisao_pedidos_amizade');
+const MAX_AMIGOS = 50, MAX_PEDIDOS_AMIZADE = 10, MOEDAS_AMIGO = [10, 25, 50], MOEDAS_AMIGO_DIA = 100;
+let amigos = new Set(), pedidosAmizade = {}, pedidosEnviados = new Set(), pararAmigos = null;
+const filaAmizade = [], amizadeVista = new Set();
+const usaAmigos = () => !!sessao && carregouProgresso && (teste || (!ehProfessora() && !contaEscondida(sessao.uid, sessao.nome)));
+const amigavel = (uid, nome = '') => !!uid && uid !== sessao.uid && (teste || (uid !== UID_PROFESSORA && !contaEscondida(uid, nome)));
+const ehAmigo = (uid) => amigos.has(uid);
+const turmaDoUid = (uid) => String(uid || '').split('_')[0] || '';
+const moedasDadasHoje = () => (estado.presentesDia?.data === diaLocal() ? Number(estado.presentesDia.moedas) || 0 : 0);
+
+function ouvirAmigos() {
+  if (pararAmigos || !usaAmigos()) return;
+  const fs = [];
+  try {
+    fs.push(onValue(ref(db, `${baseAmigos()}/${sessao.uid}`), (s) => {
+      const v = s.exists() ? s.val() || {} : {};
+      amigos = new Set(Object.keys(v).filter(u => v[u] === true && amigavel(u)));
+      const aceitos = [...pedidosEnviados].filter(u => amigos.has(u));   // aceitaram o meu pedido
+      if (aceitos.length) { for (const u of aceitos) pedidosEnviados.delete(u); gravar(Object.fromEntries(aceitos.map(u => [`amizade_enviados/${u}`, null]))); }
+      for (const u of Object.keys(pedidosAmizade)) if (amigos.has(u)) recusarAmizade(u, true);   // pedido velho de quem já é amigo
+      atualizarAmizadeNaTela();
+    }, (e) => console.warn('[jogo-revisao] amigos indisponíveis', e?.code || e)));
+    fs.push(onValue(ref(db, `${basePedAmizade()}/${sessao.uid}`), (s) => {
+      const v = s.exists() ? s.val() || {} : {};
+      pedidosAmizade = Object.fromEntries(Object.entries(v).filter(([u, p]) => p && typeof p === 'object' && amigavel(u, p.nome)));
+      for (const u of Object.keys(pedidosAmizade)) if (!amizadeVista.has(u) && !amigos.has(u)) { amizadeVista.add(u); filaAmizade.push(u); }
+      mostrarPedidoAmizade();
+      atualizarAmizadeNaTela();
+    }, (e) => console.warn('[jogo-revisao] pedidos de amizade indisponíveis', e?.code || e)));
+  } catch (e) { console.warn('[jogo-revisao] amigos indisponíveis', e?.code || e); }
+  pararAmigos = () => { for (const f of fs) try { f(); } catch (_) {} };
+  conferirPedidosEnviados();
+}
+// os pedidos que eu mandei e ainda esperam (o que foi aceito ou recusado sai da lista)
+async function conferirPedidosEnviados() {
+  try {
+    const env = await lerNo(`${raiz()}/amizade_enviados`), sairam = {};
+    await Promise.all(Object.keys(env).map(async (u) => {
+      const s = await get(ref(db, `${basePedAmizade()}/${u}/${sessao.uid}`));
+      if (s.exists() && !amigos.has(u)) pedidosEnviados.add(u); else sairam[`amizade_enviados/${u}`] = null;
+    }));
+    if (Object.keys(sairam).length) gravar(sairam);
+    atualizarAmizadeNaTela();
+  } catch (e) { console.warn('[jogo-revisao] pedidos de amizade enviados', e?.code || e); }
+}
+async function pedirAmizade(uid, nome) {
+  if (!usaAmigos() || !amigavel(uid, nome) || amigos.has(uid) || pedidosEnviados.has(uid)) return;
+  if (pedidosAmizade[uid]) { aceitarAmizade(uid); return; }   // ele já tinha me pedido: vira amizade na hora
+  if (amigos.size >= MAX_AMIGOS) { avisoPet(`Você já tem ${MAX_AMIGOS} amigos.`); return; }
+  if (pedidosEnviados.size >= MAX_PEDIDOS_AMIZADE) { avisoPet(`Você já tem ${MAX_PEDIDOS_AMIZADE} pedidos esperando resposta.`); return; }
+  try {
+    const s = await get(ref(db, `${basePedAmizade()}/${uid}`));
+    if (s.exists() && Object.keys(s.val() || {}).length >= MAX_PEDIDOS_AMIZADE) { avisoPet(`${nome} já tem muitos pedidos de amizade esperando.`); return; }
+    await set(ref(db, `${basePedAmizade()}/${uid}/${sessao.uid}`), { nome: nomeRanking(), turma: sessao.turma || '', data: Date.now() });
+  } catch (e) { console.warn('[jogo-revisao] pedido de amizade', e?.code || e); avisoPet('Não deu para mandar o pedido agora.'); return; }
+  pedidosEnviados.add(uid);
+  gravar({ [`amizade_enviados/${uid}`]: Date.now() });
+  tocar('clique');
+  avisoPet(`🤝 Pedido de amizade enviado para ${nome}!`);
+  atualizarAmizadeNaTela();
+}
+async function aceitarAmizade(uid) {
+  const p = pedidosAmizade[uid], nome = nomeVisivel(p?.nome) || nomeDoUid(uid) || 'Seu colega';
+  const pedido = ref(db, `${basePedAmizade()}/${sessao.uid}/${uid}`);
+  delete pedidosAmizade[uid];
+  try {
+    const s = await get(ref(db, `${baseAmigos()}/${uid}`));
+    if (amigos.size >= MAX_AMIGOS || (s.exists() && Object.keys(s.val() || {}).length >= MAX_AMIGOS)) {
+      avisoPet(`Não deu: ${amigos.size >= MAX_AMIGOS ? 'você já tem' : `${nome} já tem`} ${MAX_AMIGOS} amigos.`);
+      remove(pedido).catch(() => {});
+      atualizarAmizadeNaTela();
+      return;
+    }
+    await Promise.all([set(ref(db, `${baseAmigos()}/${sessao.uid}/${uid}`), true), set(ref(db, `${baseAmigos()}/${uid}/${sessao.uid}`), true), remove(pedido)]);
+  } catch (e) { console.warn('[jogo-revisao] aceitar amizade', e?.code || e); avisoPet('Não deu para aceitar agora. Tente de novo.'); pedidosAmizade[uid] = p; atualizarAmizadeNaTela(); return; }
+  amigos.add(uid);
+  tocar('vitoria');
+  avisoPet(`🤝 Agora você e ${nome} são amigos!`);
+  atualizarAmizadeNaTela();
+}
+function recusarAmizade(uid, calado = false) {
+  delete pedidosAmizade[uid];
+  remove(ref(db, `${basePedAmizade()}/${sessao.uid}/${uid}`)).catch(() => {});   // quem pediu não é avisado
+  if (!calado) { tocar('clique'); atualizarAmizadeNaTela(); }
+}
+async function desfazerAmizade(uid) {
+  amigos.delete(uid);
+  try { await Promise.all([remove(ref(db, `${baseAmigos()}/${sessao.uid}/${uid}`)), remove(ref(db, `${baseAmigos()}/${uid}/${sessao.uid}`))]); }
+  catch (e) { console.warn('[jogo-revisao] desfazer amizade', e?.code || e); }
+  tocar('clique');
+  atualizarAmizadeNaTela();
+}
+// o pedido recebido: um por vez, quando nada estiver aberto
+function mostrarPedidoAmizade() {
+  if (!$('amizade-pedido').hidden) return;
+  while (filaAmizade.length && !pedidosAmizade[filaAmizade[0]]) filaAmizade.shift();
+  if (!filaAmizade.length) return;
+  if (perguntaAberta || transicionando || sobreposicaoAberta()) { clearTimeout(mostrarPedidoAmizade.t); mostrarPedidoAmizade.t = setTimeout(mostrarPedidoAmizade, 2000); return; }
+  const uid = filaAmizade[0], p = pedidosAmizade[uid], turma = nomeVisivel(p.turma || '');
+  $('amizade-ped-txt').innerHTML = `🤝 <b>${esc(nomeVisivel(p.nome) || nomeDoUid(uid) || 'Um colega')}</b>${turma ? ` (${esc(turma)})` : ''} quer ser seu amigo.`;
+  $('amizade-pedido').dataset.uid = uid;
+  $('amizade-pedido').hidden = false;
+  tocar('clique');
+}
+function responderAmizade(sim) {
+  const uid = $('amizade-pedido').dataset.uid;
+  $('amizade-pedido').hidden = true;
+  filaAmizade.shift();
+  if (uid && pedidosAmizade[uid]) { if (sim) aceitarAmizade(uid); else recusarAmizade(uid); }
+  setTimeout(mostrarPedidoAmizade, 400);
+}
+// o botão do cartão do colega: ➕ Amigo · ⏳ Pedido enviado · ✅ Amigos
+function botaoAmigo(uid, r) {
+  if (!usaAmigos() || !amigavel(uid, r?.nome)) return '';
+  const [txt, cls] = amigos.has(uid) ? ['✅ Amigos', ' amigos'] : pedidosEnviados.has(uid) ? ['⏳ Pedido enviado', ' esperando'] : ['➕ Amigo', ''];
+  return `<button class="jr-colega-oi jr-colega-amigo${cls}" data-amigo aria-label="${txt}">${txt}</button>`;
+}
+function tocouBotaoAmigo(c) {
+  const uid = c.uid, nome = rotuloColega(uid, c.reg);
+  if (amigos.has(uid)) {   // ✅: a opção de desfazer
+    clearTimeout(cartaoColega.timer);
+    cartaoColega.timer = setTimeout(fecharCartaoColega, 15000);
+    $('colega-cartao').innerHTML = `<span class="jr-colega-info jr-presente"><b>✅ Você e ${esc(nome)} são amigos</b>
+      <span class="jr-presente-lista"><button data-desfazer-amigo>💔 Desfazer amizade</button><button data-amigo-voltar>Voltar</button></span></span>`;
+    posicionarCartaoColega();
+    return;
+  }
+  if (pedidosEnviados.has(uid)) { avisoTopo(`Você já pediu. Espere ${nome} responder!`); return; }
+  pedirAmizade(uid, nome);
+}
+function atualizarAmizadeNaTela() {
+  const b = cartaoColega && $('colega-cartao').querySelector('[data-amigo]');
+  if (b) b.outerHTML = botaoAmigo(cartaoColega.c.uid, cartaoColega.c.reg);
+  const n = Object.keys(pedidosAmizade).length, sel = $('online-ped-n');
+  if (sel) { sel.textContent = n ? String(n) : ''; sel.hidden = !n; }
+  if (!$('online-lista').hidden && $('online-lista').dataset.modo === 'amigos') renderListaAmigos();
+}
+
+// ── 👥 a aba Amigos da lista: os pedidos recebidos, os amigos online (🟢) e os offline (⚪ visto há…) ──
+const vistoAmigos = {};   // uid → { t: ultimo_acesso, lido }
+function vistoHa(t) {
+  if (!t) return '';
+  const min = Math.max(0, (Date.now() - t) / 60000);
+  if (min < 60) return 'visto há pouco';
+  if (min < 60 * 24) return `visto há ${Math.round(min / 60)} h`;
+  const d = Math.round(min / 1440);
+  return d <= 1 ? 'visto ontem' : `visto há ${d} dias`;
+}
+async function lerVistoAmigos() {
+  const faltam = [...amigos].filter(u => !vistoAmigos[u] || Date.now() - vistoAmigos[u].lido > 60000);
+  if (!faltam.length) return false;
+  await Promise.all(faltam.map(async (u) => {
+    try { const s = await get(ref(db, `${teste ? `modo_teste_historico/${u}/jogo_revisao` : `jogo_revisao/${u}`}/ultimo_acesso`)); vistoAmigos[u] = { t: s.exists() ? Number(s.val()) || 0 : 0, lido: Date.now() }; }
+    catch (_) { vistoAmigos[u] = { t: 0, lido: Date.now() }; }
+  }));
+  return true;
+}
+function mostrarAbaOnline(aba) {
+  $('online-lista').dataset.modo = aba;
+  for (const b of $('online-abas').querySelectorAll('[data-online-aba]')) b.classList.toggle('ativa', b.dataset.onlineAba === aba);
+  $('online-titulo').textContent = aba === 'amigos' ? '🤝 Amigos' : '👥 Online agora';
+  if (aba === 'amigos') { renderListaAmigos(); lerVistoAmigos().then(mudou => { if (mudou && $('online-lista').dataset.modo === 'amigos') renderListaAmigos(); }); }
+  else renderListaTodos();
+}
+function renderListaAmigos() {
+  const regs = regsOnline(), on = (u) => colegaVisivel(u, regs[u]);
+  const ped = Object.entries(pedidosAmizade).map(([uid, p]) => `<li class="jr-amigo-ped"><span class="jr-rosto">🤝</span>
+      <span class="jr-online-nome">${esc(nomeVisivel(p.nome) || nomeDoUid(uid))}</span><span class="jr-online-det">${esc(nomeVisivel(p.turma || ''))} · quer ser seu amigo</span>
+      <span class="jr-amigo-acoes"><button class="jr-online-acao" data-amz-sim="${esc(uid)}">✔ Aceitar</button><button class="jr-online-acao sec" data-amz-nao="${esc(uid)}">Agora não</button></span></li>`).join('');
+  const lista = [...amigos].map(uid => ({ uid, r: regs[uid] || null, on: on(uid) }))
+    .sort((a, b) => Number(b.on) - Number(a.on) || rotuloColega(a.uid, a.r).localeCompare(rotuloColega(b.uid, b.r)));
+  const linha = ({ uid, r, on: online }) => `<li><span class="jr-rosto">${online && r ? rostoPet(petAtual(r.pet), r.pet_tinta, r.pet_forma) : '👤'}</span>
+      <span class="jr-online-nome">${online ? '🟢' : '⚪'} ${esc(rotuloColega(uid, r))}</span>
+      <span class="jr-online-det">${esc(nomeVisivel(r?.turma || turmaDoUid(uid)))} · ${online ? esc(lugarDe(r)) : esc(vistoHa(vistoAmigos[uid]?.t) || 'offline')}</span>
+      <span class="jr-amigo-acoes"><button class="jr-online-acao" data-visitar-amigo="${esc(uid)}">🏠 Visitar</button><button class="jr-online-acao" data-presente-amigo="${esc(uid)}">🎁 Presente</button></span></li>`;
+  $('online-itens').innerHTML = (ped ? `<li class="jr-online-grupo">📨 Pedidos de amizade · ${Object.keys(pedidosAmizade).length}</li>${ped}` : '') +
+    `<li class="jr-online-grupo">🤝 Seus amigos · ${lista.length}/${MAX_AMIGOS}</li>` +
+    (lista.map(linha).join('') || '<li class="jr-online-vazio">Você ainda não tem amigos. Toque num colega e em ➕ Amigo!</li>');
+  pintarRostos($('online-itens'));
+}
+
+// ── 🏠 a casinha de um amigo sem a cópia pública: montada do registro dele (só olhar) ──
+async function casaDoAmigo(uid) {
+  const base = teste ? `modo_teste_historico/${uid}/jogo_revisao` : `jogo_revisao/${uid}`;
+  const [c, ps, ins, peixes] = await Promise.all(['casinha', 'pets', 'insignias', 'pesca_especies'].map(k => lerNo(`${base}/${k}`).catch(() => ({}))));
+  if (!c?.moveis) return null;
+  const pet = ps?.ativo && petValido(petAtual(ps.ativo)) ? petAtual(ps.ativo) : null, cp = pet ? ps.conquistados?.[ps.ativo] || {} : null;
+  const forma = pet ? formaComCor(cp.evoluido && !cp.mostrar_filhote && formaAdulta(pet) ? formaAdulta(pet) : pet, cp.cor) : null;
+  return { moveis: c.moveis, nome: nomeDoUid(uid), turma: turmaDoUid(uid), tema: c.tema || null, cor: c.cor || null, vaso: Number(c.vaso?.fase) || 1, fundo: ps?.fundo || null,
+    pet: pet ? { pet, forma, tinta: null, nome: cp.nome || NOME_PET[pet] } : null,
+    ins: Object.fromEntries(Object.entries(ins || {}).filter(([, i]) => i).map(([k, i]) => [k, { d: i.dourada ? 1 : 0, t: Number(i.data) || 0 }])),
+    peixes: peixes || {}, amigo: true };
+}
+
+// ── 🎁 presente para um amigo (online ou offline): moedas, um item da mochila ou um móvel guardado ──
+let presAmigo = null;   // { uid, nome, aba, escolha: { tipo, item, qtd } }
+function guardadosParaPresente() {
+  return Object.entries(estado.casinha?.guardados || {}).filter(([k, n]) => Number(n) > 0).map(([k, n]) => {
+    const { id, cor } = daChave(k), it = itemCasa(id);
+    return it && !ehQuadrinho(id) && id !== ID_CAMPEOES ? { k, it, cor, n: Number(n) } : null;   // os quadros das insígnias e dos campeões são pessoais
+  }).filter(Boolean);
+}
+function abrirPresenteAmigo(uid) {
+  if (!ehAmigo(uid)) return;
+  presAmigo = { uid, nome: rotuloColega(uid, regsOnline()[uid]), aba: 'moedas', escolha: null };
+  $('online-lista').hidden = true;
+  renderPresenteAmigo();
+  $('amigo-presente').hidden = false;
+}
+function renderPresenteAmigo() {
+  const pa = presAmigo, lim = cfgPesca().presentes_dia ?? 3, falta = lim - presentesHoje(), moedasFalta = MOEDAS_AMIGO_DIA - moedasDadasHoje(), saldo = Number(estado.pets?.moedas) || 0;
+  $('ap-tit').textContent = `🎁 Presente para ${pa.nome}`;
+  const bloqueado = desafiosOff?.todas || desafiosOff?.[sessao.turma] || desafiosOff?.[turmaDoUid(pa.uid)];
+  let corpo;
+  if (bloqueado) corpo = '<p class="ap-aviso">Presentes estão desligados agora.</p>';
+  else if (falta <= 0) corpo = `<p class="ap-aviso">Você já deu ${lim} presentes hoje. Amanhã tem mais!</p>`;
+  else if (pa.escolha) {
+    const e = pa.escolha;
+    corpo = `<p class="ap-conf">Dar <b>${esc(e.rotulo)}</b> para ${esc(pa.nome)}?</p>
+      <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-ap-dar>🎁 Dar</button><button class="jr-btn jr-btn-sec" data-ap-voltar>Voltar</button></div>`;
+  } else {
+    const abas = [['moedas', '🪙 Moedas'], ['mochila', '🎒 Mochila'], ['movel', '🛋️ Móvel']].map(([id, t]) => `<button data-ap-aba="${id}"${pa.aba === id ? ' class="ativa"' : ''}>${t}</button>`).join('');
+    let lista;
+    if (pa.aba === 'moedas') lista = MOEDAS_AMIGO.map(q => `<button data-ap-moedas="${q}"${q > saldo || q > moedasFalta ? ' disabled' : ''}>${moedaHtml()} <b>${q}</b></button>`).join('') +
+      `<small>Pode dar mais ${Math.max(0, moedasFalta)} moedas hoje · você tem ${saldo}</small>`;
+    else if (pa.aba === 'mochila') { const its = itensParaPresente(); lista = its.length ? its.map(x => `<button data-ap-item="${esc(x.id)}">${imgItem(x.imagem, x.emoji, 'jr-item-peixe', x.filtro)}<span>${esc(x.nome)} ×${x.n}</span></button>`).join('') : '<small>Sua mochila está vazia.</small>'; }
+    else { const gs = guardadosParaPresente(); lista = gs.length ? gs.map(g => `<button data-ap-movel="${esc(g.k)}"><img class="jr-item-img jr-item-peixe" src="${esc(imgMovel(g.it.id, vistaBase(g.it), g.cor))}" alt="" draggable="false"/><span>${esc(g.it.nome)} ×${g.n}</span></button>`).join('') : '<small>Nenhum móvel guardado. Só dá para presentear o que não está montado na casinha.</small>'; }
+    corpo = `<div class="ap-abas">${abas}</div><div class="jr-presente-lista ap-lista">${lista}</div><small class="ap-rodape">Pode dar mais ${falta} presente${falta > 1 ? 's' : ''} hoje</small>`;
+  }
+  $('ap-corpo').innerHTML = corpo;
+}
+function cliquePresenteAmigo(e) {
+  const pa = presAmigo;
+  if (!pa) return;
+  if (e.target === $('amigo-presente') || e.target.closest('[data-fechar="amigo-presente"]')) { $('amigo-presente').hidden = true; presAmigo = null; return; }
+  const ab = e.target.closest('[data-ap-aba]');
+  if (ab) { pa.aba = ab.dataset.apAba; renderPresenteAmigo(); return; }
+  const mo = e.target.closest('[data-ap-moedas]'), it = e.target.closest('[data-ap-item]'), mv = e.target.closest('[data-ap-movel]');
+  if (mo && !mo.disabled) pa.escolha = { tipo: 'moedas', item: 'moedas', qtd: Number(mo.dataset.apMoedas), rotulo: `${mo.dataset.apMoedas} moedas` };
+  else if (it) pa.escolha = { tipo: 'item', item: it.dataset.apItem, qtd: 1, rotulo: comArtigo(itemPresente(it.dataset.apItem)?.nome || 'item') };
+  else if (mv) pa.escolha = { tipo: 'movel', item: mv.dataset.apMovel, qtd: 1, rotulo: comArtigo(itemCasa(daChave(mv.dataset.apMovel).id)?.nome || 'móvel') };
+  else if (e.target.closest('[data-ap-voltar]')) pa.escolha = null;
+  else if (e.target.closest('[data-ap-dar]')) { darPresenteAmigo(); return; }
+  else return;
+  renderPresenteAmigo();
+}
+async function darPresenteAmigo() {
+  const pa = presAmigo, e = pa?.escolha, lim = cfgPesca().presentes_dia ?? 3, ps = estado.pets;
+  if (!e || !ehAmigo(pa.uid) || presentesHoje() >= lim || !carregouProgresso) return;
+  // sai na hora de quem dá; se o envio falhar, volta
+  const patch = {}, desfazer = [];
+  if (e.tipo === 'moedas') {
+    if (e.qtd > (Number(ps.moedas) || 0) || moedasDadasHoje() + e.qtd > MOEDAS_AMIGO_DIA) return;
+    ps.moedas = (Number(ps.moedas) || 0) - e.qtd; patch['pets/moedas'] = ps.moedas;
+    desfazer.push(() => { ps.moedas += e.qtd; gravar({ 'pets/moedas': ps.moedas }); });
+  } else if (e.tipo === 'movel') {
+    const g = estado.casinha?.guardados, n = Number(g?.[e.item]) || 0;
+    if (n <= 0) return;
+    g[e.item] = n - 1; patch[`casinha/guardados/${e.item}`] = n - 1 || null;
+    if (cs && !cs.visita && cs.guardados[e.item]) cs.guardados[e.item]--;
+    desfazer.push(() => { g[e.item] = (Number(g[e.item]) || 0) + 1; gravar({ [`casinha/guardados/${e.item}`]: g[e.item] }); });
+  } else {
+    if (qtdPresente(e.item) <= 0) return;
+    mudarQtdPresente(e.item, -1, patch);
+    desfazer.push(() => { const v = {}; mudarQtdPresente(e.item, +1, v); gravar(v); });
+  }
+  const antes = estado.presentesDia;
+  estado.presentesDia = { data: diaLocal(), n: presentesHoje() + 1, moedas: moedasDadasHoje() + (e.tipo === 'moedas' ? e.qtd : 0) };
+  patch.presentes_dia = estado.presentesDia;
+  gravar(patch);
+  $('amigo-presente').hidden = true; presAmigo = null;
+  try {
+    await push(ref(db, `${basePresentes()}/${pa.uid}`), { de: sessao.uid, de_nome: nomeRanking(), nome: nomeRanking(), de_turma: sessao.turma || '', para_nome: pa.nome,
+      tipo: e.tipo, item: e.item, qtd: e.qtd, ts: Date.now(), data: Date.now() });
+  } catch (err) {
+    console.warn('[jogo-revisao] presente para amigo indisponível', err?.code || err);
+    for (const f of desfazer) f();
+    estado.presentesDia = antes; gravar({ presentes_dia: antes || null });
+    avisoPet('Não deu para enviar o presente agora. Tente de novo mais tarde.');
+    return;
+  }
+  tocar('vitoria');
+  avisoPet(`🎁 Você mandou ${e.rotulo} para ${pa.nome}! Seu amigo recebe quando estiver no jogo.`);
 }
 
 // Tocar no mapa pescando: na fisgada puxa; perto do ponto lança (pronto); longe levanta e anda
@@ -3823,7 +4138,8 @@ function abrirCartaoColega(c) {
     ${casaPub(c.uid) ? BOTAO_VISITAR : ''}
     <button class="jr-colega-oi" data-oi aria-label="Acenar">👋</button>
     <button class="jr-colega-oi" data-emojis aria-label="Mandar um emoji" title="Emoji">😀</button>
-    <button class="jr-colega-oi" data-perfil aria-label="Ver perfil" title="Ver perfil">🏅</button>`;
+    <button class="jr-colega-oi" data-perfil aria-label="Ver perfil" title="Ver perfil">🏅</button>
+    ${botaoAmigo(c.uid, r)}`;
   const ti = el.querySelector('img[data-tinta]');
   if (ti) aplicarTinta(ti, ti.dataset.tinta);
   el.hidden = false;
@@ -3948,6 +4264,7 @@ function desenharOnlineGeral() {
 function abrirListaOnline(n) {
   const lista = onlinePorMapa()[n] || [];
   $('online-lista').dataset.modo = 'regiao';
+  $('online-abas').hidden = true;
   const reg = D.geral.regioes.find(r => r.mapa === n);
   $('online-titulo').textContent = `${n}. ${reg?.nome || ''}`;
   $('online-itens').innerHTML = lista.map(r => `
@@ -4015,18 +4332,19 @@ async function atualizarOnlineTodos() {
   try { onlineTodos = await lerTodos(); } catch (_) {}
   atualizarBotaoOnline();
   if (!$('online-lista').hidden && $('online-lista').dataset.modo === 'todos') renderListaTodos();
+  if (!$('online-lista').hidden && $('online-lista').dataset.modo === 'amigos') renderListaAmigos();
 }
 function atualizarBotaoOnline() {
   $('online-n').textContent = Object.entries(regsOnline()).filter(([u, r]) => colegaVisivel(u, r)).length;
 }
-function abrirListaTodos() {
+function abrirListaTodos(aba = 'todos') {
   tLista = 0;
   if ($('tela-geral').hidden) atualizarOnlineTodos();
-  $('online-lista').dataset.modo = 'todos';
-  $('online-titulo').textContent = '👥 Online agora';
+  $('online-abas').hidden = !usaAmigos();   // 🤝 a aba Amigos (PROMPT-183)
   $('online-ir').hidden = true;
   $('online-bloqueado').hidden = true;
-  renderListaTodos();
+  atualizarAmizadeNaTela();
+  mostrarAbaOnline(usaAmigos() ? aba : 'todos');
   $('online-lista').hidden = false;
 }
 function renderListaTodos() {
@@ -4061,6 +4379,15 @@ function botaoChamar(r) {
   return `<button class="jr-online-acao" data-chamar="${esc(r.uid)}">📨 Chamar pra Praça</button>`;
 }
 function cliqueListaOnline(e) {
+  const ab = e.target.closest('[data-online-aba]');   // 🤝 (PROMPT-183)
+  if (ab) { mostrarAbaOnline(ab.dataset.onlineAba); return; }
+  const as = e.target.closest('[data-amz-sim]'), an = e.target.closest('[data-amz-nao]');
+  if (as) { aceitarAmizade(as.dataset.amzSim); return; }
+  if (an) { recusarAmizade(an.dataset.amzNao); return; }
+  const va = e.target.closest('[data-visitar-amigo]');
+  if (va) { visitarCasinha(va.dataset.visitarAmigo); return; }
+  const pa = e.target.closest('[data-presente-amigo]');
+  if (pa) { abrirPresenteAmigo(pa.dataset.presenteAmigo); return; }
   const ch = e.target.closest('[data-chamar]');
   if (ch && !ch.disabled) { chamarPraPraca(ch.dataset.chamar); return; }
   const vi = e.target.closest('[data-visitar-online]');
@@ -5286,7 +5613,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('amigo-presente').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -8030,6 +8357,13 @@ const souDaSala = (n) => { const g = grupoSala(n); return !!g && g.turma === ses
 const podeEntrarSala = (n) => !!grupoSala(n) && (privilegioExpo() || souDaSala(n) || visitasAbertas);   // sala sem grupo: "Em breve"
 const podeDecorar = (n) => !!grupoSala(n) && (privilegioExpo() || souDaSala(n));   // ✏️ Decorar: o grupo e a professora
 const estadoSala = (n) => ({ tema: EXPO?.tema_padrao, musica: null, nome: null, ...(expoSalas[n] || {}) });
+// ❤️ curtidas (PROMPT-182): exposicao_curtidas/{n}/{uid} = true, uma por aluno e sala; a própria sala não; professora e contas
+// de teste não curtem nem contam. O total sai da leitura (o nó todo, ao vivo). 🏆 na placa da mais curtida (empate: todas).
+const expoCurtidas = {};   // n → Set(uid)
+const curtidasSala = (n) => expoCurtidas[n]?.size || 0;
+const curtiSala = (n) => !!expoCurtidas[n]?.has(sessao.uid);
+const podeCurtirSala = (n) => !!n && !ehProfessora() && !contaEscondida(sessao.uid, sessao.nome) && !souDaSala(n);
+const maisCurtida = (n) => { const c = curtidasSala(n); return c > 0 && Object.keys(expoCurtidas).every(k => curtidasSala(k) <= c); };
 const temaExpo = (id) => (EXPO.temas || []).find(t => t.id === id) || (EXPO.temas || []).find(t => t.id === EXPO.tema_padrao) || EXPO.temas[0];
 
 function iniciarExposicao(j) {
@@ -8044,6 +8378,13 @@ function iniciarExposicao(j) {
       conferirAprovadosExpo(p.n);   // ⭐ (PROMPT-156)
       if (ehSaguao()) desenharPlacasExpo();
     }, () => {});
+    onValue(ref(db, noExpo('exposicao_curtidas')), (s) => {   // ❤️
+      for (const k of Object.keys(expoCurtidas)) delete expoCurtidas[k];
+      for (const [n, us] of Object.entries(s.exists() ? s.val() || {} : {})) {
+        if (us && typeof us === 'object') expoCurtidas[n] = new Set(Object.keys(us).filter(u => us[u] === true && u !== UID_PROFESSORA && !contaEscondida(u)));
+      }
+      if (ehSaguao()) desenharPlacasExpo();
+    }, (e) => console.warn('[jogo-revisao] exposicao_curtidas indisponível', e?.code || e));
     onValue(ref(db, `${noExpo('exposicao_config')}/visitas_abertas`), (s) => {
       visitasAbertas = s.exists() && s.val() === true;
       if (ehSaguao()) desenharPlacasExpo();   // ao vivo: os 🔒 das portas (quem já está numa sala continua nela)
@@ -8153,10 +8494,10 @@ async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (ap
   if (privilegioExpo()) ouvirPendentesExpo();   // ⏳ {n} para aprovar
 }
 // professora e modo teste, no saguão: quantos itens e nomes esperam aprovação (todas as salas, sem as fotos)
-let expoPendN = 0;
+let expoPendN = 0, expoPendSalas = 0, expoPendCasas = 0;
 function ouvirPendentesExpo() {
   expoOuvindo = true;
-  let f = () => {};
+  let f = () => {}, g = () => {};
   try {
     f = onValue(ref(db, noExpo('exposicao_salas')), (s) => {
       let n = 0;
@@ -8165,18 +8506,22 @@ function ouvirPendentesExpo() {
         if (typeof sala.nome_pendente === 'string' && sala.nome_pendente) n++;
         for (const v of Object.values(sala.itens || {})) { const m = v && lerItemExpo(v); if (m?.status === 'pendente') n++; }
       }
-      expoPendN = n;
+      expoPendSalas = n; expoPendN = expoPendSalas + expoPendCasas;
     }, (e) => console.warn('[jogo-revisao] exposicao_salas indisponível', e?.code || e));
+    g = onValue(ref(db, baseFotosCasa()), (s) => {   // 🏠 + os quadros com foto das casinhas (PROMPT-184)
+      expoPendCasas = Object.values(s.val() || {}).filter(v => v?.status === 'pendente').length; expoPendN = expoPendSalas + expoPendCasas;
+    }, () => {});
   } catch (e) { console.warn('[jogo-revisao] exposicao_salas indisponível', e?.code || e); }
-  pararOuvirExpo = () => { try { f(); } catch (_) {} expoPendN = 0; };
+  pararOuvirExpo = () => { try { f(); g(); } catch (_) {} expoPendN = expoPendSalas = expoPendCasas = 0; };
 }
 // o número em cada placa (e 🔒: sala em que este aluno não pode entrar)
 function desenharPlacasExpo() {
   const at = $('cena-atores');
   for (const el of at.querySelectorAll('.expo-placa')) el.remove();
   at.insertAdjacentHTML('beforeend', (cena.expoPortas || []).map(p => {
-    const tranca = !podeEntrarSala(p.n);
-    return `<div class="expo-placa" style="left:${p.placa[0]}px;top:${p.placa[1]}px"><b>${p.n}</b>${tranca ? '<i>🔒</i>' : ''}</div>`;
+    const tranca = !podeEntrarSala(p.n), c = curtidasSala(p.n);
+    return `<div class="expo-placa" style="left:${p.placa[0]}px;top:${p.placa[1]}px"><b>${p.n}</b>${tranca ? '<i>🔒</i>' : ''}` +
+      (grupoSala(p.n) || c ? `<em>❤️ ${c}${maisCurtida(p.n) ? ' 🏆' : ''}</em>` : '') + '</div>';
   }).join(''));
 }
 // toque na placa ou na porta: a porta cujo segmento placa → ponto passa mais perto do toque
@@ -8278,15 +8623,25 @@ function pararExpo() {
   expoOuvindo = false;
 }
 
-// 🎵 música da sala: arquivo de audio/exposicao/ (só o nome; sem extensão vira .mp3); null = silêncio
+// 🎵 música da sala (PROMPT-182): exposicao.json → musicas [{ id, nome, arquivo }] (audio/jogo/exposicao/); a sala guarda o id.
+// Sem a música na lista (ou lista vazia): silêncio
+const musicasExpo = () => (Array.isArray(EXPO?.musicas) ? EXPO.musicas : []).filter(m => m && typeof m.id === 'string' && typeof m.arquivo === 'string' && /^[\w .()-]+$/.test(m.arquivo));
+const srcMusicaExpo = (mu) => `/audio/jogo/exposicao/${encodeURIComponent(mu.arquivo)}`;
 function musicaDaSala(ignorarMudo = false) {
-  const n = salaExpo(), m = n && estadoSala(n).musica;
-  if (!m || !/^[\w .()-]+$/.test(m) || (expoMusicaMudo && !ignorarMudo)) return null;
-  return `/audio/exposicao/${encodeURIComponent(/\.(mp3|ogg|m4a|wav)$/i.test(m) ? m : m + '.mp3')}`;
+  const n = salaExpo(), id = n && estadoSala(n).musica, mu = id && musicasExpo().find(x => x.id === id);
+  if (!mu || (expoMusicaMudo && !ignorarMudo)) return null;
+  return srcMusicaExpo(mu);
 }
 function atualizarHudExpo() {
   const n = salaExpo(), bd = $('btn-expo-decorar'), semD = !(n && ex && !ex.editando && podeDecorar(n));
   if (bd.hidden !== semD) bd.hidden = semD;
+  const bc = $('btn-expo-curtir'), semC = !n;   // ❤️ N: a própria sala (e a professora) só vê o número
+  if (bc.hidden !== semC) bc.hidden = semC;
+  if (!semC) {
+    const pode = podeCurtirSala(n), tc = `${pode && !curtiSala(n) ? '🤍' : '❤️'} ${curtidasSala(n)}`;
+    if (bc.textContent !== tc) bc.textContent = tc;
+    if (bc.classList.contains('so-ver') === pode) { bc.classList.toggle('so-ver', !pode); bc.setAttribute('aria-pressed', String(curtiSala(n))); }
+  }
   const bm = $('btn-expo-musica'), semM = !(n && musicaDaSala(true));
   if (bm.hidden !== semM) bm.hidden = semM;
   const bp = $('btn-expo-pend'), semP = !(ehSaguao() && expoPendN > 0 && privilegioExpo());
@@ -8296,8 +8651,19 @@ function atualizarHudExpo() {
   const ic = expoMusicaMudo ? '🔇' : '🔈';
   if (!semM && bm.textContent !== ic) bm.textContent = ic;
 }
+// tocar curte; tocar de novo descurte (grava só a minha curtida)
+function curtirSala() {
+  const n = salaExpo();
+  if (!podeCurtirSala(n)) { if (n && souDaSala(n)) avisoExpo('❤️ Esta é a sala do seu grupo: as curtidas são dos colegas.'); return; }
+  const s = (expoCurtidas[n] ||= new Set()), sim = !s.has(sessao.uid);
+  if (sim) s.add(sessao.uid); else s.delete(sessao.uid);
+  tocar(sim ? 'acerto' : 'clique');
+  const r = ref(db, `${noExpo('exposicao_curtidas')}/${n}/${sessao.uid}`);
+  salvarExpo(sim ? set(r, true) : remove(r));
+}
 function ligarExposicao() {
   $('btn-expo-musica').addEventListener('click', (e) => { e.stopPropagation(); expoMusicaMudo = !expoMusicaMudo; });
+  $('btn-expo-curtir').addEventListener('click', (e) => { e.stopPropagation(); curtirSala(); });
   $('btn-expo-pend').addEventListener('click', (e) => { e.stopPropagation(); window.open('/professor/p-exposicao.html', '_blank', 'noopener'); });   // só um aviso: a aprovação é na página
   ligarEditorExpo();
 }
@@ -8334,6 +8700,16 @@ const nomeDaSala = () => nomeSalaVisivel(ex.n);
 const seloNomeExpo = (n) => { const st = estadoSala(n); return !veTudoExpo(n) ? '' : st.nome_pendente ? '⏳' : st.nome_motivo !== undefined && st.nome_motivo !== null ? '❌' : ''; };
 // 📏 tamanhos de um objeto de chão (PROMPT-152): 1 = 100%, o tamanho do catálogo
 const TAMS_EXPO = [0.6, 0.8, 1, 1.3, 1.6, 2, 2.5, 3, 3.5, 4];   // até 400%
+// 📐 PROMPT-182: nenhum móvel maior que a tela (a altura da cena, 768, e a largura visível, 1376), na Exposição e na casinha
+const cabeNaTela = ([w, h]) => h <= H + 0.5 && w <= W + 0.5;
+// o maior passo da lista (até t) que cabe; medir(t) = [w, h] com esse tamanho
+function tamQueCabe(t, medir) {
+  let i = TAMS_EXPO.indexOf(t);
+  if (i < 0) return t;
+  while (i > 0 && !cabeNaTela(medir(TAMS_EXPO[i]))) i--;
+  return TAMS_EXPO[i];
+}
+const podeCrescer = (t, medir) => { const i = TAMS_EXPO.indexOf(t); return i >= 0 && i < TAMS_EXPO.length - 1 && cabeNaTela(medir(TAMS_EXPO[i + 1])); };
 const tamValido = (it, t) => (it?.tipo === 'chao' && TAMS_EXPO.includes(Number(t)) ? Number(t) : 1);
 function tamExpo(m) {
   const it = catExpo(m.mv);
@@ -8349,7 +8725,8 @@ function lerItemExpo(v) {
     cor: clamp(Math.round(Number(v.cor) || 0), 0, Math.max(0, nCoresExpo(it) - 1)), titulo: txt(v.titulo, 40), texto: txt(v.texto, 400),
     foto: typeof v.foto === 'string' ? v.foto : null, fotos: v.fotos && typeof v.fotos === 'object' ? { ...v.fotos } : null,
     por: typeof v.por === 'string' ? v.por : '', ts: Number(v.ts) || 0, mexendo: Number(v.mexendo) || 0, mexendo_por: typeof v.mexendo_por === 'string' ? v.mexendo_por : '',
-    env_por: typeof v.env_por === 'string' ? v.env_por : '', env_ts: Number(v.env_ts) || 0, motivo: txt(v.motivo, 80), rev_ts: Number(v.rev_ts) || 0 };
+    env_por: typeof v.env_por === 'string' ? v.env_por : '', env_ts: Number(v.env_ts) || 0, motivo: txt(v.motivo, 80), rev_ts: Number(v.rev_ts) || 0,
+    sobre: typeof v.sobre === 'string' && v.sobre ? v.sobre : null, sx: Number.isFinite(Number(v.sx)) ? clamp(Number(v.sx), 0, 1) : 0.5 };   // 🏛️ em cima de outro (PROMPT-182)
   // sem status (itens de antes da aprovação): com conteúdo conta como pendente
   m.status = !precisaAprov(it) ? null : STATUS_EXPO.includes(v.status) ? v.status : temAlgoExpo(m) ? 'pendente' : null;
   return m;
@@ -8358,6 +8735,7 @@ function lerItemExpo(v) {
 function gravavelExpo(m) {
   const o = { mv: m.mv, x: Math.round(m.x), y: Math.round(m.y), vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, por: sessao.uid, ts: Date.now() };
   if (m.tam && m.tam !== 1) o.tam = m.tam;
+  if (m.sobre) { o.sobre = m.sobre; o.sx = +(m.sx ?? 0.5).toFixed(3); }
   if (m.titulo) o.titulo = m.titulo;
   if (m.texto) o.texto = m.texto;
   if (m.foto) o.foto = m.foto;
@@ -8404,6 +8782,7 @@ function fecharSalaExpo() {
   ex = null;
   if (seguidor && !cs) seguidor.zCasa = null;
   for (const id of ['ex-cont', 'ex-temas', 'ex-ver']) $(id).hidden = true;
+  fecharMusicasExpo();
   $('ex-faixa').hidden = $('ex-ferr').hidden = true;
 }
 // ⭐ item que eu mandei e a professora aprovou: +10 XP do jogo, uma vez por item (xp_jogo/expo/{sala}_{item}) (PROMPT-156)
@@ -8429,10 +8808,15 @@ function itemExpoMudou(id, v) {
   if (!ex) return;
   const m = v ? lerItemExpo(v) : null;
   if (m) xpExpoAprovado(ex.n, id, m);
-  if (ex.arr?.id === id && m) { const a = ex.itens.get(id); if (a) Object.assign(a, { ...m, x: a.x, y: a.y }); return; }   // arrastando: a posição é a minha até soltar
+  if (ex.arr?.id === id && m) { const a = ex.itens.get(id); if (a) Object.assign(a, { ...m, x: a.x, y: a.y, sobre: a.sobre, sx: a.sx }); return; }   // arrastando: a posição é a minha até soltar
   if (m) ex.itens.set(id, m); else ex.itens.delete(id);
   const it = m && catExpo(m.mv);
-  (it ? medirItemExpo(it) : Promise.resolve()).then(() => { if (ex) { desenharItemExpo(id); refazerGradeExpo(); if (ex.editando) { renderCatalogoExpo(); resumoAprovExpo(); } } });
+  (it ? medirItemExpo(it) : Promise.resolve()).then(() => {
+    if (!ex) return;
+    const mm = ex.itens.get(id);   // 📐 salvo maior que a tela: fica no limite (e vai assim no próximo salvar)
+    if (mm && it?.tipo === 'chao') mm.tam = tamQueCabe(mm.tam, (t) => tamExpo({ ...mm, tam: t }));
+    desenharItemExpo(id); refazerGradeExpo(); if (ex.editando) { renderCatalogoExpo(); resumoAprovExpo(); }
+  });
   if (ex.ver) renderVisualizador();
 }
 
@@ -8443,17 +8827,25 @@ function desenharItemExpo(id) {
   let el = ex.els.get(id);
   if (!m) { el?.remove(); ex.els.delete(id); if (ex.sel === id) desselecionarExpo(); return; }
   const it = catExpo(m.mv), [w, h] = tamExpo(m);
+  const ps = m.sobre && posSobre(m), base = ps && ex.itens.get(m.sobre);   // 🏛️ em cima de outro: a posição vem do tampo dele
+  if (ps) { m.x = ps.x; m.y = ps.y; }
   if (!el) { el = document.createElement('div'); el.dataset.ex = id; at.appendChild(el); ex.els.set(id, el); }
   el.className = `cs-movel ex-movel cs-${it.tipo}${ex.sel === id ? ' sel' : ''}${mexendoOutro(m) ? ' ex-mexendo' : ''}`;
-  Object.assign(el.style, { left: m.x + 'px', top: m.y + 'px', width: w + 'px', height: h + 'px', zIndex: it.tipo === 'tapete' ? 1 : it.tipo === 'parede' ? 2 : Math.round(m.y) });
+  Object.assign(el.style, { left: m.x + 'px', top: m.y + 'px', width: w + 'px', height: h + 'px', zIndex: it.tipo === 'tapete' ? 1 : it.tipo === 'parede' ? 2 : base ? Math.round(base.y) + 1 : Math.round(m.y) });
+  if (temApoio(it)) for (const cid of filhosExpo(id)) desenharItemExpo(cid);   // os de cima andam junto
   const selo = it.conteudo === 'nome_sala' ? seloNomeExpo(ex.n) : seloExpo(m);
-  const chave = JSON.stringify([m.vista, m.espelho, m.cor, fotosDoItem(m), m.foto, ex.editando, it.conteudo === 'nome_sala' ? nomeDaSala() : '', Math.round(w), visivelExpo(m), selo]);
+  const etq = it.etiqueta?.[m.vista] && m.titulo && visivelExpo(m) ? m.titulo : '';   // 🏷️ o título na frente do pedestal (PROMPT-182)
+  const chave = JSON.stringify([m.vista, m.espelho, m.cor, fotosDoItem(m), m.foto, ex.editando, it.conteudo === 'nome_sala' ? nomeDaSala() : '', Math.round(w), visivelExpo(m), selo, etq]);
   if (el.dataset.k === chave) return;
   el.dataset.k = chave;
   const src = srcExpo(m.mv, m.vista), comFoto = it.conteudo === 'foto' || it.conteudo === 'fotos4';
   el.innerHTML = `${comFoto ? `<div class="ex-fotos${m.espelho ? ' espelho' : ''}"></div>` : ''}<img class="ex-img${m.espelho ? ' espelho' : ''}" src="${src}" alt="" draggable="false" style="${filtroExpo(it, m.cor) ? `filter:${filtroExpo(it, m.cor)};` : ''}${comFoto ? 'visibility:hidden' : ''}"/>` +
-    (it.conteudo === 'nome_sala' ? letreiroHtml(w, h) : '') + (selo ? `<span class="ex-selo" title="${selo === '⏳' ? 'Aguardando aprovação' : 'Recusado'}">${selo}</span>` : '');
+    (it.conteudo === 'nome_sala' ? letreiroHtml(w, h) : '') + (etq ? etiquetaHtml(it, m, w, etq) : '') + (selo ? `<span class="ex-selo" title="${selo === '⏳' ? 'Aguardando aprovação' : 'Recusado'}">${selo}</span>` : '');
   if (comFoto) montarFotosExpo(el, m, it, chave);
+}
+function etiquetaHtml(it, m, w, txt) {
+  const [x, y] = it.etiqueta[m.vista];
+  return `<span class="ex-etiqueta" style="left:${m.espelho ? 100 - x : x}%;top:${y}%;font-size:${clamp(w * 0.15, 9, 20).toFixed(1)}px">${esc(txt)}</span>`;
 }
 function letreiroHtml(w, h) {
   const nome = nomeDaSala(), L = EXPO.letreiro || {}, [cx, cy] = L.centro || [50, 50], larg = Number(L.largura) || 68;
@@ -8487,7 +8879,7 @@ function refazerGradeExpo() {
     if (!ex || cena?.expoSala !== ex.n) return;
     const g = Uint8Array.from(ex.gradeBase);
     g.gw = ex.gradeBase.gw; g.gh = ex.gradeBase.gh;
-    for (const m of ex.itens.values()) if (catExpo(m.mv)?.tipo === 'chao') { const [w, h] = tamExpo(m); zerarNaGrade(g, baseDeChao(m, w, h)); }
+    for (const m of ex.itens.values()) if (catExpo(m.mv)?.tipo === 'chao' && !m.sobre) { const [w, h] = tamExpo(m); zerarNaGrade(g, baseDeChao(m, w, h)); }   // o de cima não ocupa o chão
     cena.grade = g;
   }, 60);
 }
@@ -8504,6 +8896,63 @@ function prenderExpo(m, x, y) {
   if (it.tipo === 'parede') { prenderEmArea(m, x, y, 'parede', w, h, S.parede_fundo); return; }
   const ch = S.chao.y, yy = entreLim(y, ch[0] + (it.tipo === 'tapete' ? h * 0.55 : 6), ch[1]);
   prenderEmArea(m, x, yy, it.tipo, w, h, { x: larguraDoChao(yy), y: ch });
+}
+
+// ── 🏛️ objetos em cima de mesas, pedestais e vitrines (PROMPT-182) ──
+// exposicao.json → moveis[].apoio[vista] = { y, x: [a, b] }: o tampo em % da imagem. Um objeto pequeno de chão solto em cima
+// encaixa (sobre = id do de baixo, sx = 0..1 ao longo do tampo), fica na frente dele e anda junto. Sem tampo na vista nova
+// (girou) ou grande demais (> 1,5 × o tampo): cai para o chão ao lado. Apagar o de baixo: os de cima caem no mesmo x.
+const NAO_SOBE = new Set(['cordao', 'banco_museu', 'totem_info', 'pulpito', 'poltrona', 'pufe', 'biombo']);   // móveis, não objetos
+const temApoio = (it) => !!it?.apoio && Object.keys(it.apoio).length > 0;
+const podeSubir = (m) => { const it = catExpo(m?.mv); return it?.tipo === 'chao' && !temApoio(it) && !NAO_SOBE.has(it.id); };
+const filhosExpo = (id) => [...ex.itens].filter(([, m]) => m.sobre === id).map(([cid]) => cid);
+// o tampo na cena: { x0, x1, y } (com o espelho); null: a vista não tem tampo
+function tampoExpo(b) {
+  const a = b && catExpo(b.mv)?.apoio?.[b.vista];
+  if (!a) return null;
+  const [w, h] = tamExpo(b), xa = b.espelho ? 100 - a.x[1] : a.x[0], xb = b.espelho ? 100 - a.x[0] : a.x[1];
+  return { x0: b.x - w / 2 + w * xa / 100, x1: b.x - w / 2 + w * xb / 100, y: b.y - h + h * a.y / 100 };
+}
+const cabeNoTampo = (m, t) => tamExpo(m)[0] <= (t.x1 - t.x0) * 1.5;
+function posSobre(m) {
+  const t = tampoExpo(ex.itens.get(m.sobre));
+  return t ? { x: t.x0 + (t.x1 - t.x0) * clamp(m.sx ?? 0.5, 0, 1), y: t.y } : null;
+}
+// arrastando: o móvel com tampo debaixo da base do objeto (x, y); o da frente ganha
+function apoioEm(id, x, y) {
+  const m = ex.itens.get(id);
+  if (!podeSubir(m) || filhosExpo(id).length) return null;
+  let melhor = null;
+  for (const [bid, b] of ex.itens) {
+    const t = bid !== id && tampoExpo(b);
+    if (!t || x < t.x0 - 12 || x > t.x1 + 12 || y < t.y - 40 || y > b.y - 6 || !cabeNoTampo(m, t)) continue;
+    if (!melhor || b.y > melhor.b.y) melhor = { bid, b, t };
+  }
+  return melhor && { bid: melhor.bid, t: melhor.t, sx: clamp((x - melhor.t.x0) / (melhor.t.x1 - melhor.t.x0 || 1), 0, 1) };
+}
+// o contorno dourado no tampo enquanto arrasta por cima
+function realceApoio(t) {
+  let el = $('cena-atores').querySelector('.ex-apoio');
+  if (!t) { el?.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.className = 'ex-apoio'; $('cena-atores').appendChild(el); }
+  Object.assign(el.style, { left: t.x0 + 'px', top: t.y + 'px', width: (t.x1 - t.x0) + 'px' });
+}
+// desce para o chão: no mesmo x (ou ao lado do móvel, quando ele perdeu o tampo), na linha da base dele
+function cairDoApoio(id, aoLado = false) {
+  const m = ex.itens.get(id), b = m && ex.itens.get(m.sobre);
+  if (!m) return;
+  m.sobre = null;
+  prenderExpo(m, aoLado && b ? b.x + tamExpo(b)[0] / 2 + tamExpo(m)[0] / 2 + 4 : m.x, b ? b.y + 2 : m.y);
+  mudouItemExpo(id);
+}
+// o de baixo mudou (vista, espelho, tamanho): sem tampo ou pequeno demais, os de cima caem; senão acompanham
+function conferirFilhosExpo(id) {
+  const t = tampoExpo(ex.itens.get(id));
+  for (const cid of filhosExpo(id)) {
+    if (!t) cairDoApoio(cid, true);
+    else if (!cabeNoTampo(ex.itens.get(cid), t)) cairDoApoio(cid);
+    else { desenharItemExpo(cid); salvarExpo(update(refItem(cid), { x: Math.round(ex.itens.get(cid).x), y: Math.round(ex.itens.get(cid).y) })); }
+  }
 }
 
 // ── editor ──
@@ -8560,6 +9009,7 @@ function renderCatalogoExpo() {
       <img src="${srcExpo(it.id, it.vistas[0])}" alt="" draggable="false" loading="lazy"/>${n ? `<b>${n}</b>` : ''}<span>${esc(it.nome)}</span></button>`;
   }).join('');
   $('ex-uso').textContent = `${ex.itens.size}/${limiteExpo('itens', 100)} itens · ${fotosNaSala()}/${limiteExpo('fotos', 12)} fotos`;
+  $('ex-musica').hidden = !musicasExpo().length;   // 🎵 sem músicas na lista: o seletor some
 }
 async function colocarItemExpo(mv) {
   const it = catExpo(mv);
@@ -8630,16 +9080,18 @@ function mudouItemExpo(id, conteudo = false) {
   if (ex.editando) { renderCatalogoExpo(); resumoAprovExpo(); }   // o uso (itens e fotos) e o ⏳/❌
   if (ex.ver) renderVisualizador();
   if (conteudo) return salvarExpo(set(refItem(id), gravavelExpo(m)));
-  return salvarExpo(update(refItem(id), { vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, tam: m.tam && m.tam !== 1 ? m.tam : null, x: Math.round(m.x), y: Math.round(m.y), por: m.por, ts: m.ts }));
+  return salvarExpo(update(refItem(id), { vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, tam: m.tam && m.tam !== 1 ? m.tam : null, x: Math.round(m.x), y: Math.round(m.y), por: m.por, ts: m.ts,
+    sobre: m.sobre || null, sx: m.sobre ? +(m.sx ?? 0.5).toFixed(3) : null }));
 }
 // 🔄 girar: a próxima vista que existe; com uma vista só, espelha
 function girarExpo() {
   const m = ex.itens.get(ex.sel), it = m && catExpo(m.mv);
   if (!it) return;
   if (it.vistas.length > 1) m.vista = it.vistas[(it.vistas.indexOf(m.vista) + 1) % it.vistas.length]; else m.espelho = !m.espelho;
-  prenderExpo(m, m.x, m.y);
+  if (!m.sobre) prenderExpo(m, m.x, m.y);   // o de cima continua no tampo
   regrudarExpo(ex.sel);
   mudouItemExpo(ex.sel);
+  conferirFilhosExpo(ex.sel);
   tocar('clique');
 }
 function espelharExpo() {
@@ -8648,6 +9100,7 @@ function espelharExpo() {
   m.espelho = !m.espelho;
   regrudarExpo(ex.sel);
   mudouItemExpo(ex.sel);
+  conferirFilhosExpo(ex.sel);
   tocar('clique');
 }
 // 🎨 as amostras: o próprio item com cada cor
@@ -8674,18 +9127,21 @@ function pintarTamExpo() {
   const m = ex.itens.get(ex.sel), i = TAMS_EXPO.indexOf(m?.tam ?? 1);
   $('ex-tam-v').textContent = Math.round((m?.tam ?? 1) * 100) + '%';
   $('ex-tam').querySelector('[data-ex-tam="-1"]').disabled = i <= 0;
-  $('ex-tam').querySelector('[data-ex-tam="1"]').disabled = i >= TAMS_EXPO.length - 1;
+  $('ex-tam').querySelector('[data-ex-tam="1"]').disabled = !m || !podeCrescer(m.tam ?? 1, (t) => tamExpo({ ...m, tam: t }));   // 📐 no limite da tela, apagado
 }
 function tamanhoExpo(passo) {
   const m = ex.itens.get(ex.sel), it = m && catExpo(m.mv);
   if (it?.tipo !== 'chao') return;
   const i = clamp(TAMS_EXPO.indexOf(m.tam ?? 1) + passo, 0, TAMS_EXPO.length - 1);
-  if (TAMS_EXPO[i] === m.tam) return;
+  if (TAMS_EXPO[i] === m.tam || (passo > 0 && !cabeNaTela(tamExpo({ ...m, tam: TAMS_EXPO[i] })))) return;   // 📐 nunca maior que a tela
   m.tam = TAMS_EXPO[i];
-  prenderExpo(m, m.x, m.y);   // ampliado, não passa das paredes nem do chão
+  if (!m.sobre) prenderExpo(m, m.x, m.y);   // ampliado, não passa das paredes nem do chão
   regrudarExpo(ex.sel);
   pintarTamExpo();
-  mudouItemExpo(ex.sel);      // como a vista e a cor: não volta a esperar aprovação
+  const t = m.sobre && tampoExpo(ex.itens.get(m.sobre));
+  if (t && !cabeNoTampo(m, t)) cairDoApoio(ex.sel);   // grande demais para o tampo: desce
+  else mudouItemExpo(ex.sel);      // como a vista e a cor: não volta a esperar aprovação
+  conferirFilhosExpo(ex.sel);
   tocar('clique');
 }
 function corExpo(i) {
@@ -8706,6 +9162,7 @@ function apagarExpo(btn) {
   }
   const id = ex.sel, m = ex.itens.get(id);
   desselecionarExpo();
+  for (const cid of filhosExpo(id)) cairDoApoio(cid);   // 🏛️ os de cima caem no chão, no mesmo x
   ex.itens.delete(id);
   desenharItemExpo(id);
   refazerGradeExpo();
@@ -8740,7 +9197,14 @@ function arrastarExpo(e, id) {
     ex.arr = null;
     if (a.moveu) {
       const mm = ex.itens.get(id);
-      if (mm) { mm.por = sessao.uid; mm.ts = Date.now(); salvarExpo(update(refItem(id), { x: Math.round(mm.x), y: Math.round(mm.y), por: sessao.uid, ts: mm.ts, mexendo: null, mexendo_por: null })); }
+      realceApoio(null);
+      if (mm) {
+        mm.por = sessao.uid; mm.ts = Date.now();
+        salvarExpo(update(refItem(id), { x: Math.round(mm.x), y: Math.round(mm.y), por: sessao.uid, ts: mm.ts, mexendo: null, mexendo_por: null,
+          sobre: mm.sobre || null, sx: mm.sobre ? +(mm.sx ?? 0.5).toFixed(3) : null }));
+        if (mm.sobre) tocar('clique');
+        for (const cid of filhosExpo(id)) { const c = ex.itens.get(cid); salvarExpo(update(refItem(cid), { x: Math.round(c.x), y: Math.round(c.y) })); }   // os de cima andaram junto
+      }
       refazerGradeExpo();
     }
     selecionarExpo(id);
@@ -8752,10 +9216,15 @@ function arrastarExpo(e, id) {
 function seguirDedoExpo() {
   const a = ex?.arr, m = a && ex.itens.get(a.id);
   if (!m || !a.moveu) return;
-  const q = telaParaImagem(a.cx, a.cy);
-  prenderExpo(m, q.x + a.off[0], q.y + a.off[1]);
-  const g = regrudarExpo(a.id, a.grude);
-  a.grude = g;
+  const q = telaParaImagem(a.cx, a.cy), px = q.x + a.off[0], py = q.y + a.off[1];
+  const ap = apoioEm(a.id, px, py);   // 🏛️ por cima de um tampo: encaixa (a posição sai do tampo, em desenharItemExpo)
+  realceApoio(ap?.t || null);
+  if (ap) { m.sobre = ap.bid; m.sx = ap.sx; a.grude = null; }
+  else {
+    m.sobre = null;
+    prenderExpo(m, px, py);
+    a.grude = regrudarExpo(a.id, a.grude);
+  }
   desenharItemExpo(a.id);
 }
 // ── emendar os cordões (PROMPT-123) ──
@@ -8815,6 +9284,14 @@ function ligarEditorExpo() {
   $('ex-pronto').addEventListener('click', (e) => { e.stopPropagation(); sairEdicaoExpo(); });
   $('ex-resumo').addEventListener('click', (e) => { e.stopPropagation(); irAoPrimeiroAprovExpo(); });
   $('ex-tema').addEventListener('click', (e) => { e.stopPropagation(); abrirTemasExpo(); });
+  $('ex-musica').addEventListener('click', (e) => { e.stopPropagation(); abrirMusicasExpo(); });
+  $('ex-musicas').addEventListener('click', (e) => {
+    if (e.target === $('ex-musicas') || e.target.closest('[data-fechar="ex-musicas"]')) { fecharMusicasExpo(); return; }
+    const o = e.target.closest('[data-ex-ouvir]');
+    if (o) { if (previaExpo?.id === o.dataset.exOuvir) pararPreviaExpo(); else ouvirPreviaExpo(o.dataset.exOuvir); return; }
+    const b = e.target.closest('[data-ex-musica]');
+    if (b) escolherMusicaExpo(b.dataset.exMusica);
+  });
   $('ex-abas').addEventListener('click', (e) => { const b = e.target.closest('[data-ex-aba]'); if (b && ex) { ex.cat = b.dataset.exAba; renderCatalogoExpo(); } });
   $('ex-catalogo').addEventListener('click', (e) => { const b = e.target.closest('[data-ex-mv]'); if (b) colocarItemExpo(b.dataset.exMv); });
   $('ex-catalogo').addEventListener('wheel', (e) => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.currentTarget.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
@@ -8879,6 +9356,51 @@ function escolherTemaExpo(id) {
   aplicarEstadoSala(ex.n);
   tocar('clique');
   salvarExpo(set(ref(db, `${noExpo('exposicao_salas')}/${ex.n}/tema`), id));
+}
+
+// ── 🎵 música da sala (PROMPT-182): a lista com ▶ (10 s para ouvir antes) e "Sem música" ──
+let previaExpo = null;   // { a: Audio, id, t }
+function abrirMusicasExpo() {
+  if (!ex || !musicasExpo().length) return;
+  renderMusicasExpo();
+  $('ex-musicas').hidden = false;
+}
+function renderMusicasExpo() {
+  const atual = estadoSala(ex?.n).musica || '';
+  const linha = (id, nome, ouvir) => `<div class="ex-mus${id === atual || (!id && !musicasExpo().some(m => m.id === atual)) ? ' atual' : ''}">` +
+    (ouvir ? `<button class="jr-btn jr-btn-sec ex-mus-ouvir" data-ex-ouvir="${esc(id)}" aria-label="Ouvir ${esc(nome)}">${previaExpo?.id === id ? '⏹' : '▶'}</button>` : '<span class="ex-mus-ouvir">🔇</span>') +
+    `<button class="ex-mus-nome" data-ex-musica="${esc(id)}">${esc(nome)}</button></div>`;
+  $('ex-musicas-lista').innerHTML = linha('', 'Sem música', false) + musicasExpo().map(m => linha(m.id, m.nome || m.id, true)).join('');
+}
+function ouvirPreviaExpo(id) {
+  pararPreviaExpo();
+  const mu = musicasExpo().find(x => x.id === id);
+  if (!mu) return;
+  const a = new Audio(srcMusicaExpo(mu));
+  a.volume = 0.7;
+  pausarMusica('previa', true);   // a música da sala para enquanto ouve
+  previaExpo = { a, id, t: setTimeout(pararPreviaExpo, 10000) };
+  a.onended = pararPreviaExpo;
+  a.play().catch(() => pararPreviaExpo());
+  renderMusicasExpo();
+}
+function pararPreviaExpo() {
+  if (!previaExpo) return;
+  const p = previaExpo;
+  previaExpo = null;
+  clearTimeout(p.t);
+  try { p.a.pause(); } catch (_) {}
+  pausarMusica('previa', false);
+  if (!$('ex-musicas').hidden) renderMusicasExpo();
+}
+function fecharMusicasExpo() { pararPreviaExpo(); $('ex-musicas').hidden = true; }
+function escolherMusicaExpo(id) {
+  fecharMusicasExpo();
+  if (!ex || !podeDecorar(ex.n) || (id && !musicasExpo().some(m => m.id === id))) return;
+  const o = (expoSalas[ex.n] ||= {});
+  if (id) o.musica = id; else delete o.musica;
+  tocar('clique');
+  salvarExpo(set(ref(db, `${noExpo('exposicao_salas')}/${ex.n}/musica`), id || null));
 }
 
 // ⏳ / ❌ no alto do ✏️ e do visualizador (só o grupo, a professora e o modo teste chegam a ver)
@@ -9465,7 +9987,8 @@ function itemCasa(id) {
 }
 // cor (PROMPT-118): {id}_{vista}_{cor}.webp; sem cor (o padrão) a imagem normal. Se a da cor não existir: onerror → a normal
 const imgMovel = (id, vista, cor = '') => (ehQuadrinho(id) ? `${IMG}/casinha/${CASA.insignia_quadrinho.imagem}`
-  : id === ID_CAMPEOES ? `${IMG}/casinha/${CASA.quadro_campeoes?.imagem || 'moveis/quadro_campeoes_f.webp'}` : `${IMG}/casinha/moveis/${id}_${vista}${cor ? '_' + cor : ''}.webp`);
+  : id === ID_CAMPEOES ? `${IMG}/casinha/${CASA.quadro_campeoes?.imagem || 'moveis/quadro_campeoes_f.webp'}`
+  : `${IMG}/casinha/moveis/${(CASA?.itens || []).find(i => i.id === id)?.imagem_de || id}_${vista}${cor ? '_' + cor : ''}.webp`);   // imagem_de: a moldura de outro (PROMPT-184)
 const coresDe = (it) => (it?.cor && Array.isArray(CASA?.cores?.[it.cor]) ? CASA.cores[it.cor] : null);
 const corValida = (it, cor) => (cor && coresDe(it)?.some(c => c.id === cor) ? cor : '');
 // imagem de móvel com a volta para a normal se a da cor faltar
@@ -9529,7 +10052,8 @@ function lerCasinha(v) {
   const c = v && typeof v === 'object' ? v : {};
   const moveis = (Array.isArray(c.moveis) ? c.moveis : Object.values(c.moveis || {}))
     .filter(m => m && typeof m.id === 'string' && Number.isFinite(Number(m.x)) && Number.isFinite(Number(m.y)))
-    .map(m => ({ id: m.id, x: Number(m.x), y: Number(m.y), vista: String(m.vista || ''), espelho: !!m.espelho, cor: typeof m.cor === 'string' ? m.cor : '', tam: Number(m.tam) || 1 }));
+    .map(m => ({ id: m.id, x: Number(m.x), y: Number(m.y), vista: String(m.vista || ''), espelho: !!m.espelho, cor: typeof m.cor === 'string' ? m.cor : '', tam: Number(m.tam) || 1,
+      ...(typeof m.foto === 'string' && m.foto ? { foto: m.foto } : {}) }));   // 🖼️ quadro com foto (PROMPT-184)
   const guardados = {};
   for (const [id, n] of Object.entries(c.guardados || {})) if (Number(n) > 0) guardados[id] = Number(n);
   return { guardados, moveis, cama_gratis: !!c.cama_gratis, kit: !!c.kit, quadros: !!c.quadros, publicada: !!c.publicada,   // quadros: os 1ºs quadrinhos já foram pendurados
@@ -9619,6 +10143,8 @@ async function abrirCasinha(visita = null, volta = null) {
   cs = { visita, volta, moveis: [], guardados: visita ? {} : { ...c.guardados }, arrumando: false, sel: null, ida: null, petAlvo: null, petVel: 0, tSono: 0 };
   cs.moveis = (visita ? lerCasinha({ moveis: visita.dados.moveis }).moveis : c.moveis.map(m => ({ ...m }))).filter(m => itemCasa(m.id));
   for (const m of cs.moveis) { const it = itemCasa(m.id); m.vista = vistaValida(it, m.vista); m.cor = corValida(it, m.cor); }
+  // 📐 PROMPT-182: salvo maior que a tela fica no limite (gravado assim no próximo ✔ Pronto)
+  for (const m of cs.moveis) if (itemCasa(m.id).tipo !== 'parede') m.tam = tamQueCabe(tamValidoCasa(itemCasa(m.id), m.tam), (t) => tamMovel({ ...m, tam: t }));
   for (const m of cs.moveis) if (m.id === ID_CAMPEOES) prenderNaArea(m, m.x, m.y);   // PROMPT-119: ficou pequeno — dentro da parede
   // ?campeoes=1 (modo teste): o Quadro dos Campeões nos guardados, sem gravar
   if (!visita && teste && new URLSearchParams(location.search).get('campeoes') === '1' && !cs.moveis.some(m => m.id === ID_CAMPEOES)) cs.guardados[ID_CAMPEOES] = 1;
@@ -9665,13 +10191,15 @@ function irParaCasa() {
   else transicao(() => abrirCasinha(null, volta));
 }
 const mapaComCasa = () => cena?.tipo === 'mapa' && (Number(cena.n) > 0 || cena.n === 'praca');   // mapas 1–13 e Praça
-const limparMovel = (m) => ({ id: m.id, x: Math.round(m.x), y: Math.round(m.y), vista: m.vista, espelho: !!m.espelho, ...(m.cor ? { cor: m.cor } : {}), ...(m.tam && m.tam !== 1 ? { tam: m.tam } : {}) });   // 🎨 📏 vão também na cópia pública
+const limparMovel = (m) => ({ id: m.id, x: Math.round(m.x), y: Math.round(m.y), vista: m.vista, espelho: !!m.espelho, ...(m.cor ? { cor: m.cor } : {}), ...(m.tam && m.tam !== 1 ? { tam: m.tam } : {}),
+  ...(m.foto ? { foto: m.foto } : {}) });   // 🎨 📏 vão também na cópia pública
 // saiu da casinha (outra cena): o pet volta ao normal
 function fecharCasinha() {
   if (!cs) return;
   const v = cs.visita;
   if (v?.petDono) { v.petDono.seg.descartar(); v.petDono.img.remove(); v.petDono.sombra.remove(); }
   tirarComidaPote();
+  pararOuvirFotosCasa();
   cs = null;
   if (seguidor) { seguidor.zFixo = seguidor.zCasa = null; seguidor.antesDaAcao = null; }
   if (v) $('pet').hidden = $('pet-sombra').hidden = !seguidor?.pet;   // o meu pet volta
@@ -9710,14 +10238,116 @@ function desenharMoveis() {
     if (m.id === 'luzes') html += `<i class="cs-brilho cs-brilho-luzes" style="left:${m.x}px;top:${m.y - h * 0.55}px;width:${w * 1.15}px;height:${h * 1.3}px"></i>`;
   });
   atores.insertAdjacentHTML('beforeend', html);
-  // 🖼️ quadro do pet: a imagem do Meu Pet, com a tinta (na visita, o pet do dono) (PROMPT-119)
-  const dp = cs.visita?.dados.pet, pet = cs.visita ? (petsOk && dp && petValido(petAtual(dp.pet)) ? petAtual(dp.pet) : null) : petsOk && estado.pets?.ativo;
-  for (const img of atores.querySelectorAll('img[data-foto]')) {
-    if (!pet) { img.remove(); continue; }
-    if (cs.visita) { img.src = srcIcone(formaValida(pet, dp.forma)); aplicarTinta(img, dp.tinta || null); continue; }
-    img.src = srcIcone(formaDe(pet));
-    aplicarVisualPet(img, pet);
+  cs.quadroPet = '';
+  pintarQuadrosPet();
+  pintarQuadrosImagem();
+}
+// 🖼️ quadro do pet (PROMPT-184): igual ao cartão do Meu Pet — o fundo escolhido (PROMPT-179) e o pet ativo na cor e na forma,
+// sentado, com os pés perto da base; o adulto grande corta nas bordas. Na visita, o pet e o fundo do dono.
+function quadroPetAgora() {
+  if (!petsOk || !cs) return null;
+  if (cs.visita) {
+    const dp = cs.visita.dados.pet, pet = dp && petValido(petAtual(dp.pet)) ? petAtual(dp.pet) : null;
+    return pet && { pet, forma: formaValida(pet, dp.forma), tinta: dp.tinta || null, fundo: fundoPet(cs.visita.dados.fundo)?.id || null };
   }
+  const pet = estado.pets?.ativo;
+  return petValido(pet) && { pet, forma: formaDe(pet), tinta: tintaVisivel(pet) || null, fundo: fundoAtual()?.id || null, meu: true };
+}
+// altura da imagem do pet no palco (em fração da altura do palco), como em medirMeuPet
+const altPetPalco = (forma) => (ehFormaAdulta(forma) ? (/^tigre_adulto/.test(forma) ? 0.76 : 0.86) / (sentadoNoQuadro(forma) + 0.01) : Math.min(0.68 * tamVisual(forma), 0.94));
+function pintarQuadrosPet() {
+  const q = quadroPetAgora(), chave = JSON.stringify(q);
+  if (!cs || cs.quadroPet === chave) return;
+  cs.quadroPet = chave;
+  for (const el of $('cena-atores').querySelectorAll('[data-foto-pet]')) {
+    el.classList.toggle('com-fundo', !!q?.fundo);
+    el.style.backgroundImage = q?.fundo ? `url("${srcFundo(q.fundo)}")` : '';
+    const img = el.querySelector('img');
+    if (!q) { img.hidden = true; continue; }
+    img.hidden = false;
+    img.src = quadrosDe(q.forma, 'sentado_girando')[0];
+    img.style.height = (altPetPalco(q.forma) * 100).toFixed(1) + '%';
+    if (q.meu) aplicarVisualPet(img, q.pet); else aplicarTinta(img, q.tinta);
+  }
+}
+
+// ── 🖼️ Quadro com foto (PROMPT-184): o aluno escolhe uma imagem (como as fotos da Exposição: exposicao-img.js, até 1000 px,
+//  WebP, em exposicao_imagens/{id} = { dados, casa: uid, por, ts }). O móvel guarda o id da foto (casinha/moveis[i].foto) e o
+//  status fica no índice jogo_revisao_casinha_fotos/{id} = { uid, nome, turma, status, motivo?, ts, rev_ts? } (modo teste:
+//  *_teste), que a professora aprova na página da Exposição (assim o ✔ Pronto do aluno nunca desfaz a decisão dela).
+//  ⏳ pendente: o dono vê a imagem com o selo; os visitantes, a moldura vazia. ✅ aprovada: todos. ❌ recusada: a imagem sai do
+//  banco e o dono vê ❌ na moldura (pode escolher outra). Até 3 por casa (limite do catálogo).
+// ============================================================
+const baseFotosCasa = () => (teste ? 'jogo_revisao_casinha_fotos_teste' : 'jogo_revisao_casinha_fotos');
+const baseImagensCasa = () => (teste ? 'exposicao_imagens_teste' : 'exposicao_imagens');
+const statusFotoCasa = {};   // id da foto → { status, motivo } (ao vivo enquanto a casinha está aberta)
+const dadosFotoCasa = new Map();   // id → Promise<dataURL | null>
+let pararFotosCasa = [];
+function dadosFotoDaCasa(id) {
+  if (!dadosFotoCasa.has(id)) dadosFotoCasa.set(id, get(ref(db, `${baseImagensCasa()}/${id}/dados`))
+    .then(s => (s.exists() && String(s.val()).startsWith('data:image/') ? s.val() : null)).catch(() => { dadosFotoCasa.delete(id); return null; }));
+  return dadosFotoCasa.get(id);
+}
+// ouve o status das fotos dos quadros que estão no quarto (as que já ouvia continuam)
+function ouvirFotosCasa() {
+  const ids = new Set((cs?.moveis || []).map(m => m.foto).filter(Boolean));
+  for (const id of ids) {
+    if (pararFotosCasa.some(p => p.id === id)) continue;
+    try {
+      const f = onValue(ref(db, `${baseFotosCasa()}/${id}`), (s) => {
+        const v = s.exists() ? s.val() : null;
+        statusFotoCasa[id] = v && typeof v === 'object' ? { status: ['pendente', 'aprovado', 'recusado'].includes(v.status) ? v.status : 'pendente', motivo: String(v.motivo || '').slice(0, 80) } : { status: 'recusado', motivo: '' };
+        if (v?.status === 'recusado') dadosFotoCasa.delete(id);
+        pintarQuadrosImagem();
+      }, () => {});
+      pararFotosCasa.push({ id, f });
+    } catch (e) { console.warn('[jogo-revisao] fotos da casinha indisponíveis', e?.code || e); }
+  }
+}
+function pararOuvirFotosCasa() { for (const p of pararFotosCasa) try { p.f(); } catch (_) {} pararFotosCasa = []; }
+function pintarQuadrosImagem() {
+  if (!cs) return;
+  ouvirFotosCasa();
+  const dono = !cs.visita;
+  for (const el of $('cena-atores').querySelectorAll('[data-foto-img]')) {
+    const m = cs.moveis[Number(el.closest('.cs-movel')?.dataset.i)], id = m?.foto || '', st = id ? statusFotoCasa[id] : null;
+    const status = !id ? '' : st?.status || 'pendente';
+    const mostra = id && (status === 'aprovado' || (dono && status === 'pendente'));
+    const chave = `${id}|${status}|${dono}|${!!cs.arrumando}`;
+    if (el.dataset.k === chave) continue;
+    el.dataset.k = chave;
+    const selo = dono && id && status !== 'aprovado' ? `<span class="cs-foto-selo" title="${status === 'pendente' ? 'Esperando a professora aprovar' : 'Recusada' + (st?.motivo ? ': ' + esc(st.motivo) : '')}">${status === 'pendente' ? '⏳' : '❌'}</span>` : '';
+    el.innerHTML = (mostra ? '<img alt="" draggable="false"/>' : dono ? `<span class="cs-foto-vazia">${status === 'recusado' ? '❌' : '📷'}</span>` : '') + selo;
+    const img = el.querySelector('img');
+    if (img) dadosFotoDaCasa(id).then(d => { if (d && img.isConnected) img.src = d; else if (!d) img.remove(); });
+  }
+}
+// 📷 escolher a imagem (arrumando, com o quadro selecionado)
+async function enviarFotoCasa(file) {
+  const m = cs?.sel;
+  if (!m || m.id !== 'quadro_imagem' || cs.visita || !file) return;
+  avisoTopo('Enviando a imagem…');
+  let foto;
+  try { foto = await prepararFoto(file); } catch (_) { avisoPet('Não deu para abrir essa imagem.'); return; }
+  let id;
+  try {
+    id = push(ref(db, baseImagensCasa())).key;
+    await set(ref(db, `${baseImagensCasa()}/${id}`), { dados: foto.dados, casa: sessao.uid, por: sessao.uid, ts: Date.now() });
+    await set(ref(db, `${baseFotosCasa()}/${id}`), { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', status: 'pendente', ts: Date.now() });
+  } catch (e) { console.warn('[jogo-revisao] foto da casinha', e?.code || e); avisoPet('Sem conexão: a imagem não foi enviada.'); return; }
+  const velho = m.foto;
+  dadosFotoCasa.set(id, Promise.resolve(foto.dados));
+  statusFotoCasa[id] = { status: 'pendente', motivo: '' };
+  m.foto = id;
+  if (velho) apagarFotoCasa(velho);
+  pintarQuadrosImagem();
+  tocar('clique');
+  avisoPet('📷 Imagem enviada! Ela aparece para os colegas depois que a professora aprovar. Toque em ✔ Pronto para salvar.', true);
+}
+function apagarFotoCasa(id) {
+  dadosFotoCasa.delete(id); delete statusFotoCasa[id];
+  remove(ref(db, `${baseImagensCasa()}/${id}`)).catch(() => {});
+  remove(ref(db, `${baseFotosCasa()}/${id}`)).catch(() => {});
 }
 const imgInsigniaQuadro = (chave) => {
   const q = CASA.insignia_quadrinho.insignia || {}, [cx, cy] = q.centro || [50, 50];
@@ -9737,9 +10367,10 @@ function trofeuCampeoes(w, h) {
 function extraMovel(m, it, w = 80, h = 80) {
   if (it.campeoes) return trofeuCampeoes(w, h);
   if (it.quadrinho) return imgInsigniaQuadro(it.quadrinho);
-  if (m.id === 'quadro_foto' && Array.isArray(it.foto)) {
-    const [x0, y0, x1, y1] = it.foto;
-    return `<img class="cs-foto" data-foto alt="" draggable="false" style="left:${x0}%;top:${y0}%;width:${x1 - x0}%;height:${y1 - y0}%"/>`;
+  if ((m.id === 'quadro_foto' || m.id === 'quadro_imagem') && Array.isArray(it.foto)) {
+    const [x0, y0, x1, y1] = it.foto, area = `left:${x0}%;top:${y0}%;width:${x1 - x0}%;height:${y1 - y0}%`;
+    if (m.id === 'quadro_imagem') return `<div class="cs-foto cs-foto-img" data-foto-img style="${area}"></div>`;   // 🖼️ a imagem do aluno (PROMPT-184)
+    return `<div class="cs-foto cs-foto-pet" data-foto-pet style="${area}"><div class="cs-foto-pulo"><img alt="" draggable="false"/></div></div>`;   // o Meu Pet
   }
   if (m.id === 'aquario') return aguaHtml(m.vista, m.espelho, 'cs-agua');
   return '';
@@ -9850,6 +10481,7 @@ function soltarPet() {
 }
 // a cada quadro na casinha: de vez em quando (pet parado) vai dormir na cama; no fim de cada coisa, volta
 function atualizarCasinha(dt) {
+  if (cs && (cs.tQuadro = (cs.tQuadro || 0) + dt) > 0.5) { cs.tQuadro = 0; pintarQuadrosPet(); }
   if (!cs) return;
   if (cs.visita) { andarPetDono(dt); return; }   // 🏠 visita: o pet do dono passeia
   if (cs.sel && cs.arrumando) posicionarFerrCasa();
@@ -10301,7 +10933,7 @@ async function publicarCasinha() {
   if (casaSemGravar || !entraNoRanking()) return;
   const pet = petsOk && estado.pets?.ativo;
   const dados = { moveis: estado.casinha.moveis, pet: pet ? { pet, forma: formaDe(pet), tinta: tintaVisivel(pet) || null, nome: nomePet(pet) } : null,
-    nome: nomeRanking(), turma: sessao.turma || '', vaso: faseVaso(), cor: estado.casinha.cor || null, tema: temaDoDono().id, ts: Date.now(),
+    nome: nomeRanking(), turma: sessao.turma || '', vaso: faseVaso(), cor: estado.casinha.cor || null, tema: temaDoDono().id, ts: Date.now(), fundo: fundoAtual()?.id || null,
     ins: Object.fromEntries(insigniasGanhas().map(k => [k, { d: estado.ginasios[k].dourada ? 1 : 0, t: estado.ginasios[k].dataInsignia || 0 }])),   // PROMPT-107
     peixes: { ...(estado.pescaEspecies || {}) } };
   try {
@@ -10483,13 +11115,13 @@ function pintarTamMovel() {
   const m = cs?.sel, t = m ? tamValidoCasa(itemCasa(m.id), m.tam) : 1, i = TAMS_EXPO.indexOf(t);
   $('cs-tam-v').textContent = Math.round(t * 100) + '%';
   $('cs-tam').querySelector('[data-cs-tam="-1"]').disabled = i <= 0;
-  $('cs-tam').querySelector('[data-cs-tam="1"]').disabled = i >= TAMS_EXPO.length - 1;
+  $('cs-tam').querySelector('[data-cs-tam="1"]').disabled = !m || !podeCrescer(t, (tt) => tamMovel({ ...m, tam: tt }));   // 📐 no limite da tela, apagado
 }
 function tamanhoMovel(passo) {
   const m = cs?.sel, it = itemCasa(m?.id);
   if (!m || !it || it.tipo === 'parede') return;
   const i = clamp(TAMS_EXPO.indexOf(tamValidoCasa(it, m.tam)) + passo, 0, TAMS_EXPO.length - 1);
-  if (TAMS_EXPO[i] === tamValidoCasa(it, m.tam)) return;
+  if (TAMS_EXPO[i] === tamValidoCasa(it, m.tam) || (passo > 0 && !cabeNaTela(tamMovel({ ...m, tam: TAMS_EXPO[i] })))) return;   // 📐 nunca maior que a tela
   m.tam = TAMS_EXPO[i];
   prenderNaArea(m, m.x, m.y);   // ampliado, não passa das paredes nem do chão
   desenharMoveis();              // o brilho do abajur e das luzes acompanha o tamanho
@@ -10500,6 +11132,7 @@ function tamanhoMovel(passo) {
 function guardarMovel() {
   const m = cs?.sel;
   if (!m) return;
+  if (m.foto) { apagarFotoCasa(m.foto); m.foto = null; }   // 🖼️ guardado, o quadro volta vazio (a imagem sai do banco)
   cs.moveis.splice(cs.moveis.indexOf(m), 1);
   const k = chaveGuardado(m.id, m.cor);   // guarda com a cor (PROMPT-118)
   cs.guardados[k] = (cs.guardados[k] || 0) + 1;
@@ -10515,6 +11148,7 @@ function abrirFerrCasa() {
   el.querySelector('[data-cs="girar"]').hidden = ciclosVista(itemCasa(m.id), m).length < 2;
   el.querySelector('[data-cs="cor"]').hidden = !coresDe(itemCasa(m.id));   // 🎨 só nos que têm cor (PROMPT-118)
   el.querySelector('[data-cs="tam"]').hidden = itemCasa(m.id)?.tipo === 'parede';
+  el.querySelector('[data-cs="imagem"]').hidden = m.id !== 'quadro_imagem';   // 📷 (PROMPT-184)
   $('cs-cores').hidden = $('cs-tam').hidden = true;
   el.hidden = false;
   posicionarFerrCasa();
@@ -10564,6 +11198,7 @@ function ligarCasinha() {
     $('cs-cores').hidden = $('cs-tam').hidden = true;
     if (b?.dataset.cs === 'girar') girarMovel();
     else if (b?.dataset.cs === 'guardar') guardarMovel();
+    else if (b?.dataset.cs === 'imagem') { $('cs-arquivo').value = ''; $('cs-arquivo').click(); }   // 📷 (PROMPT-184)
   });
   $('cs-guardados').addEventListener('wheel', (e) => {   // roda do mouse: rola a faixa de lado
     if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
@@ -10622,7 +11257,10 @@ async function visitarCasinha(uid, volta = null) {   // volta: { n: 'vila', lado
   let d = null;
   try { const s = await get(ref(db, `${basePraca()}/casinhas/${uid}`)); d = s.exists() ? s.val() : null; }
   catch (e) { console.warn('[jogo-revisao] casinha do colega indisponível', e?.code || e); }
-  if (!d?.moveis || !visivelNoRanking(uid, d)) { avisoPet('Essa casinha não está aberta para visitas agora.'); return; }
+  if ((!d?.moveis || !visivelNoRanking(uid, d)) && ehAmigo(uid)) {   // 🤝 amigo: a casinha do jeito que ele deixou, mesmo sem publicar (PROMPT-183)
+    try { d = await casaDoAmigo(uid); } catch (e) { console.warn('[jogo-revisao] casinha do amigo indisponível', e?.code || e); }
+    if (!d) { avisoPet('Seu amigo ainda não arrumou a casinha.'); return; }
+  } else if (!d?.moveis || !visivelNoRanking(uid, d)) { avisoPet('Essa casinha não está aberta para visitas agora.'); return; }
   $('cs-menu').hidden = $('online-lista').hidden = true;
   fecharCartaoColega();
   transicao(() => abrirCasinha({ uid, dados: d }, volta));
@@ -10672,7 +11310,7 @@ const podeCurtir = (turmaDono) => entraNoRanking() && !desafiosOff?.todas && !de
 async function lerCurtida() {
   const v = cs?.visita, b = $('cs-curtir');
   b.hidden = true;
-  if (!v || v.uid === sessao.uid || !podeCurtir(v.dados.turma)) return;
+  if (!v || v.uid === sessao.uid || v.dados.amigo || !podeCurtir(v.dados.turma)) return;   // 🤝 a do amigo sem publicar: só olhar (PROMPT-183)
   try {
     const s = await get(ref(db, `${basePraca()}/casinhas_coracoes/${v.uid}/${sessao.uid}`));
     if (cs?.visita !== v) return;
@@ -11220,6 +11858,9 @@ async function deixarDeSerVizinho(uid) {
 function ligarVila() {
   $('vila-balao').addEventListener('click', cliqueBalaoVila);
   $('vila-convite').addEventListener('click', (e) => { const b = e.target.closest('[data-conv]'); if (b) responderConviteVila(b.dataset.conv === 'aceitar'); });
+  $('amizade-pedido').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-amz]'); if (b) responderAmizade(b.dataset.amz === 'sim'); });   // 🤝 (PROMPT-183)
+  $('amigo-presente').addEventListener('click', (e) => { e.stopPropagation(); cliquePresenteAmigo(e); });
+  $('cs-arquivo').addEventListener('change', (e) => { const f = e.target.files?.[0]; if (f) enviarFotoCasa(f); });   // 📷 (PROMPT-184)
   $('visita-pedido').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-ped]'); if (b) responderPedidoVisita(b.dataset.ped === 'deixar'); });   // 🚪 (PROMPT-168)
   $('perfil-colega').addEventListener('click', (e) => { e.stopPropagation(); if (e.target === $('perfil-colega') || e.target.closest('#perfil-fechar')) $('perfil-colega').hidden = true; });
   $('vila-busca-txt').addEventListener('input', renderBuscaVizinho);
@@ -12457,6 +13098,7 @@ function abrirRevisaoBatalha() {
       </div>
       <div class="bt-rev-explica">${esc(x.explica)}</div>
       ${x.relembre && explicacaoDe(x.relembre) ? `<button class="jr-btn-relembre" data-relembre="${x.relembre}">📖 Relembre</button>` : ''}
+      ${comoFazDe({ enunciado: x.conta, explicacao: x.explica, relembre: x.relembre }) ? `<button class="jr-btn-relembre" data-como="${esc(x.conta)}" data-como-rel="${esc(x.relembre || '')}" data-como-exp="${esc(x.explica || '')}">▶ Ver como faz</button>` : ''}
     </div>`).join('');
   $('bt-revisao').hidden = false;
   $('bt-rev-lista').scrollTop = 0;
@@ -13628,6 +14270,7 @@ function mostrarPlanoPergunta(q) {
   if (!tem) pgPlano = null;
 }
 
+let erroComoFaz = null;
 function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   const passos = passosDe(q.explicacao);
   const ultimo = passos[passos.length - 1] || '';
@@ -13645,7 +14288,9 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   const rel = q.relembre !== undefined ? q.relembre : chaveGinasio(q.mapa ?? pg.mapa, q.lado ?? pg.G);   // na revisão cada pergunta é de um ginásio; conta de batalha: pelo tipo
   $('erro-relembre').hidden = !explicacaoDe(rel);
   $('erro-relembre').dataset.relembre = rel;
-  $('erro-linha-dica').hidden = !mostraDica && $('erro-relembre').hidden;
+  erroComoFaz = comoFazDe(q);   // ▶ (PROMPT-185)
+  $('erro-ver').hidden = !erroComoFaz;
+  $('erro-linha-dica').hidden = !mostraDica && $('erro-relembre').hidden && $('erro-ver').hidden;
   $('erro-volta').textContent = pg.modo === 'treino' ? `🔁 ${comOutrosNumeros ? 'Ela volta daqui a pouco, com outros números, e de novo amanhã.' : 'Ela volta daqui a pouco e de novo amanhã.'}` : `🔁 ${comOutrosNumeros ? 'Essa pergunta volta daqui a pouco, com outros números.' : 'Essa pergunta volta daqui a pouco.'}`;
   // 📐 com plano (PROMPT-128): o mesmo plano da pergunta, com a animação da resposta certa; sem plano, a mini-grade de antes
   erroPlano?.cancelar(); erroPlano = null; erroFig?.cancelar(); erroFig = null;
@@ -15518,6 +16163,7 @@ function exemploRelembre(txt) {
 
 // origem: 'entrada' (sozinho, ao entrar no ginásio), 'ginasio' (📖 do interior), 'erro', 'batalha', 'insignia'
 function abrirRelembre(chave, origem) {
+  if (aulaDe(chave) && estado) { abrirAula(chave, origem); return; }   // 🧑‍🏫 ginásios 1-A a 4-B: a Aula do pet (PROMPT-185)
   const e = explicacaoDe(chave);
   if (!e || !estado) return;
   relembreAberto = { chave, origem };
@@ -15608,9 +16254,145 @@ function fecharRelembre() {
 
 // Ao entrar no ginásio: sempre na 1ª vez; depois, só se o aluno não marcou "não mostrar de novo"
 function relembreNaEntrada(chave) {
+  if (aulaDe(chave)) { aulaNaEntrada(chave); return; }   // 🧑‍🏫 (PROMPT-185)
   const r = estado?.relembre?.[chave];
   if (!explicacaoDe(chave) || (r?.visto && r.ocultar) || !$('relembre').hidden) return;
   abrirRelembre(chave, 'entrada');
+}
+
+// ============================================================
+//  🧑‍🏫 AULA DO PET (PROMPT-185) — na entrada dos ginásios 1-A a 4-B (dados/jogo/aulas.json), no lugar do 📖 Relembre:
+//  a lousa animada (lousa.js) à esquerda e o pet ativo (sentado; o adulto, só o busto) com o balão à direita. Cada página =
+//  uma fala + uma animação; ◀ ▶, "2 / 5", ↺ e ⏸. Obrigatória só para quem nunca entrou no ginásio: sem ✖, sem Esc e sem
+//  tocar fora até o Bora! da última página (aulas_vistas/{chave}: true). Quem já tem progresso nele fica marcado como visto.
+//  Depois: como o Relembre (com "Não mostrar de novo neste ginásio"). O 📖 do ginásio, do erro e da batalha abre a mesma
+//  Aula. "▶ Ver como faz" (cartão do erro e revisão da batalha): só a lousa, com os números da questão errada.
+// ============================================================
+let AULAS = {}, aula = null;   // { chave, origem, pag, obrig, modo: 'aula' | 'como', passos }
+let lousaAula = null;
+const aulaDe = (chave) => (AULAS?.aulas?.[chave]?.paginas?.length ? AULAS.aulas[chave] : null);
+// qualquer progresso salvo no ginásio (ou o Relembre/Aula já apareceu ali): não é mais a 1ª vez
+function jaEntrouNoGinasio(chave) {
+  const g = estado?.ginasios?.[chave];
+  return !!estado?.relembre?.[chave]?.visto || !!g && (g.insignia || g.zerado || !!g.primeiraTentativa ||
+    ['treinador1', 'treinador2', 'treinador3', 'lider', 'revanche'].some(p => g[p]?.vencido));
+}
+function aulaNaEntrada(chave) {
+  if (!$('aula').hidden || !estado) return;
+  if (!estado.aulasVistas[chave] && jaEntrouNoGinasio(chave)) { estado.aulasVistas[chave] = true; gravar({ [`aulas_vistas/${chave}`]: true }); }   // conta antiga: não é obrigada
+  const r = estado.relembre?.[chave];
+  if (estado.aulasVistas[chave] && r?.visto && r.ocultar) return;
+  abrirAula(chave, 'entrada');
+}
+// a fala no jeito do pet: a da personalidade, ou a neutra com o começo (e, na última página, o fim) do jeito dele
+function falaAula(p, i, n) {
+  const pet = petsOk && estado.pets?.ativo, por = pet && p.por_personalidade?.[pet];
+  if (por) return por;
+  const j = pet && AULAS.jeito?.[pet], abre = j?.abre?.length ? j.abre[i % j.abre.length] : '', fecha = i === n - 1 && j?.fecha?.length ? j.fecha[i % j.fecha.length] : '';
+  return [abre, p.texto, fecha].filter(Boolean).join(' ');
+}
+function abrirAula(chave, origem) {
+  const A = aulaDe(chave);
+  if (!A || !estado) return;
+  const obrig = origem === 'entrada' && !estado.aulasVistas[chave];
+  aula = { chave, origem, pag: 0, obrig, modo: 'aula' };
+  $('aula').classList.remove('como');
+  const [, m, G] = /^mapa(\d+)-([AB])$/.exec(chave) || [];
+  const gin = m && D.questoes?.[m]?.ginasios?.[G];
+  $('aula-tit').textContent = A.titulo || gin?.nome || 'Aula';
+  $('aula-sub').textContent = gin ? `🧑‍🏫 Aula · ${gin.nome}` : '🧑‍🏫 Aula';
+  $('aula-ins').src = `${IMG}/insignias/insignia-${chave}.webp`;
+  $('aula-ins').hidden = false;
+  mostrarPetAula(true);
+  const r = (estado.relembre[chave] ||= {});
+  $('aula-check').hidden = obrig || (origem !== 'entrada' && origem !== 'ginasio');
+  $('aula-ocultar').checked = !!r.ocultar;
+  if (origem === 'entrada') { if (!r.visto) { r.visto = true; gravar({ [`relembre/${chave}/visto`]: true }); } }
+  else { r.aberturas = (Number(r.aberturas) || 0) + 1; r.ultima = Date.now(); gravar({ [`relembre/${chave}/aberturas`]: r.aberturas, [`relembre/${chave}/ultima`]: r.ultima }); }
+  soltarJoystick();
+  $('aula').hidden = false;
+  irPaginaAula(0);
+}
+// o pet à direita: sentado, na cor e forma dele; o adulto (largo demais) só com o busto
+function mostrarPetAula(com) {
+  const pet = com && petsOk && estado.pets?.ativo;
+  $('aula-pet').hidden = !pet;
+  if (!pet) return;
+  const img = $('aula-pet-img'), forma = formaDe(pet), busto = ehFormaAdulta(forma) && temBusto(forma);
+  img.removeAttribute('style');
+  $('aula-pet').classList.toggle('com-busto', busto);
+  img.src = busto ? bustoPet(forma) : quadrosDe(forma, 'sentado_girando')[0];
+  marcarForma(img, pet, busto ? pet : forma);
+  aplicarVisualPet(img, pet);
+  if (busto) encaixarIcone(img);
+}
+function irPaginaAula(i) {
+  if (!aula || aula.modo !== 'aula') return;
+  const ps = aulaDe(aula.chave).paginas, n = ps.length;
+  aula.pag = clamp(i, 0, n - 1);
+  const p = ps[aula.pag], ultima = aula.pag === n - 1;
+  $('aula-fala').textContent = falaAula(p, aula.pag, n);
+  $('aula-n').textContent = `${aula.pag + 1} / ${n}`;
+  $('aula-ant').disabled = aula.pag === 0;
+  $('aula-prox').hidden = ultima;
+  $('aula-ok').hidden = !ultima;
+  $('aula-ok').textContent = 'Bora!';
+  $('aula-x').hidden = aula.obrig;
+  $('aula-pausa').textContent = '⏸';
+  tocarLousaAula(p.lousa || []);
+  (ultima ? $('aula-ok') : $('aula-prox')).focus({ preventScroll: true });
+}
+function tocarLousaAula(passos) {
+  lousaAula ||= criarLousa($('aula-lousa'));
+  aula.passos = passos;
+  lousaAula.tocar(passos);
+}
+// ✖ / Esc / tocar fora / Bora! / Entendi — a obrigatória só fecha pelo Bora! da última página
+function fecharAula(peloBotao = false) {
+  if (!aula) return;
+  if (aula.obrig && !(peloBotao && aula.pag === aulaDe(aula.chave).paginas.length - 1)) return;
+  const { chave, modo, obrig } = aula;
+  aula = null;
+  lousaAula?.cancelar();
+  $('aula').hidden = true;
+  if (modo !== 'aula') return;
+  if (obrig || !estado.aulasVistas[chave]) { estado.aulasVistas[chave] = true; gravar({ [`aulas_vistas/${chave}`]: true }); }
+  if ($('aula-check').hidden) return;
+  const r = (estado.relembre[chave] ||= {}), ocultar = $('aula-ocultar').checked;
+  if (!!r.ocultar !== ocultar) { r.ocultar = ocultar; gravar({ [`relembre/${chave}/ocultar`]: ocultar || null }); }
+}
+
+// ── ▶ Ver como faz: a lousa com os números da questão errada. null = não deu para montar (o botão não aparece) ──
+const soExpressao = (s) => /^[\d\s,+−×÷()[\]{}-]+$/.test(s) && /[+−×÷]/.test(s) && /\d/.test(s);
+function comoFazDe(q) {
+  if (!q) return null;
+  const chave = q.relembre !== undefined ? q.relembre : chaveGinasio(q.mapa ?? pg?.mapa, q.lado ?? pg?.G);
+  if (!/^mapa1-[AB]$/.test(chave || '')) return null;   // ginásio 1 (PROMPT-185); 2 a 4: PROMPT-186/187
+  let e = String(q.enunciado || '').replace(/\s*=\s*\??\s*$/, '').replace(/^Quanto (é|dá)\s+/i, '').replace(/\?$/, '').trim(), problema = null;
+  if (!soExpressao(e)) {   // problema com texto: a expressão do começo da explicação
+    const x = String(q.explicacao || '').split(' = ')[0].trim();
+    if (!soExpressao(x)) return null;
+    problema = q.enunciado; e = x;
+  }
+  try { if (!passosExpressao(e).length) return null; } catch (_) { return null; }
+  return [...(problema ? [{ t: 'enunciado', v: problema }] : []), { t: 'expressao', v: e }];
+}
+function abrirComoFaz(passos, titulo = 'Ver como faz') {
+  if (!passos?.length) return;
+  aula = { modo: 'como', pag: 0, obrig: false };
+  $('aula').classList.add('como');
+  $('aula-tit').textContent = titulo;
+  $('aula-sub').textContent = '▶ Ver como faz';
+  $('aula-ins').hidden = true;
+  mostrarPetAula(false);
+  $('aula-check').hidden = true;
+  $('aula-ant').disabled = true; $('aula-prox').hidden = true; $('aula-n').textContent = '';
+  $('aula-ok').hidden = false; $('aula-ok').textContent = 'Entendi';
+  $('aula-x').hidden = false;
+  $('aula-pausa').textContent = '⏸';
+  $('aula').hidden = false;
+  tocarLousaAula(passos);
+  $('aula-ok').focus({ preventScroll: true });
 }
 
 // ============================================================
@@ -15908,6 +16690,9 @@ function ligarEventos() {
     const em = e.target.closest('[data-emoji]');
     if (em) { mandarEmoji(cartaoColega.c, em.dataset.emoji); return; }
     if (e.target.closest('[data-perfil]')) { abrirPerfilColega(cartaoColega.c); return; }   // 🏅
+    if (e.target.closest('[data-amigo]')) { tocouBotaoAmigo(cartaoColega.c); return; }   // 🤝 (PROMPT-183)
+    if (e.target.closest('[data-desfazer-amigo]')) { const c = cartaoColega.c; desfazerAmizade(c.uid); abrirCartaoColega(c); return; }
+    if (e.target.closest('[data-amigo-voltar]')) { abrirCartaoColega(cartaoColega.c); return; }
     if (e.target.closest('[data-pedir-visita]')) { pedirVisita(cartaoColega.c); return; }   // 🚪
     if (e.target.closest('[data-presente]')) { escolherPresente(cartaoColega.c); return; }
     if (e.target.closest('[data-visitar]')) { visitarCasinha(cartaoColega.c.uid); return; }   // 🏠 (PROMPT-107)
@@ -16036,8 +16821,29 @@ function ligarEventos() {
   $('missoes').addEventListener('click', (e) => { if (e.target.id === 'missoes') $('missoes').hidden = true; });
   $('relembre').addEventListener('click', (e) => { if (e.target.id === 'relembre') fecharRelembre(); });
   $('erro-relembre').addEventListener('click', (e) => abrirRelembre(e.currentTarget.dataset.relembre, 'erro'));
+  // 🧑‍🏫 Aula e ▶ Ver como faz (PROMPT-185)
+  $('erro-ver').addEventListener('click', () => abrirComoFaz(erroComoFaz, $('erro-enun').textContent));
+  $('aula').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (e.target.id === 'aula' || e.target.closest('#aula-x')) { fecharAula(); return; }
+    if (e.target.closest('#aula-ok')) { fecharAula(true); return; }
+    if (e.target.closest('#aula-ant')) irPaginaAula(aula.pag - 1);
+    else if (e.target.closest('#aula-prox')) irPaginaAula(aula.pag + 1);
+    else if (e.target.closest('#aula-rep')) { $('aula-pausa').textContent = '⏸'; lousaAula?.tocar(aula.passos); }
+    else if (e.target.closest('#aula-pausa')) $('aula-pausa').textContent = lousaAula?.pausar() ? '▶' : '⏸';
+  });
+  window.addEventListener('keydown', (e) => {
+    if ($('aula').hidden || !aula) return;
+    if (e.key === 'Escape') { e.stopPropagation(); fecharAula(); }
+    else if (e.key === 'ArrowRight' && aula.modo === 'aula') { e.stopPropagation(); irPaginaAula(aula.pag + 1); }
+    else if (e.key === 'ArrowLeft' && aula.modo === 'aula') { e.stopPropagation(); irPaginaAula(aula.pag - 1); }
+  }, true);
   $('erro-continuar').addEventListener('click', continuarDoErro);
-  $('bt-rev-lista').addEventListener('click', (e) => { const b = e.target.closest('[data-relembre]'); if (b) abrirRelembre(b.dataset.relembre, 'batalha'); });
+  $('bt-rev-lista').addEventListener('click', (e) => {
+    const c = e.target.closest('[data-como]');   // ▶ (PROMPT-185)
+    if (c) { abrirComoFaz(comoFazDe({ enunciado: c.dataset.como, explicacao: c.dataset.comoExp, relembre: c.dataset.comoRel }), c.dataset.como); return; }
+    const b = e.target.closest('[data-relembre]'); if (b) abrirRelembre(b.dataset.relembre, 'batalha');
+  });
   $('cartao').addEventListener('click', (e) => { if (e.target.id === 'cartao') $('cartao').hidden = true; });
 
   window.addEventListener('resize', () => {

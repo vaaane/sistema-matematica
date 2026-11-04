@@ -106,6 +106,9 @@
       <div class="painel" id="aba-pend">
         <p class="muted" style="font-size:13px;margin:0 0 12px">Fotos, textos e nomes de sala enviados pelos alunos só aparecem para quem é de fora do grupo depois que você aprova.</p>
         <div id="pendentes"><div class="vazio">Carregando…</div></div>
+        <!-- 🏠 PROMPT-184: quadros com foto das casinhas -->
+        <section class="pend-sala" id="pend-casas-sec"><div class="pend-cab"><b>🏠 Casinhas</b><span class="muted">quadros com foto</span></div>
+          <div id="pend-casas"><div class="vazio">Carregando…</div></div></section>
       </div>
       <div class="painel" id="aba-salas" hidden>
       <div class="cartao">
@@ -145,6 +148,8 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const IMG = "/img/jogo";
 let EXPO = null, salas = {}, config = {}, teste = false, abertas = new Set();
+// 🎵 PROMPT-182: exposicao.json → musicas [{ id, nome, arquivo }] (vazia: o seletor some)
+const musicasExpo = () => (Array.isArray(EXPO?.musicas) ? EXPO.musicas : []).filter(m => m && typeof m.id === "string" && typeof m.arquivo === "string");
 try { teste = localStorage.getItem("expo_prof_teste") === "1"; } catch (_) {}
 $("modo-teste").checked = teste;
 const no = (n) => `${n}${teste ? "_teste" : ""}`;
@@ -175,6 +180,48 @@ async function gravar(p, msgOk) {
 }
 
 let pararSalas = () => {}, primeira = true, abaAtual = "pend";
+// 🏠 PROMPT-184: quadros com foto das casinhas — jogo_revisao_casinha_fotos/{id} = { uid, nome, turma, status, motivo?, ts, rev_ts? };
+// a imagem em exposicao_imagens/{id}. Recusar apaga a imagem (o aluno vê ❌ e pode escolher outra). O ⏳ soma salas e casinhas.
+let nPendSalas = 0, casasFotos = {}, pararCasas = () => {};
+const pintarNPend = () => { $("n-pend").textContent = nPendSalas + Object.values(casasFotos).filter(v => v?.status === "pendente").length; };
+function ouvirCasas() {
+  pararCasas();
+  try {
+    pararCasas = onValue(ref(db, no("jogo_revisao_casinha_fotos")), (s) => { casasFotos = s.exists() ? s.val() || {} : {}; renderCasas(); pintarNPend(); },
+      (e) => { console.error(e); $("pend-casas").innerHTML = `<div class="vazio">Não foi possível ler as casinhas: ${esc(e?.code || e?.message || e)}</div>`; });
+  } catch (e) { console.error(e); }
+}
+function renderCasas() {
+  const l = Object.entries(casasFotos).filter(([, v]) => v?.status === "pendente").sort((a, b) => (Number(a[1].ts) || 0) - (Number(b[1].ts) || 0));
+  if (!l.length) { $("pend-casas").innerHTML = '<div class="vazio">✅ Nada para aprovar.</div>'; return; }
+  $("pend-casas").innerHTML = l.map(([id, v]) => `<div class="pend" data-casa-foto="${esc(id)}">
+      <div class="pend-fotos"><img data-foto="${esc(id)}" alt=""/></div>
+      <div class="pend-info"><div class="tipo">Quadro com foto · casinha</div>
+        <h4>${esc(v.nome || nomePor(v.uid))} <span class="muted">${esc(v.turma || "")}</span></h4>
+        <div class="quem">Enviado em ${fmt(Number(v.ts))}</div>
+        <div class="pend-bot"><button class="btn-ok" data-aprovar>✅ Aprovar</button><button class="btn-perigo" data-recusar>❌ Recusar</button></div>
+        ${recusaHtml()}</div></div>`).join("");
+  for (const im of $("pend-casas").querySelectorAll("img[data-foto]")) fotoDados(im.dataset.foto).then(d => { if (d && im.isConnected) im.src = d; else if (!d) im.replaceWith(Object.assign(document.createElement("span"), { className: "sem", textContent: "(imagem não encontrada)" })); });
+}
+async function decidirCasa(id, aprovar, motivo = "") {
+  const r = ref(db, `${no("jogo_revisao_casinha_fotos")}/${id}`), v = await get(r).then(s => s.val()).catch(() => null);
+  if (!v || v.status !== "pendente") { aviso("⚠️ Essa imagem mudou enquanto você olhava."); return false; }
+  const nome = v.nome || nomePor(v.uid);
+  if (aprovar) return gravar(update(r, { status: "aprovado", rev_ts: Date.now(), motivo: null }), `Casinha de ${nome}: aprovada.`);
+  const ok = await gravar(update(r, { status: "recusado", rev_ts: Date.now(), motivo: motivo || null }), `Casinha de ${nome}: recusada.`);
+  if (ok) { fotosCache.delete(id); gravar(remove(ref(db, `${no("exposicao_imagens")}/${id}`))); }
+  return ok;
+}
+$("pend-casas").addEventListener("click", async (e) => {
+  const el = e.target.closest(".pend"), b = e.target.closest("button");
+  if (!el || !b) return;
+  const id = el.dataset.casaFoto, rec = el.querySelector(".recusa");
+  if (b.matches("[data-aprovar]")) { b.disabled = true; if (!(await decidirCasa(id, true))) b.disabled = false; }
+  else if (b.matches("[data-recusar]")) { rec.hidden = false; rec.querySelector("[data-motivo]").focus(); }
+  else if (b.matches("[data-recusar-nao]")) rec.hidden = true;
+  else if (b.matches("[data-sug]")) rec.querySelector("[data-motivo]").value = b.dataset.sug;
+  else if (b.matches("[data-recusar-ok]")) { b.disabled = true; if (!(await decidirCasa(id, false, rec.querySelector("[data-motivo]").value.replace(/\s+/g, " ").trim().slice(0, 80)))) b.disabled = false; }
+});
 async function carregar() {
   try {
     if (!EXPO) EXPO = await fetch("/dados/jogo/exposicao.json").then(r => r.json());
@@ -187,6 +234,7 @@ async function carregar() {
     return;
   }
   pararSalas();
+  ouvirCasas();
   primeira = true;
   try {
     pararSalas = onValue(ref(db, no("exposicao_salas")), (s) => {
@@ -240,7 +288,7 @@ function renderPendentes() {
   if (!EXPO) return;
   const grupos = portas().map(n => ({ n, l: pendentesDe(n) })).filter(g => g.l.length);
   const total = grupos.reduce((t, g) => t + g.l.length, 0);
-  $("n-pend").textContent = total;
+  nPendSalas = total; pintarNPend();
   // as salas: a que espera há mais tempo primeiro
   const mais = (g) => Math.min(...g.l.map(p => p.ts || Infinity));
   grupos.sort((a, b) => mais(a) - mais(b) || a.n - b.n);
@@ -366,7 +414,7 @@ function salaHtml(n, ondeEsta) {
         <label class="campo">Nome da sala<span class="linha"><input data-nome maxlength="30" value="${esc(s.nome || "")}" style="flex:1"/><button class="btn-sec" data-salvar-nome>Salvar</button></span></label>
         <label class="campo">Tema<span class="linha"><select data-tema>${(EXPO.temas || []).map(t => `<option value="${esc(t.id)}"${t.id === tema?.id ? " selected" : ""}>${esc(t.emoji || "")} ${esc(t.nome)}</option>`).join("")}</select>
           ${tema ? `<img class="tema-mini" src="${IMG}/${esc(tema.imagem)}" alt="" loading="lazy"/>` : ""}</span></label>
-        <label class="campo">Música<select data-musica><option value="">Sem música</option>${(EXPO.musicas || []).map(m => `<option${m === s.musica ? " selected" : ""}>${esc(m)}</option>`).join("")}</select></label>
+        ${musicasExpo().length ? `<label class="campo">Música<select data-musica><option value="">Sem música</option>${musicasExpo().map(m => `<option value="${esc(m.id)}"${m.id === s.musica ? " selected" : ""}>${esc(m.nome || m.id)}</option>`).join("")}</select></label>` : ""}
         <a class="btn-sec" href="/aluno/jogo-revisao.html?sala=${n}${teste ? "&teste=1" : ""}" target="_blank" rel="noopener">👀 Ver sala</a>
       </div>
       <div class="larga">
@@ -418,7 +466,8 @@ $("salas").addEventListener("change", async (e) => {
     if (await gravar(set(ref(db, `${no("exposicao_salas")}/${n}/tema`), e.target.value), `Sala ${n}: tema trocado.`)) { (salas[n] ||= {}).tema = e.target.value; render(); }
   } else if (e.target.matches("[data-musica]")) {
     const v = e.target.value || null;
-    if (await gravar(set(ref(db, `${no("exposicao_salas")}/${n}/musica`), v), v ? `Sala ${n}: música ${v}.` : `Sala ${n}: sem música.`)) (salas[n] ||= {}).musica = v;
+    const nomeM = musicasExpo().find(m => m.id === v)?.nome || v;
+    if (await gravar(set(ref(db, `${no("exposicao_salas")}/${n}/musica`), v), v ? `Sala ${n}: música ${nomeM}.` : `Sala ${n}: sem música.`)) (salas[n] ||= {}).musica = v;
   }
 });
 $("salas").addEventListener("click", async (e) => {

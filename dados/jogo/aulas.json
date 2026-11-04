@@ -1,0 +1,116 @@
+{
+ "_nota": "Aula do pet na entrada dos ginásios (PROMPT-185). aulas.{chave}.paginas: cada página = uma fala do pet + uma animação na lousa (js/jogo-revisao/lousa.js: linha, enunciado, marca, resolve, expressao, seta, texto, armada, divisao, reta, virgula, figura, pausa). texto = a fala neutra; por_personalidade.{pet} = a fala no jeito daquele pet (sem ela: jeito.{pet}.abre antes do texto e, na última página, jeito.{pet}.fecha depois).",
+ "jeito": {
+  "gato": { "abre": ["Hmm… olha só, é fácil:", "Presta atenção, que eu não repito:", "Óbvio, mas vou explicar:"], "fecha": ["Fácil, né? Até um gato faz.", "Pronto. Agora vai lá e me orgulha."] },
+  "tigre": { "abre": ["Presta atenção, campeão!", "FOCO! Olha só:", "Treino de cabeça:"], "fecha": ["AGORA É COM VOCÊ, CAMPEÃO! 💪", "Bora vencer esse ginásio!"] },
+  "capivara": { "abre": ["Calma… respira… olha só:", "Sem pressa:", "Devagarinho:"], "fecha": ["Viu? Com calma tudo dá certo.", "Tranquilo. Você consegue."] },
+  "gaviao": { "abre": ["Do alto dá pra ver:", "Olho de gavião:", "Mira aqui:"], "fecha": ["Mira certa, acerto certo!", "Agora voa nesse ginásio!"] },
+  "axolote": { "abre": ["Uiii, olha que legal:", "Psiu, olha isso:", "Sabia que…"], "fecha": ["Uiii, você vai arrasar!", "Fácil fácil, né?"] },
+  "unicornio": { "abre": ["Uma estrelinha me mostrou:", "Olha que mágico:", "✨ Repara:"], "fecha": ["Brilha, que você consegue! ✨", "Magia pura!"] },
+  "morcego": { "abre": ["Meu eco me contou:", "Escuta bem:", "No escuro eu vi:"], "fecha": ["Agora voa nessa conta!", "Eco confirmado: você consegue."] },
+  "dragao_vermelho": { "abre": ["EU, O MAGNÍFICO, explico:", "Escuta o dragão:", "Atenção, aprendiz:"], "fecha": ["Até um dragão aprovaria! 🔥", "Agora queima esse ginásio! 🔥"] },
+  "elefante": { "abre": ["Eu nunca esqueço, e lembro que:", "Guarda na memória:", "Anota na cabeça:"], "fecha": ["Guardou? Eu guardei!", "Memória de elefante: você consegue!"] }
+ },
+ "aulas": {
+  "mapa1-A": {
+   "titulo": "Expressões sem parênteses",
+   "paginas": [
+    {
+     "texto": "Quando a conta tem + e ×, existe uma ordem certa para resolver. Olha esta:",
+     "por_personalidade": {
+      "gato": "Hmpf, todo mundo erra isso. Quando a conta tem + e ×, tem uma ordem certa. Olha:",
+      "tigre": "PRESTA ATENÇÃO, CAMPEÃO! Conta com + e × tem ordem certa! Olha esta:",
+      "capivara": "Calma… quando a conta tem + e ×, existe uma ordem certinha. Olha esta aqui:"
+     },
+     "lousa": [{ "t": "linha", "v": "5 + 2 × 3" }, { "t": "texto", "v": "+ e × na mesma conta" }]
+    },
+    {
+     "texto": "Primeiro fazemos × e ÷, da esquerda para a direita. Aqui é o 2 × 3, que dá 6.",
+     "por_personalidade": {
+      "gato": "Primeiro × e ÷, da esquerda pra direita. Óbvio. 2 × 3 dá 6.",
+      "tigre": "PRIMEIRO × E ÷, da esquerda para a direita! 2 × 3 = 6. Pá!",
+      "capivara": "Primeiro, com calma, o × e o ÷, da esquerda para a direita. 2 × 3 dá 6."
+     },
+     "lousa": [{ "t": "linha", "v": "5 + 2 × 3" }, { "t": "marca", "v": "2 × 3" }, { "t": "resolve", "v": "6", "linha": "5 + 6" }, { "t": "texto", "v": "1º: × e ÷" }]
+    },
+    {
+     "texto": "Depois vêm o + e o −, também da esquerda para a direita. 5 + 6 dá 11.",
+     "por_personalidade": {
+      "gato": "Depois o + e o −, da esquerda pra direita. 5 + 6 = 11. Viu? Nem cansei.",
+      "tigre": "Agora o + e o −, da esquerda para a direita! 5 + 6 = 11. VALEU!",
+      "capivara": "Só depois o + e o −, também da esquerda para a direita. 5 + 6 dá 11. Tranquilo."
+     },
+     "lousa": [{ "t": "linha", "v": "5 + 2 × 3" }, { "t": "linha", "v": "5 + 6" }, { "t": "marca", "v": "5 + 6" }, { "t": "resolve", "v": "11", "linha": "11" }, { "t": "texto", "v": "2º: + e −" }]
+    },
+    {
+     "texto": "Numa conta maior, é linha por linha: primeiro todos os × e ÷, depois os + e −, sempre da esquerda para a direita.",
+     "por_personalidade": {
+      "gato": "Conta grande não me assusta. Linha por linha: todos os × e ÷ primeiro, depois + e −.",
+      "tigre": "CONTA GRANDE? SEM MEDO! Linha por linha: × e ÷ primeiro, depois + e −!",
+      "capivara": "Conta grande? Uma linha de cada vez: primeiro os × e ÷, depois os + e −."
+     },
+     "lousa": [{ "t": "expressao", "v": "20 − 6 ÷ 2 + 3 × 4" }]
+    },
+    {
+     "texto": "Cuidado com a pegadinha! Se fizer o 5 + 2 primeiro, dá 21, e está errado. O certo é 11.",
+     "por_personalidade": {
+      "gato": "Pegadinha clássica: fazer 5 + 2 primeiro dá 21. Errado. Eu nunca cairia nessa. O certo é 11.",
+      "tigre": "CUIDADO COM A ARMADILHA! 5 + 2 primeiro dá 21: ERRADO! O certo é 11!",
+      "capivara": "Cuidado, sem pressa: se fizer 5 + 2 primeiro, dá 21, e está errado. O certo é 11."
+     },
+     "lousa": [{ "t": "linha", "v": "5 + 2 × 3" }, { "t": "linha", "v": "7 × 3 = 21", "classe": "errado" }, { "t": "linha", "v": "5 + 6 = 11", "classe": "certo" }, { "t": "texto", "v": "Primeiro o ×!" }]
+    }
+   ]
+  },
+  "mapa1-B": {
+   "titulo": "Expressões com parênteses",
+   "paginas": [
+    {
+     "texto": "Os parênteses mandam: o que está dentro deles vem primeiro.",
+     "por_personalidade": {
+      "gato": "Os parênteses mandam. Tipo eu nesta casa. O que está dentro vem primeiro.",
+      "tigre": "OS PARÊNTESES MANDAM! O que está dentro deles vem PRIMEIRO!",
+      "capivara": "Os parênteses dizem: comece por aqui. O que está dentro deles vem primeiro."
+     },
+     "lousa": [{ "t": "expressao", "v": "(5 + 3) × 2" }, { "t": "texto", "v": "( ) primeiro" }]
+    },
+    {
+     "texto": "Olha a diferença que os parênteses fazem: os mesmos números, resultados diferentes!",
+     "por_personalidade": {
+      "gato": "Mesmos números, resultados diferentes. Impressionante, né? Eu já sabia.",
+      "tigre": "OLHA ISSO! Mesmos números, resultados diferentes! Os parênteses mudam tudo!",
+      "capivara": "Repara: os mesmos números, mas resultados diferentes. Os parênteses mudam a ordem."
+     },
+     "lousa": [{ "t": "linha", "v": "5 + 3 × 2 = 11" }, { "t": "linha", "v": "(5 + 3) × 2 = 16" }, { "t": "marca", "v": "(5 + 3)" }, { "t": "texto", "v": "Os parênteses mudam a ordem!" }]
+    },
+    {
+     "texto": "E os colchetes? Primeiro os ( ), depois os [ ], depois o resto.",
+     "por_personalidade": {
+      "gato": "Colchetes? Fácil: primeiro ( ), depois [ ], depois o resto. Igual eu como: primeiro o peixe, depois o resto.",
+      "tigre": "COLCHETES! Primeiro ( ), depois [ ], depois o resto! Em ordem, campeão!",
+      "capivara": "Com colchetes, vai de dentro para fora: primeiro ( ), depois [ ], depois o resto."
+     },
+     "lousa": [{ "t": "expressao", "v": "[10 − (2 + 3)] × 2" }, { "t": "texto", "v": "( ) → [ ] → resto" }]
+    },
+    {
+     "texto": "Dentro dos parênteses também vale a ordem: o × vem antes do +.",
+     "por_personalidade": {
+      "gato": "Dentro dos parênteses a regra continua, tá? O × vem antes do +. Sempre.",
+      "tigre": "ATENÇÃO! Dentro dos parênteses também: × ANTES do +!",
+      "capivara": "Dentro dos parênteses, a mesma calma de sempre: o × vem antes do +."
+     },
+     "lousa": [{ "t": "expressao", "v": "(2 + 3 × 4) − 5" }, { "t": "texto", "v": "Dentro: × antes do +" }]
+    },
+    {
+     "texto": "Um problema também vira expressão. Comprei 3 cadernos de R$ 4 e paguei com R$ 20. Quanto sobrou?",
+     "por_personalidade": {
+      "gato": "Problema? Vira conta. Comprei 3 cadernos de R$ 4 e paguei com R$ 20. Sobrou quanto? Eu sei, mas faz aí.",
+      "tigre": "PROBLEMA VIRA CONTA! 3 cadernos de R$ 4, paguei com R$ 20. Quanto sobrou? VAMOS!",
+      "capivara": "Um problema vira expressão, com calma: 3 cadernos de R$ 4, paguei com R$ 20. Quanto sobrou?"
+     },
+     "lousa": [{ "t": "enunciado", "v": "3 cadernos de R$ 4, paguei com R$ 20" }, { "t": "expressao", "v": "20 − 3 × 4" }, { "t": "texto", "v": "Sobrou R$ 8" }]
+    }
+   ]
+  }
+ }
+}

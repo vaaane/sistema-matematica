@@ -186,6 +186,27 @@
    "cor": "madeira"
   },
   {
+   "id": "quadro_imagem",
+   "nome": "Quadro com foto",
+   "emoji": "🖼️",
+   "preco": 40,
+   "tipo": "parede",
+   "largura": 90,
+   "limite": 3,
+   "vistas": [
+    "f"
+   ],
+   "dica": "Escolha uma imagem do seu aparelho (a professora aprova antes de aparecer para os colegas).",
+   "foto": [
+    18,
+    20,
+    82,
+    88
+   ],
+   "cor": "madeira",
+   "imagem_de": "quadro_foto"
+  },
+  {
    "id": "cavalete",
    "nome": "Cavalete",
    "emoji": "🎨",

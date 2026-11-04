@@ -90,6 +90,7 @@
       <button class="jr-btn-hud" id="btn-online" hidden aria-label="Quem está online">👥<span>Online (<b id="online-n">0</b>)</span></button>
       <button class="jr-btn-hud" id="btn-reacao" hidden aria-label="Mandar uma reação">😊</button>
       <button class="jr-btn-hud ex-pend-selo" id="btn-expo-pend" hidden aria-label="Abrir a página de aprovação">⏳</button>
+      <button class="jr-btn-hud ex-curtir" id="btn-expo-curtir" hidden aria-label="Curtir a sala" aria-pressed="false">❤️ 0</button>
       <button class="jr-btn-hud" id="btn-expo-musica" hidden aria-label="Silenciar a música da sala">🔈</button>
       <button class="jr-btn-hud jr-btn-decorar" id="btn-expo-decorar" hidden aria-label="Decorar a sala">✏️<span>Decorar</span></button>
       <button class="jr-btn-hud jr-btn-missoes" id="btn-missoes" hidden aria-label="Missões do dia">📜<span id="missoes-cont">0/3</span></button>
@@ -157,13 +158,14 @@
     <!-- PROMPT-107: ❤️ na casinha do colega · selo dos corações na minha -->
     <button id="cs-curtir" class="jr-btn cs-btn-arrumar cs-curtir" hidden aria-pressed="false">❤️ Curtir casinha</button>
     <div id="cs-selo" class="cs-selo" hidden></div>
-    <div id="cs-ferr" class="cs-ferr" hidden><div class="cs-cores" id="cs-cores" hidden></div><div class="cs-cores ex-tam" id="cs-tam" hidden><button class="jr-btn" data-cs-tam="-1" aria-label="Menor">➖</button><b id="cs-tam-v">100%</b><button class="jr-btn" data-cs-tam="1" aria-label="Maior">➕</button></div><button class="jr-btn" data-cs="cor">🎨 Cor</button><button class="jr-btn" data-cs="tam">📏 Tamanho</button><button class="jr-btn" data-cs="girar">🔄 Girar</button><button class="jr-btn" data-cs="guardar">📦 Guardar</button></div>
+    <div id="cs-ferr" class="cs-ferr" hidden><div class="cs-cores" id="cs-cores" hidden></div><div class="cs-cores ex-tam" id="cs-tam" hidden><button class="jr-btn" data-cs-tam="-1" aria-label="Menor">➖</button><b id="cs-tam-v">100%</b><button class="jr-btn" data-cs-tam="1" aria-label="Maior">➕</button></div><button class="jr-btn" data-cs="cor">🎨 Cor</button><button class="jr-btn" data-cs="tam">📏 Tamanho</button><button class="jr-btn" data-cs="girar">🔄 Girar</button><button class="jr-btn" data-cs="imagem" hidden>📷 Escolher imagem</button><button class="jr-btn" data-cs="guardar">📦 Guardar</button></div>
+    <input type="file" id="cs-arquivo" accept="image/*" hidden/>
     <!-- 🖼️ editor da sala da Exposição (PROMPT-EXPOSICAO-2) -->
     <div id="ex-ferr" class="cs-ferr ex-ferr" hidden><div class="cs-cores ex-cores" id="ex-cores" hidden></div><div class="cs-cores ex-tam" id="ex-tam" hidden><button class="jr-btn" data-ex-tam="-1" aria-label="Menor">➖</button><b id="ex-tam-v">100%</b><button class="jr-btn" data-ex-tam="1" aria-label="Maior">➕</button></div><button class="jr-btn" data-exf="girar" aria-label="Girar">🔄</button><button class="jr-btn" data-exf="espelhar" aria-label="Espelhar">↔️</button><button class="jr-btn" data-exf="tam" aria-label="Tamanho">📏</button><button class="jr-btn" data-exf="cor" aria-label="Cor">🎨</button><button class="jr-btn" data-exf="conteudo" aria-label="Conteúdo">✏️</button><button class="jr-btn" data-exf="apagar" aria-label="Apagar">🗑️</button></div>
     <button id="ex-resumo" class="ex-resumo" hidden></button>
     <div id="ex-faixa" class="cs-faixa ex-faixa" hidden>
       <div class="ex-faixa-esq"><div class="ex-abas" id="ex-abas"></div><div class="cs-guardados ex-catalogo" id="ex-catalogo"></div></div>
-      <div class="ex-faixa-dir"><small id="ex-uso"></small><button class="jr-btn jr-btn-sec" id="ex-tema">🎨 Tema</button><button class="jr-btn jr-btn-ouro" id="ex-pronto">✔ Pronto</button></div>
+      <div class="ex-faixa-dir"><small id="ex-uso"></small><button class="jr-btn jr-btn-sec" id="ex-tema">🎨 Tema</button><button class="jr-btn jr-btn-sec" id="ex-musica" hidden>🎵 Música</button><button class="jr-btn jr-btn-ouro" id="ex-pronto">✔ Pronto</button></div>
     </div>
     <div id="cs-faixa" class="cs-faixa" hidden>
       <div class="cs-guardados" id="cs-guardados"></div>
@@ -334,6 +336,19 @@
       <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-ped="deixar">✔ Deixar</button><button class="jr-btn jr-btn-sec" data-ped="nao">✖ Agora não</button></div>
     </div>
   </div>
+  <!-- 🤝 Pedido de amizade e presente para amigo (PROMPT-183) -->
+  <div id="amizade-pedido" class="jr-pet-escolha" hidden role="dialog" aria-label="Pedido de amizade">
+    <div class="jr-pet-escolha-caixa pres-caixa">
+      <div class="jr-pet-escolha-titulo" id="amizade-ped-txt"></div>
+      <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-amz="sim">✔ Aceitar</button><button class="jr-btn jr-btn-sec" data-amz="nao">✖ Agora não</button></div>
+    </div>
+  </div>
+  <div id="amigo-presente" class="jr-pet-escolha" hidden role="dialog" aria-label="Presente para amigo">
+    <div class="jr-pet-escolha-caixa pres-caixa ap-caixa">
+      <div class="al-topo"><b id="ap-tit">🎁 Presente</b><button class="bt-lista-x" data-fechar="amigo-presente" aria-label="Fechar">✕</button></div>
+      <div id="ap-corpo"></div>
+    </div>
+  </div>
   <!-- 🏅 Perfil do colega (PROMPT-168) -->
   <div id="perfil-colega" class="jr-pet-escolha" hidden role="dialog" aria-label="Perfil do colega">
     <div class="jr-pet-escolha-caixa pf-caixa">
@@ -367,6 +382,13 @@
     <div class="al-caixa cs-comida-caixa">
       <div class="al-topo"><b>🎨 Tema da sala</b><button class="bt-lista-x" data-fechar="ex-temas" aria-label="Fechar">✕</button></div>
       <div class="cs-temas-lista" id="ex-temas-lista"></div>
+    </div>
+  </div>
+  <!-- 🎵 PROMPT-182: música da sala -->
+  <div id="ex-musicas" class="al-fundo" hidden role="dialog" aria-label="Música da sala">
+    <div class="al-caixa ex-musicas-caixa">
+      <div class="al-topo"><b>🎵 Música da sala</b><button class="bt-lista-x" data-fechar="ex-musicas" aria-label="Fechar">✕</button></div>
+      <div class="ex-musicas-lista" id="ex-musicas-lista"></div>
     </div>
   </div>
   <div id="ex-cont" class="al-fundo" hidden role="dialog" aria-label="Conteúdo do item">
@@ -447,7 +469,7 @@
         <div class="jr-erro-dir">
           <div class="jr-erro-tit">Como resolver</div>
           <ol class="jr-erro-passos" id="erro-passos"></ol>
-          <div class="jr-erro-linha" id="erro-linha-dica"><span class="jr-erro-dica" id="erro-dica"></span><button class="jr-btn-relembre" id="erro-relembre">📖 Relembre</button></div>
+          <div class="jr-erro-linha" id="erro-linha-dica"><span class="jr-erro-dica" id="erro-dica"></span><button class="jr-btn-relembre" id="erro-relembre">📖 Relembre</button><button class="jr-btn-relembre" id="erro-ver" hidden>▶ Ver como faz</button></div>
         </div>
       </div>
       <div class="jr-erro-rodape"><span class="jr-erro-volta" id="erro-volta"></span><button class="jr-btn jr-btn-ouro" id="erro-continuar" disabled>Continuar ▶</button></div>
@@ -554,6 +576,24 @@
       <div class="jr-rel-rodape">
         <label class="jr-rel-check" id="rel-check"><input type="checkbox" id="rel-ocultar"/> Não mostrar de novo neste ginásio</label>
         <button class="jr-btn jr-btn-ouro" id="rel-ok">Bora!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🧑‍🏫 Aula do pet e ▶ Ver como faz (PROMPT-185) -->
+  <div id="aula" class="jr-relembre jr-aula" hidden role="dialog" aria-label="Aula">
+    <div class="aula-caixa">
+      <div class="aula-topo"><img id="aula-ins" alt="" draggable="false"/><div class="jr-rel-cab"><small id="aula-sub">🧑‍🏫 Aula</small><b id="aula-tit"></b></div>
+        <button class="bt-lista-x" id="aula-x" aria-label="Fechar">✕</button></div>
+      <div class="aula-corpo">
+        <div class="aula-lousa" id="aula-lousa" aria-live="polite"></div>
+        <div class="aula-pet" id="aula-pet"><div class="aula-balao" id="aula-fala"></div><div class="aula-moldura"><img id="aula-pet-img" alt="" draggable="false"/></div></div>
+      </div>
+      <div class="aula-nav">
+        <button class="jr-btn jr-btn-sec" id="aula-ant" aria-label="Página anterior">◀</button><span class="aula-n" id="aula-n"></span><button class="jr-btn jr-btn-sec" id="aula-prox" aria-label="Próxima página">▶</button>
+        <button class="jr-btn jr-btn-sec" id="aula-rep" aria-label="Ver de novo" title="Ver de novo">↺</button><button class="jr-btn jr-btn-sec" id="aula-pausa" aria-label="Pausar">⏸</button>
+        <label class="jr-rel-check" id="aula-check"><input type="checkbox" id="aula-ocultar"/> Não mostrar de novo neste ginásio</label>
+        <button class="jr-btn jr-btn-ouro" id="aula-ok">Bora!</button>
       </div>
     </div>
   </div>
@@ -849,7 +889,7 @@
     <div class="jr-pet-escolha-caixa pres-caixa">
       <div class="jr-pet-escolha-titulo" id="pres-tit"></div>
       <ul class="pres-lista" id="pres-lista"></ul>
-      <button class="jr-btn jr-btn-ouro" id="pres-ok">Oba! 💜</button>
+      <button class="jr-btn jr-btn-ouro" id="pres-ok">Obrigado! 💜</button>
     </div>
   </div>
   <!-- 🎂 Aniversário do pet (PROMPT-102) -->
@@ -900,6 +940,7 @@
   <div id="online-lista" class="jr-pet-escolha" hidden role="dialog" aria-label="Colegas online">
     <div class="jr-pet-escolha-caixa jr-online-caixa">
       <div class="jr-pet-escolha-titulo" id="online-titulo"></div>
+      <div class="jr-online-abas" id="online-abas" hidden><button data-online-aba="todos">👥 Online</button><button data-online-aba="amigos">🤝 Amigos <b id="online-ped-n" hidden></b></button></div>
       <ul class="jr-online-itens" id="online-itens"></ul>
       <div class="jr-online-bloq" id="online-bloqueado" hidden>🔒 Vença o mapa anterior para entrar</div>
       <div class="jr-mp-botoes">

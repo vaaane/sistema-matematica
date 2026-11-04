@@ -129,7 +129,7 @@ export function erradasPonto(x, y, n = 3) {
 }
 
 // ---- passo a passo de uma expressão: "2 + 3 × 4 = 2 + 12 = 14"
-function tokU(s) {
+export function tokU(s) {
   const t = []; let i = 0;
   while (i < s.length) {
     const c = s[i];
@@ -146,7 +146,7 @@ function tokU(s) {
   }
   return t;
 }
-function mostra(t, abre) {
+export function mostra(t, abre) {
   let s = '';
   t.forEach((x, i) => {
     if (typeof x === 'number') {

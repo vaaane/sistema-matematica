@@ -4123,3 +4123,151 @@ html.jr-deitado .mp-evo button { padding: 2px 9px; font-size: 11.5px; }
 /* adulto no truque: o desenho inteiro sai das bordas do cartão, por cima dos textos da direita (no fim volta a cortar) */
 #jr-app #meu-pet.em-truque .jr-mp-caixa, #jr-app #meu-pet.em-truque .jr-mp-palco { overflow: visible; }
 #jr-app #meu-pet.em-truque .jr-mp-esq { position: relative; z-index: 7; }
+
+/* ============================================================
+   🖼️ PROMPT-182: Exposição — objetos em cima dos móveis, etiqueta, curtidas e músicas
+   ============================================================ */
+.ex-apoio { position: absolute; z-index: 9998; height: 16px; margin-top: -8px; border-radius: 50%; pointer-events: none;
+  border: 2px dashed #ffd700; background: rgba(255,215,0,.22); box-shadow: 0 0 10px rgba(255,215,0,.85); }
+.ex-etiqueta { position: absolute; z-index: 2; transform: translate(-50%, -50%); max-width: 74%; padding: 1px 4px; border-radius: 3px; pointer-events: none;
+  background: #f6eedb; border: 1px solid #8a6a40; color: #3a2210; font-family: 'Rajdhani', sans-serif; font-weight: 700; line-height: 1.1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.expo-placa em { font-style: normal; font: 700 20px/1 'Inter', sans-serif; margin-left: 6px; padding: 3px 8px; border-radius: 999px;
+  background: rgba(13,15,26,.72); color: #fff; text-shadow: none; }
+#btn-expo-curtir { font-weight: 700; white-space: nowrap; }
+#btn-expo-curtir.so-ver { cursor: default; opacity: .85; }
+.ex-musicas-caixa { width: min(380px, 94vw); }
+.ex-musicas-lista { display: flex; flex-direction: column; gap: 6px; max-height: min(60dvh, 420px); overflow-y: auto; padding: 4px 2px; }
+.ex-mus { display: flex; align-items: center; gap: 8px; padding: 4px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); }
+.ex-mus.atual { border-color: var(--jr-ouro); background: rgba(255,215,0,.1); }
+.ex-mus-ouvir { flex: 0 0 38px; min-width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; }
+.ex-mus-nome { flex: 1; text-align: left; padding: 8px 6px; background: none; border: 0; color: #fff; font: 600 14px 'Inter', sans-serif; cursor: pointer; }
+
+/* ============================================================
+   🤝 PROMPT-183: amigos — botão no cartão, aba na lista e presente para amigo
+   ============================================================ */
+.jr-colega-oi.jr-colega-amigo { width: auto; min-width: 0; padding: 0 10px; border-radius: 999px; font: 700 13px 'Inter', sans-serif; white-space: nowrap; }
+.jr-colega-oi.jr-colega-amigo.amigos { border-color: var(--jr-verde, #00e676); }
+.jr-colega-oi.jr-colega-amigo.esperando { opacity: .8; }
+.jr-online-abas { display: flex; gap: 6px; margin: 0 0 8px; }
+.jr-online-abas[hidden] { display: none; }
+.jr-online-abas button { flex: 1; min-height: 36px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(124,92,252,.15); color: #fff; font: 700 14px 'Rajdhani', sans-serif; cursor: pointer; }
+.jr-online-abas button.ativa { background: var(--jr-roxo, #7c5cfc); border-color: var(--jr-roxo, #7c5cfc); }
+.jr-online-abas b { display: inline-block; min-width: 18px; margin-left: 4px; padding: 0 5px; border-radius: 999px; background: #ff5252; font: 700 12px/18px 'Inter', sans-serif; }
+.jr-online-abas b[hidden] { display: none; }
+.jr-online-itens li:has(.jr-amigo-acoes) { grid-template-columns: 30px 1fr auto; }
+.jr-amigo-acoes { grid-column: 3; grid-row: 1 / 3; display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.jr-amigo-acoes .jr-online-acao { grid-column: auto; grid-row: auto; }
+.jr-online-acao.sec { background: #3a3852; border-color: #4b4868; color: #e0deff; }
+.jr-online-itens li.jr-amigo-ped { background: rgba(255,215,0,.12); }
+.ap-caixa { width: min(420px, 94vw); }
+.ap-abas { display: flex; gap: 6px; margin: 4px 0 8px; }
+.ap-abas button { flex: 1; min-height: 36px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(124,92,252,.15); color: #fff; font: 700 14px 'Rajdhani', sans-serif; cursor: pointer; }
+.ap-abas button.ativa { background: var(--jr-roxo, #7c5cfc); }
+.ap-lista { display: flex; flex-wrap: wrap; gap: 6px; max-height: min(46dvh, 300px); overflow-y: auto; }
+.ap-lista button { display: inline-flex; align-items: center; gap: 6px; }
+.ap-lista button:disabled { opacity: .45; cursor: default; }
+.ap-lista small, .ap-rodape { display: block; width: 100%; margin-top: 6px; color: #c9c6ef; font: 500 12px 'Inter', sans-serif; }
+.ap-aviso, .ap-conf { margin: 10px 0; font: 600 14px/1.4 'Inter', sans-serif; color: #fff; text-align: center; }
+
+/* ============================================================
+   🖼️ PROMPT-184: quadros da casinha — o pet como no Meu Pet e a imagem do aluno
+   ============================================================ */
+.cs-movel .cs-foto-pet, .cs-movel .cs-foto-img { overflow: hidden; }
+.cs-movel .cs-foto-pet { background: radial-gradient(circle at 50% 78%, rgba(124,92,252,.42) 0%, rgba(124,92,252,.14) 35%, rgba(124,92,252,0) 60%), linear-gradient(180deg, #2a2350, #12101f); }
+.cs-movel .cs-foto-pet.com-fundo { background-color: #0d0f1a; background-position: center 80%; background-size: cover; background-repeat: no-repeat; }
+.cs-foto-pulo { position: absolute; left: 0; right: 0; bottom: 10%; height: 100%; display: flex; justify-content: center; align-items: flex-end; pointer-events: none; }
+#jr-app .cs-foto-pulo img { flex: none; width: auto; max-width: none; image-rendering: auto; display: block; }
+.cs-movel .cs-foto-img { background: #f3e9d2; display: flex; align-items: center; justify-content: center; }
+#jr-app .cs-foto-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cs-foto-vazia { font-size: 14px; opacity: .7; }
+.cs-foto-selo { position: absolute; right: 2px; top: 2px; min-width: 14px; height: 14px; padding: 0 2px; border-radius: 999px; display: flex; align-items: center; justify-content: center;
+  background: rgba(13,15,26,.85); font-size: 9px; line-height: 1; }
+
+/* ============================================================
+   🧑‍🏫 PROMPT-185: Aula do pet (lousa à esquerda, pet com balão à direita) e a lousa animada (lousa.js)
+   ============================================================ */
+.jr-aula { z-index: 74; }
+.aula-caixa { box-sizing: border-box; width: 100%; max-width: 920px; max-height: 100%; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px;
+  background: var(--jr-card); border: 2px solid var(--jr-roxo, #7c5cfc); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.6); min-height: 0; }
+.aula-topo { display: flex; align-items: center; gap: 10px; }
+.aula-topo img { width: 40px; height: 40px; object-fit: contain; flex: none; }
+.aula-topo img[hidden] { display: none; }
+.aula-topo .jr-rel-cab { flex: 1; }
+.aula-topo .bt-lista-x[hidden] { display: none; }
+.aula-corpo { display: flex; gap: 12px; align-items: stretch; min-height: 0; flex: 1 1 auto; }
+.aula-lousa { flex: 1 1 auto; min-width: 0; min-height: min(300px, 46dvh); }
+.aula-pet { flex: 0 0 min(30%, 240px); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
+.aula-pet[hidden] { display: none; }
+.aula-balao { position: relative; width: 100%; box-sizing: border-box; background: #fff; color: #1b1b2e; border-radius: 14px; padding: 10px 12px;
+  font: 600 calc(15px * var(--letra, 1))/1.35 'Inter', sans-serif; animation: aula-balao .35s ease-out; }
+.aula-balao::after { content: ''; position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); border: 8px solid transparent; border-bottom: 0; border-top-color: #fff; }
+@keyframes aula-balao { from { opacity: 0; transform: translateY(6px) scale(.97); } to { opacity: 1; transform: none; } }
+.aula-moldura { position: relative; width: min(150px, 100%); display: flex; justify-content: center; }
+#jr-app .aula-moldura img { width: 100%; height: auto; image-rendering: auto; }
+.aula-pet.com-busto .aula-moldura { height: min(150px, 22dvh); overflow: hidden; border-radius: 16px; background: radial-gradient(circle at 50% 60%, rgba(124,92,252,.35), rgba(124,92,252,0) 70%); }
+.aula-pet.com-busto .aula-moldura img { object-fit: contain; }
+.aula-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.aula-nav .jr-btn { min-height: 40px; min-width: 44px; padding: 4px 12px; }
+.aula-nav .jr-btn[hidden], .aula-nav label[hidden] { display: none; }
+.aula-n { font: 700 15px 'Rajdhani', sans-serif; color: #c9b8ff; min-width: 40px; text-align: center; }
+.aula-nav #aula-ok { margin-left: auto; min-width: 120px; }
+.jr-aula.como .aula-nav #aula-ant, .jr-aula.como .aula-nav #aula-prox, .jr-aula.como .aula-n { display: none; }
+.jr-aula.como .aula-caixa { max-width: 680px; }
+/* a lousa */
+.lz { position: relative; display: flex; flex-direction: column; box-sizing: border-box; height: 100%; padding: 14px 16px 10px; border-radius: 14px;
+  background: radial-gradient(ellipse at 30% 20%, #23362d, #14221c 70%); border: 6px solid #6b4a2b; box-shadow: inset 0 0 30px rgba(0,0,0,.45); overflow: hidden; color: #f4f1e6; }
+.lz-quadro { position: relative; flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; gap: 6px; min-height: 0; }
+.lz-linha { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: .28em; font: 800 clamp(22px, 4.4vmin, 38px)/1.2 'Inter', sans-serif; animation: lz-escreve .45s ease-out; }
+.lz-linha:not(:last-child):not(.lz-enun) { opacity: .7; font-size: clamp(18px, 3.4vmin, 30px); }
+.lz-enun { font: 600 clamp(14px, 2.6vmin, 20px)/1.3 'Inter', sans-serif; color: #cfe8d8; text-align: center; }
+@keyframes lz-escreve { from { opacity: 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
+.lz-t { position: relative; padding: 0 .06em; border-radius: 6px; transition: background .3s; }
+.lz-t.op { color: #ffd27a; }
+.lz-t.marca { background: rgba(255,215,0,.32); box-shadow: 0 3px 0 #ffd700; }
+.lz-t.novo { color: #00e676; display: inline-block; animation: lz-pula .6s cubic-bezier(.3,1.6,.5,1); }
+@keyframes lz-pula { from { transform: translateY(-1.1em) scale(1.25); opacity: 0; } to { transform: none; opacity: 1; } }
+.lz-errado { color: #ff8a8a; }
+.lz-errado .lz-t { text-decoration: line-through; text-decoration-color: #ff5252; text-decoration-thickness: 3px; }
+.lz-errado::after { content: '✖'; margin-left: .3em; color: #ff5252; }
+.lz-certo { color: #7dffb5; }
+.lz-certo::after { content: '✔'; margin-left: .3em; color: #00e676; }
+.lz-rotulo { flex: none; min-height: 1.4em; margin-top: 6px; text-align: center; font: 700 clamp(14px, 2.6vmin, 20px)/1.3 'Inter', sans-serif; color: #ffd27a; }
+.lz-seta { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.lz-bloco { align-self: center; animation: lz-escreve .45s ease-out; }
+.lz-c { display: inline-block; min-width: .62em; text-align: center; }
+.lz-c.zero { color: #9fb8ad; }
+.lz-c.novo, .lz-bloco .novo { color: #00e676; animation: lz-pula .55s cubic-bezier(.3,1.6,.5,1); }
+.lz-armada { font: 800 clamp(22px, 4.4vmin, 36px)/1.15 'Inter', monospace; font-variant-numeric: tabular-nums; }
+.lz-arm-linha { display: flex; justify-content: flex-end; }
+.lz-arm-linha .op { color: #ffd27a; }
+.lz-vai { font-size: .55em; color: #ffd27a; min-height: .9em; }
+.lz-traco { border-bottom: 3px solid #f4f1e6; }
+.lz-v { min-width: .3em; }
+.lz-divisao { display: flex; gap: 0; font: 800 clamp(20px, 4vmin, 32px)/1.2 'Inter', monospace; font-variant-numeric: tabular-nums; }
+.lz-div-esq { padding-right: 10px; }
+.lz-div-dir { border-left: 3px solid #f4f1e6; padding-left: 10px; }
+.lz-div-b { border-bottom: 3px solid #f4f1e6; padding-bottom: 2px; }
+.lz-div-q { color: #00e676; min-height: 1.2em; }
+.lz-div-linha { white-space: pre; }
+.lz-div-linha.lz-traco { border-bottom: 2px solid #f4f1e6; color: #ffd27a; }
+.lz-reta { position: relative; width: 100%; height: 90px; margin-top: 10px; }
+.lz-reta-linha { position: absolute; left: 0; right: 0; top: 40px; height: 3px; background: #f4f1e6; }
+.lz-reta-tick { position: absolute; top: 34px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; font: 700 clamp(13px, 2.4vmin, 18px) 'Inter', sans-serif; }
+.lz-reta-tick i { width: 3px; height: 14px; background: #f4f1e6; margin-bottom: 4px; }
+.lz-reta-tick.zero { color: #ffd27a; }
+.lz-reta-bola { position: absolute; top: 28px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; background: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,.8); transition: left .28s ease-in-out; }
+.lz-reta-bola.chegou { background: #00e676; box-shadow: 0 0 12px rgba(0,230,118,.9); }
+.lz-virgula { font: 800 clamp(26px, 5vmin, 42px)/1.2 'Inter', monospace; font-variant-numeric: tabular-nums; }
+.lz-virgula .lz-v { color: #ffd700; }
+.lz-figura { width: min(100%, 420px); }
+.lz-figura svg { width: 100%; height: auto; display: block; }
+html.jr-deitado .aula-caixa { padding: 8px 12px; gap: 6px; }
+html.jr-deitado .aula-topo img { width: 30px; height: 30px; }
+html.jr-deitado .aula-lousa { min-height: 0; }
+html.jr-deitado .aula-balao { font-size: calc(13px * var(--letra, 1)); padding: 7px 9px; }
+html.jr-deitado .aula-moldura { width: min(96px, 100%); }
+html.jr-deitado .aula-pet.com-busto .aula-moldura { height: min(96px, 26dvh); }
+html.jr-deitado .aula-nav .jr-btn { min-height: 34px; padding: 2px 10px; }
+@media (max-width: 560px) { .aula-corpo { flex-direction: column; } .aula-pet { flex: none; flex-direction: row; align-items: flex-end; } .aula-moldura { width: 80px; flex: none; } .aula-lousa { min-height: 220px; } }
+@media (prefers-reduced-motion: reduce) { .lz-linha, .lz-t.novo, .lz-bloco, .aula-balao { animation: none; } }
