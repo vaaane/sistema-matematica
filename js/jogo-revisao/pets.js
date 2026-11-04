@@ -18,9 +18,13 @@ export async function carregarSprites() {
       fetch(BASE + 'pets/sprites.json').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),
       fetch(BASE + 'pets/sprites-pets-cores.json').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
     ]);
-    for (const [f, a] of Object.entries(cores?.pets || {})) if (petDaCor(f) && !j.pets[f]) j.pets[f] = a;
-    // a forma colorida usa as sequências do pet (o sprites-pets-cores.json só tem as animações)
-    for (const f of Object.keys(j.pets)) { const p = petDaCor(f); if (p && j.sequencias?.[p] && !j.sequencias[f]) j.sequencias[f] = j.sequencias[p]; }
+    for (const [f, a] of Object.entries(cores?.pets || {})) if ((petDaCor(f) || adultoDaCor(f)) && !j.pets[f]) j.pets[f] = a;
+    // a forma colorida usa as sequências do pet (o sprites-pets-cores.json só tem as animações); o adulto colorido, também o quadro do adulto
+    for (const f of Object.keys(j.pets)) {
+      const p = petDaCor(f) || adultoDaCor(f);
+      if (p && j.sequencias?.[p] && !j.sequencias[f]) j.sequencias[f] = j.sequencias[p];
+      if (adultoDaCor(f) && j.quadro_por_pet?.[p] && !j.quadro_por_pet[f]) j.quadro_por_pet[f] = j.quadro_por_pet[p];
+    }
     SPR = j;
   }
   return SPR;
@@ -50,6 +54,8 @@ export const FUNDOS_PET = [
 ].map(([id, nome, preco = 0]) => ({ id, nome, preco }));
 // gato_azul → 'gato'; o resto (gato, dragao_azul, dragao_vermelho_sombra…) → null
 export const petDaCor = (forma) => { const m = /^([a-z]+)_([a-z]+)$/.exec(forma || ''); return m && CORES_PET[m[1]]?.includes(m[2]) ? m[1] : null; };
+// 🐯 adulto com cor (PROMPT-181): tigre_adulto_azul → 'tigre_adulto'; o resto → null
+export const adultoDaCor = (forma) => { const m = /^(([a-z]+)_adulto)_([a-z]+)$/.exec(forma || ''); return m && CORES_PET[m[2]]?.includes(m[3]) ? m[1] : null; };
 export const coresDoPet = (pet) => (CORES_PET[pet] || []).filter(c => SPR?.pets?.[`${pet}_${c}`]);
 
 // Pet salvo que não existe mais (ex.: cachorro, porco) conta como "sem pet"
@@ -65,9 +71,10 @@ export const formaAdulta = (pet) => { const a = SPR?.evolucao?.[pet]; return a &
 // dragao_vermelho_{cor}[_adulto] (PROMPT-84: mesmas imagens, mas o nome guarda que é o vermelho, para o tamanho ser o dele).
 export const coresDragao = () => SPR?.cores || {};
 export const aceitaCor = (pet) => /^dragao_vermelho$/.test(pet || '');   // PROMPT-129: cores especiais só no dragão vermelho
-export const ehFormaAdulta = (forma) => /_adulto$/.test(forma || '');
+export const ehFormaAdulta = (forma) => /_adulto$/.test(forma || '') || !!adultoDaCor(forma);   // dragao_sombra_adulto, tigre_adulto_azul
 export function formaComCor(forma, cor) {
   if (cor && CORES_PET[forma]?.includes(cor) && SPR?.pets?.[`${forma}_${cor}`]) return `${forma}_${cor}`;   // 🎨 PROMPT-170
+  if (cor && adultoDaCor(`${forma}_${cor}`) === forma && SPR?.pets?.[`${forma}_${cor}`]) return `${forma}_${cor}`;   // 🐯 a cor do filhote vale no adulto (PROMPT-181)
   if (!cor || !coresDragao()[cor] || !/^dragao_(azul|vermelho)(_adulto)?$/.test(forma || '')) return forma;
   const adulto = ehFormaAdulta(forma) ? '_adulto' : '';
   const f = /^dragao_vermelho/.test(forma) ? `dragao_vermelho_${cor}${adulto}` : `dragao_${cor}${adulto}`;
@@ -80,6 +87,7 @@ export function formaValida(pet, forma) {
   if (!forma || forma === pet) return pet;
   if (petDaCor(forma) === pet && SPR?.pets?.[forma]) return forma;
   if (forma === formaAdulta(pet)) return forma;
+  if (adultoDaCor(forma) && adultoDaCor(forma) === formaAdulta(pet) && SPR?.pets?.[forma]) return forma;
   if (aceitaCor(pet)) for (const cor of Object.keys(coresDragao())) if (forma === formaComCor(pet, cor) || forma === formaComCor(formaAdulta(pet), cor)) return forma;
   return pet;
 }

@@ -20,7 +20,7 @@ import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVa
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado,
   temAnim, formaAdulta, formaValida, sentadoNoQuadro, escalaPet, escalaMax, quadrosSeq, sortearOcioso, temSequencia, tocarSequencia, pararSequencia, msAtePasso,
   sortearAcaoParado, EMOCOES, MS_EMOCAO, coresDragao, aceitaCor, ehFormaAdulta, formaComCor, definirNoite,
-  NOME_COR_PET, NOME_ORIGINAL_PET, petDaCor, coresDoPet, FUNDOS_PET } from '/js/jogo-revisao/pets.js';
+  NOME_COR_PET, NOME_ORIGINAL_PET, petDaCor, adultoDaCor, coresDoPet, FUNDOS_PET } from '/js/jogo-revisao/pets.js';
 import { lerTodos, lerRegistro, iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, limiteMoedasPedidos, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
 import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, tiposDeConta, gerarConta, vidaExtraLealdade, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
@@ -85,10 +85,11 @@ const ADULTO_ANTES = CRESCE_EVOLUCAO * 622 / 604;
 // medidos no quadro de 566.
 const ALT_BASE_PERSONAGEM = ALT_JOGADOR_MAPA / ESCALA_ATORES;   // 55
 ALT_PET.dragao_azul_adulto = ALT_PET.dragao_vermelho_adulto = ALT_BASE_PERSONAGEM;
+ALT_PET.tigre_adulto = ALT_BASE_PERSONAGEM;   // 🐯 PROMPT-181: o tigre adulto sentado na altura do personagem (sentado_altura 433 no quadro de 566)
 const ALT_PET_PADRAO = 30;   // pet que não estiver na tabela
 // cores especiais do dragão (PROMPT-74/84): a cor é só visual; o tamanho é o do dragão de base.
 // dragao_vermelho_{cor}[_adulto] → dragao_vermelho[_adulto]; dragao_{cor}[_adulto] → dragao_azul[_adulto]
-const formaDeTamanho = (f) => petDaCor(f) || String(f || '')   // 🎨 PROMPT-170: {pet}_{cor} → o pet
+const formaDeTamanho = (f) => petDaCor(f) || adultoDaCor(f) || String(f || '')   // 🎨 PROMPT-170: {pet}_{cor} → o pet; tigre_adulto_{cor} → tigre_adulto
   .replace(/^dragao_vermelho_(?!adulto$)[a-z]+(?=(_adulto)?$)/, 'dragao_vermelho')
   .replace(/^dragao_(?!azul|vermelho)[a-z]+(?=(_adulto)?$)/, 'dragao_azul');
 const altPet = (pet) => (ALT_PET[pet] ?? ALT_PET[formaDeTamanho(pet)] ?? ALT_PET_PADRAO) * escalaPet(pet);
@@ -329,6 +330,7 @@ const DIST_PET = {
 };
 // cresce junto com o tamanho (mesma proporção distância/altura do filhote vermelho; distPet ainda × a escala do vermelho)
 DIST_PET.dragao_azul_adulto = DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * ALT_PET.dragao_azul_adulto / ALT_PET.dragao_vermelho;
+DIST_PET.tigre_adulto = DIST_PET.tigre * ALT_PET.tigre_adulto / ALT_PET.tigre;
 const DIST_PET_PADRAO = 36;
 const distPet = (pet) => (DIST_PET[pet] ?? DIST_PET[formaDeTamanho(pet)] ?? DIST_PET_PADRAO) * escalaPet(pet);
 // no ginásio tudo é o dobro da escala base (o personagem tem ALT_JOGADOR = 110 em vez de 55)
@@ -517,7 +519,7 @@ async function carregarEstado() {
       gravar({ 'pets/moedas': estado.pets.moedas, 'pets/moedas_iniciais': true });
       if (!estado.novo) setTimeout(() => avisoPet(`🎁 Presente de boas-vindas: +${MOEDAS_INICIAIS} 🪙`, true), 2500);
     }
-    if (v.presente_login_dia !== diaLocal()) {   // 🎁 presente diário: +100 moedas na 1ª entrada do dia
+    if (v.presente_login_dia !== diaLocal()) {   // 🎁 presente diário: +150 moedas na 1ª entrada do dia
       const patch = { presente_login_dia: diaLocal() };
       estado.pets.moedas = (Number(estado.pets.moedas) || 0) + MOEDAS_LOGIN_DIA;
       patch['pets/moedas'] = estado.pets.moedas;
@@ -1128,7 +1130,7 @@ const PETS_GINASIO = {
 };
 const INICIAIS = ['elefante', 'gato', 'gaviao'];
 const MOEDAS_INICIAIS = 100;
-const MOEDAS_LOGIN_DIA = 100;   // 🎁 presente diário (1ª entrada do dia)
+const MOEDAS_LOGIN_DIA = 150;   // 🎁 presente diário (1ª entrada do dia; era 100)
 // pet esperando ao lado do líder: ~70% do líder para um pet de 40, na mesma proporção entre os pets
 const altImagemPetGinasio = (pet) => ALT_LIDER * 0.7 * (altPet(pet) / 40) / sentadoNoQuadro(pet);
 
@@ -1683,7 +1685,7 @@ function mostrarEvolucao(pet) {
   ad.dataset.src = '';
   aplicarVisualPet(fi, pet); aplicarVisualPet(ad, pet);
   $('evo-fim').hidden = true;
-  $('evo-titulo').textContent = `${nomePet(pet)} evoluiu! 🐉`;
+  $('evo-titulo').textContent = `${nomePet(pet)} evoluiu! ${/^dragao_/.test(pet) ? '🐉' : '✨'}`;
   palco.classList.remove('brilha');
   el.classList.remove('escuro');
   el.hidden = false;
@@ -1836,7 +1838,8 @@ function medirMeuPet() {
   let h = Math.min(palco.clientHeight * 0.68, MP_ALT_MAX);
   if (ehFormaAdulta(forma)) {
     // (sentado_altura + ~1% de folga embaixo do pé, em fração do quadro)
-    h = palco.clientHeight * 0.86 / (sentadoNoQuadro(forma) + 0.01);
+    // 🐯 o tigre adulto (sem asas, de pé ele é alto) um pouco menor, para as orelhas não baterem no topo (PROMPT-181)
+    h = palco.clientHeight * (/^tigre_adulto/.test(forma) ? 0.76 : 0.86) / (sentadoNoQuadro(forma) + 0.01);
   } else if (tamVisual(forma) !== 1) {
     h = Math.min(h * tamVisual(forma), palco.clientHeight * 0.94);   // capivara: 20% maior, sem passar do palco
   }
@@ -2065,12 +2068,13 @@ function voltarAoNormal() {
 // (CSS .pet-dorme; pendurado: a partir do galho, em cima) e, a cada ~1,5 s, um "z" pequeno sobe ao lado da cabeça. Vale para
 // todos os pets, no mapa, na casinha e no Meu Pet. Os adultos já têm a sequência `dormir` com o Zzz desenhado: ficam de fora.
 const QUADRO_SONO = /\/(dormindo|pendurado)_\d+\.webp/;
-const CABECA_SONO = { pendurado: [0.6, 0.72], dormindo: [0.62, 0.36] };   // onde sai o "z", em fração do quadro
+const CABECA_SONO = { pendurado: [0.6, 0.72], dormindo: [0.62, 0.36], dormindo_adulto: [0.64, 0.6] };   // onde sai o "z", em fração do quadro
+// (o tigre adulto não tem a sequência `dormir`: respira pelo código, PROMPT-181)
 function marcarSono(img, forma) {
-  const src = img?.getAttribute('src') || '', m = !ehFormaAdulta(forma) && QUADRO_SONO.exec(src);
+  const adulto = ehFormaAdulta(forma), src = img?.getAttribute('src') || '', m = !(adulto && temSequencia(forma, 'dormir')) && QUADRO_SONO.exec(src);
   img?.classList.toggle('pet-dorme', !!m);
   img?.classList.toggle('pendurado', !!m && m[1] === 'pendurado');
-  return m ? m[1] : null;
+  return m ? (adulto && m[1] === 'dormindo' ? 'dormindo_adulto' : m[1]) : null;
 }
 function ligarSono() {
   const obs = new MutationObserver((ms) => { for (const { target } of ms) marcarSono(target, target.id === 'mp-img' ? mp?.forma : seguidor?.forma); });
@@ -7590,7 +7594,7 @@ function aplicarFimDuelo(d) {
 //  ultima: { de, caminho, cap, auto, lado } }. Cada jogada é gravada com runTransaction, conferindo a vez, o número da jogada e
 //  se é válida. Quem desafiou é o lado A (vermelho, começa). Relógio: 15 s por jogada; acabou, uma jogada válida aleatória
 //  ("jogada automática"); 3 automáticas seguidas = desistência. Contra colegas, só a aposta (PROMPT-154); contra o computador,
-//  3 / 6 / 10 🪙 até 5 vitórias por dia (damas_cpu_dia = { data, n }). Vitórias contra colegas no Mural (aba ♟️ Damas):
+//  4 / 8 / 13 🪙 até 5 vitórias por dia (damas_cpu_dia = { data, n }). Vitórias contra colegas no Mural (aba ♟️ Damas):
 //  jogo_revisao_praca/damas/{segunda}/{uid} = { vitorias, nome, turma, pers, ts }.
 // ============================================================
 const MS_JOGADA_DAMAS = 15000;
@@ -7795,8 +7799,8 @@ function terminarDamas({ vencedor, motivo }) {
   if (vencedor === dm.eu) ganharXPJogo({ facil: 5, medio: 10, dificil: 15 }[dm.nivel] || 0, 'damas');   // ⭐ (PROMPT-156)
   mostrarFimDamas(vencedor === dm.eu ? 'venceu' : vencedor === 'empate' ? 'empate' : 'perdeu', motivo, false, vencedor === dm.eu ? moedasDamasCpu(dm.nivel) : '');
 }
-// 🤖 vencer o computador (PROMPT-154): Fácil 3 · Médio 6 · Difícil 10 🪙 (já com o multiplicador), até 5 vitórias por dia
-const MOEDAS_DAMAS_CPU = { facil: 3, medio: 6, dificil: 10 }, VITORIAS_DAMAS_CPU_DIA = 5;
+// 🤖 vencer o computador (PROMPT-154): Fácil 4 · Médio 8 · Difícil 13 🪙 (já com o multiplicador; +25%: eram 3 · 6 · 10), até 5 vitórias por dia
+const MOEDAS_DAMAS_CPU = { facil: 4, medio: 8, dificil: 13 }, VITORIAS_DAMAS_CPU_DIA = 5;
 function moedasDamasCpu(nivel) {
   const n = MOEDAS_DAMAS_CPU[nivel] || 0;
   if (!n || !carregouProgresso || !estado?.pets) return '';
@@ -12041,7 +12045,8 @@ function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
 }
 // ── Sons dos pets (PROMPT-88): arquivos em /audio/jogo/, tocados por sons.js (respeitam o 🔊) ──
 // rugido da cor do dragão de BASE (PROMPT-84): o vermelho colorido ruge como o vermelho
-const somRugido = (pet, opc) => tocarArquivo(`dragao_${/^dragao_vermelho/.test(pet || '') ? 'vermelho' : 'azul'}_rugido`, opc);
+const arquivoRugido = (pet) => (/^tigre/.test(pet || '') ? 'tigre_ataque' : `dragao_${/^dragao_vermelho/.test(pet || '') ? 'vermelho' : 'azul'}_rugido`);   // 🐯 PROMPT-181
+const somRugido = (pet, opc) => tocarArquivo(arquivoRugido(pet), opc);
 // ataque de um pet no momento do golpe: dragão filhote = rugido da cor cortado em 1,5 s; os outros, {pet}_ataque
 const somAtaque = (pet) => (/^dragao_/.test(pet || '') ? somRugido(pet, { ate_ms: 1500, fade: 250 }) : tocarArquivo(`${pet}_ataque`));
 // som que acompanha um trecho de uma sequência do sprites.json: começa no 1º passo `de` e para (fade) no 1º passo `ate`
@@ -12367,7 +12372,7 @@ async function btFechar() {
       if (temSequencia(btForma(l), 'ataque_batalha')) {   // 🦇 o morcego bate as asas rápido no bote (sem fogo)
         clearTimeout(bt.anim[l]);
         $('bt-' + l).style.transform = l === 'R' ? 'scaleX(-1)' : '';
-        $('bt-img' + l).classList.add('pet-voando');
+        $('bt-img' + l).classList.toggle('pet-voando', temAnim(btForma(l), 'voando'));
         tocarSequencia($('bt-img' + l), btForma(l), 'ataque_batalha', { deFrente: false });
       } else btTocar(l, 'correndo', { loop: false, ms: 110 });
       btSom(somAtaque(pet));   // som de ataque do pet, no bote
@@ -14867,7 +14872,7 @@ function vooRasante() {
 // O pet faz as animações do truque, uma depois da outra; busto_fogo aparece no balão
 // som dos truques do dragão adulto (PROMPT-88), nos tempos da sequência (PetParado usa deFrente = true)
 function somDoTruque(t, pet, forma) {
-  if (t.sequencia === 'rugir') return somNaSequencia(`dragao_${/^dragao_vermelho/.test(pet) ? 'vermelho' : 'azul'}_rugido`, forma, 'rugir', 'rugido', null);
+  if (t.sequencia === 'rugir') return somNaSequencia(arquivoRugido(pet), forma, 'rugir', 'rugido', null);
   if (t.sequencia === 'cuspir_fogo') return somNaSequencia('dragao_fogo', forma, 'cuspir_fogo', 'ataque_fogo', 'ufa', { fade: 300 });
   if (t.sequencia === 'desfile') return somNaSequencia('dragao_fogo', forma, 'desfile', 'andando_fogo', 'sentado_lado', { fade: 300 });
   return null;

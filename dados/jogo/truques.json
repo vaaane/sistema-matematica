@@ -27,6 +27,14 @@
  "gaviao": [
   { "id": "voo_rasante", "nome": "Voo rasante", "curto": "Rasante", "emoji": "🦅", "lealdade": 60, "anims": ["andar_direita", "feliz"], "codigo": "rasante" }
  ],
+ "tigre_adulto": [
+  { "id": "rugir", "nome": "Rugir", "curto": "Rugir", "emoji": "🐯", "lealdade": 0, "anims": ["rugido"], "sequencia": "rugir" },
+  { "id": "dormir", "nome": "Soneca", "curto": "Soneca", "emoji": "💤", "lealdade": 20, "anims": ["adormecer"], "sequencia": "soneca" },
+  { "id": "se_limpar", "nome": "Tomar banho", "curto": "Banho", "emoji": "🛁", "lealdade": 35, "anims": ["lamber_pata"], "sequencia": "banho" },
+  { "id": "patada", "nome": "Patada", "curto": "Patada", "emoji": "🐾", "lealdade": 50, "anims": ["ataque_garra"], "sequencia": "patada" },
+  { "id": "salto", "nome": "Salto do tigre", "curto": "Salto", "emoji": "🤸", "lealdade": 65, "anims": ["pulo_cambalhota", "salto_pouso"], "sequencia": "salto" },
+  { "id": "rugido_campeao", "nome": "Rugido de campeão", "curto": "Campeão", "emoji": "🏆", "lealdade": 95, "anims": ["rugido_sentado", "orgulhoso"] }
+ ],
  "dragao_vermelho_adulto": "dragao_azul_adulto",
  "dragao_sombra_adulto": "dragao_azul_adulto",
  "dragao_branco_adulto": "dragao_azul_adulto",

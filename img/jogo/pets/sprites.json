@@ -9,6 +9,7 @@
  ],
  "sentado_altura": 604,
  "quadro_por_pet": {
+  "tigre_adulto": { "tamanho_quadro": [1219, 566], "sentado_altura": 433 },
   "morcego": { "tamanho_quadro": [1400, 704] },
   "morcego_marrom": { "tamanho_quadro": [1400, 704] },
   "morcego_cinza": { "tamanho_quadro": [1400, 704] },
@@ -83,6 +84,7 @@
   }
  },
  "evolucao": {
+  "tigre": "tigre_adulto",
   "dragao_azul": "dragao_azul_adulto",
   "dragao_vermelho": "dragao_vermelho_adulto"
  },
@@ -510,6 +512,120 @@
     "pets/tigre/triste_fome_1.webp",
     "pets/tigre/triste_fome_2.webp",
     "pets/tigre/triste_fome_3.webp"
+   ]
+  },
+  "tigre_adulto": {
+   "adormecer": [
+    "pets/tigre_adulto/dormindo_1.webp",
+    "pets/tigre_adulto/dormindo_2.webp",
+    "pets/tigre_adulto/dormindo_3.webp"
+   ],
+   "andar_costas": [
+    "pets/tigre_adulto/andar_costas_1.webp",
+    "pets/tigre_adulto/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_adulto/andar_direita_1.webp",
+    "pets/tigre_adulto/andar_direita_2.webp",
+    "pets/tigre_adulto/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_adulto/andar_esquerda_1.webp",
+    "pets/tigre_adulto/andar_esquerda_2.webp",
+    "pets/tigre_adulto/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_adulto/andar_frente_1.webp"
+   ],
+   "animado": [
+    "pets/tigre_adulto/animado_1.webp"
+   ],
+   "ataque_garra": [
+    "pets/tigre_adulto/ataque_garra_1.webp",
+    "pets/tigre_adulto/ataque_garra_2.webp",
+    "pets/tigre_adulto/ataque_garra_3.webp",
+    "pets/tigre_adulto/ataque_garra_4.webp"
+   ],
+   "bravo": [
+    "pets/tigre_adulto/bravo_1.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_adulto/busto_sorrindo_1.webp"
+   ],
+   "calmo": [
+    "pets/tigre_adulto/calmo_1.webp"
+   ],
+   "carinho": [
+    "pets/tigre_adulto/carinho_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_adulto/comendo_1.webp",
+    "pets/tigre_adulto/comendo_2.webp"
+   ],
+   "correndo": [
+    "pets/tigre_adulto/correndo_1.webp",
+    "pets/tigre_adulto/correndo_2.webp",
+    "pets/tigre_adulto/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_adulto/costas_parado_1.webp"
+   ],
+   "costas_sentado": [
+    "pets/tigre_adulto/costas_sentado_1.webp",
+    "pets/tigre_adulto/costas_sentado_2.webp",
+    "pets/tigre_adulto/costas_sentado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_adulto/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_adulto/feliz_1.webp",
+    "pets/tigre_adulto/feliz_2.webp"
+   ],
+   "lamber_beicos": [
+    "pets/tigre_adulto/lamber_beicos_1.webp"
+   ],
+   "lamber_pata": [
+    "pets/tigre_adulto/lamber_pata_1.webp",
+    "pets/tigre_adulto/lamber_pata_2.webp"
+   ],
+   "orgulhoso": [
+    "pets/tigre_adulto/orgulhoso_1.webp"
+   ],
+   "parado_lado": [
+    "pets/tigre_adulto/parado_lado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_adulto/pulo_cambalhota_1.webp",
+    "pets/tigre_adulto/pulo_cambalhota_2.webp"
+   ],
+   "rugido": [
+    "pets/tigre_adulto/rugido_1.webp",
+    "pets/tigre_adulto/rugido_2.webp",
+    "pets/tigre_adulto/rugido_3.webp"
+   ],
+   "rugido_sentado": [
+    "pets/tigre_adulto/rugido_sentado_1.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_adulto/salto_pouso_1.webp",
+    "pets/tigre_adulto/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_adulto/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_adulto/sentado_girando_1.webp"
+   ],
+   "sentado_lado": [
+    "pets/tigre_adulto/sentado_lado_1.webp"
+   ],
+   "sentado_reto": [
+    "pets/tigre_adulto/sentado_reto_1.webp"
+   ],
+   "tres_quartos": [
+    "pets/tigre_adulto/tres_quartos_1.webp",
+    "pets/tigre_adulto/tres_quartos_2.webp"
    ]
   },
   "unicornio": {
@@ -2605,6 +2721,109 @@
   "carinho": "feliz"
  },
  "sequencias": {
+  "tigre_adulto": {
+   "rugir": [
+    ["sentado_lado", 1, 900],
+    ["rugido", 1, 450],
+    ["rugido", 2, 450],
+    ["rugido", 3, 450],
+    ["rugido", 2, 450],
+    ["rugido", 3, 450],
+    ["sentado_lado", 1, 900]
+   ],
+   "banho": [
+    ["sentado_lado", 1, 700],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["sentado_lado", 1, 700]
+   ],
+   "lamber_pata": [
+    ["sentado_lado", 1, 700],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["lamber_pata", 1, 450],
+    ["lamber_pata", 2, 450],
+    ["sentado_lado", 1, 600]
+   ],
+   "descansar": [
+    ["sentado_lado", 1, 800],
+    ["adormecer", 1, 1200],
+    ["adormecer", 2, 3000],
+    ["adormecer", 1, 900],
+    ["sentado_lado", 1, 700]
+   ],
+   "soneca": [
+    ["adormecer", 1, 1000],
+    ["adormecer", 2, 1000],
+    ["adormecer", 3, 4500],
+    ["adormecer", 2, 800],
+    ["adormecer", 1, 800],
+    ["calmo", 1, 900]
+   ],
+   "carinho": [
+    ["sentado_lado", 1, 500],
+    ["carinho", 1, 900],
+    ["sentado_lado", 1, 350],
+    ["carinho", 1, 900],
+    ["feliz", 2, 700]
+   ],
+   "comer": [
+    ["sentado_lado", 1, 500],
+    ["comendo", 1, 800],
+    ["comendo", 2, 600],
+    ["comendo", 1, 500],
+    ["comendo", 2, 600],
+    ["lamber_beicos", 1, 1300],
+    ["sentado_lado", 1, 600]
+   ],
+   "vitoria": [
+    ["sentado_lado", 1, 800],
+    ["rugido_sentado", 1, 1000],
+    ["sentado_lado", 1, 600],
+    ["orgulhoso", 1, 1500]
+   ],
+   "recusa": [
+    ["bravo", 1, 800],
+    ["rugido_sentado", 1, 1000],
+    ["bravo", 1, 600]
+   ],
+   "ataque_batalha": [
+    ["tres_quartos", 1, 250],
+    ["ataque_garra", 1, 220],
+    ["ataque_garra", 2, 200],
+    ["ataque_garra", 3, 220],
+    ["ataque_garra", 4, 350],
+    ["feliz", 2, 400]
+   ],
+   "patada": [
+    ["sentado_lado", 1, 600],
+    ["tres_quartos", 1, 350],
+    ["ataque_garra", 1, 300],
+    ["ataque_garra", 2, 250],
+    ["ataque_garra", 3, 300],
+    ["ataque_garra", 4, 500],
+    ["tres_quartos", 2, 500],
+    ["sentado_lado", 1, 600]
+   ],
+   "salto": [
+    ["sentado_lado", 1, 500],
+    ["tres_quartos", 1, 350],
+    ["pulo_cambalhota", 1, 450],
+    ["pulo_cambalhota", 2, 350],
+    ["salto_pouso", 1, 300],
+    ["salto_pouso", 2, 450],
+    ["feliz", 1, 700],
+    ["sentado_lado", 1, 500]
+   ]
+  },
   "capivara": {
    "acenar": [
     ["sentado_girando", 1, 600],

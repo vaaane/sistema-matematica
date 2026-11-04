@@ -5000,6 +5000,1032 @@
     "pets/morcego_dourado/voando_frente_3.webp",
     "pets/morcego_dourado/voando_frente_4.webp"
    ]
+  },
+  "tigre_adulto_marrom": {
+   "adormecer": [
+    "pets/tigre_adulto_marrom/dormindo_1.webp",
+    "pets/tigre_adulto_marrom/dormindo_2.webp",
+    "pets/tigre_adulto_marrom/dormindo_3.webp"
+   ],
+   "andar_costas": [
+    "pets/tigre_adulto_marrom/andar_costas_1.webp",
+    "pets/tigre_adulto_marrom/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_adulto_marrom/andar_direita_1.webp",
+    "pets/tigre_adulto_marrom/andar_direita_2.webp",
+    "pets/tigre_adulto_marrom/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_adulto_marrom/andar_esquerda_1.webp",
+    "pets/tigre_adulto_marrom/andar_esquerda_2.webp",
+    "pets/tigre_adulto_marrom/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_adulto_marrom/andar_frente_1.webp"
+   ],
+   "animado": [
+    "pets/tigre_adulto_marrom/animado_1.webp"
+   ],
+   "ataque_garra": [
+    "pets/tigre_adulto_marrom/ataque_garra_1.webp",
+    "pets/tigre_adulto_marrom/ataque_garra_2.webp",
+    "pets/tigre_adulto_marrom/ataque_garra_3.webp",
+    "pets/tigre_adulto_marrom/ataque_garra_4.webp"
+   ],
+   "bravo": [
+    "pets/tigre_adulto_marrom/bravo_1.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_adulto_marrom/busto_sorrindo_1.webp"
+   ],
+   "calmo": [
+    "pets/tigre_adulto_marrom/calmo_1.webp"
+   ],
+   "carinho": [
+    "pets/tigre_adulto_marrom/carinho_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_adulto_marrom/comendo_1.webp",
+    "pets/tigre_adulto_marrom/comendo_2.webp"
+   ],
+   "correndo": [
+    "pets/tigre_adulto_marrom/correndo_1.webp",
+    "pets/tigre_adulto_marrom/correndo_2.webp",
+    "pets/tigre_adulto_marrom/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_adulto_marrom/costas_parado_1.webp"
+   ],
+   "costas_sentado": [
+    "pets/tigre_adulto_marrom/costas_sentado_1.webp",
+    "pets/tigre_adulto_marrom/costas_sentado_2.webp",
+    "pets/tigre_adulto_marrom/costas_sentado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_adulto_marrom/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_adulto_marrom/feliz_1.webp",
+    "pets/tigre_adulto_marrom/feliz_2.webp"
+   ],
+   "lamber_beicos": [
+    "pets/tigre_adulto_marrom/lamber_beicos_1.webp"
+   ],
+   "lamber_pata": [
+    "pets/tigre_adulto_marrom/lamber_pata_1.webp",
+    "pets/tigre_adulto_marrom/lamber_pata_2.webp"
+   ],
+   "orgulhoso": [
+    "pets/tigre_adulto_marrom/orgulhoso_1.webp"
+   ],
+   "parado_lado": [
+    "pets/tigre_adulto_marrom/parado_lado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_adulto_marrom/pulo_cambalhota_1.webp",
+    "pets/tigre_adulto_marrom/pulo_cambalhota_2.webp"
+   ],
+   "rugido": [
+    "pets/tigre_adulto_marrom/rugido_1.webp",
+    "pets/tigre_adulto_marrom/rugido_2.webp",
+    "pets/tigre_adulto_marrom/rugido_3.webp"
+   ],
+   "rugido_sentado": [
+    "pets/tigre_adulto_marrom/rugido_sentado_1.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_adulto_marrom/salto_pouso_1.webp",
+    "pets/tigre_adulto_marrom/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_adulto_marrom/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_adulto_marrom/sentado_girando_1.webp"
+   ],
+   "sentado_lado": [
+    "pets/tigre_adulto_marrom/sentado_lado_1.webp"
+   ],
+   "sentado_reto": [
+    "pets/tigre_adulto_marrom/sentado_reto_1.webp"
+   ],
+   "tres_quartos": [
+    "pets/tigre_adulto_marrom/tres_quartos_1.webp",
+    "pets/tigre_adulto_marrom/tres_quartos_2.webp"
+   ]
+  },
+  "tigre_adulto_cinza": {
+   "adormecer": [
+    "pets/tigre_adulto_cinza/dormindo_1.webp",
+    "pets/tigre_adulto_cinza/dormindo_2.webp",
+    "pets/tigre_adulto_cinza/dormindo_3.webp"
+   ],
+   "andar_costas": [
+    "pets/tigre_adulto_cinza/andar_costas_1.webp",
+    "pets/tigre_adulto_cinza/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_adulto_cinza/andar_direita_1.webp",
+    "pets/tigre_adulto_cinza/andar_direita_2.webp",
+    "pets/tigre_adulto_cinza/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_adulto_cinza/andar_esquerda_1.webp",
+    "pets/tigre_adulto_cinza/andar_esquerda_2.webp",
+    "pets/tigre_adulto_cinza/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_adulto_cinza/andar_frente_1.webp"
+   ],
+   "animado": [
+    "pets/tigre_adulto_cinza/animado_1.webp"
+   ],
+   "ataque_garra": [
+    "pets/tigre_adulto_cinza/ataque_garra_1.webp",
+    "pets/tigre_adulto_cinza/ataque_garra_2.webp",
+    "pets/tigre_adulto_cinza/ataque_garra_3.webp",
+    "pets/tigre_adulto_cinza/ataque_garra_4.webp"
+   ],
+   "bravo": [
+    "pets/tigre_adulto_cinza/bravo_1.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_adulto_cinza/busto_sorrindo_1.webp"
+   ],
+   "calmo": [
+    "pets/tigre_adulto_cinza/calmo_1.webp"
+   ],
+   "carinho": [
+    "pets/tigre_adulto_cinza/carinho_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_adulto_cinza/comendo_1.webp",
+    "pets/tigre_adulto_cinza/comendo_2.webp"
+   ],
+   "correndo": [
+    "pets/tigre_adulto_cinza/correndo_1.webp",
+    "pets/tigre_adulto_cinza/correndo_2.webp",
+    "pets/tigre_adulto_cinza/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_adulto_cinza/costas_parado_1.webp"
+   ],
+   "costas_sentado": [
+    "pets/tigre_adulto_cinza/costas_sentado_1.webp",
+    "pets/tigre_adulto_cinza/costas_sentado_2.webp",
+    "pets/tigre_adulto_cinza/costas_sentado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_adulto_cinza/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_adulto_cinza/feliz_1.webp",
+    "pets/tigre_adulto_cinza/feliz_2.webp"
+   ],
+   "lamber_beicos": [
+    "pets/tigre_adulto_cinza/lamber_beicos_1.webp"
+   ],
+   "lamber_pata": [
+    "pets/tigre_adulto_cinza/lamber_pata_1.webp",
+    "pets/tigre_adulto_cinza/lamber_pata_2.webp"
+   ],
+   "orgulhoso": [
+    "pets/tigre_adulto_cinza/orgulhoso_1.webp"
+   ],
+   "parado_lado": [
+    "pets/tigre_adulto_cinza/parado_lado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_adulto_cinza/pulo_cambalhota_1.webp",
+    "pets/tigre_adulto_cinza/pulo_cambalhota_2.webp"
+   ],
+   "rugido": [
+    "pets/tigre_adulto_cinza/rugido_1.webp",
+    "pets/tigre_adulto_cinza/rugido_2.webp",
+    "pets/tigre_adulto_cinza/rugido_3.webp"
+   ],
+   "rugido_sentado": [
+    "pets/tigre_adulto_cinza/rugido_sentado_1.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_adulto_cinza/salto_pouso_1.webp",
+    "pets/tigre_adulto_cinza/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_adulto_cinza/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_adulto_cinza/sentado_girando_1.webp"
+   ],
+   "sentado_lado": [
+    "pets/tigre_adulto_cinza/sentado_lado_1.webp"
+   ],
+   "sentado_reto": [
+    "pets/tigre_adulto_cinza/sentado_reto_1.webp"
+   ],
+   "tres_quartos": [
+    "pets/tigre_adulto_cinza/tres_quartos_1.webp",
+    "pets/tigre_adulto_cinza/tres_quartos_2.webp"
+   ]
+  },
+  "tigre_adulto_branco": {
+   "adormecer": [
+    "pets/tigre_adulto_branco/dormindo_1.webp",
+    "pets/tigre_adulto_branco/dormindo_2.webp",
+    "pets/tigre_adulto_branco/dormindo_3.webp"
+   ],
+   "andar_costas": [
+    "pets/tigre_adulto_branco/andar_costas_1.webp",
+    "pets/tigre_adulto_branco/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_adulto_branco/andar_direita_1.webp",
+    "pets/tigre_adulto_branco/andar_direita_2.webp",
+    "pets/tigre_adulto_branco/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_adulto_branco/andar_esquerda_1.webp",
+    "pets/tigre_adulto_branco/andar_esquerda_2.webp",
+    "pets/tigre_adulto_branco/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_adulto_branco/andar_frente_1.webp"
+   ],
+   "animado": [
+    "pets/tigre_adulto_branco/animado_1.webp"
+   ],
+   "ataque_garra": [
+    "pets/tigre_adulto_branco/ataque_garra_1.webp",
+    "pets/tigre_adulto_branco/ataque_garra_2.webp",
+    "pets/tigre_adulto_branco/ataque_garra_3.webp",
+    "pets/tigre_adulto_branco/ataque_garra_4.webp"
+   ],
+   "bravo": [
+    "pets/tigre_adulto_branco/bravo_1.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_adulto_branco/busto_sorrindo_1.webp"
+   ],
+   "calmo": [
+    "pets/tigre_adulto_branco/calmo_1.webp"
+   ],
+   "carinho": [
+    "pets/tigre_adulto_branco/carinho_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_adulto_branco/comendo_1.webp",
+    "pets/tigre_adulto_branco/comendo_2.webp"
+   ],
+   "correndo": [
+    "pets/tigre_adulto_branco/correndo_1.webp",
+    "pets/tigre_adulto_branco/correndo_2.webp",
+    "pets/tigre_adulto_branco/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_adulto_branco/costas_parado_1.webp"
+   ],
+   "costas_sentado": [
+    "pets/tigre_adulto_branco/costas_sentado_1.webp",
+    "pets/tigre_adulto_branco/costas_sentado_2.webp",
+    "pets/tigre_adulto_branco/costas_sentado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_adulto_branco/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_adulto_branco/feliz_1.webp",
+    "pets/tigre_adulto_branco/feliz_2.webp"
+   ],
+   "lamber_beicos": [
+    "pets/tigre_adulto_branco/lamber_beicos_1.webp"
+   ],
+   "lamber_pata": [
+    "pets/tigre_adulto_branco/lamber_pata_1.webp",
+    "pets/tigre_adulto_branco/lamber_pata_2.webp"
+   ],
+   "orgulhoso": [
+    "pets/tigre_adulto_branco/orgulhoso_1.webp"
+   ],
+   "parado_lado": [
+    "pets/tigre_adulto_branco/parado_lado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_adulto_branco/pulo_cambalhota_1.webp",
+    "pets/tigre_adulto_branco/pulo_cambalhota_2.webp"
+   ],
+   "rugido": [
+    "pets/tigre_adulto_branco/rugido_1.webp",
+    "pets/tigre_adulto_branco/rugido_2.webp",
+    "pets/tigre_adulto_branco/rugido_3.webp"
+   ],
+   "rugido_sentado": [
+    "pets/tigre_adulto_branco/rugido_sentado_1.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_adulto_branco/salto_pouso_1.webp",
+    "pets/tigre_adulto_branco/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_adulto_branco/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_adulto_branco/sentado_girando_1.webp"
+   ],
+   "sentado_lado": [
+    "pets/tigre_adulto_branco/sentado_lado_1.webp"
+   ],
+   "sentado_reto": [
+    "pets/tigre_adulto_branco/sentado_reto_1.webp"
+   ],
+   "tres_quartos": [
+    "pets/tigre_adulto_branco/tres_quartos_1.webp",
+    "pets/tigre_adulto_branco/tres_quartos_2.webp"
+   ]
+  },
+  "tigre_adulto_roxo": {
+   "adormecer": [
+    "pets/tigre_adulto_roxo/dormindo_1.webp",
+    "pets/tigre_adulto_roxo/dormindo_2.webp",
+    "pets/tigre_adulto_roxo/dormindo_3.webp"
+   ],
+   "andar_costas": [
+    "pets/tigre_adulto_roxo/andar_costas_1.webp",
+    "pets/tigre_adulto_roxo/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_adulto_roxo/andar_direita_1.webp",
+    "pets/tigre_adulto_roxo/andar_direita_2.webp",
+    "pets/tigre_adulto_roxo/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_adulto_roxo/andar_esquerda_1.webp",
+    "pets/tigre_adulto_roxo/andar_esquerda_2.webp",
+    "pets/tigre_adulto_roxo/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_adulto_roxo/andar_frente_1.webp"
+   ],
+   "animado": [
+    "pets/tigre_adulto_roxo/animado_1.webp"
+   ],
+   "ataque_garra": [
+    "pets/tigre_adulto_roxo/ataque_garra_1.webp",
+    "pets/tigre_adulto_roxo/ataque_garra_2.webp",
+    "pets/tigre_adulto_roxo/ataque_garra_3.webp",
+    "pets/tigre_adulto_roxo/ataque_garra_4.webp"
+   ],
+   "bravo": [
+    "pets/tigre_adulto_roxo/bravo_1.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_adulto_roxo/busto_sorrindo_1.webp"
+   ],
+   "calmo": [
+    "pets/tigre_adulto_roxo/calmo_1.webp"
+   ],
+   "carinho": [
+    "pets/tigre_adulto_roxo/carinho_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_adulto_roxo/comendo_1.webp",
+    "pets/tigre_adulto_roxo/comendo_2.webp"
+   ],
+   "correndo": [
+    "pets/tigre_adulto_roxo/correndo_1.webp",
+    "pets/tigre_adulto_roxo/correndo_2.webp",
+    "pets/tigre_adulto_roxo/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_adulto_roxo/costas_parado_1.webp"
+   ],
+   "costas_sentado": [
+    "pets/tigre_adulto_roxo/costas_sentado_1.webp",
+    "pets/tigre_adulto_roxo/costas_sentado_2.webp",
+    "pets/tigre_adulto_roxo/costas_sentado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_adulto_roxo/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_adulto_roxo/feliz_1.webp",
+    "pets/tigre_adulto_roxo/feliz_2.webp"
+   ],
+   "lamber_beicos": [
+    "pets/tigre_adulto_roxo/lamber_beicos_1.webp"
+   ],
+   "lamber_pata": [
+    "pets/tigre_adulto_roxo/lamber_pata_1.webp",
+    "pets/tigre_adulto_roxo/lamber_pata_2.webp"
+   ],
+   "orgulhoso": [
+    "pets/tigre_adulto_roxo/orgulhoso_1.webp"
+   ],
+   "parado_lado": [
+    "pets/tigre_adulto_roxo/parado_lado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_adulto_roxo/pulo_cambalhota_1.webp",
+    "pets/tigre_adulto_roxo/pulo_cambalhota_2.webp"
+   ],
+   "rugido": [
+    "pets/tigre_adulto_roxo/rugido_1.webp",
+    "pets/tigre_adulto_roxo/rugido_2.webp",
+    "pets/tigre_adulto_roxo/rugido_3.webp"
+   ],
+   "rugido_sentado": [
+    "pets/tigre_adulto_roxo/rugido_sentado_1.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_adulto_roxo/salto_pouso_1.webp",
+    "pets/tigre_adulto_roxo/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_adulto_roxo/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_adulto_roxo/sentado_girando_1.webp"
+   ],
+   "sentado_lado": [
+    "pets/tigre_adulto_roxo/sentado_lado_1.webp"
+   ],
+   "sentado_reto": [
+    "pets/tigre_adulto_roxo/sentado_reto_1.webp"
+   ],
+   "tres_quartos": [
+    "pets/tigre_adulto_roxo/tres_quartos_1.webp",
+    "pets/tigre_adulto_roxo/tres_quartos_2.webp"
+   ]
+  },
+  "tigre_adulto_azul": {
+   "adormecer": [
+    "pets/tigre_adulto_azul/dormindo_1.webp",
+    "pets/tigre_adulto_azul/dormindo_2.webp",
+    "pets/tigre_adulto_azul/dormindo_3.webp"
+   ],
+   "andar_costas": [
+    "pets/tigre_adulto_azul/andar_costas_1.webp",
+    "pets/tigre_adulto_azul/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_adulto_azul/andar_direita_1.webp",
+    "pets/tigre_adulto_azul/andar_direita_2.webp",
+    "pets/tigre_adulto_azul/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_adulto_azul/andar_esquerda_1.webp",
+    "pets/tigre_adulto_azul/andar_esquerda_2.webp",
+    "pets/tigre_adulto_azul/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_adulto_azul/andar_frente_1.webp"
+   ],
+   "animado": [
+    "pets/tigre_adulto_azul/animado_1.webp"
+   ],
+   "ataque_garra": [
+    "pets/tigre_adulto_azul/ataque_garra_1.webp",
+    "pets/tigre_adulto_azul/ataque_garra_2.webp",
+    "pets/tigre_adulto_azul/ataque_garra_3.webp",
+    "pets/tigre_adulto_azul/ataque_garra_4.webp"
+   ],
+   "bravo": [
+    "pets/tigre_adulto_azul/bravo_1.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_adulto_azul/busto_sorrindo_1.webp"
+   ],
+   "calmo": [
+    "pets/tigre_adulto_azul/calmo_1.webp"
+   ],
+   "carinho": [
+    "pets/tigre_adulto_azul/carinho_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_adulto_azul/comendo_1.webp",
+    "pets/tigre_adulto_azul/comendo_2.webp"
+   ],
+   "correndo": [
+    "pets/tigre_adulto_azul/correndo_1.webp",
+    "pets/tigre_adulto_azul/correndo_2.webp",
+    "pets/tigre_adulto_azul/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_adulto_azul/costas_parado_1.webp"
+   ],
+   "costas_sentado": [
+    "pets/tigre_adulto_azul/costas_sentado_1.webp",
+    "pets/tigre_adulto_azul/costas_sentado_2.webp",
+    "pets/tigre_adulto_azul/costas_sentado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_adulto_azul/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_adulto_azul/feliz_1.webp",
+    "pets/tigre_adulto_azul/feliz_2.webp"
+   ],
+   "lamber_beicos": [
+    "pets/tigre_adulto_azul/lamber_beicos_1.webp"
+   ],
+   "lamber_pata": [
+    "pets/tigre_adulto_azul/lamber_pata_1.webp",
+    "pets/tigre_adulto_azul/lamber_pata_2.webp"
+   ],
+   "orgulhoso": [
+    "pets/tigre_adulto_azul/orgulhoso_1.webp"
+   ],
+   "parado_lado": [
+    "pets/tigre_adulto_azul/parado_lado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_adulto_azul/pulo_cambalhota_1.webp",
+    "pets/tigre_adulto_azul/pulo_cambalhota_2.webp"
+   ],
+   "rugido": [
+    "pets/tigre_adulto_azul/rugido_1.webp",
+    "pets/tigre_adulto_azul/rugido_2.webp",
+    "pets/tigre_adulto_azul/rugido_3.webp"
+   ],
+   "rugido_sentado": [
+    "pets/tigre_adulto_azul/rugido_sentado_1.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_adulto_azul/salto_pouso_1.webp",
+    "pets/tigre_adulto_azul/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_adulto_azul/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_adulto_azul/sentado_girando_1.webp"
+   ],
+   "sentado_lado": [
+    "pets/tigre_adulto_azul/sentado_lado_1.webp"
+   ],
+   "sentado_reto": [
+    "pets/tigre_adulto_azul/sentado_reto_1.webp"
+   ],
+   "tres_quartos": [
+    "pets/tigre_adulto_azul/tres_quartos_1.webp",
+    "pets/tigre_adulto_azul/tres_quartos_2.webp"
+   ]
+  },
+  "tigre_adulto_rosa": {
+   "adormecer": [
+    "pets/tigre_adulto_rosa/dormindo_1.webp",
+    "pets/tigre_adulto_rosa/dormindo_2.webp",
+    "pets/tigre_adulto_rosa/dormindo_3.webp"
+   ],
+   "andar_costas": [
+    "pets/tigre_adulto_rosa/andar_costas_1.webp",
+    "pets/tigre_adulto_rosa/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_adulto_rosa/andar_direita_1.webp",
+    "pets/tigre_adulto_rosa/andar_direita_2.webp",
+    "pets/tigre_adulto_rosa/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_adulto_rosa/andar_esquerda_1.webp",
+    "pets/tigre_adulto_rosa/andar_esquerda_2.webp",
+    "pets/tigre_adulto_rosa/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_adulto_rosa/andar_frente_1.webp"
+   ],
+   "animado": [
+    "pets/tigre_adulto_rosa/animado_1.webp"
+   ],
+   "ataque_garra": [
+    "pets/tigre_adulto_rosa/ataque_garra_1.webp",
+    "pets/tigre_adulto_rosa/ataque_garra_2.webp",
+    "pets/tigre_adulto_rosa/ataque_garra_3.webp",
+    "pets/tigre_adulto_rosa/ataque_garra_4.webp"
+   ],
+   "bravo": [
+    "pets/tigre_adulto_rosa/bravo_1.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_adulto_rosa/busto_sorrindo_1.webp"
+   ],
+   "calmo": [
+    "pets/tigre_adulto_rosa/calmo_1.webp"
+   ],
+   "carinho": [
+    "pets/tigre_adulto_rosa/carinho_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_adulto_rosa/comendo_1.webp",
+    "pets/tigre_adulto_rosa/comendo_2.webp"
+   ],
+   "correndo": [
+    "pets/tigre_adulto_rosa/correndo_1.webp",
+    "pets/tigre_adulto_rosa/correndo_2.webp",
+    "pets/tigre_adulto_rosa/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_adulto_rosa/costas_parado_1.webp"
+   ],
+   "costas_sentado": [
+    "pets/tigre_adulto_rosa/costas_sentado_1.webp",
+    "pets/tigre_adulto_rosa/costas_sentado_2.webp",
+    "pets/tigre_adulto_rosa/costas_sentado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_adulto_rosa/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_adulto_rosa/feliz_1.webp",
+    "pets/tigre_adulto_rosa/feliz_2.webp"
+   ],
+   "lamber_beicos": [
+    "pets/tigre_adulto_rosa/lamber_beicos_1.webp"
+   ],
+   "lamber_pata": [
+    "pets/tigre_adulto_rosa/lamber_pata_1.webp",
+    "pets/tigre_adulto_rosa/lamber_pata_2.webp"
+   ],
+   "orgulhoso": [
+    "pets/tigre_adulto_rosa/orgulhoso_1.webp"
+   ],
+   "parado_lado": [
+    "pets/tigre_adulto_rosa/parado_lado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_adulto_rosa/pulo_cambalhota_1.webp",
+    "pets/tigre_adulto_rosa/pulo_cambalhota_2.webp"
+   ],
+   "rugido": [
+    "pets/tigre_adulto_rosa/rugido_1.webp",
+    "pets/tigre_adulto_rosa/rugido_2.webp",
+    "pets/tigre_adulto_rosa/rugido_3.webp"
+   ],
+   "rugido_sentado": [
+    "pets/tigre_adulto_rosa/rugido_sentado_1.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_adulto_rosa/salto_pouso_1.webp",
+    "pets/tigre_adulto_rosa/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_adulto_rosa/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_adulto_rosa/sentado_girando_1.webp"
+   ],
+   "sentado_lado": [
+    "pets/tigre_adulto_rosa/sentado_lado_1.webp"
+   ],
+   "sentado_reto": [
+    "pets/tigre_adulto_rosa/sentado_reto_1.webp"
+   ],
+   "tres_quartos": [
+    "pets/tigre_adulto_rosa/tres_quartos_1.webp",
+    "pets/tigre_adulto_rosa/tres_quartos_2.webp"
+   ]
+  },
+  "tigre_adulto_verde": {
+   "adormecer": [
+    "pets/tigre_adulto_verde/dormindo_1.webp",
+    "pets/tigre_adulto_verde/dormindo_2.webp",
+    "pets/tigre_adulto_verde/dormindo_3.webp"
+   ],
+   "andar_costas": [
+    "pets/tigre_adulto_verde/andar_costas_1.webp",
+    "pets/tigre_adulto_verde/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_adulto_verde/andar_direita_1.webp",
+    "pets/tigre_adulto_verde/andar_direita_2.webp",
+    "pets/tigre_adulto_verde/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_adulto_verde/andar_esquerda_1.webp",
+    "pets/tigre_adulto_verde/andar_esquerda_2.webp",
+    "pets/tigre_adulto_verde/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_adulto_verde/andar_frente_1.webp"
+   ],
+   "animado": [
+    "pets/tigre_adulto_verde/animado_1.webp"
+   ],
+   "ataque_garra": [
+    "pets/tigre_adulto_verde/ataque_garra_1.webp",
+    "pets/tigre_adulto_verde/ataque_garra_2.webp",
+    "pets/tigre_adulto_verde/ataque_garra_3.webp",
+    "pets/tigre_adulto_verde/ataque_garra_4.webp"
+   ],
+   "bravo": [
+    "pets/tigre_adulto_verde/bravo_1.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_adulto_verde/busto_sorrindo_1.webp"
+   ],
+   "calmo": [
+    "pets/tigre_adulto_verde/calmo_1.webp"
+   ],
+   "carinho": [
+    "pets/tigre_adulto_verde/carinho_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_adulto_verde/comendo_1.webp",
+    "pets/tigre_adulto_verde/comendo_2.webp"
+   ],
+   "correndo": [
+    "pets/tigre_adulto_verde/correndo_1.webp",
+    "pets/tigre_adulto_verde/correndo_2.webp",
+    "pets/tigre_adulto_verde/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_adulto_verde/costas_parado_1.webp"
+   ],
+   "costas_sentado": [
+    "pets/tigre_adulto_verde/costas_sentado_1.webp",
+    "pets/tigre_adulto_verde/costas_sentado_2.webp",
+    "pets/tigre_adulto_verde/costas_sentado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_adulto_verde/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_adulto_verde/feliz_1.webp",
+    "pets/tigre_adulto_verde/feliz_2.webp"
+   ],
+   "lamber_beicos": [
+    "pets/tigre_adulto_verde/lamber_beicos_1.webp"
+   ],
+   "lamber_pata": [
+    "pets/tigre_adulto_verde/lamber_pata_1.webp",
+    "pets/tigre_adulto_verde/lamber_pata_2.webp"
+   ],
+   "orgulhoso": [
+    "pets/tigre_adulto_verde/orgulhoso_1.webp"
+   ],
+   "parado_lado": [
+    "pets/tigre_adulto_verde/parado_lado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_adulto_verde/pulo_cambalhota_1.webp",
+    "pets/tigre_adulto_verde/pulo_cambalhota_2.webp"
+   ],
+   "rugido": [
+    "pets/tigre_adulto_verde/rugido_1.webp",
+    "pets/tigre_adulto_verde/rugido_2.webp",
+    "pets/tigre_adulto_verde/rugido_3.webp"
+   ],
+   "rugido_sentado": [
+    "pets/tigre_adulto_verde/rugido_sentado_1.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_adulto_verde/salto_pouso_1.webp",
+    "pets/tigre_adulto_verde/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_adulto_verde/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_adulto_verde/sentado_girando_1.webp"
+   ],
+   "sentado_lado": [
+    "pets/tigre_adulto_verde/sentado_lado_1.webp"
+   ],
+   "sentado_reto": [
+    "pets/tigre_adulto_verde/sentado_reto_1.webp"
+   ],
+   "tres_quartos": [
+    "pets/tigre_adulto_verde/tres_quartos_1.webp",
+    "pets/tigre_adulto_verde/tres_quartos_2.webp"
+   ]
+  },
+  "tigre_adulto_dourado": {
+   "adormecer": [
+    "pets/tigre_adulto_dourado/dormindo_1.webp",
+    "pets/tigre_adulto_dourado/dormindo_2.webp",
+    "pets/tigre_adulto_dourado/dormindo_3.webp"
+   ],
+   "andar_costas": [
+    "pets/tigre_adulto_dourado/andar_costas_1.webp",
+    "pets/tigre_adulto_dourado/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_adulto_dourado/andar_direita_1.webp",
+    "pets/tigre_adulto_dourado/andar_direita_2.webp",
+    "pets/tigre_adulto_dourado/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_adulto_dourado/andar_esquerda_1.webp",
+    "pets/tigre_adulto_dourado/andar_esquerda_2.webp",
+    "pets/tigre_adulto_dourado/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_adulto_dourado/andar_frente_1.webp"
+   ],
+   "animado": [
+    "pets/tigre_adulto_dourado/animado_1.webp"
+   ],
+   "ataque_garra": [
+    "pets/tigre_adulto_dourado/ataque_garra_1.webp",
+    "pets/tigre_adulto_dourado/ataque_garra_2.webp",
+    "pets/tigre_adulto_dourado/ataque_garra_3.webp",
+    "pets/tigre_adulto_dourado/ataque_garra_4.webp"
+   ],
+   "bravo": [
+    "pets/tigre_adulto_dourado/bravo_1.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_adulto_dourado/busto_sorrindo_1.webp"
+   ],
+   "calmo": [
+    "pets/tigre_adulto_dourado/calmo_1.webp"
+   ],
+   "carinho": [
+    "pets/tigre_adulto_dourado/carinho_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_adulto_dourado/comendo_1.webp",
+    "pets/tigre_adulto_dourado/comendo_2.webp"
+   ],
+   "correndo": [
+    "pets/tigre_adulto_dourado/correndo_1.webp",
+    "pets/tigre_adulto_dourado/correndo_2.webp",
+    "pets/tigre_adulto_dourado/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_adulto_dourado/costas_parado_1.webp"
+   ],
+   "costas_sentado": [
+    "pets/tigre_adulto_dourado/costas_sentado_1.webp",
+    "pets/tigre_adulto_dourado/costas_sentado_2.webp",
+    "pets/tigre_adulto_dourado/costas_sentado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_adulto_dourado/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_adulto_dourado/feliz_1.webp",
+    "pets/tigre_adulto_dourado/feliz_2.webp"
+   ],
+   "lamber_beicos": [
+    "pets/tigre_adulto_dourado/lamber_beicos_1.webp"
+   ],
+   "lamber_pata": [
+    "pets/tigre_adulto_dourado/lamber_pata_1.webp",
+    "pets/tigre_adulto_dourado/lamber_pata_2.webp"
+   ],
+   "orgulhoso": [
+    "pets/tigre_adulto_dourado/orgulhoso_1.webp"
+   ],
+   "parado_lado": [
+    "pets/tigre_adulto_dourado/parado_lado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_adulto_dourado/pulo_cambalhota_1.webp",
+    "pets/tigre_adulto_dourado/pulo_cambalhota_2.webp"
+   ],
+   "rugido": [
+    "pets/tigre_adulto_dourado/rugido_1.webp",
+    "pets/tigre_adulto_dourado/rugido_2.webp",
+    "pets/tigre_adulto_dourado/rugido_3.webp"
+   ],
+   "rugido_sentado": [
+    "pets/tigre_adulto_dourado/rugido_sentado_1.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_adulto_dourado/salto_pouso_1.webp",
+    "pets/tigre_adulto_dourado/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_adulto_dourado/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_adulto_dourado/sentado_girando_1.webp"
+   ],
+   "sentado_lado": [
+    "pets/tigre_adulto_dourado/sentado_lado_1.webp"
+   ],
+   "sentado_reto": [
+    "pets/tigre_adulto_dourado/sentado_reto_1.webp"
+   ],
+   "tres_quartos": [
+    "pets/tigre_adulto_dourado/tres_quartos_1.webp",
+    "pets/tigre_adulto_dourado/tres_quartos_2.webp"
+   ]
+  },
+  "tigre_adulto_preto": {
+   "adormecer": [
+    "pets/tigre_adulto_preto/dormindo_1.webp",
+    "pets/tigre_adulto_preto/dormindo_2.webp",
+    "pets/tigre_adulto_preto/dormindo_3.webp"
+   ],
+   "andar_costas": [
+    "pets/tigre_adulto_preto/andar_costas_1.webp",
+    "pets/tigre_adulto_preto/andar_costas_2.webp"
+   ],
+   "andar_direita": [
+    "pets/tigre_adulto_preto/andar_direita_1.webp",
+    "pets/tigre_adulto_preto/andar_direita_2.webp",
+    "pets/tigre_adulto_preto/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/tigre_adulto_preto/andar_esquerda_1.webp",
+    "pets/tigre_adulto_preto/andar_esquerda_2.webp",
+    "pets/tigre_adulto_preto/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/tigre_adulto_preto/andar_frente_1.webp"
+   ],
+   "animado": [
+    "pets/tigre_adulto_preto/animado_1.webp"
+   ],
+   "ataque_garra": [
+    "pets/tigre_adulto_preto/ataque_garra_1.webp",
+    "pets/tigre_adulto_preto/ataque_garra_2.webp",
+    "pets/tigre_adulto_preto/ataque_garra_3.webp",
+    "pets/tigre_adulto_preto/ataque_garra_4.webp"
+   ],
+   "bravo": [
+    "pets/tigre_adulto_preto/bravo_1.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/tigre_adulto_preto/busto_sorrindo_1.webp"
+   ],
+   "calmo": [
+    "pets/tigre_adulto_preto/calmo_1.webp"
+   ],
+   "carinho": [
+    "pets/tigre_adulto_preto/carinho_1.webp"
+   ],
+   "comendo": [
+    "pets/tigre_adulto_preto/comendo_1.webp",
+    "pets/tigre_adulto_preto/comendo_2.webp"
+   ],
+   "correndo": [
+    "pets/tigre_adulto_preto/correndo_1.webp",
+    "pets/tigre_adulto_preto/correndo_2.webp",
+    "pets/tigre_adulto_preto/correndo_3.webp"
+   ],
+   "costas_parado": [
+    "pets/tigre_adulto_preto/costas_parado_1.webp"
+   ],
+   "costas_sentado": [
+    "pets/tigre_adulto_preto/costas_sentado_1.webp",
+    "pets/tigre_adulto_preto/costas_sentado_2.webp",
+    "pets/tigre_adulto_preto/costas_sentado_3.webp"
+   ],
+   "dormindo": [
+    "pets/tigre_adulto_preto/dormindo_3.webp"
+   ],
+   "feliz": [
+    "pets/tigre_adulto_preto/feliz_1.webp",
+    "pets/tigre_adulto_preto/feliz_2.webp"
+   ],
+   "lamber_beicos": [
+    "pets/tigre_adulto_preto/lamber_beicos_1.webp"
+   ],
+   "lamber_pata": [
+    "pets/tigre_adulto_preto/lamber_pata_1.webp",
+    "pets/tigre_adulto_preto/lamber_pata_2.webp"
+   ],
+   "orgulhoso": [
+    "pets/tigre_adulto_preto/orgulhoso_1.webp"
+   ],
+   "parado_lado": [
+    "pets/tigre_adulto_preto/parado_lado_1.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/tigre_adulto_preto/pulo_cambalhota_1.webp",
+    "pets/tigre_adulto_preto/pulo_cambalhota_2.webp"
+   ],
+   "rugido": [
+    "pets/tigre_adulto_preto/rugido_1.webp",
+    "pets/tigre_adulto_preto/rugido_2.webp",
+    "pets/tigre_adulto_preto/rugido_3.webp"
+   ],
+   "rugido_sentado": [
+    "pets/tigre_adulto_preto/rugido_sentado_1.webp"
+   ],
+   "salto_pouso": [
+    "pets/tigre_adulto_preto/salto_pouso_1.webp",
+    "pets/tigre_adulto_preto/salto_pouso_2.webp"
+   ],
+   "sentado_2": [
+    "pets/tigre_adulto_preto/sentado_2_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/tigre_adulto_preto/sentado_girando_1.webp"
+   ],
+   "sentado_lado": [
+    "pets/tigre_adulto_preto/sentado_lado_1.webp"
+   ],
+   "sentado_reto": [
+    "pets/tigre_adulto_preto/sentado_reto_1.webp"
+   ],
+   "tres_quartos": [
+    "pets/tigre_adulto_preto/tres_quartos_1.webp",
+    "pets/tigre_adulto_preto/tres_quartos_2.webp"
+   ]
   }
  }
 }
