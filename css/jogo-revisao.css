@@ -4600,3 +4600,43 @@ html.jr-deitado .aula-balao { font-size: calc(15px * var(--letra, 1)); }
 .lz-g100 i.fx { background: rgba(143,216,255,.22); }
 .lz-g100 i.risc { background: rgba(255,82,82,.35) !important; background-image: linear-gradient(135deg, transparent 45%, #ff5252 45%, #ff5252 55%, transparent 55%) !important; }
 @media (prefers-reduced-motion: reduce) { .lz-t.surge-t, .lz-gr.resto i { animation: none; } }
+
+/* 🧪 PROMPT-204: a casa vazia pisca tracejada e o 0 entra (azul-claro); a vírgula escondida surge; o rastro da vírgula */
+.lz-arm-linha > .lz-c.vazia { outline: 2px dashed #8fd8ff; outline-offset: -2px; animation: lz-vazia .45s ease-in-out 3; }
+.lz-arm-linha > .lz-c.vazia > b { visibility: hidden; }
+@keyframes lz-vazia { 50% { outline-color: transparent; } }
+.lz-arm-linha > .lz-c.entra0 > b { color: #8fd8ff; animation: lz-pula .45s cubic-bezier(.3,1.6,.5,1); }
+.lz-arm-linha > .lz-c.surge-c > b { animation: lz-surge .45s ease-in-out 3; }
+.lz-compdec.semv .lz-c.int > b, .lz-compdec.semv .lz-c.virg > b { color: #6b7a72 !important; text-shadow: none; }
+.lz-compdec.semv .lz-c.dec > b { color: #fff; text-shadow: 0 0 8px rgba(255,255,255,.6); }
+.lz-v.rastro { color: rgba(255,215,0,.32) !important; text-shadow: none; }
+.lz-seta-v.velha { opacity: .4; }
+@media (prefers-reduced-motion: reduce) { .lz-arm-linha > .lz-c.vazia, .lz-arm-linha > .lz-c.entra0 > b, .lz-arm-linha > .lz-c.surge-c > b { animation: none; } }
+
+/* 🧪 PROMPT-204 (layout v2, por enquanto só o 4-B): a lousa ocupa a largura toda; o pet fica DENTRO dela, embaixo à direita,
+   e o balão é a faixa de baixo da lousa, com o rabinho saindo da boca do pet. A conta usa só a área livre (acima da faixa). */
+#aula.aula-v2 { --faixa-v2: clamp(84px, calc(var(--jr-alt, 100dvh) * .17), 130px); }
+#aula.aula-v2 .aula-corpo { position: relative; }
+#aula.aula-v2 .aula-lousa { min-height: min(380px, 60dvh); }
+#aula.aula-v2 .aula-lousa.lz { padding-bottom: calc(var(--faixa-v2) + 4px); }
+#aula.aula-v2 .aula-pet { position: absolute; left: 22px; right: 22px; bottom: 16px; height: calc(var(--faixa-v2) - 18px); flex: none; width: auto;
+  display: flex; flex-direction: row; align-items: center; justify-content: flex-end; gap: 16px; z-index: 3; pointer-events: none; }
+#aula.aula-v2 .aula-balao { flex: 1 1 auto; width: auto; max-height: 100%; overflow: hidden; padding: 8px 14px; transform-origin: right center;
+  font: 700 clamp(18px, 3.4vmin, 30px) / 1.25 'Inter', sans-serif; }
+#aula.aula-v2 .aula-balao.cresce { animation: aula-cresce .3s ease-out; }
+@keyframes aula-cresce { from { transform: scaleX(.08); opacity: 0; } to { transform: none; opacity: 1; } }
+#aula.aula-v2 .aula-balao::before { display: none; }
+#aula.aula-v2 .aula-balao::after { left: auto; right: -10px; bottom: auto; top: 50%; transform: translateY(-50%); border: 10px solid transparent; border-right: 0; border-left-color: #fff; }
+#aula.aula-v2 .aula-pet.sem-pet .aula-balao::after { display: none; }
+#aula.aula-v2 .aula-moldura, #aula.aula-v2 .aula-pet.com-busto .aula-moldura { flex: none; height: 100%; width: auto; aspect-ratio: 1; }
+#jr-app #aula.aula-v2 .aula-moldura img { width: auto; height: 100%; max-width: none; }
+html.jr-deitado #aula.aula-v2 .aula-balao { font-size: 18px; padding: 6px 12px; }
+@media (prefers-reduced-motion: reduce) { #aula.aula-v2 .aula-balao.cresce { animation: none; } }
+html.jr-deitado #aula.aula-v2 { --faixa-v2: 58px; }
+html.jr-deitado #aula.aula-v2 .aula-lousa { min-height: 0; }
+html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px; }
+/* PROMPT-204: no v2 a janela usa a altura disponível e a lousa preenche exatamente o espaço dela (tamanho fixo):
+   assim a conta não empurra nada para fora; quem se ajusta é a letra da lousa (--lz-k) */
+#aula.aula-v2 .aula-caixa { height: min(100%, 720px); }
+#aula.aula-v2 .aula-corpo { flex: 1 1 0; min-height: 0; }
+#aula.aula-v2 .aula-lousa { position: absolute; inset: 0; min-height: 0; }

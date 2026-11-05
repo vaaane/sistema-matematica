@@ -1,5 +1,5 @@
 {
- "_nota": "Aula do pet na entrada dos ginásios (PROMPT-185). aulas.{chave}.paginas: cada página = uma fala do pet + uma animação na lousa (js/jogo-revisao/lousa.js: linha, enunciado, marca, resolve, expressao, seta, texto, armada, divisao, reta, virgula, escada, tabela, acende, figura, fracao, fracoes, barras, compara, pausa). PROMPT-191: cada página resolve a conta inteira (as linhas ficam na lousa) e a fala explica a conta toda; as pegadinhas usam 'compara' (✖ jeito errado × ✔ jeito certo, lado a lado). PROMPT-196: texto = a fala, bem curta (máx. ~10 palavras: a lousa já mostra a conta, a fala só aponta o que olhar); o jeito do pet entra só como uma palavrinha antes, sorteada de jeito.{pet}.abre (máx. 3 palavras). PROMPT-197: ginásios 5-A a 8-B; passos novos na lousa: grade100 (100 quadradinhos, n pintados) e acende com soma (as de antes continuam acesas) e ms. PROMPT-198: a fala só com a regra (os números ficam na lousa); compara em duas etapas (o ✔ certo primeiro, depois o ✖ errado entra à esquerda); barras com mais de 20 partes enchem como uma barra contínua. PROMPT-200: escreve (frases que ficam embaixo da conta; n: numerada; cor: certo/aviso/errado), zeros (zeros que entram no fim), contazeros; virgula com surge/casas 0/frases/fim; as contas, a vírgula, a escada e as expressões escrevem as próprias frases (frases: false desliga). Uma ideia por página. PROMPT-201: bloco (título \"1º …\": os passos seguintes desenham dentro dele; até 3 por página), casas (as casas depois da vírgula acendem numeradas), semvirgula; as frases e legendas vão para o balão do pet; a fala da página é o título no alto da lousa; no compara o certo fica à esquerda. PROMPT-202: tabuada (a tabuada na lateral: op/a/b ou b/procura; nas expressões entra sozinha no × e ÷ de tabuada), lese (o nome do símbolo no canto), palavras (o problema com as palavras-chave virando conta), caixinhas; página pode ter \"titulo\" (a regra no alto da lousa) diferente da fala; armada/× com vírgula: n0 = o número do 1º bloco. PROMPT-203: escondido (a parte escondida surge piscando), lateral (tabela fixa ao lado: a tradução do 8-A), tabuada com quadrados/alvo/col 2, bolinhas, algarismos, termos (com cores), perimetro; grade100 com faixas e riscados.",
+ "_nota": "Aula do pet na entrada dos ginásios (PROMPT-185). aulas.{chave}.paginas: cada página = uma fala do pet + uma animação na lousa (js/jogo-revisao/lousa.js: linha, enunciado, marca, resolve, expressao, seta, texto, armada, divisao, reta, virgula, escada, tabela, acende, figura, fracao, fracoes, barras, compara, pausa). PROMPT-191: cada página resolve a conta inteira (as linhas ficam na lousa) e a fala explica a conta toda; as pegadinhas usam 'compara' (✖ jeito errado × ✔ jeito certo, lado a lado). PROMPT-196: texto = a fala, bem curta (máx. ~10 palavras: a lousa já mostra a conta, a fala só aponta o que olhar); o jeito do pet entra só como uma palavrinha antes, sorteada de jeito.{pet}.abre (máx. 3 palavras). PROMPT-197: ginásios 5-A a 8-B; passos novos na lousa: grade100 (100 quadradinhos, n pintados) e acende com soma (as de antes continuam acesas) e ms. PROMPT-198: a fala só com a regra (os números ficam na lousa); compara em duas etapas (o ✔ certo primeiro, depois o ✖ errado entra à esquerda); barras com mais de 20 partes enchem como uma barra contínua. PROMPT-200: escreve (frases que ficam embaixo da conta; n: numerada; cor: certo/aviso/errado), zeros (zeros que entram no fim), contazeros; virgula com surge/casas 0/frases/fim; as contas, a vírgula, a escada e as expressões escrevem as próprias frases (frases: false desliga). Uma ideia por página. PROMPT-201: bloco (título \"1º …\": os passos seguintes desenham dentro dele; até 3 por página), casas (as casas depois da vírgula acendem numeradas), semvirgula; as frases e legendas vão para o balão do pet; a fala da página é o título no alto da lousa; no compara o certo fica à esquerda. PROMPT-202: tabuada (a tabuada na lateral: op/a/b ou b/procura; nas expressões entra sozinha no × e ÷ de tabuada), lese (o nome do símbolo no canto), palavras (o problema com as palavras-chave virando conta), caixinhas; página pode ter \"titulo\" (a regra no alto da lousa) diferente da fala; armada/× com vírgula: n0 = o número do 1º bloco. PROMPT-203: escondido (a parte escondida surge piscando), lateral (tabela fixa ao lado: a tradução do 8-A), tabuada com quadrados/alvo/col 2, bolinhas, algarismos, termos (com cores), perimetro; grade100 com faixas e riscados. PROMPT-204: aula com \"layout\": \"v2\" (por enquanto só o 4-B): sem título, o pet dentro da lousa e o balão como faixa embaixo; comparadec; armada/× com blocos: false (o zero entra dentro da conta); a vírgula deixa rastro.",
  "jeito": {
   "gato": {"abre": ["Hmm…", "Olha só:", "Presta atenção:"]},
   "tigre": {"abre": ["FOCO!", "Bora, campeão!", "Olha só!"]},
@@ -332,90 +332,47 @@
   },
   "mapa4-B": {
    "titulo": "Decimais",
+   "layout": "v2",
    "paginas": [
     {
-     "texto": "A vírgula separa inteiros e pedaços.",
-     "lousa": [{"t": "linha", "v": "2,5"}, {"t": "barras", "fr": [[10, 10], [10, 10], [5, 10]], "rotulos": ["1", "1", "5 de 10"]}, {"t": "escreve", "v": "Antes da vírgula: inteiros."}, {"t": "escreve", "v": "Depois da vírgula: pedaços do inteiro."}, {"t": "escreve", "v": "2,5 = 2 inteiros e 5 pedaços de 10."}]
-    },
-    {
-     "texto": "Dinheiro é decimal!",
-     "lousa": [{"t": "linha", "v": "R$ 1,25"}, {"t": "linha", "v": "🪙 1 real  +  🪙 25 centavos"}, {"t": "escreve", "v": "1ª casa depois da vírgula: décimos (pedaços de 10)."}, {"t": "escreve", "v": "2ª casa: centésimos (pedaços de 100)."}, {"t": "escreve", "v": "R$ 1,25 = 1 real e 25 centavos."}]
-    },
-    {
-     "texto": "A vírgula se esconde no fim!",
-     "lousa": [{"t": "virgula", "v": "3", "surge": true, "casas": 0}, {"t": "escreve", "v": "3 = 3,"}]
-    },
-    {
-     "texto": "Zero no fim não muda o número!",
-     "lousa": [{"t": "linha", "v": "0,5 = 0,50 = 0,500"}, {"t": "barras", "fr": [[5, 10], [50, 100], [500, 1000]], "rotulos": ["5 de 10", "50 de 100", "500 de 1000"]}, {"t": "escreve", "v": "As três barras têm o mesmo tanto pintado."}, {"t": "escreve", "v": "Zero no fim, depois da vírgula, não muda o número."}]
-    },
-    {
      "texto": "Vírgula embaixo de vírgula!",
-     "lousa": [{"t": "armada", "a": "1,3", "op": "+", "b": "4,1"}]
-    },
-    {
-     "texto": "Pegadinha: vírgula fora do lugar!",
-     "lousa": [{"t": "compara", "esq": {"titulo": "✖ vírgula fora do lugar", "passos": [{"t": "linha", "v": "1,3 + 4,1"}, {"t": "linha", "v": "13 + 41"}, {"t": "armada", "a": "1,3", "op": "+", "b": "4,1", "sem_virgula": true}, {"t": "texto", "v": "A vírgula sumiu"}]}, "dir": {"passos": [{"t": "linha", "v": "1,3 + 4,1"}, {"t": "armada", "a": "1,3", "op": "+", "b": "4,1"}]}}, {"t": "escreve", "v": "Sem a vírgula, 1,3 virou 13: é outro número!", "cor": "errado"}]
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "1,3 + 4,1"}, {"t": "linha", "v": "13 + 41"}, {"t": "armada", "a": "1,3", "op": "+", "b": "4,1", "sem_virgula": true}]}, "dir": {"passos": [{"t": "escreve", "v": "Antes da vírgula ficam os inteiros. Depois, os pedaços."}, {"t": "armada", "a": "1,3", "op": "+", "b": "4,1", "blocos": false}]}}, {"t": "escreve", "v": "Sem a vírgula, 1,3 virou 13: é outro número!", "cor": "errado"}]
     },
     {
      "texto": "Casas diferentes? Completa com zero.",
-     "lousa": [{"t": "linha", "v": "2,5 + 1,25"}, {"t": "armada", "a": "2,5", "op": "+", "b": "1,25"}]
+     "lousa": [{"t": "armada", "a": "2,5", "op": "+", "b": "1,25", "blocos": false}]
     },
     {
-     "texto": "Na subtração, também completa!",
-     "lousa": [{"t": "linha", "v": "3 − 1,25"}, {"t": "armada", "a": "3", "op": "−", "b": "1,25"}]
+     "texto": "Não dá? Pede emprestado ao vizinho!",
+     "lousa": [{"t": "armada", "a": "3", "op": "−", "b": "1,25", "blocos": false}]
     },
     {
-     "texto": "Qual é o maior: 0,5 ou 0,14?",
-     "lousa": [{"t": "bloco", "titulo": "1º Iguala as casas"}, {"t": "casas", "v": ["0,5", "0,14"]}, {"t": "escreve", "v": "Primeiro iguala as casas. 0,5 tem 1, 0,14 tem 2."}, {"t": "zeros", "v": "0,5", "n": 1}, {"t": "escreve", "v": "Completa com zero: 0,5 = 0,50. Zero no fim não muda nada."}, {"t": "bloco", "titulo": "2º Compara"}, {"t": "semvirgula", "v": ["0,50", "0,14"]}, {"t": "escreve", "v": "Agora compara os números sem a vírgula: 50 e 14."}, {"t": "linha", "v": "50 > 14"}, {"t": "barras", "fr": [[50, 100], [14, 100]], "rotulos": ["0,50", "0,14"]}, {"t": "escreve", "v": "50 é maior. Então 0,5 é o maior!"}, {"t": "linha", "v": "0,5 é o maior", "classe": "certo"}]
-    },
-    {
-     "texto": "Mais números não quer dizer maior!",
-     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "0,14 tem mais números"}, {"t": "linha", "v": "0,14 > 0,5"}]}, "dir": {"passos": [{"t": "linha", "v": "0,50 e 0,14"}, {"t": "linha", "v": "50 > 14"}, {"t": "linha", "v": "0,5 > 0,14"}]}}, {"t": "escreve", "v": "Mais números não quer dizer maior!", "cor": "errado"}]
+     "texto": "Iguala as casas e depois compara.",
+     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "enunciado", "v": "Qual é o maior?"}, {"t": "linha", "v": "0,14 tem mais números"}, {"t": "linha", "v": "0,14 é maior"}]}, "dir": {"passos": [{"t": "enunciado", "v": "Qual é o maior?"}, {"t": "comparadec", "v": ["0,5", "0,14"]}, {"t": "linha", "v": "50 > 14"}, {"t": "escreve", "v": "50 é maior. Então 0,5 é o maior!"}, {"t": "linha", "v": "0,5 é o maior", "classe": "certo"}]}}, {"t": "escreve", "v": "Mais números não quer dizer maior!", "cor": "errado"}]
     },
     {
      "texto": "Conta as casas, multiplica e anda a vírgula.",
-     "lousa": [{"t": "armada", "a": "0,3", "op": "×", "b": "0,2"}]
+     "lousa": [{"t": "armada", "a": "0,3", "op": "×", "b": "0,2", "blocos": false}]
     },
     {
      "texto": "Conta as casas, multiplica e anda a vírgula.",
-     "titulo": "× por 1,5",
-     "lousa": [{"t": "armada", "a": "6", "op": "×", "b": "1,5"}, {"t": "escreve", "v": "Atalho: 1,5 = 1 + meio. 6 + 3 = 9."}]
+     "lousa": [{"t": "armada", "a": "2,5", "op": "×", "b": "4", "blocos": false}]
     },
     {
      "texto": "Fração vira decimal dividindo!",
-     "lousa": [{"t": "linha", "v": "1/2 = 1 ÷ 2"}, {"t": "escreve", "v": "O tracinho da fração é uma divisão: 1/2 = 1 ÷ 2", "n": true}, {"t": "divisao", "a": 1, "b": 2, "casas": 1}]
+     "lousa": [{"t": "escondido", "v": "1/2", "mostra": "1 ÷ 2", "onde": 1, "fala": "O tracinho da fração é uma divisão: 1 ÷ 2."}, {"t": "divisao", "a": 1, "b": 2, "casas": 1}]
     },
     {
-     "texto": "Sobrou? Põe outro zero!",
-     "titulo": "3/4 em decimal: duas casas",
-     "lousa": [{"t": "linha", "v": "3/4 = 3 ÷ 4"}, {"t": "divisao", "a": 3, "b": 4, "casas": 2}, {"t": "linha", "v": "3/4 = 0,75", "classe": "certo"}]
+     "texto": "Sobrou? Põe zero e continua!",
+     "lousa": [{"t": "escondido", "v": "3/4", "mostra": "3 ÷ 4", "onde": 1, "fala": "3/4 é 3 ÷ 4."}, {"t": "divisao", "a": 3, "b": 4, "casas": 2}]
     },
     {
-     "texto": "Conta as casas: 1 casa é 10, 2 casas é 100!",
-     "titulo": "Lê o decimal e escreve a fração",
-     "lousa": [{"t": "bloco", "titulo": "1º Conta as casas"}, {"t": "casas", "v": ["0,3", "0,25"]}, {"t": "escreve", "v": "1 casa depois da vírgula: décimos. Embaixo vai 10."}, {"t": "escreve", "v": "2 casas: centésimos. Embaixo vai 100."}, {"t": "bloco", "titulo": "2º Escreve a fração"}, {"t": "linha", "v": "0,3 = 3/10"}, {"t": "linha", "v": "0,25 = 25/100"}, {"t": "bloco", "titulo": "3º Simplifica"}, {"t": "fracoes", "fr": [[25, 100], [1, 4]], "op": "÷", "k": 25}, {"t": "escreve", "v": "25/100 dá para simplificar: ÷ 25 em cima e embaixo = 1/4."}, {"t": "linha", "v": "0,25 = 1/4", "classe": "certo"}]
+     "texto": "Conta os zeros!",
+     "lousa": [{"t": "escondido", "v": "7/10", "mostra": "7 ÷ 10", "onde": 1, "fala": "7/10 é 7 ÷ 10."}, {"t": "virgula", "v": "7", "op": "÷", "k": 10}]
     },
     {
-     "texto": "Fração com 10 embaixo também é divisão.",
-     "lousa": [{"t": "linha", "v": "1/10 = 1 ÷ 10"}, {"t": "divisao", "a": 1, "b": 10, "casas": 1}]
-    },
-    {
-     "texto": "Dividir por 10: a vírgula anda uma casa.",
-     "lousa": [{"t": "virgula", "v": "1", "op": "÷", "k": 10}]
-    },
-    {
-     "texto": "Dividir por 100: a vírgula anda duas casas.",
-     "lousa": [{"t": "virgula", "v": "1", "op": "÷", "k": 100}]
-    },
-    {
-     "texto": "Pensa no dinheiro!",
-     "lousa": [{"t": "barras", "fr": [[1, 2], [1, 4], [3, 4]], "rotulos": ["0,5 = 1/2", "0,25 = 1/4", "0,75 = 3/4"]}, {"t": "linha", "v": "50 centavos · 25 centavos · 75 centavos"}, {"t": "escreve", "v": "0,5 = metade · 0,25 = um quarto · 0,75 = três quartos"}]
-    },
-    {
-     "texto": "Troco é conta de menos!",
-     "titulo": "Troco com centavos",
-     "lousa": [{"t": "bloco", "titulo": "1º Vira conta"}, {"t": "palavras", "v": "Paguei R$ 10 por um lanche de R$ 3,50. Qual o troco?", "marcas": [["Paguei R$ 10", "10", "Paguei com 10: a conta começa no 10."], ["lanche de R$ 3,50", "− 3,50"], ["troco", "−", "Troco é conta de menos: 10 − 3,50."]]}, {"t": "linha", "v": "10 − 3,50"}, {"t": "armada", "a": "10", "op": "−", "b": "3,50", "n0": 2}, {"t": "linha", "v": "Troco: R$ 6,50", "classe": "certo"}]
+     "texto": "Uma casa é dez, duas casas é cem!",
+     "lousa": [{"t": "casas", "v": ["0,3"]}, {"t": "escreve", "v": "0,3: 1 casa depois da vírgula. Embaixo vai 10: 3/10."}, {"t": "linha", "v": "0,3 = 3/10", "classe": "certo"}, {"t": "casas", "v": ["0,25"]}, {"t": "escreve", "v": "0,25: 2 casas. Embaixo vai 100: 25/100."}, {"t": "linha", "v": "0,25 = 25/100"}, {"t": "tabuada", "b": 25, "procura": [100]}, {"t": "escreve", "v": "Dá para simplificar? 25 e 100 dividem por 25."}, {"t": "fracoes", "fr": [[25, 100], [1, 4]], "op": "÷", "k": 25}, {"t": "linha", "v": "25/100 = 1/4", "classe": "certo"}]
     }
    ]
   },

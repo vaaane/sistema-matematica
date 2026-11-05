@@ -14577,25 +14577,39 @@ function passoCalculadora(enun) {
 }
 
 // 🗨️ PROMPT-201: o balão do pet mostra só o passo atual da lousa, letra a letra (~25 ms); a letra diminui se não couber (nunca rola)
-const digitando = new Map();
+const digitando = new Map();   // el → { id, fila }
+// PROMPT-204: a frase sai sempre inteira. A letra diminui até caber; se nem assim couber, o balão cresce (nunca corta)
 function caberBalao(el, texto) {
   el.style.fontSize = '';
+  el.style.maxHeight = '';
   el.textContent = texto;
   let fs = parseFloat(getComputedStyle(el).fontSize) || 16;
-  for (let g = 0; g < 12 && el.scrollHeight > el.clientHeight + 1 && fs > 11; g++) { fs -= 1; el.style.fontSize = `${fs}px`; }
+  for (let g = 0; g < 20 && el.scrollHeight > el.clientHeight + 1 && fs > 11; g++) { fs -= 1; el.style.fontSize = `${fs}px`; }
+  if (el.scrollHeight > el.clientHeight + 1) el.style.maxHeight = 'none';
 }
+// se chega outra frase enquanto esta ainda está sendo escrita, ela espera: esta termina inteira, fica um pouco, e só então troca
 function digitar(el, texto) {
   if (!el) return;
-  clearInterval(digitando.get(el)); digitando.delete(el);
+  const st = digitando.get(el);
+  if (st?.id) { st.fila = String(texto ?? ''); return; }
+  comecarDigitar(el, texto);
+}
+function comecarDigitar(el, texto) {
   const letras = Array.from(String(texto || ''));
   caberBalao(el, letras.join(''));   // o tamanho da letra pela frase inteira, antes de começar
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !letras.length) return;
+  const st = { id: null, fila: null };
+  digitando.set(el, st);
+  const seguir = () => {
+    if (st.fila == null) { st.id = null; return; }
+    const prox = st.fila; st.fila = null;
+    st.id = setTimeout(() => { st.id = null; comecarDigitar(el, prox); }, 700);
+  };
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !letras.length) { seguir(); return; }
   let n = 0;
   el.textContent = '';
-  const id = setInterval(() => { n++; el.textContent = letras.slice(0, n).join(''); if (n >= letras.length) { clearInterval(id); digitando.delete(el); } }, 25);
-  digitando.set(el, id);
+  st.id = setInterval(() => { n++; el.textContent = letras.slice(0, n).join(''); if (n >= letras.length) { clearInterval(st.id); st.id = null; seguir(); } }, 25);
 }
-const pararDigitar = (el) => { clearInterval(digitando.get(el)); digitando.delete(el); };
+const pararDigitar = (el) => { const st = digitando.get(el); if (st) { clearInterval(st.id); clearTimeout(st.id); } digitando.delete(el); };
 
 // 🐾 PROMPT-199: o pet ativo do aluno (na cor dele, como na Aula) com o balão: a palavrinha do jeito dele + a dica.
 // PROMPT-201: o mesmo balão explica cada passo da lousa; sem pet (e com lousa), o balão aparece sozinho; sem os dois, a 💡
@@ -16544,8 +16558,9 @@ function abrirAula(chave, origem) {
   const A = aulaDe(chave);
   if (!A || !estado) return;
   const obrig = origem === 'entrada' && !estado.aulasVistas[chave];
-  aula = { chave, origem, pag: 0, obrig, modo: 'aula' };
+  aula = { chave, origem, pag: 0, obrig, modo: 'aula', v2: A.layout === 'v2' };
   $('aula').classList.remove('como');
+  $('aula').classList.toggle('aula-v2', aula.v2);   // 🧪 PROMPT-204: o pet dentro da lousa, o balão como faixa embaixo
   const [, m, G] = /^mapa(\d+)-([AB])$/.exec(chave) || [];
   const gin = m && D.questoes?.[m]?.ginasios?.[G];
   $('aula-tit').textContent = A.titulo || gin?.nome || 'Aula';
@@ -16598,10 +16613,13 @@ function tocarLousaAula(passos) {
   lousaAula ||= criarLousa($('aula-lousa'), { aoFalar: (v) => { if (aula) digitar($('aula-fala'), v); } });
   aula.passos = passos;
   const a = aula;
+  pararDigitar($('aula-fala'));   // página nova: começa já com a fala dela
+  if (a.v2) { const f = $('aula-fala'); f.classList.remove('cresce'); void f.offsetWidth; f.classList.add('cresce'); }   // o balão cresce da boca do pet
   digitar($('aula-fala'), a.fala || '');
-  lousaAula.tocar(passos, { titulo: a.titulo || '' }).then((ok) => { if (ok && aula === a && a.passos === passos) digitar($('aula-fala'), a.fala || ''); });
+  lousaAula.tocar(passos, { titulo: a.v2 ? '' : a.titulo || '' }).then((ok) => { if (ok && aula === a && a.passos === passos) digitar($('aula-fala'), a.fala || ''); });
 }
 function tocarLousaErro() {
+  pararDigitar($('erro-balao'));
   digitar($('erro-balao'), erroFala);
   const ps = erroComoFaz;
   erroLousa.tocar(ps, { titulo: '' }).then((ok) => { if (ok && erroComoFaz === ps && !$('perg-erro').hidden) digitar($('erro-balao'), erroFala); });
@@ -16631,6 +16649,7 @@ function comoFazDe(q) {   // PROMPT-193: só o jeito certo (sem a coluna "✖ su
 function abrirComoFaz(passos, titulo = 'Ver como faz') {
   if (!passos?.length) return;
   aula = { modo: 'como', pag: 0, obrig: false, fala: 'Olha como faz:', titulo };
+  $('aula').classList.remove('aula-v2');
   $('aula').classList.add('como');
   $('aula-tit').textContent = titulo;
   $('aula-sub').textContent = '▶ Ver como faz';

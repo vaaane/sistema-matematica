@@ -170,7 +170,8 @@ export function criarLousa(raiz, { aoFalar = null } = {}) {
     // PROMPT-200: as frases escritas também contam: a lousa inteira (conta + frases + legenda) tem que caber
     const sobra = () => { const r = raiz.getBoundingClientRect(), e = ESC0.getBoundingClientRect(), o = ROT0.getBoundingClientRect(); return !r.height || Math.max(e.bottom, o.bottom) <= r.bottom - 4; };
     const cabe2 = () => cabe() && sobra();
-    for (let g = 0; g < 12 && !cabe2() && L.k > KMIN; g++) { L.k = Math.max(KMIN, Math.round((L.k - 0.06) * 100) / 100); raiz.style.setProperty('--lz-k', L.k); }
+    const kmin = raiz.closest('.aula-v2') ? 0.45 : KMIN;   // PROMPT-204: no layout v2 a conta pode diminuir mais (nunca corta)
+    for (let g = 0; g < 16 && !cabe2() && L.k > kmin; g++) { L.k = Math.max(kmin, Math.round((L.k - 0.06) * 100) / 100); raiz.style.setProperty('--lz-k', L.k); }
     for (let g = 0; g < 6 && !cabe2() && ESC0.children.length > 1; g++) ESC0.firstElementChild.remove();   // as frases mais antigas saem primeiro
     // PROMPT-201: ainda não coube: os blocos já feitos se recolhem (fica só o título)
     for (let g = 0; g < 4 && !cabe2(); g++) { const b = Q0.querySelector('.lz-blk.feito:not(.recolhido)'); if (!b) break; b.classList.add('recolhido'); }
@@ -413,7 +414,7 @@ export function criarLousa(raiz, { aoFalar = null } = {}) {
     const [ai, ad = ''] = String(p.a).split(','), [bi, bd = ''] = String(p.b).split(',');
     const dec = Math.max(ad.length, bd.length), ni = Math.max(ai.length, bi.length) + (op === '+' ? 1 : 0);
     // PROMPT-201: casas diferentes → "1º O 3 vira 3,00" (os zeros entram) e "2º Arma e subtrai"
-    const blocos = dec > 0 && ad.length !== bd.length && p.blocos !== false;
+    const blocos = dec > 0 && ad.length !== bd.length && p.blocos !== false;   // PROMPT-204: blocos: false = tudo dentro da conta armada
     if (blocos) {
       const [curto, outro, falta] = ad.length < bd.length ? [String(p.a), String(p.b), bd.length - ad.length] : [String(p.b), String(p.a), ad.length - bd.length];
       const pronto = (curto.includes(',') ? curto : curto + ',') + '0'.repeat(falta);
@@ -445,16 +446,58 @@ export function criarLousa(raiz, { aoFalar = null } = {}) {
     if (dec) dizer('Vírgula embaixo de vírgula.');
     if (blocos) for (const c of bloco.querySelectorAll('.esconde')) c.classList.remove('esconde');   // os zeros já entraram no 1º bloco
     const esc0 = [...bloco.querySelectorAll('.esconde')];
-    if (esc0.length) {   // completa com zero (e a vírgula do número inteiro)
-      rotulo('completa com zero');
-      dizer('Casas diferentes: completa com zero.');
-      for (const c of esc0) { c.classList.remove('esconde'); await dorme(MICRO * 0.5, t); }
-      await dorme(MICRO * 0.5, t);
+    if (esc0.length) {   // PROMPT-204: completa com zero DENTRO da conta: a vírgula escondida surge; a casa vazia pisca e o 0 entra
+      const [curto, falta] = ad.length < bd.length ? [String(p.a), bd.length - ad.length] : [String(p.b), ad.length - bd.length];
+      const pronto = (curto.includes(',') ? curto : curto + ',') + '0'.repeat(falta);
+      const virgs = esc0.filter(c => c.classList.contains('virg')), zeros = esc0.filter(c => !c.classList.contains('virg'));
+      if (virgs.length) {
+        dizer(`O ${curto} tem uma vírgula escondida no fim.`);
+        for (const c of virgs) { c.classList.remove('esconde'); c.classList.add('surge-c'); }
+        await dorme(MS_PASSO * 1.3, t);
+      }
+      dizer(falta === 1 ? `O ${curto} tem uma casa vazia aqui.` : `Faltam ${plural(falta, 'casa', 'casas')}: completa com zero.`);
+      for (const c of zeros) { c.classList.remove('esconde'); c.classList.add('vazia'); }
+      await dorme(MS_PASSO * 1.3, t);
+      for (const c of zeros) { c.classList.remove('vazia'); await dorme(MICRO * 0.5, t); c.classList.add('entra0'); }
+      dizer(`Zero no fim, depois da vírgula, não muda o número: ${curto} = ${pronto}.`);
+      await dorme(MS_PASSO * 1.2, t);
     }
     if (op === '−') await subtraiColunas(bloco, A, B, R, cols, virg, unid, t, dizer);
     else await somaColunas(bloco, [A, B], R, cols, virg, unid, t, dizer);
     limpaSetas(bloco);
     if (p.fim !== false) dizer(`${p.a} ${op} ${p.b} = ${R.map(c => c.querySelector(':scope > b').textContent).join('').trim()}`, 'certo');
+  }
+
+  // ── PROMPT-204: { t: 'comparadec', v: ['0,5', '0,14'] }: um embaixo do outro, vírgula embaixo de vírgula; a casa vazia
+  //    pisca e o 0 entra; depois a frente e a vírgula ficam cinza e os números de depois da vírgula acendem ──
+  async function comparaDec(p, t) {
+    const vs = (p.v || []).map(String), partes = vs.map(x => { const [i, d = ''] = x.split(','); return { i, d }; });
+    const ni = Math.max(...partes.map(x => x.i.length)), dec = Math.max(...partes.map(x => x.d.length));
+    const bloco = div('lz-bloco lz-armada lz-compdec');
+    const linhas = partes.map(({ i, d }) => {
+      const l = div('lz-arm-linha', '', bloco), cs = [];
+      for (const ch of i.padStart(ni, ' ')) cs.push(celula(l, ch, 'int'));
+      cs.push(celula(l, ',', 'virg'));
+      for (let k = 0; k < dec; k++) cs.push(celula(l, d[k] ?? '0', k < d.length ? 'dec' : 'dec zero esconde'));
+      return cs;
+    });
+    await dorme(MS_PASSO, t);
+    diz(p, 'Para comparar, iguala as casas.');
+    await dorme(MS_PASSO, t);
+    const esc0 = [...bloco.querySelectorAll('.esconde')];
+    if (esc0.length) {
+      const curto = vs[partes.findIndex(x => x.d.length < dec)];
+      const pronto = vs.map((x, k) => x + '0'.repeat(dec - partes[k].d.length));
+      diz(p, `${vs.map((x, k) => `${x} tem ${plural(partes[k].d.length, 'casa', 'casas')}`).join(' e ')}. Completa com zero: ${curto} = ${pronto[vs.indexOf(curto)]}.`);
+      for (const c of esc0) { c.classList.remove('esconde'); c.classList.add('vazia'); }
+      await dorme(MS_PASSO * 1.3, t);
+      for (const c of esc0) { c.classList.remove('vazia'); c.classList.add('entra0'); await dorme(MICRO * 0.5, t); }
+      await dorme(MS_PASSO * 0.8, t);
+    }
+    const sem = partes.map(x => String(Number(x.d.padEnd(dec, '0'))));
+    bloco.classList.add('semv');
+    diz(p, `Agora compara sem a vírgula: ${sem.join(' e ')}.`);
+    await dorme(MS_PASSO * 1.4, t);
   }
 
   // ══ PROMPT-203 ══
@@ -560,7 +603,7 @@ export function criarLousa(raiz, { aoFalar = null } = {}) {
   async function tabuadaLateral(p, t) {
     const op = p.op, a = Math.abs(Number(p.a)), b = Math.abs(Number(p.b));
     const base = op === '×' ? a : b, procura = op === '×' ? [a * b] : op === '÷' ? [a] : (p.procura || []).map(Number);
-    if (!(base >= 1 && base <= 10)) return;
+    if (!(base >= 1 && base <= 25)) return;   // PROMPT-204: até o 25 (25 × 4 = 100)
     const tab = painelLateral(Array.from({ length: 10 }, (_, m) => `${base} × ${m + 1} = ${base * (m + 1)}`), p.col || 1, `tab${base}`);   // PROMPT-203: col 2 = uma 2ª tabuada ao lado
     tab.classList.remove('some');
     for (const l of tab.children) l.className = '';
@@ -642,24 +685,27 @@ export function criarLousa(raiz, { aoFalar = null } = {}) {
     const [ai, ad = ''] = String(p.a).split(','), [bi, bd = ''] = String(p.b).split(',');
     const dec = ad.length + bd.length;
     const As = (ai + ad).replace(/^0+(?=\d)/, ''), Bs = (bi + bd).replace(/^0+(?=\d)/, ''), total = String(BigInt(As) * BigInt(Bs));
-    const n0 = Number(p.n0) || 1;
-    abreBloco(`${n0}º Conta as casas depois da vírgula`);
+    const n0 = Number(p.n0) || 1, sb = p.blocos === false;   // PROMPT-204: sem blocos = tudo na mesma conta
+    const abre = (tit) => { if (!sb) abreBloco(tit); };
+    abre(`${n0}º Conta as casas depois da vírgula`);
     const l = div('lz-linha lz-casas', `${numCasas(p.a)}<span class="lz-t op">×</span>${numCasas(p.b)}`);
     await dorme(MS_PASSO * 0.6, t);
-    dizer('Conta as casas depois da vírgula em cada número.');
+    dizer(sb ? 'Primeiro conta as casas depois da vírgula.' : 'Conta as casas depois da vírgula em cada número.');
     await acendeCasas(l, t);
     const g = div('lz-linha lz-soma-casas', `${esc(plural(ad.length, 'casa', 'casas'))} + ${esc(plural(bd.length, 'casa', 'casas'))} = <span class="lz-guarda">${dec}</span> ${dec === 1 ? 'casa' : 'casas'}`);
-    dizer(`${p.a} tem ${ad.length}. ${p.b} tem ${bd.length}. São ${plural(dec, 'casa', 'casas')}.`);
+    const temN = (x, n) => (n ? `${x} tem ${n}.` : `O ${x} não tem nenhuma.`);
+    dizer(`${temN(p.a, ad.length)} ${temN(p.b, bd.length)} ${dec === 1 ? 'É 1 casa.' : `São ${dec} casas.`}`);
     await dorme(MS_PASSO * 1.2, t);
-    abreBloco(`${n0 + 1}º Multiplica sem a vírgula`);
+    abre(`${n0 + 1}º Multiplica sem a vírgula`);
+    if (sb) { l.classList.add('sem-virgula'); await dorme(MS_PASSO * 0.6, t); }
     dizer(`Agora esquece a vírgula: ${As} × ${Bs}`);
     await dorme(MICRO, t);
     await multiplicar({ ...p, a: As, b: Bs, interno: true, fim: false }, t);
     dizer(`${As} × ${Bs} = ${total}`);
     await dorme(MICRO, t);
-    abreBloco(`${n0 + 2}º Anda a vírgula`);
+    abre(`${n0 + 2}º Anda a vírgula`);
     g.querySelector('.lz-guarda')?.classList.add('aceso');
-    dizer(`Tinha ${plural(dec, 'casa', 'casas')}: a vírgula anda ${plural(dec, 'casa', 'casas')} para a esquerda.`);
+    dizer(sb ? `Ela anda ${dec === 1 ? 'a casa' : `as ${dec} casas`} para a esquerda.` : `Tinha ${plural(dec, 'casa', 'casas')}: a vírgula anda ${plural(dec, 'casa', 'casas')} para a esquerda.`);
     await dorme(MS_PASSO, t);
     await virgula({ v: total, casas: dec, lado: 'esquerda', fim: false, frases: p.frases }, t);
     if (p.fim !== false) dizer(`${p.a} × ${p.b} = ${num(Number(total) / 10 ** dec)}`, 'certo');
@@ -931,37 +977,57 @@ export function criarLousa(raiz, { aoFalar = null } = {}) {
   // No fim, a limpeza: vírgula no fim some ("puf"); zeros no fim depois da vírgula são riscados e saem.
   function numeroVirgula(pai, v, bloco) {
     const s = String(v).replace('.', ','), [i0, d0 = ''] = s.split(',');
-    const N = { digs: [...(i0 + d0)].map(d => ({ d })), pos: i0.length, visivel: s.includes(','), setas: [] };
+    // PROMPT-204: rastro = os lugares (vãos entre algarismos) por onde a vírgula passou: ficam com uma vírgula clarinha;
+    // setas = os pulos { de, para, rot }: redesenhados a cada mudança (os algarismos andam quando entra um zero)
+    const N = { digs: [...(i0 + d0)].map(d => ({ d })), pos: i0.length, visivel: s.includes(','), rastro: new Set(), setas: [] };
     const el = document.createElement('span'); el.className = 'lz-vnum'; pai.appendChild(el);
-    const virgHtml = (cls = '') => `<span class="lz-v${cls}">,</span>`;
-    N.desenhar = (cls = '') => {
-      el.innerHTML = N.digs.map((x, k) => (k === N.pos && N.visivel ? virgHtml(cls) : '') +
-        `<span class="lz-c${x.novo ? ' zero0' : ''}${x.risc ? ' risc0' : ''}"><b>${x.d}</b></span>`).join('') +
-        (N.pos >= N.digs.length && N.visivel ? virgHtml(cls) : '');
+    const vao = (k, cls) => {
+      if (k === N.pos && N.visivel) return `<span class="lz-v${cls}" data-gap="${k}">,</span>`;
+      return N.rastro.has(k) ? `<span class="lz-v rastro" data-gap="${k}">,</span>` : '';
     };
-    N.virg = () => el.querySelector('.lz-v');
+    N.desenhar = (cls = '') => {
+      el.innerHTML = N.digs.map((x, k) => vao(k, cls) + `<span class="lz-c${x.novo ? ' zero0' : ''}${x.risc ? ' risc0' : ''}"><b>${x.d}</b></span>`).join('') + vao(N.digs.length, cls);
+      N.redesenharSetas();
+    };
+    N.redesenharSetas = (anima = false) => {
+      for (const sv of bloco.querySelectorAll(':scope > .lz-seta-v')) sv.remove();
+      const r0 = bloco.getBoundingClientRect();
+      N.setas.forEach((st, i) => {
+        const a = el.querySelector(`[data-gap="${st.de}"]`), b = el.querySelector(`[data-gap="${st.para}"]`);
+        if (!a || !b) return;
+        const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+        const ultimo = i === N.setas.length - 1;
+        const sv = arcoNumerado(bloco, ra.left + ra.width / 2 - r0.left, rb.left + rb.width / 2 - r0.left, Math.min(ra.top, rb.top) - r0.top + rb.height * 0.25, st.rot, anima && ultimo);
+        if (!ultimo || N.pronto) sv.classList.add('velha');
+      });
+    };
+    N.virg = () => el.querySelector('.lz-v:not(.rastro)');
     N.texto = () => { const d = N.digs.map(x => x.d).join(''); return N.visivel ? d.slice(0, N.pos) + ',' + d.slice(N.pos) : d; };
     N.surgir = async (t) => { N.visivel = true; N.desenhar(' surge'); await dorme(MS_PASSO * 1.2, t); };
+    const empurra = () => {   // um zero entrou na frente: todos os vãos guardados andam uma casa
+      N.rastro = new Set([...N.rastro].map(k => k + 1));
+      for (const st of N.setas) { st.de++; st.para++; }
+    };
     // um pulo: true = direita (×), false = esquerda (÷); devolve se faltou casa/número (o zero entrou)
     N.pular = (dir, rotuloSeta) => {
-      for (const sv of N.setas) sv.classList.add('velha');
-      const r0 = bloco.getBoundingClientRect(), a = N.virg()?.getBoundingClientRect();
-      let faltou = false;
+      const a = N.virg()?.getBoundingClientRect();
+      let faltou = false, de = N.pos;
       if (dir) { N.pos++; if (N.pos > N.digs.length) { N.digs.push({ d: '0', novo: true }); faltou = true; } }
-      else if (N.pos <= 0) { N.digs.unshift({ d: '0', novo: true }); faltou = true; }   // ",5" → ",05": o zero entra entre a vírgula e o número
+      else if (N.pos <= 0) { N.digs.unshift({ d: '0', novo: true }); empurra(); de = 1; faltou = true; }   // ",5" → ",05": o zero entra entre a vírgula e o número
       else N.pos--;
+      N.rastro.add(de);
+      N.setas.push({ de, para: N.pos, rot: rotuloSeta });
       N.desenhar();
-      const vEl = N.virg(), b = vEl.getBoundingClientRect();
-      if (a) {
-        const x1 = a.left + a.width / 2 - r0.left, x2 = b.left + b.width / 2 - r0.left, y = Math.min(a.top, b.top) - r0.top + b.height * 0.25;
+      N.redesenharSetas(true);
+      const vEl = N.virg(), b = vEl?.getBoundingClientRect();
+      if (a && b) {
         vEl.style.transform = `translateX(${a.left - b.left}px)`;   // desliza (não teleporta)
         requestAnimationFrame(() => requestAnimationFrame(() => { vEl.style.transform = ''; }));
-        N.setas.push(arcoNumerado(bloco, faltou && !dir ? x1 : x1, x2, y, rotuloSeta));
       }
       return faltou;
     };
-    N.zeroNaFrente = () => { N.digs.unshift({ d: '0', novo: true }); N.pos++; N.desenhar(); };
-    // a limpeza do fim, com as frases
+    N.zeroNaFrente = () => { N.digs.unshift({ d: '0', novo: true }); empurra(); N.pos++; N.desenhar(); };
+    // a limpeza do fim, com as frases (o rastro continua)
     N.limpar = async (t, dizer) => {
       if (!N.visivel) return;
       let k = N.digs.length;
@@ -972,6 +1038,8 @@ export function criarLousa(raiz, { aoFalar = null } = {}) {
         dizer('Zero no fim, depois da vírgula, pode sair: não muda nada.');
         await dorme(MS_PASSO * 1.2, t);
         N.digs = N.digs.slice(0, k);
+        N.rastro = new Set([...N.rastro].filter(g => g <= k));
+        N.setas = N.setas.filter(st => st.de <= k && st.para <= k);
         N.desenhar();
         await dorme(MS_PASSO * 0.5, t);
       }
@@ -980,23 +1048,26 @@ export function criarLousa(raiz, { aoFalar = null } = {}) {
         dizer('Vírgula no fim do número não precisa aparecer.');
         await dorme(MS_PASSO, t);
         N.visivel = false;
+        N.rastro.delete(N.pos);
+        N.setas = N.setas.filter(st => st.para !== N.pos && st.de !== N.pos);
         N.desenhar();
       }
     };
-    N.final = () => { for (const sv of N.setas) sv.remove(); N.setas = []; el.classList.add('pronto'); };
+    N.final = () => { N.pronto = true; N.redesenharSetas(); el.classList.add('pronto'); };   // as setinhas ficam, em tom suave
     N.desenhar();
     return N;
   }
   // a setinha curva da vírgula, com o número do pulo em cima
-  function arcoNumerado(bloco, x1, x2, y, rot) {
+  function arcoNumerado(bloco, x1, x2, y, rot, anima = true) {
     const alto = Math.max(16, Math.abs(x2 - x1) * 0.6), cx = (x1 + x2) / 2, cy = y - alto;
     const ang = Math.atan2(y - cy, x2 - cx), h = 7;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('class', 'lz-seta2 lz-seta-v');
+    svg.setAttribute('class', 'lz-seta2 lz-seta-v' + (anima ? '' : ' vai'));
     svg.innerHTML = `<path class="arco" d="M${x1},${y} Q${cx},${cy} ${x2},${y}"/>` +
       `<path class="ponta" d="M${x2},${y} L${x2 - h * Math.cos(ang - 0.5)},${y - h * Math.sin(ang - 0.5)} M${x2},${y} L${x2 - h * Math.cos(ang + 0.5)},${y - h * Math.sin(ang + 0.5)}"/>` +
       (rot ? `<text x="${cx}" y="${cy + alto * 0.5 - 4}" text-anchor="middle">${esc(rot)}</text>` : '');
     bloco.appendChild(svg);
+    if (!anima) return svg;
     const arco = svg.querySelector('.arco'), len = arco.getTotalLength?.() || 100;
     arco.style.strokeDasharray = `${len}`; arco.style.strokeDashoffset = `${len}`;
     requestAnimationFrame(() => requestAnimationFrame(() => { arco.style.strokeDashoffset = '0'; svg.classList.add('vai'); }));
@@ -1237,6 +1308,7 @@ export function criarLousa(raiz, { aoFalar = null } = {}) {
       case 'casas': return casasPasso(p, t);
       case 'tabuada': if (p.auto && !auto) return undefined; return p.quadrados || p.alvo !== undefined ? tabuadaBusca(p, t) : tabuadaLateral(p, t);
       case 'escondido': return escondido(p, t);
+      case 'comparadec': if (!p.manter) limparBlocos(); return comparaDec(p, t);
       case 'lateral': return lateral(p, t);
       case 'bolinhas': if (!p.manter) limparBlocos(); return bolinhas(p, t);
       case 'algarismos': return algarismos(p, t);

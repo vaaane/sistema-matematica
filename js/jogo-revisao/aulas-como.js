@@ -245,7 +245,8 @@ function contaDec(q) {
 }
 function gin4b(q) {
   const c = contaDec(q);
-  if (c) return [...(c.problema ? [{ t: 'enunciado', v: c.problema }] : []), { t: 'linha', v: c.e }, { t: 'armada', a: c.a, op: c.op, b: c.b },
+  if (c) return [...(c.problema ? [{ t: 'enunciado', v: c.problema }] : []), { t: 'linha', v: c.e }, { t: 'armada', a: c.a, op: c.op, b: c.b, blocos: false },   // PROMPT-204: o zero entra dentro da conta
+   
     // PROMPT-198: a legenda só com a regra
     ...(c.op === '×' ? [] : [{ t: 'texto', v: casasDe(c.a) !== casasDe(c.b) ? 'Casas diferentes? Completa com zero. Zero no fim não muda nada.' : 'Vírgula embaixo de vírgula' }])];
   const fd = /^(\d+)\/(\d+) em número decimal$/i.exec(String(q.enunciado || '').trim());
@@ -577,7 +578,7 @@ function resolveProblema(pc) {
   try { if (passosExpressao(pc.conta).length) return [{ t: 'expressao', v: pc.conta }]; } catch (_) {}
   return null;
 }
-const fazBlocos = (s) => s.t === 'armada' && ((s.op === '×' && /,/.test(`${s.a}${s.b}`)) || (s.op !== '×' && casasDe(s.a) !== casasDe(s.b)));
+const fazBlocos = (s) => s.t === 'armada' && s.blocos !== false && ((s.op === '×' && /,/.test(`${s.a}${s.b}`)) || (s.op !== '×' && casasDe(s.a) !== casasDe(s.b)));
 function comBlocosDoProblema(q, certo) {
   const pc = problemaConta(q.enunciado);
   const eProblema = pc || certo?.[0]?.t === 'enunciado';
