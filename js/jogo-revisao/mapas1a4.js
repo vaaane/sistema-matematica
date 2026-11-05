@@ -194,7 +194,7 @@ function equivalente() {
   const [p, q] = pick([[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [1, 5]]); const k = int(2, 4);
   const certo = frac(p * k, q * k);
   const errs = erradasFrac(p * k, q * k, [[p * k + 1, q * k], [p + 1, q], [p * k, q * k + 1], [q, p], [p + k, q + k]]);
-  return Q(`Qual fração é igual a ${frac(p, q)}?`, certo, errs, FG(X(`Multiplique o de cima e o de baixo pelo mesmo número: ${p} × ${k} = ${p * k} e ${q} × ${k} = ${q * k}. Fica ${certo}`), { tipo: 'barras_iguais', de: [p, q], para: [p * k, q * k] }));
+  return Q(`Qual fração é equivalente (igual) a ${frac(p, q)}?`, certo, errs, FG(X(`Multiplique o de cima e o de baixo pelo mesmo número: ${p} × ${k} = ${p * k} e ${q} × ${k} = ${q * k}. Fica ${certo}`), { tipo: 'barras_iguais', de: [p, q], para: [p * k, q * k] }));
 }
 function simplifique() {
   const [p, q] = pick([[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5], [1, 6]]); const k = int(2, 5);
@@ -216,6 +216,28 @@ function fracQtd(unit = true) {
     const e = unit && q === 2 && coin() ? `Quanto é a metade de ${N}?` : `Quanto é ${frac(p, q)} de ${N}?`;
     return Q(e, num(v), erradasNum(v, [N, v * 2, k, N - v, v + 1]), FG(X(p === 1 ? `Divida pelo de baixo: ${N} ÷ ${q} = ${v}` : `Divida pelo de baixo e multiplique pelo de cima: ${N} ÷ ${q} = ${k} e ${k} × ${p} = ${v}`), { tipo: 'parte_de', num: p, den: q, total: N }));
   };
+}
+// PROMPT-206: × e ÷ de frações — números pequenos e a resposta já irredutível (a forma sem simplificar nunca vira alternativa certa)
+function multFrac() {
+  for (let t = 0; ; t++) {
+    const b = int(2, 6), a = int(1, b - 1), d = int(2, 7), c = int(1, d - 1), n = a * c, m = b * d;
+    if (mdc(n, m) !== 1) continue;
+    const errs = erradasFrac(n, m, [[a + c, b + d], [a * d, b * c], [n, b + d], [n + 1, m], [n, m + 1]]);
+    if (errs.length < 3 && t < 200) continue;
+    return Q(`${frac(a, b)} × ${frac(c, d)}`, frac(n, m), errs, X(`Em cima com em cima: ${a} × ${c} = ${n}. Embaixo com embaixo: ${b} × ${d} = ${m}. Fica ${frac(n, m)}`));
+  }
+}
+function divFrac() {
+  for (let t = 0; ; t++) {
+    const b = int(2, 6), a = int(1, b - 1), d = int(2, 7), c = int(1, d - 1), n = a * d, m = b * c;
+    if (mdc(n, m) !== 1 || n === m) continue;
+    const cand = [[a * c, b * d], [b * c, a * d]];
+    if (a % c === 0 && b % d === 0) cand.push([a / c, b / d]);   // dividiu direto
+    cand.push([n + 1, m], [n, m + 1]);
+    const errs = erradasFrac(n, m, cand);
+    if (errs.length < 3 && t < 200) continue;
+    return Q(`${frac(a, b)} ÷ ${frac(c, d)}`, frac(n, m), errs, X(`Mantém a primeira, vira a segunda (${frac(c, d)} vira ${frac(d, c)}) e multiplica: ${frac(a, b)} × ${frac(d, c)} = ${frac(n, m)}`));
+  }
 }
 function comparaUnit() { const s = sample([2, 3, 4, 5, 6, 8, 10], 2).sort((a, b) => a - b); return Q('Qual é maior?', frac(1, s[0]), [frac(1, s[1])], FG(X(`Com o 1 em cima, quanto menos partes, maior cada pedaço: ${frac(1, s[0])} > ${frac(1, s[1])}`), { tipo: 'compara_fracoes', fracoes: [[1, s[0]], [1, s[1]]] })); }
 function pizza() { const t = pick([6, 8, 10, 12]), c = int(2, t - 1); return Q(`Uma pizza tem ${t} pedaços e comi ${c}. Que fração da pizza comi?`, frac(c, t), erradasFrac(c, t, [[t - c, t], [c, t - c], [t, c], [c + 1, t]]), FG(X(`Em cima, os pedaços que comi (${c}); embaixo, o total de pedaços (${t}): ${frac(c, t)}`), { tipo: 'pizza', n: t, comidos: c })); }
@@ -242,9 +264,9 @@ const M4 = {
   A: {
     treinador1: [equivalente, simplifique, simplifique, equivalente, simplifique],
     treinador2: [mesmaDen(), mesmaDen(true), mesmaDen(), mesmaDen(true), mesmaDen()],
-    treinador3: [fracQtd(), fracQtd(), fracQtd(), fracQtd(), fracQtd()],
-    lider: [comparaUnit, mesmaDen(), fracQtd(), pizza, simplifique],
-    revanche: [difDen, fracQtd(false), fracQtd(false)],
+    treinador3: [fracQtd(), multFrac, fracQtd(), multFrac, fracQtd()],   // PROMPT-206
+    lider: [comparaUnit, mesmaDen(), multFrac, pizza, divFrac],
+    revanche: [difDen, fracQtd(false), divFrac],
   },
   B: {
     treinador1: [DEC('+'), DEC('+'), DEC('+'), DEC('+'), DEC('+')],

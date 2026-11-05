@@ -474,11 +474,13 @@
           <ol class="jr-erro-passos" id="erro-passos"></ol>
           <!-- PROMPT-193: a lousa já abre sozinha, resolvendo só do jeito certo (sem animação: o texto "Como resolver" de cima) -->
           <div class="jr-erro-lousa" id="erro-lousa" aria-live="polite" hidden></div>
-          <div class="jr-erro-lousa jr-erro-quadro" id="erro-quadro" aria-live="polite" hidden></div><!-- PROMPT-205: o quadro do 4-B -->
-          <div class="jr-erro-linha" id="erro-linha-dica"><button class="jr-btn-relembre" id="erro-rep" title="Ver a animação de novo" aria-label="Ver a animação de novo" hidden>↺</button><button class="jr-btn-relembre" id="erro-relembre">📖 Relembre</button></div>
+          <div class="jr-erro-lousa jr-erro-quadro" id="erro-quadro" aria-live="polite" hidden></div><!-- PROMPT-205/206: o quadro do 4-A e do 4-B -->
+          <div class="jr-erro-linha" id="erro-linha-dica"><button class="jr-btn-relembre" id="erro-rep" title="Ver a animação de novo" aria-label="Ver a animação de novo" hidden>↺</button><span class="qd-vel" role="group" aria-label="Velocidade"><button type="button" data-vel="1" aria-pressed="true">1×</button><button type="button" data-vel="2" aria-pressed="false">2×</button><button type="button" data-vel="4" aria-pressed="false">4×</button></span><button class="jr-btn-relembre" id="erro-relembre">📖 Relembre</button></div>
         </div>
       </div>
       <div class="jr-erro-rodape"><span class="jr-erro-volta" id="erro-volta"></span><button class="jr-btn jr-btn-ouro" id="erro-continuar" disabled>Continuar ▶</button></div>
+      <!-- PROMPT-207: pulou essa página do resumo? o pet aparece pequeno no canto, brinca (no jeito dele) e sai -->
+      <div class="jr-erro-pulou" id="erro-pulou" hidden aria-live="polite"><div class="jr-erro-pulou-balao" id="erro-pulou-balao"></div><div class="jr-erro-pulou-pet"><img id="erro-pulou-img" alt="" draggable="false"/></div></div>
     </div>
   </div>
 
@@ -593,12 +595,12 @@
         <button class="bt-lista-x" id="aula-x" aria-label="Fechar">✕</button></div>
       <div class="aula-corpo">
         <div class="aula-lousa" id="aula-lousa" aria-live="polite"></div>
-        <div id="aula-quadro" aria-live="polite"></div><!-- PROMPT-205: o quadro de verdade (só o 4-B), sem pet e sem balão -->
+        <div id="aula-quadro" aria-live="polite"></div><!-- PROMPT-205/206: o quadro de verdade (4-A e 4-B), sem pet e sem balão -->
         <div class="aula-pet" id="aula-pet"><div class="aula-balao" id="aula-fala"></div><div class="aula-moldura"><img id="aula-pet-img" alt="" draggable="false"/></div></div>
       </div>
       <div class="aula-nav">
         <button class="jr-btn jr-btn-sec" id="aula-ant" aria-label="Página anterior">◀</button><span class="aula-n" id="aula-n"></span><button class="jr-btn jr-btn-sec" id="aula-prox" aria-label="Próxima página">▶</button>
-        <button class="jr-btn jr-btn-sec" id="aula-rep" aria-label="Ver de novo" title="Ver de novo">↺</button><button class="jr-btn jr-btn-sec" id="aula-pausa" aria-label="Pausar">⏸</button>
+        <button class="jr-btn jr-btn-sec" id="aula-rep" aria-label="Ver de novo" title="Ver de novo">↺</button><button class="jr-btn jr-btn-sec" id="aula-pausa" aria-label="Pausar">⏸</button><span class="qd-vel" role="group" aria-label="Velocidade"><button type="button" data-vel="1" aria-pressed="true">1×</button><button type="button" data-vel="2" aria-pressed="false">2×</button><button type="button" data-vel="4" aria-pressed="false">4×</button></span><!-- PROMPT-206: 1× 2× 4× (só no quadro do 4-A e do 4-B) -->
         <label class="jr-rel-check" id="aula-check"><input type="checkbox" id="aula-ocultar"/> Não mostrar de novo neste ginásio</label>
         <button class="jr-btn jr-btn-ouro" id="aula-ok">Bora!</button>
       </div>

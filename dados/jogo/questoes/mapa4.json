@@ -13,7 +13,7 @@
      "questoes": [
       {
        "id": "m4A-treinador1-1",
-       "enunciado": "Qual fração é igual a 1/2?",
+       "enunciado": "Qual fração é equivalente (igual) a 1/2?",
        "resposta": "2/4",
        "erradas": [
         "1/3",
@@ -76,7 +76,7 @@
       },
       {
        "id": "m4A-treinador1-4",
-       "enunciado": "Qual fração é igual a 1/3?",
+       "enunciado": "Qual fração é equivalente (igual) a 1/3?",
        "resposta": "2/6",
        "erradas": [
         "2/3",

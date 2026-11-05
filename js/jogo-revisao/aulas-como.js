@@ -189,6 +189,13 @@ function engano3b(q, sua) {
 
 // ── 4-A: frações — a figura que a pergunta já tem, com a conta (setas ×n / ÷n, os de cima somando, o de baixo fixo) ──
 function gin4a(q) {
+  // PROMPT-206: × e ÷ de frações (a lousa antiga, para o "▶ Ver como faz"; o cartão do erro usa o quadro)
+  const mx = /^(\d+)\/(\d+)\s*([×÷])\s*(\d+)\/(\d+)$/.exec(String(q.enunciado || '').trim());
+  if (mx) {
+    const [a, b, c, d] = [mx[1], mx[2], mx[4], mx[5]].map(Number), div = mx[3] === '÷', [x, y] = div ? [d, c] : [c, d];
+    return [{ t: 'linha', v: `${a}/${b} ${mx[3]} ${c}/${d}` }, ...(div ? [{ t: 'linha', v: `${a}/${b} × ${d}/${c}` }, { t: 'texto', v: 'Mantém a primeira, vira a segunda' }] : []),
+      { t: 'linha', v: `em cima: ${a} × ${x} = ${a * x}` }, { t: 'linha', v: `embaixo: ${b} × ${y} = ${b * y}` }, { t: 'linha', v: `${a * x}/${b * y}`, classe: 'certo' }];
+  }
   const f = q.figura;
   if (!f?.tipo) return null;
   switch (f.tipo) {
@@ -276,7 +283,10 @@ function gin4b(q) {
 }
 // 🧑‍🏫 PROMPT-205: o cartão do erro do 4-B usa o quadro escrito (quadro.js): as cenas com os números da questão (null = a lousa de antes)
 export function quadroComoFaz(chave, q) {
-  if (chave !== 'mapa4-B' || !q) return null;
+  if (!q) return null;
+  if (chave === 'mapa4-A') return quadro4a(q);   // PROMPT-206
+  if (chave === 'mapa5-A') return quadro5a(q);   // PROMPT-207
+  if (chave !== 'mapa4-B') return null;
   const en = String(q.enunciado || '').trim();
   const c = contaDec(q);
   if (c) {
@@ -297,6 +307,64 @@ export function quadroComoFaz(chave, q) {
     return ns.length === 2 ? [{ t: 'compara', v: ns }] : null;
   }
   return null;
+}
+// 🧑‍🏫 PROMPT-207: as cenas do quadro do 5-A (potências), pelo enunciado. Os expoentes vêm em sobrescrito (2³; deSup lá embaixo)
+const RP = '(\\d+)([⁰¹²³⁴⁵⁶⁷⁸⁹]+)';
+function cenaPot(b, n) {
+  if (n === 2 && b >= 1 && b <= 12) return { t: 'quadrado', b };
+  if (b === 10 && n >= 1 && n <= 6) return { t: 'dez', n };
+  if (b === 1 && n >= 2) return { t: 'umzero', casos: [[1, n]] };
+  if (n === 0 || n === 1) return { t: 'umzero', casos: [[b, n]] };
+  if (n >= 3 && n <= 6 && b >= 2 && b ** (n - 1) <= 99) return { t: 'cadeia', b, n };   // a armada vai até 2 algarismos × 1
+  return null;
+}
+function quadro5a(q) {
+  const en = limpa(q.enunciado);
+  let m = new RegExp(`^${RP}$`).exec(en);
+  if (m) { const c = cenaPot(Number(m[1]), deSup(m[2])); return c ? [c] : null; }
+  m = new RegExp(`^${RP} é o mesmo que:?$`).exec(en) || new RegExp(`^Na potência ${RP}, qual número é a base`).exec(en);
+  if (m) { const n = deSup(m[2]); return n >= 1 && n <= 6 ? [{ t: 'potencia', b: Number(m[1]), n, leitura: false }] : null; }
+  m = /^(\d+)((?: × \d+)+) em forma de potência:?$/.exec(en);
+  if (m) { const fs = [m[1], ...m[2].split(' × ').filter(Boolean)]; return fs.every(f => f === m[1]) && fs.length <= 6 ? [{ t: 'virapot', b: Number(m[1]), n: fs.length }] : null; }
+  m = new RegExp(`^${RP} ([+−-]) ${RP}$`).exec(en);
+  if (m) return [{ t: 'naconta', a: Number(m[1]), n: deSup(m[2]), op: m[3] === '+' ? '+' : '−', b: Number(m[4]), m: deSup(m[5]) }];
+  return null;
+}
+// 🧑‍🏫 PROMPT-207: a página do resumo (da Aula) de cada tipo de questão, pelas cenas do cartão do erro (1 = a primeira; 0 = nenhuma)
+export function paginaResumo(chave, cenas, q) {
+  const c = cenas?.[0];
+  if (!c) return 0;
+  if (chave === 'mapa4-A') return { fracao: 1, equiv: 2, simplif: 3, compunit: 6, dendif: 7, multfr: 8, partede: 9, divfr: 10 }[c.t] || (c.t === 'mesmoden' ? (c.op === '+' ? 4 : 5) : 0);
+  if (chave === 'mapa4-B') {
+    if (c.t === 'armada') return c.op === '+' ? (/R\$/.test(String(q?.enunciado || '')) || casasDe(c.a) !== casasDe(c.b) ? 2 : 1) : 3;
+    if (c.t === 'mult') return casasDe(c.a) && casasDe(c.b) ? 5 : 6;
+    return { compara: 4, fracdec: 7, divk: 7, decfrac: 8 }[c.t] || 0;
+  }
+  if (chave === 'mapa5-A') {
+    if (c.t === 'cadeia') return c.n === 3 ? 3 : 4;
+    return { potencia: 1, quadrado: 2, virapot: 5, dez: 6, umzero: 7, naconta: 8 }[c.t] || 0;
+  }
+  return 0;
+}
+// PROMPT-206: as cenas do quadro do 4-A, pela figura da questão (ou pelo enunciado: × e ÷ de frações)
+function quadro4a(q) {
+  const en = String(q.enunciado || '').trim(), f = q.figura;
+  const mx = /^(\d+)\/(\d+)\s*([×÷])\s*(\d+)\/(\d+)$/.exec(en);
+  if (mx) { const [a, b, c, d] = [mx[1], mx[2], mx[4], mx[5]].map(Number); return [{ t: mx[3] === '×' ? 'multfr' : 'divfr', a, b, c, d }]; }
+  if (!f?.tipo) return null;
+  switch (f.tipo) {
+    case 'barras_iguais': { const k = f.para[0] / f.de[0]; return Number.isInteger(k) && f.para[1] === f.de[1] * k ? [{ t: 'equiv', a: f.de[0], b: f.de[1], k }] : null; }
+    case 'simplificar': return [{ t: 'simplif', n: f.fr[0], d: f.fr[1] }];
+    case 'soma_fracao': {
+      const [a, d] = f.a, [b, db] = f.b, op = f.op === '−' ? '−' : '+';
+      if (d === db) { const r = op === '+' ? a + b : a - b; return [{ t: 'mesmoden', a, b, d, op, simplifica: !!f.res && (f.res[0] !== r || f.res[1] !== d) }]; }
+      return op === '+' ? [{ t: 'dendif', p: a, a: d, r: b, b: db }] : null;
+    }
+    case 'parte_de': return [{ t: 'partede', p: f.num, q: f.den, N: f.total, metade: /metade/i.test(en) }];
+    case 'compara_fracoes': { const fr = f.fracoes || []; return fr.length === 2 && fr.every(x => x[0] === 1) ? [{ t: 'compunit', a: fr[0][1], b: fr[1][1] }] : null; }
+    case 'pizza': return [{ t: 'fracao', n: f.comidos, d: f.n, pizza: true }];
+    default: return null;
+  }
 }
 function engano4b(q, sua) {
   const v = numero(sua), c = contaDec(q);

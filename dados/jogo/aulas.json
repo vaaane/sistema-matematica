@@ -1,15 +1,15 @@
 {
- "_nota": "Aula do pet na entrada dos ginásios (PROMPT-185). aulas.{chave}.paginas: cada página = uma fala do pet + uma animação na lousa (js/jogo-revisao/lousa.js: linha, enunciado, marca, resolve, expressao, seta, texto, armada, divisao, reta, virgula, escada, tabela, acende, figura, fracao, fracoes, barras, compara, pausa). PROMPT-191: cada página resolve a conta inteira (as linhas ficam na lousa) e a fala explica a conta toda; as pegadinhas usam 'compara' (✖ jeito errado × ✔ jeito certo, lado a lado). PROMPT-196: texto = a fala, bem curta (máx. ~10 palavras: a lousa já mostra a conta, a fala só aponta o que olhar); o jeito do pet entra só como uma palavrinha antes, sorteada de jeito.{pet}.abre (máx. 3 palavras). PROMPT-197: ginásios 5-A a 8-B; passos novos na lousa: grade100 (100 quadradinhos, n pintados) e acende com soma (as de antes continuam acesas) e ms. PROMPT-198: a fala só com a regra (os números ficam na lousa); compara em duas etapas (o ✔ certo primeiro, depois o ✖ errado entra à esquerda); barras com mais de 20 partes enchem como uma barra contínua. PROMPT-200: escreve (frases que ficam embaixo da conta; n: numerada; cor: certo/aviso/errado), zeros (zeros que entram no fim), contazeros; virgula com surge/casas 0/frases/fim; as contas, a vírgula, a escada e as expressões escrevem as próprias frases (frases: false desliga). Uma ideia por página. PROMPT-201: bloco (título \"1º …\": os passos seguintes desenham dentro dele; até 3 por página), casas (as casas depois da vírgula acendem numeradas), semvirgula; as frases e legendas vão para o balão do pet; a fala da página é o título no alto da lousa; no compara o certo fica à esquerda. PROMPT-202: tabuada (a tabuada na lateral: op/a/b ou b/procura; nas expressões entra sozinha no × e ÷ de tabuada), lese (o nome do símbolo no canto), palavras (o problema com as palavras-chave virando conta), caixinhas; página pode ter \"titulo\" (a regra no alto da lousa) diferente da fala; armada/× com vírgula: n0 = o número do 1º bloco. PROMPT-203: escondido (a parte escondida surge piscando), lateral (tabela fixa ao lado: a tradução do 8-A), tabuada com quadrados/alvo/col 2, bolinhas, algarismos, termos (com cores), perimetro; grade100 com faixas e riscados. PROMPT-204: aula com \"layout\": \"v2\" (por enquanto só o 4-B): sem título, o pet dentro da lousa e o balão como faixa embaixo; comparadec; armada/× com blocos: false (o zero entra dentro da conta); a vírgula deixa rastro. PROMPT-205: \"layout\": \"quadro\" (só o 4-B): cada página tem \"quadro\": [cenas] (quadro.js: armada, mult, compara, fracdec, divk, decfrac), sem pet e sem balão; \"lousa\" fica de reserva.",
+ "_nota": "Aula do pet na entrada dos ginásios (PROMPT-185). aulas.{chave}.paginas: cada página = uma fala do pet + uma animação na lousa (js/jogo-revisao/lousa.js: linha, enunciado, marca, resolve, expressao, seta, texto, armada, divisao, reta, virgula, escada, tabela, acende, figura, fracao, fracoes, barras, compara, pausa). PROMPT-191: cada página resolve a conta inteira (as linhas ficam na lousa) e a fala explica a conta toda; as pegadinhas usam 'compara' (✖ jeito errado × ✔ jeito certo, lado a lado). PROMPT-196: texto = a fala, bem curta (máx. ~10 palavras: a lousa já mostra a conta, a fala só aponta o que olhar); o jeito do pet entra só como uma palavrinha antes, sorteada de jeito.{pet}.abre (máx. 3 palavras). PROMPT-197: ginásios 5-A a 8-B; passos novos na lousa: grade100 (100 quadradinhos, n pintados) e acende com soma (as de antes continuam acesas) e ms. PROMPT-198: a fala só com a regra (os números ficam na lousa); compara em duas etapas (o ✔ certo primeiro, depois o ✖ errado entra à esquerda); barras com mais de 20 partes enchem como uma barra contínua. PROMPT-200: escreve (frases que ficam embaixo da conta; n: numerada; cor: certo/aviso/errado), zeros (zeros que entram no fim), contazeros; virgula com surge/casas 0/frases/fim; as contas, a vírgula, a escada e as expressões escrevem as próprias frases (frases: false desliga). Uma ideia por página. PROMPT-201: bloco (título \"1º …\": os passos seguintes desenham dentro dele; até 3 por página), casas (as casas depois da vírgula acendem numeradas), semvirgula; as frases e legendas vão para o balão do pet; a fala da página é o título no alto da lousa; no compara o certo fica à esquerda. PROMPT-202: tabuada (a tabuada na lateral: op/a/b ou b/procura; nas expressões entra sozinha no × e ÷ de tabuada), lese (o nome do símbolo no canto), palavras (o problema com as palavras-chave virando conta), caixinhas; página pode ter \"titulo\" (a regra no alto da lousa) diferente da fala; armada/× com vírgula: n0 = o número do 1º bloco. PROMPT-203: escondido (a parte escondida surge piscando), lateral (tabela fixa ao lado: a tradução do 8-A), tabuada com quadrados/alvo/col 2, bolinhas, algarismos, termos (com cores), perimetro; grade100 com faixas e riscados. PROMPT-204: aula com \"layout\": \"v2\" (por enquanto só o 4-B): sem título, o pet dentro da lousa e o balão como faixa embaixo; comparadec; armada/× com blocos: false (o zero entra dentro da conta); a vírgula deixa rastro. PROMPT-205: \"layout\": \"quadro\" (só o 4-B): cada página tem \"quadro\": [cenas] (quadro.js: armada, mult, compara, fracdec, divk, decfrac), sem pet e sem balão; \"lousa\" fica de reserva. PROMPT-206: o 4-A e o 4-B com \"layout\": \"v2\" e \"quadro\" em todas as páginas (quadro.js: o quadro escrito, sem pet e sem balão); o 4-A em 10 páginas (protótipo referencia/lousa-4a.html), o 4-B em 8.",
  "jeito": {
-  "gato": {"abre": ["Hmm…", "Olha só:", "Presta atenção:"]},
-  "tigre": {"abre": ["FOCO!", "Bora, campeão!", "Olha só!"]},
-  "capivara": {"abre": ["Calma…", "Sem pressa:", "Devagar:"]},
-  "gaviao": {"abre": ["Mira aqui:", "Do alto:", "Olha:"]},
-  "axolote": {"abre": ["Uiii!", "Psiu!", "Olha que legal:"]},
-  "unicornio": {"abre": ["✨ Olha:", "Que mágico:", "Repara:"]},
-  "morcego": {"abre": ["Escuta:", "Meu eco diz:", "Psst:"]},
-  "dragao_vermelho": {"abre": ["Aprendiz!", "Escuta o dragão:", "Atenção:"]},
-  "elefante": {"abre": ["Lembra:", "Anota aí:", "Guarda isso:"]}
+  "gato": {"abre": ["Hmm…", "Olha só:", "Presta atenção:"], "pulou": "Hmm… acho que alguém pulou essa parte do resumo 😼"},
+  "tigre": {"abre": ["FOCO!", "Bora, campeão!", "Olha só!"], "pulou": "FOCO! Essa parte do resumo você pulou!"},
+  "capivara": {"abre": ["Calma…", "Sem pressa:", "Devagar:"], "pulou": "Calma… você passou correndo por essa página."},
+  "gaviao": {"abre": ["Mira aqui:", "Do alto:", "Olha:"], "pulou": "Do alto eu vi: essa página do resumo você pulou!"},
+  "axolote": {"abre": ["Uiii!", "Psiu!", "Olha que legal:"], "pulou": "Uiii! Essa parte do resumo ficou para trás!"},
+  "unicornio": {"abre": ["✨ Olha:", "Que mágico:", "Repara:"], "pulou": "✨ Essa página do resumo passou voando… vamos ver juntos?"},
+  "morcego": {"abre": ["Escuta:", "Meu eco diz:", "Psst:"], "pulou": "Psst… meu eco diz que você pulou essa página."},
+  "dragao_vermelho": {"abre": ["Aprendiz!", "Escuta o dragão:", "Atenção:"], "pulou": "Aprendiz! Essa página do resumo você pulou!"},
+  "elefante": {"abre": ["Lembra:", "Anota aí:", "Guarda isso:"], "pulou": "Eu lembro: essa página do resumo você pulou!"}
  },
  "aulas": {
   "mapa1-A": {
@@ -280,59 +280,53 @@
   },
   "mapa4-A": {
    "titulo": "Frações",
+   "layout": "v2",
    "paginas": [
     {
-     "texto": "Em cima: pintadas. Embaixo: partes do inteiro.",
-     "lousa": [{"t": "barras", "fr": [[1, 4]], "rotulos": [""]}, {"t": "fracao", "p": 1, "q": 4, "explica": true}, {"t": "escreve", "v": "Embaixo: em quantas partes iguais o inteiro foi dividido (4)."}, {"t": "escreve", "v": "Em cima: quantas partes estão pintadas (1)."}, {"t": "escreve", "v": "1/4 = 1 parte de 4.", "cor": "certo"}]
+     "texto": "O que é fração",
+     "quadro": [{"t": "fracao", "n": 3, "d": 8}]
     },
     {
-     "texto": "Embaixo, o nome; em cima, quantos!",
-     "titulo": "Como se lê",
-     "lousa": [{"t": "barras", "fr": [[1, 2], [1, 3], [1, 4], [3, 4], [2, 5], [7, 10]], "rotulos": ["1/2 um meio", "1/3 um terço", "1/4 um quarto", "3/4 três quartos", "2/5 dois quintos", "7/10 sete décimos"]}, {"t": "lese", "s": "1/4", "v": "um quarto"}, {"t": "escreve", "v": "O de baixo diz o nome do pedaço."}, {"t": "escreve", "v": "O de cima diz quantos pedaços."}]
+     "texto": "Frações equivalentes",
+     "quadro": [{"t": "equiv", "a": 2, "b": 3, "k": 3}]
     },
     {
-     "texto": "× em cima e embaixo: vale o mesmo!",
-     "lousa": [{"t": "fracoes", "fr": [[1, 2], [2, 4], [4, 8]], "op": "×"}, {"t": "barras", "fr": [[1, 2], [2, 4], [4, 8]]}, {"t": "texto", "v": "em cima e embaixo, o mesmo ×"}, {"t": "escreve", "v": "1/2 com × 2 em cima e embaixo = 2/4", "n": true}, {"t": "escreve", "v": "2/4 com × 2 em cima e embaixo = 4/8", "n": true}, {"t": "escreve", "v": "As barras mostram: é o mesmo tanto!", "cor": "certo"}]
+     "texto": "Simplificar",
+     "quadro": [{"t": "simplif", "n": 12, "d": 18}]
     },
     {
-     "texto": "Simplificar: ÷ em cima e embaixo.",
-     "lousa": [{"t": "bloco", "titulo": "1º Acha um número que divide os dois"}, {"t": "tabuada", "b": 2, "procura": [6, 12]}, {"t": "escreve", "v": "6 e 12 estão na tabuada do 2? Sim! Divide os dois por 2."}, {"t": "bloco", "titulo": "2º Divide em cima e embaixo"}, {"t": "fracoes", "fr": [[6, 12], [3, 6], [1, 2]], "op": "÷", "k": [2, 3]}, {"t": "barras", "fr": [[6, 12], [1, 2]]}, {"t": "texto", "v": "divida até não dar mais"}, {"t": "escreve", "v": "6/12 com ÷ 2 em cima e embaixo = 3/6", "n": true}, {"t": "escreve", "v": "3/6 com ÷ 3 em cima e embaixo = 1/2", "n": true}, {"t": "escreve", "v": "6/12 = 1/2", "cor": "certo", "n": true}]
+     "texto": "Somar",
+     "quadro": [{"t": "mesmoden", "a": 2, "b": 3, "d": 7, "op": "+", "pegadinha": true}]
     },
     {
-     "texto": "Mesmo embaixo? Soma só os de cima.",
-     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "1/5 + 2/5"}, {"t": "texto", "v": "somou os de baixo também"}, {"t": "linha", "v": "3/10"}]}, "dir": {"passos": [{"t": "linha", "v": "1/5 + 2/5"}, {"t": "barras", "fr": [[1, 5], [2, 5], [3, 5]]}, {"t": "linha", "v": "3/5"}]}}, {"t": "texto", "v": "O de baixo fica igual"}, {"t": "escreve", "v": "O de baixo fica igual: 1 + 2 = 3 → 3/5", "cor": "certo"}, {"t": "escreve", "v": "Somar os de baixo também (3/10) está errado!", "cor": "errado"}]
+     "texto": "Subtrair e simplificar",
+     "quadro": [{"t": "mesmoden", "a": 6, "b": 2, "d": 8, "op": "−", "simplifica": true}]
     },
     {
-     "texto": "Subtrai em cima e simplifica.",
-     "lousa": [{"t": "linha", "v": "5/6 − 1/6"}, {"t": "linha", "v": "5/6 − 1/6 = 4/6"}, {"t": "fracoes", "fr": [[4, 6], [2, 3]], "op": "÷"}, {"t": "texto", "v": "Depois simplifica"}, {"t": "escreve", "v": "O de baixo fica: 5 − 1 = 4 → 4/6", "n": true}, {"t": "escreve", "v": "Simplifica com ÷ 2: 4/6 = 2/3", "cor": "certo", "n": true}]
+     "texto": "Qual é maior?",
+     "quadro": [{"t": "compunit", "a": 3, "b": 5}]
     },
     {
-     "texto": "Embaixo diferente? Iguala primeiro!",
-     "titulo": "Embaixo diferente? Iguala primeiro!",
-     "lousa": [{"t": "linha", "v": "1/2 + 1/4"}, {"t": "barras", "fr": [[1, 2], [1, 4]]}, {"t": "escreve", "v": "Pedaços de tamanhos diferentes não somam direto."}, {"t": "bloco", "titulo": "1º Procura o 4 na tabuada do 2"}, {"t": "tabuada", "b": 2, "procura": [4]}, {"t": "escreve", "v": "Quero o 2 virando 4: 2 × 2 = 4."}, {"t": "bloco", "titulo": "2º Multiplica em cima e embaixo"}, {"t": "fracoes", "fr": [[1, 2], [2, 4]], "op": "×"}, {"t": "barras", "fr": [[1, 2], [2, 4]]}, {"t": "escreve", "v": "O que faz embaixo, faz em cima: 1/2 = 2/4."}]
+     "texto": "Embaixo diferente",
+     "quadro": [{"t": "dendif", "p": 1, "a": 2, "r": 1, "b": 4}]
     },
     {
-     "texto": "Agora sim: soma os de cima!",
-     "titulo": "Agora soma",
-     "lousa": [{"t": "linha", "v": "2/4 + 1/4"}, {"t": "barras", "fr": [[2, 4], [1, 4], [3, 4]]}, {"t": "escreve", "v": "Agora os de baixo são iguais."}, {"t": "escreve", "v": "Soma só os de cima: 2 + 1 = 3."}, {"t": "linha", "v": "1/2 + 1/4 = 3/4", "classe": "certo"}]
+     "texto": "Multiplicar",
+     "quadro": [{"t": "multfr", "a": 2, "b": 3, "c": 4, "d": 5}]
     },
     {
-     "texto": "Fração de um número: divide pelo de baixo.",
-     "lousa": [{"t": "figura", "figura": {"tipo": "parte_de", "num": 1, "den": 4, "total": 20}}, {"t": "tabuada", "op": "÷", "a": 20, "b": 4}, {"t": "linha", "v": "20 ÷ 4 = 5", "classe": "certo"}, {"t": "escreve", "v": "1/4 de 20: separa 20 em 4 grupos iguais.", "n": true}, {"t": "escreve", "v": "20 ÷ 4 = 5", "cor": "certo", "n": true}, {"t": "linha", "v": "metade de 20 = 1/2 de 20 = 20 ÷ 2"}, {"t": "escreve", "v": "Metade de 20 = 1/2 de 20 = 20 ÷ 2 = 10."}]
+     "texto": "3/4 de 20",
+     "quadro": [{"t": "partede", "p": 3, "q": 4, "N": 20, "anterior": true, "regras": ["Divide pelo de baixo, multiplica pelo de cima.", "Sem número embaixo? É 1: 20 = 20/1.", "Metade de 20 = 1/2 de 20 = 20 ÷ 2"]}]
     },
     {
-     "texto": "Divide pelo de baixo, multiplica pelo de cima.",
-     "lousa": [{"t": "escreve", "v": "3/4 de 20: divide pelo de baixo (4) e multiplica pelo de cima (3)."}, {"t": "figura", "figura": {"tipo": "parte_de", "num": 3, "den": 4, "total": 20}}, {"t": "expressao", "v": "20 ÷ 4 × 3"}]
-    },
-    {
-     "texto": "Mais partes, pedaço menor!",
-     "lousa": [{"t": "figura", "figura": {"tipo": "compara_fracoes", "fracoes": [[1, 3], [1, 5]]}}, {"t": "linha", "v": "1/3 > 1/5", "classe": "certo"}, {"t": "escreve", "v": "1/3: o inteiro dividido em 3 pedaços."}, {"t": "escreve", "v": "1/5: dividido em 5 pedaços, menores."}, {"t": "escreve", "v": "1/3 > 1/5", "cor": "certo"}]
+     "texto": "Dividir",
+     "quadro": [{"t": "divfr", "a": 2, "b": 3, "c": 4, "d": 5}]
     }
    ]
   },
   "mapa4-B": {
    "titulo": "Decimais",
-   "layout": "quadro",
+   "layout": "v2",
    "paginas": [
     {
      "texto": "Vírgula embaixo de vírgula!",
@@ -370,16 +364,6 @@
      "lousa": [{"t": "escondido", "v": "1/2", "mostra": "1 ÷ 2", "onde": 1, "fala": "O tracinho da fração é uma divisão: 1 ÷ 2."}, {"t": "divisao", "a": 1, "b": 2, "casas": 1}]
     },
     {
-     "texto": "Sobrou? Põe zero e continua!",
-     "quadro": [{"t": "fracdec", "p": 3, "d": 4, "regras": ["Sobrou? Põe zero e continua!"]}],
-     "lousa": [{"t": "escondido", "v": "3/4", "mostra": "3 ÷ 4", "onde": 1, "fala": "3/4 é 3 ÷ 4."}, {"t": "divisao", "a": 3, "b": 4, "casas": 2}]
-    },
-    {
-     "texto": "Conta os zeros!",
-     "quadro": [{"t": "divk", "p": 7, "k": 10}],
-     "lousa": [{"t": "escondido", "v": "7/10", "mostra": "7 ÷ 10", "onde": 1, "fala": "7/10 é 7 ÷ 10."}, {"t": "virgula", "v": "7", "op": "÷", "k": 10}]
-    },
-    {
      "texto": "Uma casa é dez, duas casas é cem!",
      "quadro": [{"t": "decfrac", "v": ["0,3", "0,25"], "regras": ["1 casa é 10, 2 casas é 100!"]}],
      "lousa": [{"t": "casas", "v": ["0,3"]}, {"t": "escreve", "v": "0,3: 1 casa depois da vírgula. Embaixo vai 10: 3/10."}, {"t": "linha", "v": "0,3 = 3/10", "classe": "certo"}, {"t": "casas", "v": ["0,25"]}, {"t": "escreve", "v": "0,25: 2 casas. Embaixo vai 100: 25/100."}, {"t": "linha", "v": "0,25 = 25/100"}, {"t": "tabuada", "b": 25, "procura": [100]}, {"t": "escreve", "v": "Dá para simplificar? 25 e 100 dividem por 25."}, {"t": "fracoes", "fr": [[25, 100], [1, 4]], "op": "÷", "k": 25}, {"t": "linha", "v": "25/100 = 1/4", "classe": "certo"}]
@@ -388,47 +372,39 @@
   },
   "mapa5-A": {
    "titulo": "Potências",
+   "layout": "v2",
    "paginas": [
     {
-     "texto": "Base embaixo, expoente em cima!",
-     "titulo": "Base e expoente",
-     "lousa": [{"t": "linha", "v": "2³"}, {"t": "escreve", "v": "O número grande é a base."}, {"t": "escreve", "v": "O numerinho em cima é o expoente."}, {"t": "escreve", "v": "Ele diz quantas vezes a base aparece."}, {"t": "lese", "s": "³", "v": "ao cubo"}, {"t": "lese", "s": "²", "v": "ao quadrado"}, {"t": "linha", "v": "2³: dois ao cubo"}, {"t": "linha", "v": "5²: cinco ao quadrado"}, {"t": "linha", "v": "2⁴: dois elevado a quatro"}]
+     "texto": "O que é potência",
+     "quadro": [{"t": "potencia", "b": 2, "n": 3}]
     },
     {
-     "texto": "Potência é multiplicar o número por ele mesmo.",
-     "lousa": [{"t": "linha", "v": "2³"}, {"t": "bloco", "titulo": "1º Escreve a base 3 vezes"}, {"t": "linha", "v": "2 × 2 × 2"}, {"t": "escreve", "v": "1, 2, 3: o 2 aparece 3 vezes."}, {"t": "bloco", "titulo": "2º Multiplica de dois em dois"}, {"t": "expressao", "v": "2 × 2 × 2"}]
+     "texto": "Ao quadrado",
+     "quadro": [{"t": "quadrado", "b": 5}]
     },
     {
-     "texto": "O expoente diz quantas vezes.",
-     "lousa": [{"t": "linha", "v": "5²"}, {"t": "expressao", "v": "5 × 5"}, {"t": "texto", "v": "O de cima diz quantas vezes"}]
+     "texto": "Ao cubo",
+     "quadro": [{"t": "cadeia", "b": 2, "n": 3}]
     },
     {
-     "texto": "Pegadinha: não é base × expoente!",
-     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "2³"}, {"t": "linha", "v": "2 × 3"}, {"t": "linha", "v": "6"}]}, "dir": {"passos": [{"t": "linha", "v": "2³"}, {"t": "expressao", "v": "2 × 2 × 2"}]}}, {"t": "texto", "v": "A base se repete"}, {"t": "escreve", "v": "2³ é 2 × 2 × 2 = 8, não 2 × 3!", "cor": "errado"}]
+     "texto": "Expoente maior",
+     "quadro": [{"t": "cadeia", "b": 3, "n": 4}]
     },
     {
-     "texto": "Conta quantas vezes repete!",
-     "titulo": "De multiplicação para potência",
-     "lousa": [{"t": "linha", "v": "3 × 3 × 3 × 3"}, {"t": "escreve", "v": "Qual número se repete? O 3: é a base."}, {"t": "escreve", "v": "Quantas vezes? 4: é o expoente."}, {"t": "linha", "v": "3 × 3 × 3 × 3 = 3⁴", "classe": "certo"}]
+     "texto": "Multiplicação vira potência",
+     "quadro": [{"t": "virapot", "b": 4, "n": 3}]
     },
     {
-     "texto": "Um vezes um é sempre um!",
-     "titulo": "1 elevado a qualquer coisa",
-     "lousa": [{"t": "linha", "v": "1⁵"}, {"t": "linha", "v": "1 × 1 × 1 × 1 × 1"}, {"t": "linha", "v": "1⁵ = 1", "classe": "certo"}, {"t": "escreve", "v": "1 vezes 1 dá sempre 1."}, {"t": "escreve", "v": "Por isso 1 elevado a qualquer número é 1."}]
+     "texto": "Potência de 10",
+     "quadro": [{"t": "dez", "n": 3, "n2": 5}]
     },
     {
-     "texto": "Potência primeiro!",
-     "titulo": "Primeiro as potências, depois o + e o −",
-     "lousa": [{"t": "linha", "v": "2³ + 3²"}, {"t": "escreve", "v": "Potência vem antes de tudo."}, {"t": "bloco", "titulo": "1º 2³"}, {"t": "expressao", "v": "2 × 2 × 2"}, {"t": "bloco", "titulo": "2º 3²"}, {"t": "expressao", "v": "3 × 3"}, {"t": "bloco", "titulo": "3º Soma"}, {"t": "linha", "v": "8 + 9 = 17", "classe": "certo"}]
+     "texto": "Elevado a 1 e a 0",
+     "quadro": [{"t": "umzero", "casos": [[7, 1], [7, 0], [1, 5]], "regras": ["Elevado a 1: o próprio número.", "Elevado a 0: dá 1."]}]
     },
     {
-     "texto": "Expoente não multiplica a base!",
-     "titulo": "Pegadinha: potência dentro da conta",
-     "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "2³ + 3²"}, {"t": "linha", "v": "2 × 3 + 3 × 2"}, {"t": "linha", "v": "12"}]}, "dir": {"passos": [{"t": "linha", "v": "2³ + 3²"}, {"t": "linha", "v": "8 + 9"}, {"t": "linha", "v": "17"}]}}, {"t": "escreve", "v": "Expoente não multiplica a base!", "cor": "errado"}]
-    },
-    {
-     "texto": "Potência de 10: conta os zeros!",
-     "lousa": [{"t": "linha", "v": "10⁴"}, {"t": "linha", "v": "10 × 10 × 10 × 10"}, {"t": "linha", "v": "4 zeros"}, {"t": "linha", "v": "10000", "classe": "certo"}, {"t": "escreve", "v": "O expoente do 10 diz quantos zeros."}]
+     "texto": "Potência na conta",
+     "quadro": [{"t": "naconta", "a": 2, "n": 3, "op": "+", "b": 3, "m": 2}]
     }
    ]
   },

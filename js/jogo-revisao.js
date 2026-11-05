@@ -7,8 +7,8 @@ import { db } from '/js/firebase-config.js';
 import { ref, get, update, push, set, remove, increment, onValue, onChildAdded, onChildChanged, onChildRemoved, runTransaction, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { prepararFoto, analisarMoldura } from '/js/jogo-revisao/exposicao-img.js';
 import { criarLousa } from '/js/jogo-revisao/lousa.js';
-import { comoFaz, dicaCurta, quadroComoFaz } from '/js/jogo-revisao/aulas-como.js';
-import { criarQuadro } from '/js/jogo-revisao/quadro.js';
+import { comoFaz, dicaCurta, quadroComoFaz, paginaResumo } from '/js/jogo-revisao/aulas-como.js';
+import { criarQuadro, mudarVelocidade, velocidade } from '/js/jogo-revisao/quadro.js';
 import { urlSprite as spriteComCor, coresValidas, semCor, CORES_CABELO, CORES_BLUSA, CORES_DIVERTIDAS, PRECO_COR_DIVERTIDA, NOME_COR } from '/js/jogo-revisao/cores-pers.js';
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE, ALUNOS_POR_TURMA, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
@@ -14453,7 +14453,7 @@ function mostrarPlanoPergunta(q) {
   if (!tem) pgPlano = null;
 }
 
-let erroComoFaz = null, erroLousa = null, erroCenas = null, erroQuadro = null;
+let erroComoFaz = null, erroLousa = null, erroCenas = null, erroQuadro = null, erroPag = null, erroPulouT = 0;
 function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   const passos = passosDe(q.explicacao);
   const ultimo = passos[passos.length - 1] || '';
@@ -14475,14 +14475,25 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   // PROMPT-193: a lousa (aulas-como.js) já abre sozinha, só com o jeito certo; não deu para montar → os passos em texto
   erroLousa?.cancelar(); erroQuadro?.cancelar();
   erroComoFaz = comoFazDe(q);
-  erroCenas = quadroDe(q);   // 🧑‍🏫 PROMPT-205: o 4-B usa o quadro escrito (sem pet, sem balão, sem a 💡)
+  erroCenas = quadroDe(q);   // 🧑‍🏫 PROMPT-205/206/207: o 4-A, o 4-B e o 5-A usam o quadro escrito (sem pet, sem balão, sem a 💡)
   const comQuadro = !!erroCenas, comLousa = comQuadro || !!erroComoFaz?.length;
+  // 🧑‍🏫 PROMPT-207: o quadro é a página do resumo daquele tipo, com os números da questão. Pulou essa página (ou nunca viu)?
+  // o pet brinca no canto e o Continuar só aparece no fim da animação; já leu: Continuar liberado e o link para o resumo todo
+  const nPag = comQuadro ? paginaResumo(rel, erroCenas, q) : 0;
+  const leu = !!nPag && estado?.relembre?.[rel]?.paginas?.[nPag] === 'lida';
+  erroPag = nPag ? { chave: rel, n: nPag, pendente: !leu } : null;
+  esconderPetPulou();
+  $('erro-relembre').textContent = nPag && leu ? '📖 Ver o resumo todo de novo' : '📖 Relembre';
+  if (nPag) $('erro-relembre').hidden = !(leu && aulaDe(rel));
+  $('erro-relembre').classList.toggle('discreto', !!nPag);
   $('erro-tit').hidden = comLousa;
   $('erro-passos').hidden = comLousa;
   $('erro-lousa').hidden = !comLousa || comQuadro;
   $('erro-quadro').hidden = !comQuadro;
   $('erro-rep').hidden = !comLousa;
   $('perg-erro').classList.toggle('com-lousa', comLousa);
+  $('perg-erro').classList.toggle('com-quadro', comQuadro);
+  if (comQuadro) marcarVelocidade();
   if (comQuadro) { petDaDica('', false); $('erro-dica').hidden = true; }
   else petDaDica(mostraDica ? dica : '', comLousa);   // 🐾 PROMPT-199/201: o pet dá a dica e explica a lousa no balão
   $('erro-linha-dica').hidden = $('erro-relembre').hidden && !comLousa;
@@ -14504,11 +14515,19 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
     setTimeout(() => { if (erroPlano === ep) animarRespostaPlano(ep, q).catch(() => {}); }, 450);
   }
   const b = $('erro-continuar');
+  b.hidden = false;
   $('perg-erro').hidden = false;
+  if (comQuadro && erroPag?.pendente) {   // PROMPT-207: pulou a página do resumo → o Continuar espera o fim (2× e 4× valem)
+    b.hidden = true; b.disabled = true;
+    mostrarPetPulou();
+    erroQuadro ||= criarQuadro($('erro-quadro'));
+    tocarErroQuadro();
+    return;
+  }
   if (comLousa) {   // PROMPT-193: o Continuar já vem liberado; a animação toca uma vez (↺ repete)
     b.disabled = false;
     b.focus({ preventScroll: true });
-    if (comQuadro) { erroQuadro ||= criarQuadro($('erro-quadro')); erroQuadro.tocar(erroCenas); return; }
+    if (comQuadro) { erroQuadro ||= criarQuadro($('erro-quadro')); tocarErroQuadro(); return; }
     erroLousa ||= criarLousa($('erro-lousa'), { aoFalar: (v) => digitar($('erro-balao'), v) });
     tocarLousaErro();
     return;
@@ -14644,8 +14663,49 @@ function petDaDica(dica, comLousa = false) {
   digitar($('erro-balao'), erroFala);
 }
 
+// 🧑‍🏫 PROMPT-207: o quadro do cartão do erro; chegou ao fim (em qualquer velocidade): a página do resumo conta como lida
+function tocarErroQuadro() {
+  const cs = erroCenas;
+  if (!cs || !erroQuadro) return;
+  erroQuadro.tocar(cs).then((ok) => {
+    if (!ok || erroCenas !== cs || $('perg-erro').hidden || !erroPag?.pendente) return;
+    erroPag.pendente = false;
+    marcarPaginaResumo(erroPag.chave, erroPag.n, 'lida');
+    const b = $('erro-continuar');
+    b.hidden = false; b.disabled = false;
+    b.focus({ preventScroll: true });
+  });
+}
+// o pet ativo, pequeno no canto do cartão, brinca que o aluno pulou essa página do resumo (no jeito dele) e depois sai
+function mostrarPetPulou() {
+  const pet = petsOk && estado?.pets?.ativo;
+  if (!pet) return;
+  const img = $('erro-pulou-img'), forma = formaDe(pet), busto = ehFormaAdulta(forma) && temBusto(forma);
+  img.removeAttribute('style');
+  $('erro-pulou').classList.toggle('com-busto', busto);
+  img.src = busto ? bustoPet(forma) : quadrosDe(forma, 'sentado_girando')[0];
+  marcarForma(img, pet, busto ? pet : forma);
+  aplicarVisualPet(img, pet);
+  $('erro-pulou-balao').textContent = AULAS.jeito?.[pet]?.pulou || 'Essa parte do resumo você pulou! Olha com calma:';
+  $('erro-pulou').classList.remove('sai');
+  $('erro-pulou').hidden = false;
+  if (busto) encaixarIcone(img);
+  clearTimeout(erroPulouT);
+  erroPulouT = setTimeout(() => { $('erro-pulou').classList.add('sai'); erroPulouT = setTimeout(esconderPetPulou, 600); }, 6000);
+}
+function esconderPetPulou() { clearTimeout(erroPulouT); $('erro-pulou').hidden = true; $('erro-pulou').classList.remove('sai'); }
+// relembre/{ginásio}/paginas/{n}: 'lida' (ficou até o fim da animação) ou 'pulada' (saiu antes); lida não volta a ser pulada
+function marcarPaginaResumo(chave, n, st) {
+  if (!estado || !chave || !n) return;
+  const r = (estado.relembre[chave] ||= {}), ps = (r.paginas = r.paginas && typeof r.paginas === 'object' ? r.paginas : {});
+  if (ps[n] === 'lida' || ps[n] === st) return;
+  ps[n] = st;
+  gravar({ [`relembre/${chave}/paginas/${n}`]: st });
+}
+
 function continuarDoErro() {
-  if ($('erro-continuar').disabled) return;
+  if ($('erro-continuar').disabled || $('erro-continuar').hidden) return;
+  esconderPetPulou();
   pararDigitacao();
   erroLousa?.cancelar(); erroQuadro?.cancelar();
   $('perg-erro').hidden = true;
@@ -16537,7 +16597,9 @@ function relembreNaEntrada(chave) {
 //  Aula. "▶ Ver como faz" (cartão do erro e revisão da batalha): só a lousa, com os números da questão errada.
 // ============================================================
 let AULAS = {}, aula = null;   // { chave, origem, pag, obrig, modo: 'aula' | 'como', passos }
-let lousaAula = null, quadroAula = null;   // PROMPT-205: o quadro (layout "quadro": só o 4-B)
+let lousaAula = null, quadroAula = null;   // PROMPT-205/206: o quadro (layout "v2" com "quadro" nas páginas: 4-A e 4-B)
+// PROMPT-206: os botões 1× 2× 4× (Aula e cartão do erro) mostram a velocidade escolhida (quadro.js guarda no localStorage)
+function marcarVelocidade() { const v = velocidade(); document.querySelectorAll('.qd-vel button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.vel) === v))); }
 const aulaDe = (chave) => (AULAS?.aulas?.[chave]?.paginas?.length ? AULAS.aulas[chave] : null);
 // qualquer progresso salvo no ginásio (ou o Relembre/Aula já apareceu ali): não é mais a 1ª vez
 function jaEntrouNoGinasio(chave) {
@@ -16563,7 +16625,9 @@ function abrirAula(chave, origem) {
   const A = aulaDe(chave);
   if (!A || !estado) return;
   const obrig = origem === 'entrada' && !estado.aulasVistas[chave];
-  aula = { chave, origem, pag: 0, obrig, modo: 'aula', v2: A.layout === 'v2', quadro: A.layout === 'quadro' };
+  const qd = A.layout === 'v2' && A.paginas.some(p => p.quadro?.length);   // PROMPT-206: v2 com o quadro escrito (sem pet e sem balão)
+  aula = { chave, origem, pag: 0, obrig, modo: 'aula', v2: A.layout === 'v2' && !qd, quadro: qd };
+  if (qd) marcarVelocidade();
   $('aula').classList.remove('como');
   $('aula').classList.toggle('aula-v2', aula.v2);   // 🧪 PROMPT-204: o pet dentro da lousa, o balão como faixa embaixo
   const [, m, G] = /^mapa(\d+)-([AB])$/.exec(chave) || [];
@@ -16598,6 +16662,7 @@ function mostrarPetAula(com) {
 }
 function irPaginaAula(i) {
   if (!aula || aula.modo !== 'aula') return;
+  if (aula.lendo) { marcarPaginaResumo(aula.chave, aula.lendo, 'pulada'); aula.lendo = 0; }   // PROMPT-207: saiu antes do fim
   const ps = aulaDe(aula.chave).paginas, n = ps.length;
   aula.pag = clamp(i, 0, n - 1);
   const p = ps[aula.pag], ultima = aula.pag === n - 1;
@@ -16620,7 +16685,10 @@ function tocarQuadroAula(cenas) {
   quadroAula ||= criarQuadro($('aula-quadro'));
   lousaAula?.cancelar(); pararDigitar($('aula-fala'));
   aula.passos = null; aula.cenas = cenas;
-  quadroAula.tocar(cenas);
+  // PROMPT-207: a página conta como lida quando a animação termina (em qualquer velocidade); ▶ ou ✖ antes do fim: pulada
+  const a = aula, n = a.modo === 'aula' ? a.pag + 1 : 0;
+  a.lendo = n;
+  quadroAula.tocar(cenas).then((ok) => { if (ok && n && aula === a && a.lendo === n) { a.lendo = 0; marcarPaginaResumo(a.chave, n, 'lida'); } });
 }
 function tocarLousaAula(passos) {
   lousaAula ||= criarLousa($('aula-lousa'), { aoFalar: (v) => { if (aula) digitar($('aula-fala'), v); } });
@@ -16644,6 +16712,7 @@ function fecharAula(peloBotao = false) {
   if (!aula) return;
   if (aula.obrig && !(peloBotao && aula.pag === aulaDe(aula.chave).paginas.length - 1)) return;
   const { chave, modo, obrig } = aula;
+  if (aula.lendo) marcarPaginaResumo(chave, aula.lendo, 'pulada');   // PROMPT-207
   aula = null;
   lousaAula?.cancelar(); quadroAula?.cancelar();
   pararDigitar($('aula-fala'));
@@ -17118,7 +17187,9 @@ function ligarEventos() {
   $('relembre').addEventListener('click', (e) => { if (e.target.id === 'relembre') fecharRelembre(); });
   $('erro-relembre').addEventListener('click', (e) => abrirRelembre(e.currentTarget.dataset.relembre, 'erro'));
   // 🧑‍🏫 Aula e ▶ Ver como faz (PROMPT-185)
-  $('erro-rep').addEventListener('click', () => { if (erroCenas) erroQuadro?.tocar(erroCenas); else if (erroComoFaz) tocarLousaErro(); });   // ↺ (PROMPT-193)
+  $('erro-rep').addEventListener('click', () => { if (erroCenas) tocarErroQuadro(); else if (erroComoFaz) tocarLousaErro(); });
+  // PROMPT-206: 1× 2× 4× — vale na hora (também no meio de uma animação) e fica guardado
+  document.addEventListener('click', (e) => { const bt = e.target.closest('.qd-vel button'); if (!bt) return; e.stopPropagation(); mudarVelocidade(bt.dataset.vel); marcarVelocidade(); }, true);   // ↺ (PROMPT-193)
   $('aula').addEventListener('click', (e) => {
     e.stopPropagation();
     if (e.target.id === 'aula' || e.target.closest('#aula-x')) { fecharAula(); return; }

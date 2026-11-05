@@ -4651,17 +4651,17 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
   background: radial-gradient(ellipse at 30% 25%, var(--qd-lousa-a), var(--qd-lousa-b) 75%); box-shadow: inset 0 0 40px rgba(0,0,0,.45), 0 10px 30px rgba(0,0,0,.35);
   container-type: inline-size; font-family: var(--qd-num); text-align: left; }
 .qd-hist { position: absolute; left: 2.2%; top: 4%; width: 22%; bottom: 25%; display: flex; flex-direction: column; gap: 2.2cqw; align-items: flex-start; overflow: hidden; }
-.qd-foco { position: absolute; left: 26%; right: 4%; top: 4%; bottom: 25%; display: flex; align-items: center; justify-content: center; transition: right .6s ease; }
+.qd-foco { position: absolute; left: 26%; right: 4%; top: 4%; bottom: 25%; display: flex; align-items: center; justify-content: center; transition: right calc(.6s / var(--qd-vel, 1)) ease; }
 .qd.com-lado .qd-foco { right: 24%; }
-.qd-lado { position: absolute; right: 2.5%; top: 5%; width: 18%; bottom: 25%; display: flex; flex-direction: column; justify-content: center; gap: .35cqw; font-size: max(2cqw, 10px); font-weight: 800; transition: opacity .5s; }
+.qd-lado { position: absolute; right: 2.5%; top: 5%; width: 18%; bottom: 25%; display: flex; flex-direction: column; justify-content: center; gap: .35cqw; font-size: max(2cqw, 10px); font-weight: 800; transition: opacity calc(.5s / var(--qd-vel, 1)); }
 .qd-base { position: absolute; left: 3%; right: 3%; bottom: 3%; height: 19%; display: flex; align-items: center; gap: 3cqw; border-top: 2px dashed var(--qd-giz-3); padding-top: 1cqw; box-sizing: border-box; }
 .qd-regras { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .5cqw; }
 .qd-resp { flex: none; font-size: max(3.6cqw, 15px); font-weight: 900; color: var(--qd-verde); border: .25cqw solid var(--qd-verde); border-radius: 1cqw; padding: .4cqw 1.6cqw; background: rgba(61,220,132,.08);
-  opacity: 0; transform: scale(.85); transition: opacity .5s, transform .5s cubic-bezier(.3,1.6,.5,1); white-space: nowrap; }
+  opacity: 0; transform: scale(.85); transition: opacity calc(.5s / var(--qd-vel, 1)), transform calc(.5s / var(--qd-vel, 1)) cubic-bezier(.3,1.6,.5,1); white-space: nowrap; }
 .qd-resp.on { opacity: 1; transform: none; }
 .qd-resp:empty { display: none; }
 
-.qd-card { font-size: 6cqw; display: flex; flex-direction: column; align-items: center; gap: .18em; position: relative; animation: qd-entra .5s ease both; transition: scale .3s ease; max-width: 100%; }
+.qd-card { font-size: 6cqw; display: flex; flex-direction: column; align-items: center; gap: .18em; position: relative; animation: qd-entra calc(.5s / var(--qd-vel, 1)) ease both; transition: scale calc(.3s / var(--qd-vel, 1)) ease; max-width: 100%; }
 @keyframes qd-entra { from { opacity: 0; transform: translateY(.3em); } }
 .qd-card.mini { position: absolute; left: 0; top: 0; transform-origin: 0 0; animation: none; max-width: none; }
 .qd-hslot { position: relative; flex: none; }
@@ -4672,23 +4672,23 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-nota.detalhe { font-size: max(.42em, 13px); color: var(--qd-amarelo); }
 .qd-nota.regra { font-size: max(2.5cqw, 13px); color: var(--qd-amarelo); text-align: left; text-decoration: underline; text-decoration-thickness: .12cqw; text-underline-offset: .4cqw; }
 .qd-ch { opacity: 0; }
-.qd-ch.on { opacity: 1; transition: opacity .1s; }
-.qd-apaga { animation: qd-apaga .5s ease forwards; }
+.qd-ch.on { opacity: 1; transition: opacity calc(.1s / var(--qd-vel, 1)); }
+.qd-apaga { animation: qd-apaga calc(.5s / var(--qd-vel, 1)) ease forwards; }
 @keyframes qd-apaga { to { opacity: 0; filter: blur(5px); transform: translateX(-.4em) scaleY(.85); } }
 .qd .qd-v { color: var(--qd-amarelo); }
 .qd-circ { display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; border: .08em solid var(--qd-amarelo); border-radius: 50%; color: var(--qd-amarelo); line-height: 1; margin: 0 .05em; }
-.qd-circ.brilha { animation: qd-brilha .5s ease-in-out 6 alternate; }
+.qd-circ.brilha { animation: qd-brilha calc(.5s / var(--qd-vel, 1)) ease-in-out 6 alternate; }
 @keyframes qd-brilha { to { background: var(--qd-amarelo); color: var(--qd-lousa-b); box-shadow: 0 0 .6em var(--qd-amarelo); } }
-.qd-pisca { animation: qd-pisca .35s ease-in-out 6 alternate; }
+.qd-pisca { animation: qd-pisca calc(.35s / var(--qd-vel, 1)) ease-in-out 6 alternate; }
 @keyframes qd-pisca { from { opacity: .15; } to { opacity: 1; } }
-.qd-pop { animation: qd-pop .45s cubic-bezier(.3,1.6,.5,1); }
+.qd-pop { animation: qd-pop calc(.45s / var(--qd-vel, 1)) cubic-bezier(.3,1.6,.5,1); }
 @keyframes qd-pop { from { transform: scale(1.6); opacity: 0; } }
 
 /* expressão em linha, frações */
 .qd-expr { display: flex; align-items: baseline; gap: .25em; white-space: nowrap; }
 .qd-expr.qd-meio { align-items: center; }
 .qd-expr .op { color: var(--qd-amarelo); opacity: .85; }
-.qd-expr.qd-errado { color: var(--qd-vermelho); text-decoration: line-through; text-decoration-color: var(--qd-vermelho); text-decoration-thickness: .08em; }
+.qd-expr.qd-errado { color: var(--qd-vermelho); }
 .qd-expr.qd-errado .qd-v { color: inherit; }
 .qd-dgt { position: relative; display: inline-block; }
 .qd-dgt.casa-on { color: var(--qd-amarelo); text-decoration: underline; text-decoration-thickness: .06em; text-underline-offset: .08em; }
@@ -4703,12 +4703,12 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 
 /* número com a vírgula andando */
 .qd-nrow { position: relative; display: block; height: 1.25em; font-weight: 900; margin-top: .55em; }
-.qd-nrow .qd-dg { position: absolute; top: 0; width: .78em; text-align: center; line-height: 1.25em; transition: left .6s ease; }
+.qd-nrow .qd-dg { position: absolute; top: 0; width: .78em; text-align: center; line-height: 1.25em; transition: left calc(.6s / var(--qd-vel, 1)) ease; }
 .qd-nrow .qd-dg.novo { color: var(--qd-azul); }
 .qd-nrow .qd-dg.novo::after { content: ''; position: absolute; inset: .12em .06em .08em; border: .04em dashed var(--qd-azul); border-radius: .08em; }
-.qd-nrow .qd-vg { position: absolute; top: 0; line-height: 1.25em; color: var(--qd-amarelo); transform: translateX(-50%); transition: left .75s cubic-bezier(.45,.1,.25,1), opacity .4s; }
+.qd-nrow .qd-vg { position: absolute; top: 0; line-height: 1.25em; color: var(--qd-amarelo); transform: translateX(-50%); transition: left calc(.75s / var(--qd-vel, 1)) cubic-bezier(.45,.1,.25,1), opacity calc(.4s / var(--qd-vel, 1)); }
 .qd-nrow .qd-vg.rastro { opacity: .3; }
-.qd-arcw { position: absolute; top: -.62em; height: .6em; transition: left .6s ease, opacity .4s; }
+.qd-arcw { position: absolute; top: -.62em; height: .6em; transition: left calc(.6s / var(--qd-vel, 1)) ease, opacity calc(.4s / var(--qd-vel, 1)); }
 .qd-arcw svg { position: absolute; inset: 0; overflow: visible; }
 .qd-arcw .rot { position: absolute; top: -.42em; left: 50%; transform: translateX(-50%); font-family: var(--qd-mao); font-size: .3em; color: var(--qd-amarelo); font-weight: 400; white-space: nowrap; }
 .qd-arcw.velha { opacity: .45; }
@@ -4739,7 +4739,7 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-q .qd-esconde { visibility: hidden; }
 
 /* tabuada na lateral */
-.qd-tab { color: var(--qd-giz-3); padding: .1cqw .5cqw; border-radius: .5cqw; display: flex; justify-content: space-between; align-items: center; gap: .6cqw; transition: color .25s, background .25s; white-space: nowrap; }
+.qd-tab { color: var(--qd-giz-3); padding: .1cqw .5cqw; border-radius: .5cqw; display: flex; justify-content: space-between; align-items: center; gap: .6cqw; transition: color calc(.25s / var(--qd-vel, 1)), background calc(.25s / var(--qd-vel, 1)); white-space: nowrap; }
 .qd-tab .ok { font-family: var(--qd-mao); font-weight: 400; font-size: .85em; color: var(--qd-verde); }
 .qd-tab.cabe { color: var(--qd-giz-2); }
 .qd-tab.atual { color: var(--qd-giz); background: var(--qd-amarelo-2); }
@@ -4747,8 +4747,8 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-tab.passou { color: var(--qd-vermelho); }
 .qd-tab.passou .ok { color: var(--qd-vermelho); }
 .qd-voa { position: absolute; font-family: var(--qd-num); font-weight: 900; color: var(--qd-verde); z-index: 5; pointer-events: none; line-height: 1;
-  transition: left .8s cubic-bezier(.45,.1,.25,1), top .8s cubic-bezier(.45,.1,.25,1), font-size .8s; }
-@media (prefers-reduced-motion: reduce) { .qd-card, .qd-pop, .qd-pisca, .qd-circ.brilha { animation-duration: .01s !important; } }
+  transition: left calc(.8s / var(--qd-vel, 1)) cubic-bezier(.45,.1,.25,1), top calc(.8s / var(--qd-vel, 1)) cubic-bezier(.45,.1,.25,1), font-size calc(.8s / var(--qd-vel, 1)); }
+@media (prefers-reduced-motion: reduce) { .qd-card, .qd-pop, .qd-pisca, .qd-circ.brilha { animation-duration: calc(.01s / var(--qd-vel, 1)) !important; } }
 
 /* pequeno (cartão do erro): sem histórico, o foco usa a largura toda e a base é mais alta */
 .qd.compacto .qd-hist { display: none; }
@@ -4768,3 +4768,175 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 #aula.aula-quadro .aula-corpo { flex: 1 1 0; min-height: 0; }
 /* no cartão do erro: o mesmo quadro, menor */
 .jr-erro-quadro[hidden] { display: none; }
+
+/* 🧑‍🏫 PROMPT-206: o caminho da vírgula fica clarinho; embaixo, ↓ e o resultado limpo; o X grande da pegadinha;
+   as peças do 4-A (protótipo referencia/lousa-4a.html): frações, setinhas azuis, barras em bloquinhos, chocolate, pizza,
+   bolinhas, grade, etiqueta do conceito. As durações seguem a velocidade (--qd-vel: 1, 2 ou 4) */
+.qd-seta-baixo { font-size: .55em; color: var(--qd-giz-2); line-height: 1; margin-top: .15em; }
+.qd-limpo { color: var(--qd-verde); font-size: 1.15em; line-height: 1.1; font-weight: 900; }
+.qd-x { position: relative; display: inline-flex; align-items: center; gap: .25em; }
+.qd-x::before, .qd-x::after { content: ''; position: absolute; left: 50%; top: 50%; width: 150%; max-width: calc(100% + 1.2em); height: .12em; background: var(--qd-vermelho); border-radius: .06em;
+  box-shadow: 0 0 .15em rgba(0,0,0,.4); animation: qd-xentra calc(.35s / var(--qd-vel, 1)) ease-out both; }
+.qd-x::before { transform: translate(-50%, -50%) rotate(45deg); }
+.qd-x::after { transform: translate(-50%, -50%) rotate(-45deg); animation-delay: calc(.15s / var(--qd-vel, 1)); }
+@keyframes qd-xentra { from { width: 0; } }
+.qd-errado { color: var(--qd-vermelho); }
+.qd-nota { text-wrap: balance; }
+.qd-nota.etq-sub { font-size: 2.2cqw; color: rgba(244,240,227,.85); margin-top: .4cqw; white-space: nowrap; }
+
+/* frações */
+.qd-fr { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; font-weight: 900; font-variant-numeric: tabular-nums; position: relative;
+  transition: transform calc(.4s / var(--qd-vel, 1)) ease; }
+.qd-fr .fn, .qd-fr .fd { display: block; min-width: .7em; text-align: center; padding: 0 .08em; border-radius: .08em; white-space: nowrap;
+  transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)); }
+.qd-fr .fl { width: 100%; min-width: 1em; height: .07em; background: var(--qd-giz); margin: .1em 0; border-radius: .04em; }
+.qd-fr .ok-pisca { background: var(--qd-amarelo-fundo); color: var(--qd-amarelo); }
+.qd-fr.gira { transform: rotateX(90deg); }
+.qd .vazio-q { color: var(--qd-giz-3); }
+.qd-fx { position: relative; display: flex; align-items: center; gap: .35em; white-space: nowrap; }
+.qd-fx .op { color: var(--qd-amarelo); opacity: .85; font-weight: 900; }
+.qd-fx .igual { color: var(--qd-giz-2); font-weight: 900; }
+.qd-fx svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.qd-fx .rotx { position: absolute; font-family: var(--qd-mao); font-weight: 400; font-size: .36em; color: var(--qd-azul); white-space: nowrap; transform: translate(-50%, -50%); }
+.qd-card .qd-fx { padding-block: .8em; }
+.qd-fx.qd-errado .qd-fr .fl { background: var(--qd-vermelho); }
+.qd-resp .qd-fx { display: inline-flex; gap: .3em; padding-block: 0; }
+.qd-resp .qd-fr { font-size: .9em; vertical-align: middle; }
+.qd-resp .qd-fr .fl { background: var(--qd-verde); }
+.qd-resp .leia { font-family: var(--qd-mao); font-weight: 400; font-size: .7em; color: var(--qd-giz); margin-left: .5em; }
+
+/* a ajuda mais larga (4-A) e a etiqueta do conceito */
+.qd.lado-largo .qd-foco { right: 33%; }
+.qd.lado-largo .qd-lado { width: 29%; right: 2.5%; font-size: max(2.2cqw, 10px); }
+.qd-etq { position: absolute; top: 2.2%; left: 26%; right: 4%; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 2;
+  transition: right calc(.6s / var(--qd-vel, 1)); }
+.qd.lado-largo .qd-etq { right: 33%; }
+.qd.com-etq .qd-foco, .qd.com-etq .qd-lado { top: 17%; }
+.qd-etq b { font-weight: 900; font-size: 2.3cqw; letter-spacing: .12em; color: var(--qd-azul); border: .2cqw solid var(--qd-azul); border-radius: .6cqw; padding: .2cqw 1.2cqw; background: rgba(143,211,255,.08); }
+.qd.compacto .qd-etq { left: 4%; }
+.qd.compacto.lado-largo .qd-foco { right: 33%; }
+
+/* barras, chocolate, pizza, bolinhas e grade na área da ajuda */
+.qd-vis { display: flex; flex-direction: column; gap: 1.2cqw; width: 100%; transition: opacity calc(.5s / var(--qd-vel, 1)); }
+.qd-barra-l { display: grid; grid-template-columns: 4.2cqw 1fr; align-items: center; column-gap: 1cqw; row-gap: .3cqw; }
+.qd-barra-l .bf { font-size: 2.3cqw; justify-self: center; }
+.qd-barra-l .bf .fl { background: var(--qd-giz-2); }
+.qd-barra-l .bt { grid-column: 2; font-weight: 700; font-size: max(1.5cqw, 9px); color: var(--qd-giz-2); }
+.qd-barra { grid-column: 2; display: flex; height: 3.8cqw; padding: .35cqw; background: rgba(0,0,0,.28); border-radius: .8cqw; box-sizing: border-box; }
+.qd-barra i { flex: 1; border-radius: .35cqw; background: rgba(244,240,227,.06); border: .12cqw solid rgba(244,240,227,.3);
+  transition: background calc(.35s / var(--qd-vel, 1)), border-color calc(.35s / var(--qd-vel, 1)); }
+.qd-barra i.pt { background: linear-gradient(180deg, #ffb57e, #ee8638); border-color: #ffd0a3; }
+.qd-barra i.pt2 { background: linear-gradient(180deg, #ffe58a, #efc11d); border-color: #fff2b5; }
+.qd-barra i.sai { background: rgba(255,107,107,.35); }
+.qd-choco { display: grid; grid-template-columns: repeat(4, 1fr); gap: .45cqw; padding: .6cqw; background: #3d2414; border-radius: .7cqw; width: 88%; align-self: center; box-sizing: border-box; }
+.qd-choco i { aspect-ratio: 1.15; border-radius: .35cqw; background: linear-gradient(145deg, #8a5530, #5e361c); position: relative;
+  box-shadow: inset .25cqw .25cqw 0 rgba(255,255,255,.12), inset -.25cqw -.25cqw 0 rgba(0,0,0,.25);
+  transition: transform calc(.4s / var(--qd-vel, 1)), box-shadow calc(.4s / var(--qd-vel, 1)), opacity calc(.4s / var(--qd-vel, 1)); }
+.qd-choco i.peguei { transform: translateY(-.8cqw) rotate(-4deg); box-shadow: 0 0 0 .25cqw var(--qd-amarelo), 0 .6cqw 1cqw rgba(0,0,0,.4); }
+.qd-choco i .k { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 1.6cqw; color: var(--qd-amarelo); }
+.qd-pizza { width: 82%; align-self: center; overflow: visible; }
+.qd-pizza g path { fill: #f2b84b; stroke: #8a4b1c; stroke-width: 1.2; transition: transform calc(.4s / var(--qd-vel, 1)), fill calc(.4s / var(--qd-vel, 1)); }
+.qd-pizza g.peguei path { fill: #ff8f4a; stroke: var(--qd-amarelo); stroke-width: 1.8; transform: translate(var(--dx), var(--dy)); }
+.qd-pizza g.peguei text { transform: translate(var(--dx), var(--dy)); }
+.qd-pizza text.k { font: 900 8px 'Inter', sans-serif; fill: #3d2414; text-anchor: middle; dominant-baseline: central; }
+.qd-bolas { position: relative; width: 100%; height: 22cqw; }
+.qd-bolas b { position: absolute; width: 2cqw; height: 2cqw; border-radius: 50%; background: #ff9f5a;
+  transition: left calc(.8s / var(--qd-vel, 1)) cubic-bezier(.45,.1,.25,1), top calc(.8s / var(--qd-vel, 1)) cubic-bezier(.45,.1,.25,1), background calc(.4s / var(--qd-vel, 1)), opacity calc(.4s / var(--qd-vel, 1)); }
+.qd-bolas b.fora { opacity: .25; }
+.qd-bolas .grupo { position: absolute; border: .18cqw dashed var(--qd-giz-2); border-radius: .8cqw; opacity: 0;
+  transition: opacity calc(.4s / var(--qd-vel, 1)), border-color calc(.4s / var(--qd-vel, 1)), background calc(.4s / var(--qd-vel, 1)); }
+.qd-bolas .grupo.on { opacity: 1; }
+.qd-bolas .grupo.pega { border: .25cqw solid var(--qd-amarelo); background: var(--qd-amarelo-fundo); }
+.qd-bolas .grupo .gq { position: absolute; bottom: -2.6cqw; left: 50%; transform: translateX(-50%); font-weight: 900; font-size: 1.7cqw; color: var(--qd-giz-2); }
+.qd-grade { display: grid; grid-template-columns: repeat(5, 1fr); width: 92%; max-height: 30cqw; aspect-ratio: 5 / 3; border: .2cqw solid var(--qd-giz); border-radius: .4cqw; overflow: hidden; align-self: center; }
+.qd-grade i { border-right: .12cqw solid rgba(0,0,0,.8); border-bottom: .12cqw solid rgba(0,0,0,.8); transition: background calc(.35s / var(--qd-vel, 1)); }
+.qd-grade i.col { background: rgba(255,159,90,.45); }
+.qd-grade i.ambos { background: var(--qd-amarelo); }
+.qd-vis .bt2 { font-weight: 800; font-size: 1.8cqw; color: var(--qd-giz-2); text-align: center; }
+.qd-tab .alvo { color: var(--qd-amarelo); }
+
+/* 🧑‍🏫 PROMPT-207: a resposta final no centro, numa caixa verde (a faixa de baixo fica só com as regras); o jeito certo
+   embaixo da pegadinha; no histórico os resultados ficam em branco (o verde é só da resposta final). Protótipos 4-A, 4-B e 5-A */
+.qd-base .qd-resp { display: none; }
+.qd-card.qd-resp-final { font-size: 5.2cqw; }
+.qd-caixa-ok { color: var(--qd-verde); border: .12em solid var(--qd-verde); border-radius: .25em; padding: .2em .55em; background: rgba(61,220,132,.08); font-weight: 900;
+  display: block; width: max-content; white-space: nowrap; }
+.qd-caixa-ok .qd-fx { gap: .3em; padding-block: .1em; }
+.qd-caixa-ok .qd-fr .fl, .qd-caixa-ok .qd-frac .qd-fl { background: var(--qd-verde); }
+.qd-caixa-ok .qd-v, .qd-certo-baixo .qd-v { color: inherit; }
+.qd-caixa-ok .op { color: inherit; opacity: 1; }
+.qd-limpo .qd-caixa-ok { margin-top: .05em; }
+.qd-certo-baixo { color: var(--qd-verde); font-weight: 900; font-size: .75em; display: flex; align-items: center; gap: .3em; margin-top: .25em; white-space: nowrap; }
+.qd-card .qd-certo-baixo .qd-fx { padding-block: .2em; }
+.qd-certo-baixo .qd-fr .fl { background: var(--qd-verde); }
+.qd-certo-baixo .ok-ic { font-size: .8em; }
+.qd-hist .qd-card [style*="verde"], .qd-hist .qd-card .qd-c.res, .qd-hist .qd-card .qd-mil, .qd-hist .qd-card .qd-q, .qd-hist .qd-card .qd-limpo,
+.qd-hist .qd-card .qd-caixa-ok, .qd-hist .qd-card .qd-certo-baixo, .qd-hist .qd-card .qd-nrow, .qd-hist .qd-card .qd-frac.res { color: var(--qd-giz) !important; }
+.qd-hist .qd-card .qd-caixa-ok { border-color: var(--qd-giz-3); background: none; }
+.qd-hist .qd-card .qd-certo-baixo .ok-ic { color: var(--qd-verde); }
+.qd-hist .qd-card .qd-certo-baixo .qd-fr .fl, .qd-hist .qd-card .qd-caixa-ok .qd-fr .fl, .qd-hist .qd-card .qd-frac.res .qd-fl { background: var(--qd-giz); }
+/* 4-A p.1: "lê-se: 3 sobre 8" e, menor, "ou três oitavos" */
+.qd-leit-fr { display: flex; align-items: center; gap: .45em; }
+.qd-leit-fr .lei { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
+.qd-leit-fr .lei b { font-family: var(--qd-mao); font-weight: 400; font-size: .5em; color: var(--qd-verde); }
+.qd-leit-fr .lei small { font-family: var(--qd-mao); font-weight: 400; font-size: .32em; color: var(--qd-giz); }
+.qd .qd-esconde { visibility: hidden; }
+.qd .ok-pisca { background: var(--qd-amarelo-fundo); color: var(--qd-amarelo) !important; border-radius: .08em; }
+
+/* 5-A (potências): base laranja, expoente azul; na conta errada, tudo vermelho */
+.qd { --qd-laranja: #ff9f5a; }
+.qd-pot { display: inline-flex; align-items: flex-start; font-weight: 900; line-height: 1; }
+.qd-pot .pb { color: var(--qd-laranja); border-radius: .08em; padding: 0 .04em; transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)); }
+.qd-pot .pe { font-size: .55em; color: var(--qd-azul); margin-left: .04em; margin-top: -.15em; border-radius: .08em; padding: 0 .06em;
+  transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)); }
+.qd-fat { position: relative; display: inline-block; font-weight: 900; color: var(--qd-laranja); transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)); }
+.qd-cnt { position: absolute; bottom: -.62em; left: 50%; transform: translateX(-50%); font-family: var(--qd-mao); font-weight: 400; font-size: .38em; color: var(--qd-azul); line-height: 1; }
+.qd-mil { font-weight: 900; color: var(--qd-verde); display: inline-flex; }
+.qd-mil .z { position: relative; display: inline-block; }
+.qd-quad { display: grid; gap: .9cqw; width: 62%; align-self: center; aspect-ratio: 1; }
+.qd-quad b { border-radius: 50%; background: #ff9f5a; aspect-ratio: 1; }
+.qd-cubo { width: 80%; align-self: center; height: auto; }
+.qd-leit { display: flex; flex-direction: column; gap: .3em; align-items: flex-start; }
+.qd-leit .lrow { display: flex; align-items: center; gap: .5em; font-size: .8em; }
+.qd-leit .lrow > span:last-child { font-family: var(--qd-mao); font-weight: 400; font-size: .7em; color: var(--qd-giz); }
+.qd-errado .qd-pot .pb, .qd-errado .qd-fat, .qd-errado .qd-pot .pe { color: inherit; }
+.qd-caixa-ok .qd-pot .pb, .qd-caixa-ok .qd-fat, .qd-certo-baixo .qd-pot .pb, .qd-certo-baixo .qd-fat { color: var(--qd-laranja); }
+.qd-nota.base-cor { color: var(--qd-laranja); }
+.qd-nota.exp-cor { color: var(--qd-azul); }
+
+/* os botões 1× 2× 4× (Aula e cartão do erro) */
+.qd-vel { display: none; align-items: center; gap: 4px; }
+#aula.aula-quadro .qd-vel, .jr-erro.com-quadro .qd-vel { display: inline-flex; }
+.qd-vel button { min-width: 40px; min-height: 36px; padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: #fff;
+  font: 800 14px 'Inter', sans-serif; cursor: pointer; }
+.qd-vel button[aria-pressed="true"] { background: #ffd23f; color: #151a2c; border-color: #ffd23f; }
+.qd-vel button:focus-visible { outline: 3px solid #ffd23f; outline-offset: 2px; }
+
+/* PROMPT-206: celular deitado — a barra de baixo da Aula numa linha só (com 1× 2× 4×), para a lousa ficar grande */
+html.jr-deitado #aula.aula-quadro .aula-nav { gap: 5px; flex-wrap: nowrap; }
+html.jr-deitado #aula.aula-quadro .aula-nav .jr-btn { min-width: 36px; min-height: 32px; padding: 2px 8px; }
+html.jr-deitado #aula.aula-quadro .aula-nav #aula-ok { min-width: 84px; }
+html.jr-deitado #aula.aula-quadro .qd-vel button { min-width: 32px; min-height: 32px; padding: 2px 4px; font-size: 13px; }
+html.jr-deitado #aula.aula-quadro .jr-rel-check { font-size: 12px; min-width: 0; flex: 1 1 auto; line-height: 1.15; }
+html.jr-deitado #aula.aula-quadro .aula-n { font-size: 13px; }
+
+/* 🧑‍🏫 PROMPT-207: cartão do erro do 4-A, 4-B e 5-A — pulou a página do resumo: o pet pequeno no canto, com um balãozinho, e
+   depois sai (o Continuar só aparece no fim da animação); já leu: o link discreto "📖 Ver o resumo todo de novo" */
+.jr-erro-caixa { position: relative; }
+.jr-erro-pulou { position: absolute; top: 8px; right: 10px; z-index: 6; display: flex; align-items: center; gap: 8px; max-width: min(320px, 70%); pointer-events: none;
+  animation: jr-pulou-entra .35s cubic-bezier(.3,1.5,.5,1) both; transition: opacity .5s, transform .5s; }
+.jr-erro-pulou[hidden] { display: none; }
+.jr-erro-pulou.sai { opacity: 0; transform: translateX(30px); }
+@keyframes jr-pulou-entra { from { opacity: 0; transform: translateX(40px) scale(.8); } }
+.jr-erro-pulou-pet { flex: none; width: 54px; height: 54px; display: flex; align-items: flex-end; justify-content: center; animation: jr-pet-balanca 1.6s ease-in-out infinite; }
+.jr-erro-pulou-pet img { height: 100%; width: auto; max-width: none; object-fit: contain; transform: scale(1.25); transform-origin: 50% 100%; }
+.jr-erro-pulou.com-busto .jr-erro-pulou-pet { overflow: hidden; border-radius: 12px; background: radial-gradient(circle at 50% 60%, rgba(124,92,252,.35), rgba(124,92,252,0) 70%); }
+.jr-erro-pulou.com-busto .jr-erro-pulou-pet img { transform: none; }
+.jr-erro-pulou-balao { position: relative; min-width: 0; background: #fff; color: #1b1b2e; border-radius: 10px; padding: 6px 9px; box-shadow: 0 4px 14px rgba(0,0,0,.4);
+  font: 700 calc(13px * var(--letra, 1))/1.25 'Inter', sans-serif; overflow-wrap: anywhere; }
+.jr-erro-pulou-balao::after { content: ''; position: absolute; right: -7px; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-right: 0; border-left-color: #fff; }
+html.jr-deitado .jr-erro-pulou-pet { width: 44px; height: 44px; }
+html.jr-deitado .jr-erro-pulou-balao { font-size: calc(12px * var(--letra, 1)); }
+@media (prefers-reduced-motion: reduce) { .jr-erro-pulou, .jr-erro-pulou-pet { animation: none; } }
+#erro-continuar[hidden] { display: none; }
+.jr-erro-linha #erro-relembre.discreto { background: none; border-color: transparent; box-shadow: none; opacity: .75; font-size: .9em; text-decoration: underline; text-underline-offset: 3px; }
