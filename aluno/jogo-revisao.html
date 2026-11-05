@@ -8,7 +8,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Jogo de Revisão</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700;800;900&family=Patrick+Hand&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="/css/main.css"/>
 <link rel="stylesheet" href="/css/jogo-revisao.css"/>
 </head>
@@ -474,6 +474,7 @@
           <ol class="jr-erro-passos" id="erro-passos"></ol>
           <!-- PROMPT-193: a lousa já abre sozinha, resolvendo só do jeito certo (sem animação: o texto "Como resolver" de cima) -->
           <div class="jr-erro-lousa" id="erro-lousa" aria-live="polite" hidden></div>
+          <div class="jr-erro-lousa jr-erro-quadro" id="erro-quadro" aria-live="polite" hidden></div><!-- PROMPT-205: o quadro do 4-B -->
           <div class="jr-erro-linha" id="erro-linha-dica"><button class="jr-btn-relembre" id="erro-rep" title="Ver a animação de novo" aria-label="Ver a animação de novo" hidden>↺</button><button class="jr-btn-relembre" id="erro-relembre">📖 Relembre</button></div>
         </div>
       </div>
@@ -592,6 +593,7 @@
         <button class="bt-lista-x" id="aula-x" aria-label="Fechar">✕</button></div>
       <div class="aula-corpo">
         <div class="aula-lousa" id="aula-lousa" aria-live="polite"></div>
+        <div id="aula-quadro" aria-live="polite"></div><!-- PROMPT-205: o quadro de verdade (só o 4-B), sem pet e sem balão -->
         <div class="aula-pet" id="aula-pet"><div class="aula-balao" id="aula-fala"></div><div class="aula-moldura"><img id="aula-pet-img" alt="" draggable="false"/></div></div>
       </div>
       <div class="aula-nav">

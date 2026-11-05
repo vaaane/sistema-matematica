@@ -7,7 +7,8 @@ import { db } from '/js/firebase-config.js';
 import { ref, get, update, push, set, remove, increment, onValue, onChildAdded, onChildChanged, onChildRemoved, runTransaction, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { prepararFoto, analisarMoldura } from '/js/jogo-revisao/exposicao-img.js';
 import { criarLousa } from '/js/jogo-revisao/lousa.js';
-import { comoFaz, dicaCurta } from '/js/jogo-revisao/aulas-como.js';
+import { comoFaz, dicaCurta, quadroComoFaz } from '/js/jogo-revisao/aulas-como.js';
+import { criarQuadro } from '/js/jogo-revisao/quadro.js';
 import { urlSprite as spriteComCor, coresValidas, semCor, CORES_CABELO, CORES_BLUSA, CORES_DIVERTIDAS, PRECO_COR_DIVERTIDA, NOME_COR } from '/js/jogo-revisao/cores-pers.js';
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE, ALUNOS_POR_TURMA, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
@@ -14452,7 +14453,7 @@ function mostrarPlanoPergunta(q) {
   if (!tem) pgPlano = null;
 }
 
-let erroComoFaz = null, erroLousa = null;
+let erroComoFaz = null, erroLousa = null, erroCenas = null, erroQuadro = null;
 function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   const passos = passosDe(q.explicacao);
   const ultimo = passos[passos.length - 1] || '';
@@ -14472,15 +14473,18 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   $('erro-relembre').hidden = !explicacaoDe(rel);
   $('erro-relembre').dataset.relembre = rel;
   // PROMPT-193: a lousa (aulas-como.js) já abre sozinha, só com o jeito certo; não deu para montar → os passos em texto
-  erroLousa?.cancelar();
+  erroLousa?.cancelar(); erroQuadro?.cancelar();
   erroComoFaz = comoFazDe(q);
-  const comLousa = !!erroComoFaz?.length;
+  erroCenas = quadroDe(q);   // 🧑‍🏫 PROMPT-205: o 4-B usa o quadro escrito (sem pet, sem balão, sem a 💡)
+  const comQuadro = !!erroCenas, comLousa = comQuadro || !!erroComoFaz?.length;
   $('erro-tit').hidden = comLousa;
   $('erro-passos').hidden = comLousa;
-  $('erro-lousa').hidden = !comLousa;
+  $('erro-lousa').hidden = !comLousa || comQuadro;
+  $('erro-quadro').hidden = !comQuadro;
   $('erro-rep').hidden = !comLousa;
   $('perg-erro').classList.toggle('com-lousa', comLousa);
-  petDaDica(mostraDica ? dica : '', comLousa);   // 🐾 PROMPT-199/201: o pet dá a dica e explica a lousa no balão
+  if (comQuadro) { petDaDica('', false); $('erro-dica').hidden = true; }
+  else petDaDica(mostraDica ? dica : '', comLousa);   // 🐾 PROMPT-199/201: o pet dá a dica e explica a lousa no balão
   $('erro-linha-dica').hidden = $('erro-relembre').hidden && !comLousa;
   $('erro-volta').textContent = pg.modo === 'treino' ? `🔁 ${comOutrosNumeros ? 'Ela volta daqui a pouco, com outros números, e de novo amanhã.' : 'Ela volta daqui a pouco e de novo amanhã.'}` : `🔁 ${comOutrosNumeros ? 'Essa pergunta volta daqui a pouco, com outros números.' : 'Essa pergunta volta daqui a pouco.'}`;
   // 📐 com plano (PROMPT-128): o mesmo plano da pergunta, com a animação da resposta certa; sem plano, a mini-grade de antes
@@ -14504,6 +14508,7 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   if (comLousa) {   // PROMPT-193: o Continuar já vem liberado; a animação toca uma vez (↺ repete)
     b.disabled = false;
     b.focus({ preventScroll: true });
+    if (comQuadro) { erroQuadro ||= criarQuadro($('erro-quadro')); erroQuadro.tocar(erroCenas); return; }
     erroLousa ||= criarLousa($('erro-lousa'), { aoFalar: (v) => digitar($('erro-balao'), v) });
     tocarLousaErro();
     return;
@@ -14642,7 +14647,7 @@ function petDaDica(dica, comLousa = false) {
 function continuarDoErro() {
   if ($('erro-continuar').disabled) return;
   pararDigitacao();
-  erroLousa?.cancelar();
+  erroLousa?.cancelar(); erroQuadro?.cancelar();
   $('perg-erro').hidden = true;
   const f = pg?.aoContinuar;
   if (f) f();
@@ -16532,7 +16537,7 @@ function relembreNaEntrada(chave) {
 //  Aula. "▶ Ver como faz" (cartão do erro e revisão da batalha): só a lousa, com os números da questão errada.
 // ============================================================
 let AULAS = {}, aula = null;   // { chave, origem, pag, obrig, modo: 'aula' | 'como', passos }
-let lousaAula = null;
+let lousaAula = null, quadroAula = null;   // PROMPT-205: o quadro (layout "quadro": só o 4-B)
 const aulaDe = (chave) => (AULAS?.aulas?.[chave]?.paginas?.length ? AULAS.aulas[chave] : null);
 // qualquer progresso salvo no ginásio (ou o Relembre/Aula já apareceu ali): não é mais a 1ª vez
 function jaEntrouNoGinasio(chave) {
@@ -16558,7 +16563,7 @@ function abrirAula(chave, origem) {
   const A = aulaDe(chave);
   if (!A || !estado) return;
   const obrig = origem === 'entrada' && !estado.aulasVistas[chave];
-  aula = { chave, origem, pag: 0, obrig, modo: 'aula', v2: A.layout === 'v2' };
+  aula = { chave, origem, pag: 0, obrig, modo: 'aula', v2: A.layout === 'v2', quadro: A.layout === 'quadro' };
   $('aula').classList.remove('como');
   $('aula').classList.toggle('aula-v2', aula.v2);   // 🧪 PROMPT-204: o pet dentro da lousa, o balão como faixa embaixo
   const [, m, G] = /^mapa(\d+)-([AB])$/.exec(chave) || [];
@@ -16605,12 +16610,22 @@ function irPaginaAula(i) {
   $('aula-ok').textContent = 'Bora!';
   $('aula-x').hidden = aula.obrig;
   $('aula-pausa').textContent = '⏸';
-  tocarLousaAula(p.lousa || []);
+  const qd = aula.quadro && p.quadro?.length;
+  $('aula').classList.toggle('aula-quadro', !!qd);   // 🧑‍🏫 PROMPT-205: sem pet e sem balão, o quadro ocupa a janela
+  if (qd) tocarQuadroAula(p.quadro); else tocarLousaAula(p.lousa || []);
   (ultima ? $('aula-ok') : $('aula-prox')).focus({ preventScroll: true });
 }
 // PROMPT-201: o balão começa com a fala da página; a cada passo da lousa troca para a frase do passo; no fim, volta para a fala
+function tocarQuadroAula(cenas) {
+  quadroAula ||= criarQuadro($('aula-quadro'));
+  lousaAula?.cancelar(); pararDigitar($('aula-fala'));
+  aula.passos = null; aula.cenas = cenas;
+  quadroAula.tocar(cenas);
+}
 function tocarLousaAula(passos) {
   lousaAula ||= criarLousa($('aula-lousa'), { aoFalar: (v) => { if (aula) digitar($('aula-fala'), v); } });
+  quadroAula?.cancelar();
+  aula.cenas = null;
   aula.passos = passos;
   const a = aula;
   pararDigitar($('aula-fala'));   // página nova: começa já com a fala dela
@@ -16630,7 +16645,7 @@ function fecharAula(peloBotao = false) {
   if (aula.obrig && !(peloBotao && aula.pag === aulaDe(aula.chave).paginas.length - 1)) return;
   const { chave, modo, obrig } = aula;
   aula = null;
-  lousaAula?.cancelar();
+  lousaAula?.cancelar(); quadroAula?.cancelar();
   pararDigitar($('aula-fala'));
   $('aula').hidden = true;
   if (modo !== 'aula') return;
@@ -16646,10 +16661,15 @@ function comoFazDe(q) {   // PROMPT-193: só o jeito certo (sem a coluna "✖ su
   const chave = q.relembre !== undefined ? q.relembre : chaveGinasio(q.mapa ?? pg?.mapa, q.lado ?? pg?.G);
   return comoFaz(chave, q);
 }
+function quadroDe(q) {   // PROMPT-205: as cenas do quadro (só o 4-B) ou null
+  if (!q) return null;
+  const chave = q.relembre !== undefined ? q.relembre : chaveGinasio(q.mapa ?? pg?.mapa, q.lado ?? pg?.G);
+  return quadroComoFaz(chave, q);
+}
 function abrirComoFaz(passos, titulo = 'Ver como faz') {
   if (!passos?.length) return;
   aula = { modo: 'como', pag: 0, obrig: false, fala: 'Olha como faz:', titulo };
-  $('aula').classList.remove('aula-v2');
+  $('aula').classList.remove('aula-v2', 'aula-quadro');
   $('aula').classList.add('como');
   $('aula-tit').textContent = titulo;
   $('aula-sub').textContent = '▶ Ver como faz';
@@ -17098,15 +17118,15 @@ function ligarEventos() {
   $('relembre').addEventListener('click', (e) => { if (e.target.id === 'relembre') fecharRelembre(); });
   $('erro-relembre').addEventListener('click', (e) => abrirRelembre(e.currentTarget.dataset.relembre, 'erro'));
   // 🧑‍🏫 Aula e ▶ Ver como faz (PROMPT-185)
-  $('erro-rep').addEventListener('click', () => { if (erroComoFaz) tocarLousaErro(); });   // ↺ (PROMPT-193)
+  $('erro-rep').addEventListener('click', () => { if (erroCenas) erroQuadro?.tocar(erroCenas); else if (erroComoFaz) tocarLousaErro(); });   // ↺ (PROMPT-193)
   $('aula').addEventListener('click', (e) => {
     e.stopPropagation();
     if (e.target.id === 'aula' || e.target.closest('#aula-x')) { fecharAula(); return; }
     if (e.target.closest('#aula-ok')) { fecharAula(true); return; }
     if (e.target.closest('#aula-ant')) irPaginaAula(aula.pag - 1);
     else if (e.target.closest('#aula-prox')) irPaginaAula(aula.pag + 1);
-    else if (e.target.closest('#aula-rep')) { $('aula-pausa').textContent = '⏸'; if (aula?.passos) tocarLousaAula(aula.passos); }
-    else if (e.target.closest('#aula-pausa')) $('aula-pausa').textContent = lousaAula?.pausar() ? '▶' : '⏸';
+    else if (e.target.closest('#aula-rep')) { $('aula-pausa').textContent = '⏸'; if (aula?.cenas) tocarQuadroAula(aula.cenas); else if (aula?.passos) tocarLousaAula(aula.passos); }
+    else if (e.target.closest('#aula-pausa')) $('aula-pausa').textContent = (aula?.cenas ? quadroAula : lousaAula)?.pausar() ? '▶' : '⏸';
   });
   window.addEventListener('keydown', (e) => {
     if ($('aula').hidden || !aula) return;

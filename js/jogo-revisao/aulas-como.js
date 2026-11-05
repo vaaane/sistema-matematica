@@ -6,6 +6,7 @@
 // a coluna da esquerda mostra a conta que leva à resposta dele; se não der, só a resposta dele, riscada.
 import { tokU, num, arred } from './base.js';
 import { passosExpressao, passosSemOrdem, lousaDePassos } from './lousa.js';
+import { QUADRO_FD } from './quadro.js';
 
 const soExpressao = (s) => /^[\d\s,+−×÷()[\]{}-]+$/.test(s) && /[+−×÷]/.test(s) && /\d/.test(s);
 const limpa = (e) => String(e || '').replace(/\s*=\s*\??\s*$/, '').replace(/^Quanto (é|dá)\s+/i, '').replace(/\?$/, '').trim();
@@ -270,6 +271,30 @@ function gin4b(q) {
     const [x, y] = ns, maior = numero(x) >= numero(y) ? x : y;
     return [{ t: 'linha', v: `${x} ou ${y}?` }, { t: 'linha', v: `${pad(x)} e ${pad(y)}` }, { t: 'texto', v: 'iguale as casas com zeros' },
       { t: 'linha', v: `${Math.max(inteiro(x), inteiro(y))} > ${Math.min(inteiro(x), inteiro(y))}` }, { t: 'linha', v: `${maior} é maior`, classe: 'certo' }];
+  }
+  return null;
+}
+// 🧑‍🏫 PROMPT-205: o cartão do erro do 4-B usa o quadro escrito (quadro.js): as cenas com os números da questão (null = a lousa de antes)
+export function quadroComoFaz(chave, q) {
+  if (chave !== 'mapa4-B' || !q) return null;
+  const en = String(q.enunciado || '').trim();
+  const c = contaDec(q);
+  if (c) {
+    const resposta = `${c.e} = ${q.resposta}`;
+    if (c.op === '×') return [{ t: 'mult', a: c.a, b: c.b, resposta }];
+    return [{ t: 'armada', a: c.a, op: c.op, b: c.b, resposta, passos: c.problema ? [`Troco é conta de menos: ${c.a} − ${c.b}.`] : [] }];
+  }
+  const fd = /^(\d+)\/(\d+) em número decimal$/i.exec(en);
+  if (fd) {
+    const p = Number(fd[1]), d = Number(fd[2]);
+    if ([10, 100, 1000].includes(d)) return [{ t: 'divk', p, k: d }];
+    return QUADRO_FD(p, d) ? [{ t: 'fracdec', p, d }] : null;
+  }
+  const df = /^(\d+,\d+) em fração$/i.exec(en);
+  if (df) return [{ t: 'decfrac', v: [df[1]] }];
+  if (/^Qual é maior\??$/i.test(en)) {
+    const ns = [q.resposta, ...(q.erradas || [])].map(String).filter(s => /^\d+,\d+$/.test(s));
+    return ns.length === 2 ? [{ t: 'compara', v: ns }] : null;
   }
   return null;
 }
