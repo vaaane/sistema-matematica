@@ -6,7 +6,7 @@
 //   await f.animar()              roda o "depois" (lança CANCELADA se outra começar)
 // Tipos (o campo `figura` das perguntas, montado pelos geradores): poligono, grade, triangulo_area, paralelogramo,
 // compara_area, medida, contar_lados, angulo_reto, angulos, regua, barras_iguais, simplificar, soma_fracao, parte_de,
-// compara_fracoes, pizza. Cores do jogo: laranja = 1ª medida, azul = 2ª, ouro = contorno, verde = resultado.
+// compara_fracoes, pizza, quadrilatero, tipo_angulo, angulos4 (PROMPT-216). Cores do jogo: laranja = 1ª medida, azul = 2ª, ouro = contorno, verde = resultado.
 // A legenda da conta fica numa faixa embaixo da figura: [[laranja]], <<azul>>, **verde**.
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -273,6 +273,65 @@ export function criarFigura(svg) {
       legenda(`**${f.conta || ''}**`);
     };
   }
+  // ── PROMPT-216: qual quadrilátero — os lados acendem, os ângulos retos aparecem, depois o nome ──
+  const QUADS = {
+    quadrado: [[[10, 10], [90, 10], [90, 90], [10, 90]], true], 'retângulo': [[[0, 24], [100, 24], [100, 76], [0, 76]], true],
+    losango: [[[50, 2], [90, 50], [50, 98], [10, 50]], false], paralelogramo: [[[24, 24], [100, 24], [76, 76], [0, 76]], false],
+    'trapézio': [[[28, 24], [72, 24], [100, 76], [0, 76]], false],
+  };
+  function canto(p, a, b, k = 26) {
+    const u = (q) => { const d = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1; return [(q[0] - p[0]) / d * k, (q[1] - p[1]) / d * k]; };
+    const [ux, uy] = u(a), [vx, vy] = u(b);
+    return el('path', { d: `M${p[0] + ux} ${p[1] + uy} L${p[0] + ux + vx} ${p[1] + uy + vy} L${p[0] + vx} ${p[1] + vy}`, fill: 'none', stroke: VERDE, 'stroke-width': 4 });
+  }
+  function quadrilatero(f) {
+    const [base, reto] = QUADS[f.nome] || QUADS.quadrado, pts = encaixar(base, 380, 280);
+    el('polygon', { points: pts.map(p => p.join(',')).join(' '), fill: 'rgba(124,92,252,.18)', stroke: '#fff', 'stroke-width': 4, 'stroke-linejoin': 'round' });
+    legenda('Que quadrilátero é este?');
+    return async (t) => {
+      for (let i = 0; i < 4; i++) { const p = pts[i], q = pts[(i + 1) % 4]; el('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1], stroke: OURO, 'stroke-width': 8, 'stroke-linecap': 'round' }); await dorme(260, t); }
+      if (reto) for (let i = 0; i < 4; i++) { canto(pts[i], pts[(i + 1) % 4], pts[(i + 3) % 4]); await dorme(160, t); }
+      legenda(`**${f.nome}**: ${f.info || ''}`);
+    };
+  }
+  // ── PROMPT-216: tipo de ângulo — o ângulo abre de 0 até g; reto (90°) e raso (180°) são as divisas ──
+  function tipoAngulo(f) {
+    const g = Number(f.g), ox = W / 2, oy = 300, r = 200, ra = 70, R = Math.PI / 180;
+    el('line', { x1: ox, y1: oy, x2: ox + r, y2: oy, stroke: '#fff', 'stroke-width': 6, 'stroke-linecap': 'round' });
+    const raio = el('line', { x1: ox, y1: oy, x2: ox + r, y2: oy, stroke: '#fff', 'stroke-width': 6, 'stroke-linecap': 'round' });
+    const arco = el('path', { d: '', fill: 'rgba(255,215,0,.3)', stroke: OURO, 'stroke-width': 3 });
+    const rot = txt(`${g}°`, ox + 110, oy - 110, { fill: OURO, 'font-size': 32 });
+    const poe = (a) => {
+      raio.setAttribute('x2', ox + r * Math.cos(a * R)); raio.setAttribute('y2', oy - r * Math.sin(a * R));
+      arco.setAttribute('d', a > 0 ? `M${ox} ${oy} L${ox + ra} ${oy} A${ra} ${ra} 0 ${a > 180 ? 1 : 0} 0 ${ox + ra * Math.cos(a * R)} ${oy - ra * Math.sin(a * R)} Z` : '');
+      rot.setAttribute('x', ox + (ra + 50) * Math.cos(Math.min(a, 170) / 2 * R)); rot.setAttribute('y', oy - (ra + 50) * Math.sin(Math.max(a, 40) / 2 * R));
+    };
+    poe(g);
+    legenda(`Um ângulo de ${g}°`);
+    return async (t) => {
+      for (let a = 0; a <= g; a += 3) { poe(a); await dorme(18, t); }
+      poe(g);
+      if (g === 90) canto([ox, oy], [ox + 10, oy], [ox, oy - 10], 34);
+      const nome = g < 90 ? 'agudo' : g === 90 ? 'reto' : g < 180 ? 'obtuso' : 'raso';
+      legenda(`**${nome}**: ${g < 90 ? 'menor que 90°' : g === 90 ? '90°, o canto do quadrado' : g < 180 ? 'entre 90° e 180°' : '180°, uma linha reta'}`);
+    };
+  }
+  // ── PROMPT-216: o ângulo que falta no quadrilátero — os 4 somam 360° ──
+  function angulos4(f) {
+    const pts = encaixar([[0, 0], [1, 0], [1, .8], [.2, .8]], 400, 280);
+    el('polygon', { points: pts.map(p => p.join(',')).join(' '), fill: 'rgba(124,92,252,.18)', stroke: '#fff', 'stroke-width': 4, 'stroke-linejoin': 'round' });
+    const [cx, cy] = centro(pts);
+    const rot = pts.map((p, i) => { const dx = cx - p[0], dy = cy - p[1], d = Math.hypot(dx, dy) || 1, v = f.angulos[i];
+      return txt(v === '?' ? '?' : `${v}°`, p[0] + dx / d * 58, p[1] + dy / d * 58, { fill: v === '?' ? OURO : '#fff', 'font-size': 24 }); });
+    legenda('Os ângulos do quadrilátero');
+    return async (t) => {
+      legenda('A soma dos 4 ângulos de um quadrilátero é **360°**');
+      await dorme(1100, t);
+      const i = f.angulos.indexOf('?');
+      if (i >= 0 && f.revela != null) { rot[i].textContent = `${f.revela}°`; rot[i].setAttribute('fill', VERDE); }
+      legenda(`**${f.conta || ''}**`);
+    };
+  }
   // ── régua: a fita se marca em partes ──
   function regua(f) {
     const x0 = 60, w = 520, y0 = 170, h = 70;
@@ -411,7 +470,7 @@ export function criarFigura(svg) {
 
   const TIPOS = { poligono, grade, triangulo_area: trianguloArea, paralelogramo, compara_area: comparaArea, medida, contar_lados: contarLados,
     angulo_reto: anguloReto, angulos, regua, barras_iguais: barrasIguais, simplificar, soma_fracao: somaFracao, parte_de: parteDe,
-    compara_fracoes: comparaFracoes, pizza: pizzaFig };
+    compara_fracoes: comparaFracoes, pizza: pizzaFig, quadrilatero, tipo_angulo: tipoAngulo, angulos4 };
 
   return {
     mostrar(fig) {

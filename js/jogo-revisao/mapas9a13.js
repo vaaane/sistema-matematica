@@ -158,6 +158,25 @@ const ladoDoQ = () => { const l = int(2, 12); const p = 4 * l; return Q(`Um quad
 const cmM = () => { const k = int(2, 9); return Q(`${k * 100} cm são quantos metros?`, m_(k), erradasNum(k, [k * 10, k * 100, k + 1], { fmt: m_ }), FG(X(`100 cm = 1 m. ${k * 100} ÷ 100 = ${k} m`), { tipo: 'regua', texto: `100 cm = 1 m → ${k * 100} cm = ${k} m`, de: `${k * 100} cm`, para: `${k} m`, metros: k })); };
 const ladoR = () => { const a = int(3, 9), b = int(1, 9); const p = 2 * (a + b); return Q(`Um retângulo tem perímetro ${p} cm e um dos lados mede ${a} cm. Quanto mede o outro?`, cm(b), erradasNum(b, [p - a, p / 2, p - 2 * a], { fmt: cm }), FG(X(`Metade do perímetro é um lado de cada: ${p} ÷ 2 = ${p / 2}. Então ${p / 2} − ${a} = ${b} cm`), POL('retangulo', [a, '?', a, '?'], 'cm', { revela: [a, b, a, b], total: p, conta: `${p} − ${a} − ${a} = ${p - 2 * a} · ${p - 2 * a} ÷ 2 = ${b} cm` }))); };
 const angulo = () => { const a = int(30, 80), b = int(30, 150 - a); const v = 180 - a - b; return Q(`Um triângulo tem ângulos de ${a}° e ${b}°. Quanto mede o terceiro?`, `${v}°`, erradasNum(v, [360 - a - b, 90 - a + b > 0 ? 90 - a + b : v + 10, a + b], { fmt: x => `${x}°` }), FG(X(`Os ângulos do triângulo somam 180°: 180 − ${a} − ${b} = ${v}°`), { tipo: 'angulos', angulos: [a, b, '?'], revela: v, conta: `180° − ${a}° − ${b}° = ${v}°` })); };
+// PROMPT-216: questões novas do 11-A (polígonos, quadriláteros, tipos de ângulo, ângulo do quadrilátero, trocar a unidade)
+const NOMES_POL = [['triângulo', 3], ['quadrilátero', 4], ['pentágono', 5], ['hexágono', 6], ['heptágono', 7], ['octógono', 8], ['decágono', 10]];
+const poligono = () => pick([
+  () => { const [n, k] = pick(NOMES_POL.filter(p => [7, 8, 10].includes(p[1]))); return Q(`Quantos lados tem um ${n}?`, num(k), erradasNum(k, [k + 1, k - 1, k === 10 ? 12 : k + 2]), FG(X('O nome diz os lados: hepta 7, octo 8, deca 10.'), { tipo: 'contar_lados', n: k })); },
+  () => { const [n, k] = pick(NOMES_POL.filter(p => p[1] >= 4)); const outros = NOMES_POL.filter(p => p[0] !== n).map(p => p[0]); return Q(`Um polígono de ${k} lados se chama:`, n, sample(outros, 3), FG(X('O nome diz os lados: tri 3, quadri 4, penta 5, hexa 6, hepta 7, octo 8, deca 10.'), { tipo: 'contar_lados', n: k })); },
+])();
+const QUADRI = [['quadrado', '4 lados iguais e 4 ângulos retos'], ['retângulo', 'lados opostos iguais e 4 ângulos retos'], ['losango', '4 lados iguais, sem ângulo reto'], ['trapézio', 'só 2 lados paralelos']];
+const quadrilatero = () => { const [n, d] = pick(QUADRI); return Q(`Qual quadrilátero tem ${d}?`, n, ['quadrado', 'retângulo', 'losango', 'trapézio', 'paralelogramo'].filter(x => x !== n).slice(0, 3), FG(X(`${n[0].toUpperCase() + n.slice(1)}: ${d}.`), { tipo: 'quadrilatero', nome: n, info: d })); };
+const TIPOS_ANG = ['agudo', 'reto', 'obtuso', 'raso'];
+const tipoAngulo = () => { const t = pick(['agudo', 'agudo', 'obtuso', 'obtuso', 'reto', 'raso']); const g = t === 'agudo' ? 5 * int(2, 17) : t === 'obtuso' ? 5 * int(19, 35) : t === 'reto' ? 90 : 180;
+  return Q(`Um ângulo de ${g}° é:`, t, TIPOS_ANG.filter(x => x !== t), FG(X('Agudo: menor que 90°. Reto: 90°. Obtuso: entre 90° e 180°. Raso: 180°.'), { tipo: 'tipo_angulo', g })); };
+const angQuad = () => { for (; ;) { const a = 5 * int(14, 26), b = 5 * int(14, 26), c = 5 * int(14, 26), v = 360 - a - b - c; if (v < 40 || v > 140) continue;
+  return Q(`Um quadrilátero tem ângulos de ${a}°, ${b}° e ${c}°. Quanto mede o quarto?`, `${v}°`, erradasNum(v, [v + 20, v + 10, v - 10], { fmt: x => `${x}°` }), FG(X(`Os 4 ângulos do quadrilátero somam 360°: 360 − ${a} − ${b} − ${c} = ${v}°`), { tipo: 'angulos4', angulos: ['?', a, b, c], revela: v, conta: `360° − ${a + b + c}° = ${v}°` })); } };
+const trocaUnid = () => { const k = int(2, 9); return pick([
+  () => Q(`${k} m são quantos cm?`, `${k * 100} cm`, erradasNum(k * 100, [k * 10, k * 1000, k], { fmt: cm }), FG(X(`1 m = 100 cm. ${k} × 100 = ${k * 100} cm`), { tipo: 'regua', texto: `${k} m = ${k * 100} cm`, de: `${k} m`, para: `${k * 100} cm`, metros: k })),
+  () => Q(`${k} cm são quantos mm?`, `${k * 10} mm`, erradasNum(k * 10, [k * 100, k, k * 1000], { fmt: x => `${num(x)} mm` }), FG(X(`1 cm = 10 mm. ${k} × 10 = ${k * 10} mm`), { tipo: 'regua', texto: `${k} cm = ${k * 10} mm`, de: `${k} cm`, para: `${k * 10} mm`, partes: k * 10 })),
+  () => Q(`${k} km são quantos m?`, `${k * 1000} m`, erradasNum(k * 1000, [k * 100, k * 10, k * 10000], { fmt: m_ }), FG(X(`1 km = 1000 m. ${k} × 1000 = ${k * 1000} m`), { tipo: 'regua', texto: `${k} km = ${k * 1000} m`, de: `${k} km`, para: `${k * 1000} m`, partes: 10 })),
+  () => Q(`${k * 100} cm são quantos m?`, m_(k), erradasNum(k, [k * 10, k * 100, k + 1], { fmt: m_ }), FG(X(`100 cm = 1 m. ${k * 100} ÷ 100 = ${k} m`), { tipo: 'regua', texto: `${k * 100} cm = ${k} m`, de: `${k * 100} cm`, para: `${k} m`, metros: k })),
+])(); };
 const areaQ = () => { const l = int(2, 12); const v = l * l; return Q(`Qual é a área de um quadrado de lado ${l} cm?`, cm2(v), erradasNum(v, [4 * l, 2 * l, v + l], { fmt: cm2 }), FG(X(`Área do quadrado = lado × lado: ${l} × ${l} = ${v} cm²`), GR(l, l))); };
 const areaR = () => { const a = int(2, 12), b = int(2, 9); const v = a * b; return Q(`Qual é a área de um retângulo de ${a} cm por ${b} cm?`, cm2(v), erradasNum(v, [2 * (a + b), a + b, v + a], { fmt: cm2 }), FG(X(`Área do retângulo = comprimento × largura: ${a} × ${b} = ${v} cm²`), GR(a, b))); };
 const quadradinhos = () => { const r = int(2, 5), c = int(2, 6); const v = r * c; return pick([() => Q(`Uma figura é formada por ${v} quadradinhos de 1 cm². Qual a área?`, cm2(v), erradasNum(v, [v * 4, v + 4], { fmt: cm2 }), FG(X(`Cada quadradinho vale 1 cm²: ${v} quadradinhos = ${v} cm²`), GR(c, r))), () => Q(`Um piso tem ${r} fileiras com ${c} lajotas cada. Quantas lajotas ao todo?`, num(v), erradasNum(v, [r + c, 2 * (r + c), v + c]), FG(X(`${r} fileiras × ${c} lajotas = ${v}`), GR(c, r, '', { rotulo: 'lajotas' })))])(); };
@@ -173,9 +192,9 @@ const M11 = {
   A: {
     treinador1: [perQ, perQ, perR, perR, perQ],
     treinador2: [perT, perP, perP, perP, perT],
-    treinador3: [fato, fato, fato, fato, fato],
+    treinador3: [fato, poligono, quadrilatero, tipoAngulo, trocaUnid, fato],   // PROMPT-216
     lider: [cerca, ladoDoQ, cmM, () => { const l = 10 * int(1, 5); return Q(`Dei uma volta numa quadra quadrada de lado ${l} m. Quanto andei?`, m_(4 * l), erradasNum(4 * l, [l * l, 2 * l, l + 4], { fmt: m_ }), FG(X(`Uma volta é o perímetro: 4 × ${l} = ${4 * l} m`), POL('quadrado', [l, l, l, l], 'm'))); }, perR],
-    revanche: [angulo, ladoR, () => { const l = arred(int(1, 4) + 0.5); const v = 4 * l; return Q(`Qual é o perímetro de um quadrado de lado ${num(l)} cm?`, cm(v), erradasNum(v, [l * l, 2 * l, v + 1], { fmt: cm, inteiro: false }), FG(X(`4 × ${num(l)} = ${num(v)} cm`), POL('quadrado', [l, l, l, l]))); }],
+    revanche: [angulo, ladoR, () => { const l = arred(int(1, 4) + 0.5); const v = 4 * l; return Q(`Qual é o perímetro de um quadrado de lado ${num(l)} cm?`, cm(v), erradasNum(v, [l * l, 2 * l, v + 1], { fmt: cm, inteiro: false }), FG(X(`4 × ${num(l)} = ${num(v)} cm`), POL('quadrado', [l, l, l, l]))); }, angQuad],   // PROMPT-216: + angQuad
   },
   B: {
     treinador1: [areaQ, areaQ, areaQ, areaQ, areaQ],

@@ -755,6 +755,324 @@
     }
    ]
   },
+  "mapa11-A": {
+   "titulo": "Perímetro, medidas e ângulos",
+   "layout": "v2",
+   "paginas": [
+    {
+     "texto": "Perímetro",
+     "quadro": [
+      {
+       "t": "perim",
+       "forma": "quadrado",
+       "l": 3,
+       "etq": true
+      }
+     ]
+    },
+    {
+     "texto": "Lado com vírgula",
+     "quadro": [
+      {
+       "t": "perim",
+       "forma": "quadrado",
+       "l": 2.5
+      }
+     ]
+    },
+    {
+     "texto": "Retângulo",
+     "quadro": [
+      {
+       "t": "perim",
+       "forma": "retangulo",
+       "a": 5,
+       "b": 2
+      }
+     ]
+    },
+    {
+     "texto": "Triângulo",
+     "quadro": [
+      {
+       "t": "perim",
+       "forma": "triangulo",
+       "lados": [
+        4,
+        5,
+        6
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Lados iguais",
+     "quadro": [
+      {
+       "t": "iguais",
+       "n": 6,
+       "l": 3,
+       "nome": "hexágono"
+      }
+     ]
+    },
+    {
+     "texto": "Cercar",
+     "quadro": [
+      {
+       "t": "perim",
+       "forma": "retangulo",
+       "a": 12,
+       "b": 5,
+       "cerca": true
+      }
+     ]
+    },
+    {
+     "texto": "Dar a volta",
+     "quadro": [
+      {
+       "t": "volta",
+       "l": 20
+      }
+     ]
+    },
+    {
+     "texto": "Lado do quadrado",
+     "quadro": [
+      {
+       "t": "ladoq",
+       "p": 20
+      }
+     ]
+    },
+    {
+     "texto": "Lado do retângulo",
+     "quadro": [
+      {
+       "t": "lador",
+       "p": 18,
+       "a": 5
+      }
+     ]
+    },
+    {
+     "texto": "Medidas",
+     "quadro": [
+      {
+       "t": "medidas"
+      }
+     ]
+    },
+    {
+     "texto": "Trocar a unidade",
+     "quadro": [
+      {
+       "t": "trocar",
+       "casos": [
+        {
+         "v": 300,
+         "de": "cm",
+         "para": "m"
+        },
+        {
+         "v": 2,
+         "de": "m",
+         "para": "cm"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Tipos de ângulo",
+     "quadro": [
+      {
+       "t": "tiposang"
+      }
+     ]
+    },
+    {
+     "texto": "Polígonos",
+     "quadro": [
+      {
+       "t": "poligonos"
+      }
+     ]
+    },
+    {
+     "texto": "Quadriláteros",
+     "quadro": [
+      {
+       "t": "quadrilateros"
+      }
+     ]
+    },
+    {
+     "texto": "Triângulo: os ângulos somam 180°",
+     "quadro": [
+      {
+       "t": "angtri"
+      }
+     ]
+    },
+    {
+     "texto": "O ângulo que falta (triângulo)",
+     "quadro": [
+      {
+       "t": "faltatri",
+       "a": 50,
+       "b": 60
+      }
+     ]
+    },
+    {
+     "texto": "Quadrilátero: os ângulos somam 360°",
+     "quadro": [
+      {
+       "t": "angquad"
+      }
+     ]
+    },
+    {
+     "texto": "O ângulo que falta (quadrilátero)",
+     "quadro": [
+      {
+       "t": "faltaquad",
+       "angs": [
+        90,
+        90,
+        100
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "mapa11-B": {
+   "titulo": "Área",
+   "layout": "v2",
+   "paginas": [
+    {
+     "texto": "Área",
+     "quadro": [
+      {
+       "t": "area",
+       "c": 3,
+       "l": 2
+      }
+     ]
+    },
+    {
+     "texto": "Retângulo",
+     "quadro": [
+      {
+       "t": "arear",
+       "c": 4,
+       "l": 3
+      }
+     ]
+    },
+    {
+     "texto": "Lajotas",
+     "quadro": [
+      {
+       "t": "lajotas",
+       "c": 4,
+       "l": 3
+      }
+     ]
+    },
+    {
+     "texto": "Quadrado",
+     "quadro": [
+      {
+       "t": "arear",
+       "c": 5,
+       "l": 5,
+       "quadrado": true
+      }
+     ]
+    },
+    {
+     "texto": "Área × perímetro",
+     "quadro": [
+      {
+       "t": "areaper",
+       "c": 4,
+       "l": 3
+      }
+     ]
+    },
+    {
+     "texto": "Comparar áreas",
+     "quadro": [
+      {
+       "t": "comparaa",
+       "a": [
+        4,
+        4
+       ],
+       "b": [
+        6,
+        2
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Triângulo",
+     "quadro": [
+      {
+       "t": "areat",
+       "b": 6,
+       "h": 4
+      }
+     ]
+    },
+    {
+     "texto": "Paralelogramo",
+     "quadro": [
+      {
+       "t": "areap",
+       "b": 8,
+       "h": 3
+      }
+     ]
+    },
+    {
+     "texto": "Sala",
+     "quadro": [
+      {
+       "t": "arear",
+       "c": 4,
+       "l": 3,
+       "unid": "m",
+       "sala": true
+      }
+     ]
+    },
+    {
+     "texto": "Metade com grama",
+     "quadro": [
+      {
+       "t": "metade",
+       "c": 8,
+       "l": 5
+      }
+     ]
+    },
+    {
+     "texto": "Lado pela área",
+     "quadro": [
+      {
+       "t": "ladoa",
+       "l": 6
+      }
+     ]
+    }
+   ]
+  },
   "mapa12-A": {
    "titulo": "Ler coordenadas",
    "layout": "v2",

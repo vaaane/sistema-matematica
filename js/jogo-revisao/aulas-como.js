@@ -298,7 +298,8 @@ const semPergunta = (q) => (q && typeof q === 'object' ? { ...q, enunciado: tira
 // 🧑‍🏫 PROMPT-205: o cartão do erro do 4-B usa o quadro escrito (quadro.js): as cenas com os números da questão (null = a lousa de antes)
 export function quadroComoFaz(chave, q, sua = '') {
   if (!q) return null;
-  const cs = chave === 'mapa12-A' ? quadro12a(q) : chave === 'mapa12-B' ? quadro12b(q, sua) : quadroComoFaz0(chave, q);   // PROMPT-215
+  const cs = chave === 'mapa12-A' ? quadro12a(q) : chave === 'mapa12-B' ? quadro12b(q, sua)   // PROMPT-215
+    : chave === 'mapa11-A' ? quadro11a(q) : chave === 'mapa11-B' ? quadro11b(q) : quadroComoFaz0(chave, q);   // PROMPT-216
   // PROMPT-214: a pergunta da questão fica no alto da lousa (o enunciado inteiro, com a pergunta)
   const perg = String(q.enunciado || '').trim();
   if (cs?.[0] && perg && !cs[0].perg) cs[0] = { ...cs[0], perg };
@@ -375,10 +376,54 @@ export function paginaResumo(chave, cenas, q) {
     if (c.t === 'mediana') return c.l.length % 2 ? 6 : 7;
     return { notafalta: 3, medcomp: 8 }[c.t] || 0;
   }
+  if (chave === 'mapa11-A' || chave === 'mapa11-B') return c.pag || 0;   // PROMPT-216: quadro11a / quadro11b marcam a página
   if (chave === 'mapa12-A') return { plano: 1, ponto: 2, valor: 3, ordem: 4, eixos: 5, maislado: 6, negativos: 7, quadrantes: 8 }[c.t] || 0;   // PROMPT-215
   if (chave === 'mapa12-B') return c.t === 'caminho' ? 6 : c.t === 'andar' ? c.pag || 0 : 0;
   if (chave === 'mapa13-B') return { ler: 1, maior: 2, total: 3, amais: 4, mediatab: 5, fractab: 6, pcttab: 7, afirma: 8, dupla: 9 }[c.t] || 0;
   return 0;
+}
+// 🧑‍🏫 PROMPT-216: as cenas do quadro do mapa 11 (com os números da questão), pelo enunciado e pela figura; pag = a página do resumo
+const nBr = (t) => Number(String(t).replace(',', '.'));
+const NOME_LADOS = { 'triângulo': 3, 'quadrado': 4, 'pentágono': 5, 'hexágono': 6, 'heptágono': 7, 'octógono': 8, 'decágono': 10 };
+const UNI = { 'milímetros': 'mm', 'mm': 'mm', 'centímetros': 'cm', 'cm': 'cm', 'metros': 'm', 'm': 'm', 'quilômetros': 'km', 'km': 'km' };
+function quadro11a(q) {
+  const en = String(q.enunciado || '').trim();
+  let m;
+  const um = (c, pag) => [{ ...c, pag }];
+  if ((m = /^Qual é o perímetro de um quadrado de lado (\d+(?:,\d+)?) cm\?$/.exec(en))) { const l = nBr(m[1]); return um({ t: 'perim', forma: 'quadrado', l }, Number.isInteger(l) ? 1 : 2); }
+  if ((m = /^Qual é o perímetro de um retângulo de (\d+(?:,\d+)?) cm por (\d+(?:,\d+)?) cm\?$/.exec(en))) return um({ t: 'perim', forma: 'retangulo', a: nBr(m[1]), b: nBr(m[2]) }, 3);
+  if ((m = /^Qual é o perímetro de um triângulo de lados (\d+(?:,\d+)?) cm, (\d+(?:,\d+)?) cm e (\d+(?:,\d+)?) cm\?$/.exec(en))) return um({ t: 'perim', forma: 'triangulo', lados: [m[1], m[2], m[3]].map(nBr) }, 4);
+  if ((m = /^Qual é o perímetro de um (\S+) com (\d+) lados iguais de (\d+(?:,\d+)?) cm\?$/.exec(en))) return um({ t: 'iguais', nome: m[1], n: Number(m[2]), l: nBr(m[3]) }, 5);
+  if ((m = /^Um terreno retangular tem (\d+) m por (\d+) m\. Quantos metros de cerca/.exec(en))) return um({ t: 'perim', forma: 'retangulo', a: Number(m[1]), b: Number(m[2]), cerca: true }, 6);
+  if ((m = /^Dei uma volta numa quadra quadrada de lado (\d+) m\./.exec(en))) return um({ t: 'volta', l: Number(m[1]) }, 7);
+  if ((m = /^Um quadrado tem perímetro (\d+) cm\. Quanto mede cada lado\?$/.exec(en))) return um({ t: 'ladoq', p: Number(m[1]) }, 8);
+  if ((m = /^Um retângulo tem perímetro (\d+) cm e um dos lados mede (\d+) cm\./.exec(en))) return um({ t: 'lador', p: Number(m[1]), a: Number(m[2]) }, 9);
+  if (/^1 (metro|quilômetro|centímetro) tem quantos/.test(en)) return um({ t: 'medidas' }, 10);
+  if ((m = /^(\d+) (cm|m|km|mm) são quantos (milímetros|centímetros|metros|quilômetros|mm|cm|m|km)\?$/.exec(en))) return um({ t: 'trocar', casos: [{ v: Number(m[1]), de: m[2], para: UNI[m[3]] }] }, 11);
+  if (/^Um ângulo reto mede/.test(en)) return um({ t: 'tiposang', g: 90 }, 12);
+  if ((m = /^Um ângulo de (\d+)° é:?$/.exec(en))) return um({ t: 'tiposang', g: Number(m[1]) }, 12);
+  if (/^Quantos lados tem um \S+\?$/.test(en) || /^Um polígono de \d+ lados se chama:?$/.test(en)) return um({ t: 'poligonos' }, 13);
+  if (/^Qual quadrilátero tem/.test(en)) return um({ t: 'quadrilateros' }, 14);
+  if ((m = /^Um triângulo tem ângulos de (\d+)° e (\d+)°\./.exec(en))) return um({ t: 'faltatri', a: Number(m[1]), b: Number(m[2]) }, 16);
+  if ((m = /^Um quadrilátero tem ângulos de (\d+)°, (\d+)° e (\d+)°\./.exec(en))) return um({ t: 'faltaquad', angs: [m[1], m[2], m[3]].map(Number) }, 18);
+  return null;
+}
+function quadro11b(q) {
+  const en = String(q.enunciado || '').trim(), f = q.figura || {};
+  let m;
+  const um = (c, pag) => [{ ...c, pag }];
+  if (/^Uma figura é formada por \d+ quadradinhos/.test(en) && f.c && f.l) return um({ t: 'area', c: f.c, l: f.l }, 1);
+  if ((m = /^Qual é a área de um retângulo de (\d+) cm por (\d+) cm\?$/.exec(en))) return um({ t: 'arear', c: Number(m[1]), l: Number(m[2]) }, 2);
+  if ((m = /^Um piso tem (\d+) fileiras com (\d+) lajotas cada\./.exec(en))) return um({ t: 'lajotas', c: Number(m[2]), l: Number(m[1]) }, 3);
+  if ((m = /^Qual é a área de um quadrado de lado (\d+) cm\?$/.exec(en))) return um({ t: 'arear', c: Number(m[1]), l: Number(m[1]), quadrado: true }, 4);
+  if (f.tipo === 'medida' || /^(Área|Perímetro) é medid[ao] em:?$/.test(en)) return um({ t: 'areaper' }, 5);
+  if (f.tipo === 'compara_area' && f.figuras?.length === 2) { const [x, y] = f.figuras; return um({ t: 'comparaa', a: [x.c, x.l], b: [y.c, y.l], ...(x.nome && y.nome ? { perg: `${en}|{A:${x.nome}} ou|{B:${y.nome}}` } : {}) }, 6); }
+  if ((m = /^Qual é a área de um triângulo de base (\d+) cm e altura (\d+) cm\?$/.exec(en))) return um({ t: 'areat', b: Number(m[1]), h: Number(m[2]) }, 7);
+  if ((m = /^Qual é a área de um paralelogramo de base (\d+) cm e altura (\d+) cm\?$/.exec(en))) return um({ t: 'areap', b: Number(m[1]), h: Number(m[2]) }, 8);
+  if ((m = /^Uma sala retangular tem (\d+) m por (\d+) m\./.exec(en))) return um({ t: 'arear', c: Number(m[1]), l: Number(m[2]), unid: 'm', sala: true }, 9);
+  if ((m = /^Um terreno de (\d+) m por (\d+) m tem grama/.exec(en))) return um({ t: 'metade', c: Number(m[1]), l: Number(m[2]) }, 10);
+  if ((m = /^Um quadrado tem área (\d+) cm²\. Quanto mede o lado\?$/.exec(en))) { const l = Math.round(Math.sqrt(Number(m[1]))); return l * l === Number(m[1]) ? um({ t: 'ladoa', l }, 11) : null; }
+  return null;
 }
 // 🧑‍🏫 PROMPT-215: as cenas do quadro do mapa 12 (o plano do tamanho da questão), pelo plano da pergunta (q.plano) e pelo enunciado
 const nCoord = (t) => Number(String(t).replace(/−/g, '-'));

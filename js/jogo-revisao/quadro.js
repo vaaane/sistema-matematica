@@ -119,13 +119,18 @@ export function criarQuadro(raiz) {
     [FOCO, LADO].forEach(e => { e.style.top = fim + 'px'; });   // o histórico começa no alto, do lado da etiqueta
     L.ajustaPlano?.();   // PROMPT-215: o plano acompanha a altura que sobra
   }
+  // PROMPT-216: as medidas da pergunta sublinhadas em amarelo (3 cm, 12 m², 50°); {A:…} e {B:…}: o que se compara (laranja e lilás)
+  const pergHtml = (fr) => esc(fr)
+    .replace(/(\d+(?:,\d+)?) ?(cm²|m²|cm|mm|km|m|°)(?![a-zà-ú²])/g, (m, n, u) => `<u class="qd-med">${n}${u === '°' ? '' : ' '}${u}</u>`)
+    .replace(/\{([AB]):([^{}]+)\}/g, (m, k, t) => `<span class="qd-cmp${k}">${t}</span>`)
+    .replace(/(\d),(\d)/g, '$1<span class="qd-v">,</span>$2');
   const ler = (txt) => wait(1800 + 160 * String(txt).replace(/<[^>]+>/g, ' ').trim().split(/\s+/).length);
   async function poePergunta(txt, espera = true) {
     txt = String(txt || '').trim();
     if (!txt || PERG.dataset.txt === txt) { ajustaTopo(); return; }
     if (PERG.textContent.trim()) { PERG.style.opacity = 0; await wait(300); }
     PERG.dataset.txt = txt;
-    PERG.innerHTML = txt.split(/(?<=[.?!])\s+/).map(fr => `<div>${virgulas(fr)}</div>`).join('');
+    PERG.innerHTML = txt.split(/(?<=[.?!])\s+|\s*\|\s*/).filter(Boolean).map(fr => `<div>${pergHtml(fr)}</div>`).join('');
     ajustaTopo(); PERG.style.opacity = 1;
     if (espera) await ler(txt);
   }
@@ -147,9 +152,8 @@ export function criarQuadro(raiz) {
   }
   new ResizeObserver(medir).observe(raiz);
   new ResizeObserver(caber).observe(FOCO);
-  let pendCaber = false;
-  new MutationObserver(() => { if (pendCaber) return; pendCaber = true; requestAnimationFrame(() => { pendCaber = false; caber(); }); })
-    .observe(FOCO, { childList: true, subtree: true, characterData: true });
+  // PROMPT-216: caber() na hora (antes da pintura), não no requestAnimationFrame: a conta nasce no tamanho certo
+  new MutationObserver(() => caber()).observe(FOCO, { childList: true, subtree: true, characterData: true });
 
   // ── tempo (respeita a pausa e a troca de página) ──
   function wait(ms) {
@@ -215,6 +219,7 @@ export function criarQuadro(raiz) {
       await wait(300);
     }
     if (perg) await poePergunta(perg, false);
+    html = String(html).replace(/(\d) (?=(?:cm|mm|km|m)²?(?![a-zà-ú])|°)/g, '$1 ');   // PROMPT-216: número e unidade juntos (14 cm, 12 m², 70°)
     const c = el('div', 'qd-card qd-resp-final', `<div class="qd-caixa-ok qd-pop">${html}</div>`, FOCO);
     caber();
     await wait(800);
@@ -243,12 +248,17 @@ export function criarQuadro(raiz) {
     const notas = card.querySelector(':scope > .qd-notas');
     const txtN = notas ? [...notas.querySelectorAll('.qd-nota')].filter(n => !n.classList.contains('qd-apaga')).map(n => n.textContent.trim()).filter(Boolean) : [];
     if (notas) { notas.classList.add('qd-apaga'); await wait(250); notas.remove(); }
-    const M = mapa(), f = fluxo(card, M), h = card.offsetHeight;
-    const w = Math.max(card.offsetWidth, ...[...card.querySelectorAll(":scope > .qd-conta > *")].map(e => e.offsetWidth));
+    let M = mapa(), f = fluxo(card, M), h = card.offsetHeight;
+    let w = Math.max(card.offsetWidth, ...[...card.querySelectorAll(":scope > .qd-conta > *")].map(e => e.offsetWidth));
     const gap = parseFloat(getComputedStyle(HIST).rowGap) || 0;
     const min = L.clientWidth * LETRA_MIN / 100;
     const fonte = parseFloat(getComputedStyle(card).fontSize) * .75;   // a menor letra da conta (listas, frações e o certo embaixo ficam ~75%)
     const K = Math.min(1, Math.max(min / fonte, Math.min(.5, (HIST.clientWidth - 4) / Math.max(w, 1))));
+    // PROMPT-216: a conta não cabe na largura do histórico com a letra mínima? quebra em linhas (nunca fica cortada)
+    if (w * K > HIST.clientWidth - 4) {
+      card.style.width = (HIST.clientWidth - 4) / K + 'px'; card.classList.add('quebra-h');
+      w = card.offsetWidth; h = card.offsetHeight; M = mapa(); f = fluxo(card, M);
+    }
     const slot = el('div', 'qd-hslot', '', HIST);
     slot.style.width = Math.max(w * K, 1) + 'px';
     const hn = txtN.length ? el('div', 'qd-hnota', esc(txtN.join(' · ')), slot) : null;
@@ -2426,6 +2436,732 @@ export function criarQuadro(raiz) {
     for (const r of s.regras || ['Cada número é o cruzamento de uma linha com uma coluna.']) await regra(r);
   }
 
+  // ══════════════════ 11: figuras na lateral (PROMPT-216; protótipos referencia/lousa-11a.html e lousa-11b.html) ══════════════════
+  // A figura fica na lateral larga desde o alto (como o plano do 12). Coordenadas em fração do quadro (0 a 1).
+  const nU = (v, u) => `${nBR(v)}${u ? ' ' + u : ''}`;
+  function figura() {
+    L.classList.add('com-lado', 'lado-xl', 'plano-alto');
+    LADO.innerHTML = ''; LADO.style.opacity = '';
+    ajustaTopo();
+    const box = el('div', 'qd-plano', '', LADO);
+    const S = Math.min(LADO.clientWidth, LADO.clientHeight) * .97;
+    box.style.width = box.style.height = S + 'px';
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', `0 0 ${S} ${S}`); svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%'); box.appendChild(svg);
+    L.ajustaPlano = () => { const S2 = Math.min(LADO.clientWidth, LADO.clientHeight) * .97; if (S2 > 0) box.style.width = box.style.height = S2 + 'px'; };
+    const fs = L.clientWidth * LETRA_MIN / 100 * 1.1;
+    const mk = (tag, at, pai = svg) => { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); pai.appendChild(e); return e; };
+    const txt = (x, y, t, cls = 'fg-rot', pai = svg, anc = 'middle') => { const e = mk('text', { x, y, class: cls, 'text-anchor': anc, 'dominant-baseline': 'central' }, pai); e.textContent = t; e.style.fontSize = fs + 'px'; return e; };
+    const F = { S, fs, svg, mk, txt, bola: null };
+    F.limpa = () => { svg.innerHTML = ''; F.bola = null; };
+    // polígono: rótulo de cada lado do lado de fora; ângulos (ang) dentro, perto de cada canto
+    F.poli = (pts, rots = [], { ang = null } = {}) => {
+      const g = mk('g', {});
+      const P = pts.map(([x, y]) => [x * S, y * S]);
+      const cx = P.reduce((a, p) => a + p[0], 0) / P.length, cy = P.reduce((a, p) => a + p[1], 0) / P.length;
+      mk('polygon', { points: P.map((p) => p.join(',')).join(' '), class: 'fg-fundo' }, g);
+      const lados = P.map((p, i) => { const q = P[(i + 1) % P.length]; return mk('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1], class: 'fg-lado' }, g); });
+      const rot = P.map((p, i) => {
+        if (rots[i] == null || rots[i] === '') return null;
+        const q = P[(i + 1) % P.length], mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2;
+        const nx = mx - cx, ny = my - cy, d = Math.hypot(nx, ny) || 1;
+        const lado = Math.abs(nx) > Math.abs(ny) * 1.5;   // lado da esquerda/direita: o texto encosta do lado de fora
+        return txt(mx + nx / d * fs * (lado ? .6 : 1.4), my + ny / d * fs * 1.1, String(rots[i]), 'fg-rot', g, lado ? (nx > 0 ? 'start' : 'end') : 'middle');
+      });
+      const angs = (ang || []).map((a, i) => (a == null ? null : txt(P[i][0] + (cx - P[i][0]) * .3, P[i][1] + (cy - P[i][1]) * .3, a, 'fg-rot', g)));
+      return {
+        g, lados, rot, angs, P,
+        async acende(i, ms = 500) { lados[i].classList.add('on'); rot[i]?.classList.add('on'); await wait(ms); },
+        poe(i, t, cls = 'ok') { if (rot[i]) { rot[i].textContent = t; rot[i].classList.add(cls); } },
+      };
+    };
+    // polígono regular de n lados (base deitada)
+    F.regular = (n, r = .3, cx = .5, cy = .52) => Array.from({ length: n }, (_, i) => { const a = Math.PI / 2 + Math.PI / n + i * 2 * Math.PI / n; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; });
+    // grade c × l de quadradinhos (maxW/maxH: o espaço que ela pode ocupar, em fração do quadro)
+    F.grade = (c, l, { x = .5, y = .5, tam = .74, maxW = tam, maxH = tam, unid = 'cm', cor = '' } = {}) => {
+      const cel = Math.min(maxW * S / c, maxH * S / l), w = cel * c, h = cel * l, x0 = x * S - w / 2, y0 = y * S - h / 2;
+      const g = mk('g', {});
+      const cs = [];
+      for (let r = 0; r < l; r++) for (let k = 0; k < c; k++) cs.push(mk('rect', { x: x0 + k * cel, y: y0 + r * cel, width: cel, height: cel, class: 'fg-cel' }, g));
+      const borda = [[x0, y0, x0 + w, y0], [x0 + w, y0, x0 + w, y0 + h], [x0 + w, y0 + h, x0, y0 + h], [x0, y0 + h, x0, y0]].map(([a, b, cc, d]) => mk('line', { x1: a, y1: b, x2: cc, y2: d, class: 'fg-lado ' + cor }, g));
+      if (unid !== null) { txt(x0 + w / 2, y0 + h + fs * 1, `${c}${unid ? ' ' + unid : ''}`, 'fg-rot', g); txt(x0 - fs * .5, y0 + h / 2, `${l}${unid ? ' ' + unid : ''}`, 'fg-rot', g, 'end'); }
+      return {
+        g, cs, cel,
+        async conta(ms = 170) { for (const [i, e] of cs.entries()) { e.classList.add('on'); if (cel > fs * 1.5) txt(+e.getAttribute('x') + cel / 2, +e.getAttribute('y') + cel / 2, String(i + 1), 'fg-n', g); await wait(ms); } },
+        async fileiras(ms = 550) { for (let r = 0; r < l; r++) { for (let k = 0; k < c; k++) cs[r * c + k].classList.add('on'); txt(x0 + w + fs * .5, y0 + (r + .5) * cel, String(c), 'fg-n fg-fila', g, 'start'); await wait(ms); } },
+        async contorno(ms = 650) { for (const b of borda) await trilhaLado(F, [+b.getAttribute('x1'), +b.getAttribute('y1')], [+b.getAttribute('x2'), +b.getAttribute('y2')], ms); },
+        metade() { mk('polygon', { points: `${x0},${y0 + h} ${x0 + w},${y0 + h} ${x0 + w},${y0}`, class: 'fg-metade' }, g); mk('line', { x1: x0, y1: y0 + h, x2: x0 + w, y2: y0, class: 'fg-diag' }, g); },
+        apagaCel() { cs.forEach((e) => e.classList.remove('on')); g.querySelectorAll('.fg-n').forEach(e => e.remove()); },
+      };
+    };
+    // barra dividida em n pedaços (régua: 1 cm em 10 mm; metro: 100 cm em 10 pedaços de 10 cm)
+    F.barra = (n, { y = .5, esq = '0', dir = '', leg = '' } = {}) => {
+      const x0 = .1 * S, x1 = .9 * S, h = .12 * S, y0 = y * S - h / 2, seg = (x1 - x0) / n;
+      const g = mk('g', {});
+      mk('rect', { x: x0, y: y0, width: x1 - x0, height: h, class: 'fg-barra' }, g);
+      const sg = Array.from({ length: n }, (_, i) => mk('rect', { x: x0 + i * seg, y: y0, width: seg, height: h, class: 'fg-seg' }, g));
+      txt(x0, y0 + h + fs * 1, esq, 'fg-rot', g); txt(x1, y0 + h + fs * 1, dir, 'fg-rot', g);
+      if (leg) txt(S / 2, y0 - fs * 1.1, leg, 'fg-leg', g);
+      return { async conta(ms = 300) { for (const [i, e] of sg.entries()) { e.classList.add('on'); if (seg > fs * 1.1) txt(+e.getAttribute('x') + seg / 2, y0 + h / 2, String(i + 1), 'fg-n', g); await wait(ms); } } };
+    };
+    return F;
+  }
+  // ── a linha que percorre o contorno (perímetro: é a linha que se soma), com uma bolinha na ponta ──
+  function trilhaLado(F, p, q, ms) {
+    const len = Math.hypot(q[0] - p[0], q[1] - p[1]);
+    const ln = F.mk('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1], class: 'fg-trilha' });
+    ln.style.strokeDasharray = len; ln.style.strokeDashoffset = len; ln.getBoundingClientRect();
+    ln.style.transition = `stroke-dashoffset ${T(ms / 1000)} linear`; ln.style.strokeDashoffset = 0;
+    if (!F.bola) { F.bola = F.mk('circle', { cx: 0, cy: 0, r: F.fs * .38, class: 'fg-bola' }); F.bola.style.transform = `translate(${p[0]}px, ${p[1]}px)`; F.bola.getBoundingClientRect(); }
+    F.svg.appendChild(F.bola);
+    F.bola.style.transition = `transform ${T(ms / 1000)} linear`;
+    F.bola.style.transform = `translate(${q[0]}px, ${q[1]}px)`;
+    return wait(ms);
+  }
+  // percorre os lados na ordem; depois de cada lado, chama aoPassar(k, i)
+  async function percorre(F, Pg, ordem, aoPassar = null, ms = 750) {
+    for (const [k, i] of ordem.entries()) {
+      Pg.rot[i]?.classList.add('on');
+      await trilhaLado(F, Pg.P[i], Pg.P[(i + 1) % Pg.P.length], ms);
+      if (aoPassar) await aoPassar(k, i);
+    }
+  }
+  // setor (fatia de ângulo) com centro (x, y), raio r, de a1 até a2 graus (anti-horário, 0° = para a direita)
+  const setor = (x, y, r, a1, a2) => {
+    const R = (a) => [x + r * Math.cos(a * Math.PI / 180), y - r * Math.sin(a * Math.PI / 180)];
+    const [x1, y1] = R(a1), [x2, y2] = R(a2), grande = a2 - a1 > 180 ? 1 : 0;
+    return `M${x} ${y} L${x1} ${y1} A${r} ${r} 0 ${grande} 0 ${x2} ${y2} Z`;
+  };
+  // marca de ângulo reto no canto p, entre as direções de p para a e de p para b
+  function cantoReto(F, p, a, b, k = .07) {
+    const u = (q) => { const d = Math.hypot(q[0] - p[0], q[1] - p[1]); return [(q[0] - p[0]) / d * k * F.S, (q[1] - p[1]) / d * k * F.S]; };
+    const [ux, uy] = u(a), [vx, vy] = u(b);
+    return F.mk('path', { d: `M${p[0] + ux} ${p[1] + uy} L${p[0] + ux + vx} ${p[1] + uy + vy} L${p[0] + vx} ${p[1] + vy}`, class: 'fg-canto' });
+  }
+  const regular100 = (n, r = 44, cx = 50, cy = 52) => Array.from({ length: n }, (_, i) => { const a = Math.PI / 2 + Math.PI / n + i * 2 * Math.PI / n; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; });
+  // ── vitrine: sem histórico e sem lateral; a figura grande é feita no alto, à esquerda; uma cópia pequena voa para o
+  //    lugar dela na fileira de baixo (centralizada); depois aparecem o nome e a explicação ──
+  function vitrine(n, { vb = '-6 -6 112 112', cls = '' } = {}) {
+    L.classList.add('sem-hist', 'sem-lado'); if (cls) L.classList.add(cls);
+    const palco = el('div', 'qd-palco', '', L);
+    const big = document.createElementNS(NS, 'svg'); big.setAttribute('viewBox', vb); palco.appendChild(big);
+    const mk = (tag, at) => { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); big.appendChild(e); return e; };
+    const fila = el('div', 'qd-galeria qd-vitrine', '', FOCO); fila.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+    const itens = Array.from({ length: n }, () => {
+      const it = el('div', 'gal-item', '', fila);
+      const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', vb); it.appendChild(svg);
+      return { it, svg, nome: el('div', 'gal-nome', '', it), info: el('div', 'gal-info', '', it) };
+    });
+    return {
+      mk,
+      limpa() { big.innerHTML = ''; },
+      num(x, y, t) { const e = mk('text', { x, y, class: 'vt-num', 'text-anchor': 'middle', 'dominant-baseline': 'central' }); e.textContent = t; return e; },
+      poli(pts) { mk('polygon', { points: pts.map((p) => p.join(',')).join(' '), class: 'gl-fundo' }); return pts.map((p, i) => { const q = pts[(i + 1) % pts.length]; return mk('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1], class: 'gl-lado' }); }); },
+      reto(p, a, b, k = 11) { const u = (q) => { const d = Math.hypot(q[0] - p[0], q[1] - p[1]); return [(q[0] - p[0]) / d * k, (q[1] - p[1]) / d * k]; }; const [ux, uy] = u(a), [vx, vy] = u(b); mk('path', { d: `M${p[0] + ux} ${p[1] + uy} L${p[0] + ux + vx} ${p[1] + uy + vy} L${p[0] + vx} ${p[1] + vy}`, class: 'gl-canto' }); },
+      // a cópia pequena (sem os números de contagem) voa do desenho grande para o lugar dela; depois aparece o texto
+      async voa(i, nome, info) {
+        const { it, svg } = itens[i];
+        svg.innerHTML = big.innerHTML; svg.querySelectorAll('.vt-num').forEach((e) => e.remove());
+        it.classList.add('on');
+        const M = mapa(), a = fluxo(big, M), b = fluxo(svg, M);
+        svg.style.transformOrigin = '0 0'; svg.style.transition = 'none';
+        svg.style.transform = `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / (b.width || 1)})`;
+        svg.getBoundingClientRect();
+        svg.style.transition = `transform ${T(.9)} cubic-bezier(.4,.1,.25,1)`; svg.style.transform = 'none';
+        await wait(950);
+        itens[i].nome.textContent = nome; itens[i].info.textContent = info; it.classList.add('txt');
+        await wait(700);
+      },
+    };
+  }
+  const QUAD = [[.24, .16], [.76, .16], [.76, .68], [.24, .68]];
+  const retPts = (a, b, larg = .6) => { const w = larg, h = Math.min(.6, Math.max(.2, larg * b / a)); const x0 = .5 - w / 2, y0 = .45 - h / 2; return [[x0, y0], [x0 + w, y0], [x0 + w, y0 + h], [x0, y0 + h]]; };
+  // triângulo pelos 3 lados (a base é o maior), dentro de [.1, .9] × [.2, .72]
+  function triPts(lados) {
+    const [B, s1, s2] = [...lados].sort((a, b) => b - a);
+    const x = (B * B + s2 * s2 - s1 * s1) / (2 * B), y = Math.sqrt(Math.max(.01, s2 * s2 - x * x));
+    const k = Math.min(.7 / B, .5 / y), x0 = .5 - B * k / 2;
+    return { pts: [[x0, .72], [x0 + B * k, .72], [x0 + x * k, .72 - y * k]], ordem: [B, s1, s2] };
+  }
+  const cartaoSoma = () => { const c = cartao(); c.conta.innerHTML = '<div class="qd-fx qd-soma"></div>'; return [c, c.conta.querySelector('.qd-soma')]; };
+  const fecha = (alvo, v) => { el('span', 'igual', '=', alvo); verde(el('span', '', '', alvo), v); };
+  async function somaPercorrendo(F, Pg, valores, alvo, ms = 750) {
+    await percorre(F, Pg, valores.map((_, i) => i), async (k) => { if (k) el('span', 'op', '+', alvo); el('span', 'qd-pop', virgulas(nBR(valores[k])), alvo); await wait(250); }, ms);
+  }
+  const msConta = (n, base) => Math.min(base, Math.max(60, 5000 / n));   // contar de 1 a n: nunca mais que ~5 s
+
+  // 11-A p.1–4 e 6) perímetro: a linha percorre o contorno e cada lado entra na soma quando ela passa
+  //   { forma: 'quadrado', l } · { forma: 'retangulo', a, b } · { forma: 'triangulo', lados: [a, b, c] }; cerca: true (terreno, em m)
+  async function cenaPerim(s) {
+    const u = s.unid || (s.cerca ? 'm' : 'cm'), forma = s.forma;
+    let pts, rots, vals, perg;
+    if (forma === 'quadrado') { const l = Number(s.l); pts = QUAD; vals = [l, l, l, l]; perg = `Qual é o perímetro de um quadrado de lado ${nU(l, u)}?`; }
+    else if (forma === 'triangulo') { const t = triPts(s.lados.map(Number)); pts = t.pts; vals = t.ordem; perg = `Qual é o perímetro de um triângulo de lados ${s.lados.slice(0, -1).map(v => nU(v, u)).join(', ')} e ${nU(s.lados[2], u)}?`; }
+    else { const a = Number(s.a), b = Number(s.b); pts = retPts(Math.max(a, b), Math.min(a, b)); vals = a >= b ? [a, b, a, b] : [b, a, b, a]; perg = s.cerca ? `Um terreno tem ${nU(a, 'm')} por ${nU(b, 'm')}. Quantos metros de cerca para cercar tudo?` : `Qual é o perímetro de um retângulo de ${nU(a, u)} por ${nU(b, u)}?`; }
+    perg = s.perg || perg;
+    rots = vals.map(v => nU(v, u));
+    const P = vals.reduce((a, b) => a + b, 0), dec = vals.some(v => !Number.isInteger(v));
+    const F = figura();
+    if (s.etq) await etiqueta('PERÍMETRO', 'a linha do contorno');
+    await poePergunta(perg, false);
+    const Pg = F.poli(pts, rots);
+    const [c1, alvo] = cartaoSoma();
+    await ler(perg);
+    const txtP = s.cerca ? '"Cercar" é contornar: a cerca é a linha do contorno.' : forma === 'triangulo' ? 'Percorre os 3 lados e soma.'
+      : forma === 'retangulo' ? 'Percorre o contorno: 2 lados de cada tamanho.' : dec ? 'Percorre o contorno e soma.' : 'Percorre o contorno: soma cada lado que a linha passa.';
+    let p = await nota(c1.notas, txtP, 'passo');
+    await somaPercorrendo(F, Pg, vals, alvo);
+    fecha(alvo, nU(P, u));
+    await wait(500); await apagar(p);
+    if (forma === 'quadrado') {
+      const l = vals[0];
+      if (dec) {
+        await nota(c1.notas, `${nBR(l)} + ${nBR(l)} = ${nBR(2 * l)} e ${nBR(2 * l)} + ${nBR(2 * l)} = ${nBR(P)}`, 'detalhe');
+        await paraHist(c1);
+        const c2 = cartao(), rr = contaQ(c2, virgulas(`4 × ${nBR(l)}`));
+        p = await nota(c2.notas, `Jeito rápido: 4 lados iguais, 4 × ${nBR(l)}.`, 'passo');
+        await wait(900); verde(rr, nU(P, u)); await wait(600); await apagar(p);
+      } else await nota(c1.notas, `4 lados iguais: 4 × ${nBR(l)} = ${nBR(P)}`, 'detalhe');
+    }
+    if (forma === 'retangulo' && !s.cerca) {
+      const [a, b] = vals;
+      await paraHist(c1);
+      const c2 = cartao(); c2.conta.innerHTML = `<div class="qd-fx qd-errado"><span class="qd-x"><span>${nBR(a)} × ${nBR(b)} = ${nBR(a * b)}</span></span></div>`;
+      await nota(c2.notas, `Pegadinha: ${nBR(a)} × ${nBR(b)} é a área (o de dentro), não o contorno!`, 'passo');
+      await wait(700);
+      await certoEmbaixo(c2, `<span>${virgulas(`${vals.map(nBR).join(' + ')} = ${nU(P, u)}`)}</span>`);
+    }
+    await respostaFinal(`<span>${virgulas(s.cerca ? `${nU(P, 'm')} de cerca` : `perímetro = ${nU(P, u)}`)}</span>`, { perg });
+    const padrao = s.cerca ? '"Cercar" e "contornar": é perímetro.' : forma === 'triangulo' ? 'Triângulo: soma os 3 lados.' : forma === 'retangulo' ? 'Retângulo: cada tamanho de lado aparece 2 vezes no contorno.'
+      : dec ? 'Lado com vírgula: soma do mesmo jeito (ou 4 × o lado).' : 'Perímetro: o tamanho da linha do contorno (soma todos os lados).';
+    for (const r of s.regras || [padrao]) await regra(r);
+  }
+
+  // 11-A p.5) lados iguais: conta os lados enquanto a linha passa → n × lado
+  async function cenaIguais(s) {
+    const n = Number(s.n), l = Number(s.l), u = s.unid || 'cm', nome = s.nome || 'polígono';
+    const perg = s.perg || `Qual é o perímetro de um ${nome} com ${n} lados iguais de ${nU(l, u)}?`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const H = F.poli(F.regular(n, .3, .5, .46), Array(n).fill(nU(l, u)));
+    const c = cartao(), rr = contaQ(c, virgulas(`${n} × ${nBR(l)}`));
+    await ler(perg);
+    const p = await nota(c.notas, `Conta os lados enquanto a linha passa: ${n} lados de ${nU(l, u)}.`, 'passo');
+    await percorre(F, H, H.P.map((_, i) => i), async (k, i) => { const [a, b] = H.P[i], [x, y] = H.P[(i + 1) % n]; F.txt((a + x) / 2 + ((a + x) / 2 - F.S / 2) * -.25, (b + y) / 2 + ((b + y) / 2 - F.S * .46) * -.25, String(k + 1), 'fg-n fg-fila'); }, 450);
+    verde(rr, nU(n * l, u)); await wait(700); await apagar(p);
+    await respostaFinal(`<span>${virgulas(`perímetro = ${nU(n * l, u)}`)}</span>`, { perg });
+    for (const r of s.regras || ['Lados iguais? Quantos lados × o tamanho do lado.']) await regra(r);
+  }
+
+  // 11-A p.7) dar a volta numa quadra quadrada: o contorno todo → 4 × lado
+  async function cenaVolta(s) {
+    const l = Number(s.l), u = s.unid || 'm', perg = s.perg || `Dei uma volta numa quadra quadrada de lado ${nU(l, u)}. Quanto andei?`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const Q = F.poli(QUAD, Array(4).fill(nU(l, u)));
+    const c = cartao(), rr = contaQ(c, `4 × ${nBR(l)}`);
+    await ler(perg);
+    const p = await nota(c.notas, '"Dar uma volta" é andar o contorno todo.', 'passo');
+    await percorre(F, Q, [0, 1, 2, 3], null, 650);
+    verde(rr, nU(4 * l, u)); await wait(600); await apagar(p);
+    await respostaFinal(`<span>andei ${nU(4 * l, u)}</span>`, { perg });
+    for (const r of s.regras || ['"Dar uma volta": é perímetro.']) await regra(r);
+  }
+
+  // 11-A p.8) o lado do quadrado pelo perímetro: perímetro ÷ 4
+  async function cenaLadoQ(s) {
+    const P = Number(s.p), l = P / 4, u = s.unid || 'cm', perg = s.perg || `Um quadrado tem perímetro ${nU(P, u)}. Quanto mede cada lado?`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const Q = F.poli(QUAD, ['?', '?', '?', '?']);
+    const c = cartao(), rr = contaQ(c, `${nBR(P)} ÷ 4`);
+    await ler(perg);
+    const p = await nota(c.notas, `O contorno tem 4 lados iguais: reparte o ${nBR(P)} em 4.`, 'passo');
+    await wait(900); verde(rr, nU(l, u));
+    await percorre(F, Q, [0, 1, 2, 3], async (k, i) => { Q.poe(i, nU(l, u)); }, 450);
+    await wait(500); await apagar(p);
+    await nota(c.notas, `confere: ${Array(4).fill(nBR(l)).join(' + ')} = ${nBR(P)} ✔`, 'detalhe');
+    await respostaFinal(`<span>${virgulas(`cada lado = ${nU(l, u)}`)}</span>`, { perg });
+    for (const r of s.regras || ['Quadrado: perímetro ÷ 4 = o lado.']) await regra(r);
+  }
+
+  // 11-A p.9) o outro lado do retângulo: tira os 2 lados que já sabe; o que sobra ÷ 2
+  async function cenaLadoR(s) {
+    const P = Number(s.p), a = Number(s.a), sobra = P - 2 * a, b = sobra / 2, u = s.unid || 'cm';
+    const perg = s.perg || `Um retângulo tem perímetro ${nU(P, u)} e um lado mede ${nU(a, u)}. Quanto mede o outro?`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const R = F.poli(retPts(a, b, .55), [nU(a, u), '?', nU(a, u), '?']);
+    const c1 = cartao(); let rr = contaQ(c1, `${nBR(P)} − ${nBR(a)} − ${nBR(a)}`);
+    await ler(perg);
+    let p = await nota(c1.notas, `Tira os 2 lados de ${nU(a, u)} que já sabe.`, 'passo');
+    await R.acende(0, 400); await R.acende(2, 400);
+    verde(rr, nBR(sobra)); await wait(600); await apagar(p);
+    await nota(c1.notas, 'sobram os 2 lados iguais', 'detalhe');
+    await paraHist(c1);
+    const c2 = cartao(); rr = contaQ(c2, `${nBR(sobra)} ÷ 2`);
+    p = await nota(c2.notas, `Os ${nU(sobra, u)} são 2 lados iguais: divide por 2.`, 'passo');
+    await wait(800); verde(rr, nU(b, u));
+    R.poe(1, nU(b, u)); R.poe(3, nU(b, u));
+    await wait(600); await apagar(p);
+    await respostaFinal(`<span>${virgulas(`o outro lado = ${nU(b, u)}`)}</span>`, { perg });
+    for (const r of s.regras || ['Tira os lados que já sabe; o que sobra divide por 2.']) await regra(r);
+  }
+
+  // 11-A p.10) medidas: régua (1 cm = 10 mm), metro (10 pedaços de 10 cm), km
+  async function cenaMedidas(s) {
+    const F = figura();
+    let perg = 'Quantos milímetros tem 1 centímetro?';
+    await poePergunta(perg, false);
+    const B1 = F.barra(10, { y: .3, esq: '0', dir: '1 cm', leg: 'régua (bem de perto)' });
+    const c1 = cartao(); let rr = contaQ(c1, '1 cm');
+    await ler(perg);
+    let p = await nota(c1.notas, 'Conta os risquinhos da régua dentro de 1 cm.', 'passo');
+    await B1.conta(260);
+    verde(rr, '10 mm'); await wait(600); await apagar(p);
+    await paraHist(c1);
+    perg = 'E 1 metro tem quantos centímetros?';
+    await poePergunta(perg, false);
+    const B2 = F.barra(10, { y: .72, esq: '0', dir: '1 m', leg: '10 pedaços de 10 cm' });
+    const c2 = cartao(); rr = contaQ(c2, '1 m');
+    await ler(perg);
+    p = await nota(c2.notas, '10 pedaços de 10 cm: 10 × 10.', 'passo');
+    await B2.conta(220);
+    verde(rr, '100 cm'); await wait(600); await apagar(p);
+    await paraHist(c2);
+    perg = 'E 1 quilômetro tem quantos metros?';
+    await poePergunta(perg, false);
+    const c3 = cartao(); rr = contaQ(c3, '1 km');
+    await ler(perg);
+    p = await nota(c3.notas, '"Quilo" quer dizer mil.', 'passo');
+    await wait(600); verde(rr, '1000 m'); await wait(600); await apagar(p);
+    await respostaFinal('<span class="l2">1 cm = 10 mm</span><span class="l2">1 m = 100 cm</span><span class="l2">1 km = 1000 m</span>', { perg: 'Quanto vale cada medida?' });
+    for (const r of s.regras || ['1 cm = 10 mm · 1 m = 100 cm · 1 km = 1000 m']) await regra(r);
+  }
+
+  // 11-A p.11) trocar a unidade: para a maior divide, para a menor multiplica. casos: [{ v, de, para }]
+  const TROCA = { cm: { m: ['÷', 100], mm: ['×', 10] }, m: { cm: ['×', 100], km: ['÷', 1000] }, km: { m: ['×', 1000] }, mm: { cm: ['÷', 10] } };
+  const UN_NOME = { mm: ['milímetro', 'milímetros'], cm: ['centímetro', 'centímetros'], m: ['metro', 'metros'], km: ['quilômetro', 'quilômetros'] };
+  async function cenaTrocar(s) {
+    const casos = (s.casos || []).filter(k => TROCA[k.de]?.[k.para]);
+    if (!casos.length) return;
+    const F = figura();
+    const pergDe = (k, i) => `${i ? 'E ' : ''}${nBR(k.v)} ${k.de} são quantos ${UN_NOME[k.para][1]}?`;
+    let c = null;
+    const resp = [];
+    for (const [i, k] of casos.entries()) {
+      const [op, f] = TROCA[k.de][k.para], v = Number(k.v), r = op === '÷' ? v / f : v * f;
+      const perg = (i === 0 && casos.length === 1 && s.perg) || pergDe(k, i);
+      if (i) await paraHist(c);
+      await poePergunta(perg, false);
+      let B = null;
+      if (i === 0 && op === '÷' && Number.isInteger(r) && r > 1 && r <= 10) B = F.barra(r, { y: .45, esq: '0', dir: `${nBR(v)} ${k.de}`, leg: `cada pedaço = ${f} ${k.de} = 1 ${k.para}` });
+      if (i === 0 && op === '×' && Number.isInteger(v) && v > 1 && v <= 10) B = F.barra(v, { y: .45, esq: '0', dir: `${nBR(v)} ${k.de}`, leg: `cada pedaço = 1 ${k.de} = ${f} ${k.para}` });
+      c = cartao(); const rr = contaQ(c, `${nBR(v)} ${op} ${f}`);
+      await ler(perg);
+      const p = await nota(c.notas, op === '÷' ? `De ${k.de} para ${k.para}: quantos ${f} cabem? Divide por ${f}.` : `De ${k.de} para ${k.para}: cada ${UN_NOME[k.de][0]} tem ${f} ${k.para}. Multiplica por ${f}.`, 'passo');
+      if (B) await B.conta(500); else await wait(900);
+      verde(rr, nU(r, k.para)); await wait(600); await apagar(p);
+      resp.push(`${nU(v, k.de)} = ${nU(r, k.para)}`);
+    }
+    await respostaFinal(resp.length > 1 ? resp.map(t => `<span class="l2">${virgulas(t)}</span>`).join('') : `<span>${virgulas(resp[0])}</span>`,
+      { perg: casos.length > 1 ? casos.map(k => `${nBR(k.v)} ${k.de} em ${UN_NOME[k.para][1]}?`).join(' ') : (s.perg || pergDe(casos[0], 0)) });
+    for (const r of s.regras || ['Para a unidade maior, divide. Para a menor, multiplica.']) await regra(r);
+  }
+
+  // 11-A p.12) tipos de ângulo (vitrine): o ângulo abre e para em cada tipo; g: o ângulo da questão (entra no lugar do do mesmo tipo)
+  async function cenaTiposAng(s) {
+    await etiqueta('ÂNGULOS', 'a abertura entre duas linhas');
+    const perg = s.perg || 'Como se chama cada ângulo?';
+    await poePergunta(perg, false);
+    const V = vitrine(5, { vb: '-6 22 112 84', cls: 'vit-ang' });
+    const ox = 50, oy = 80, r = 50, ra = 20;
+    const desenha = (g) => {
+      V.limpa();
+      if (g >= 360) V.mk('circle', { cx: ox, cy: oy, r: ra, class: 'gl-ang' }); else if (g > 0) V.mk('path', { d: setor(ox, oy, ra, 0, g), class: 'gl-ang' });
+      V.mk('line', { x1: ox, y1: oy, x2: ox + r, y2: oy, class: 'gl-raio' });
+      const a = g * Math.PI / 180;
+      V.mk('line', { x1: ox, y1: oy, x2: ox + r * Math.cos(a), y2: oy - r * Math.sin(a), class: 'gl-raio' });
+      if (g === 90) V.reto([ox, oy], [ox + 10, oy], [ox, oy - 10], 12);
+      V.num(ox + 34, oy - 30, `${g}°`);
+    };
+    const tipos = [[45, 'agudo', 'menor que 90°'], [90, 'reto', '90°: o canto do quadrado'], [135, 'obtuso', 'entre 90° e 180°'], [180, 'raso', '180°: uma linha reta'], [360, 'volta inteira', '360°']];
+    const g0 = Number(s.g);
+    if (g0 > 0 && g0 < 90) tipos[0][0] = g0; else if (g0 > 90 && g0 < 180) tipos[2][0] = g0;
+    desenha(0);
+    await ler(perg);
+    let g = 0;
+    for (const [i, [alvo, nome, info]] of tipos.entries()) {
+      for (; g < alvo; g = Math.min(alvo, g + 3)) { desenha(g); await wait(25); }
+      desenha(alvo);
+      await wait(500);
+      await V.voa(i, nome, info);
+    }
+    for (const r of s.regras || ['Ângulo: a abertura, em graus (°). Agudo < 90° · reto = 90° · obtuso > 90° · raso = 180° · volta = 360°.']) await regra(r);
+  }
+
+  // 11-A p.13) polígonos (vitrine): desenha o grande contando os lados; a cópia vai para a fileira
+  async function cenaPoligonos(s) {
+    await etiqueta('POLÍGONOS', 'figuras fechadas de lados retos');
+    const perg = s.perg || 'Quantos lados tem cada polígono?';
+    await poePergunta(perg, false);
+    const lista = [['triângulo', 3], ['quadrilátero', 4], ['pentágono', 5], ['hexágono', 6], ['heptágono', 7], ['octógono', 8], ['decágono', 10]];
+    const V = vitrine(lista.length);
+    await ler(perg);
+    for (const [i, [nome, n]] of lista.entries()) {
+      V.limpa();
+      const pts = n === 4 ? [[10, 16], [92, 8], [86, 90], [16, 82]] : regular100(n, 42, 50, 52);
+      const lados = V.poli(pts);
+      for (let k = 0; k < n; k++) {
+        lados[k].classList.add('on');
+        const [a, b] = pts[k], [x, y] = pts[(k + 1) % n], mx = (a + x) / 2, my = (b + y) / 2;
+        V.num(mx + (mx - 50) * .32, my + (my - 52) * .32, String(k + 1));
+        await wait(260);
+      }
+      await wait(300);
+      await V.voa(i, nome, `${n} lados`);
+    }
+    for (const r of s.regras || ['O nome diz os lados: tri 3, quadri 4, penta 5, hexa 6, hepta 7, octo 8, deca 10.']) await regra(r);
+  }
+
+  // 11-A p.14) quadriláteros (vitrine; o ângulo reto já foi explicado)
+  async function cenaQuadrilateros(s) {
+    await etiqueta('QUADRILÁTEROS', 'polígonos de 4 lados');
+    const perg = s.perg || 'Quais são os quadriláteros?';
+    await poePergunta(perg, false);
+    const fig = [
+      ['quadrado', [[10, 10], [90, 10], [90, 90], [10, 90]], '4 lados iguais e 4 ângulos retos', true],
+      ['retângulo', [[0, 24], [100, 24], [100, 76], [0, 76]], 'lados opostos iguais e 4 ângulos retos', true],
+      ['losango', [[50, 2], [90, 50], [50, 98], [10, 50]], '4 lados iguais, sem ângulo reto', false],
+      ['paralelogramo', [[24, 24], [100, 24], [76, 76], [0, 76]], 'lados opostos iguais e paralelos', false],
+      ['trapézio', [[28, 24], [72, 24], [100, 76], [0, 76]], 'só 2 lados paralelos', false],
+    ];
+    const V = vitrine(fig.length);
+    await ler(perg);
+    for (const [i, [nome, pts, info, reto]] of fig.entries()) {
+      V.limpa();
+      const lados = V.poli(pts);
+      for (const l of lados) { l.classList.add('on'); await wait(200); }
+      if (reto) pts.forEach((p, k) => V.reto(p, pts[(k + 1) % 4], pts[(k + 3) % 4]));
+      await wait(500);
+      await V.voa(i, nome, info);
+    }
+    for (const r of s.regras || ['Quadrilátero: 4 lados. Quadrado e retângulo têm os 4 ângulos retos (90°).']) await regra(r);
+  }
+
+  // 11-A p.15) por que os ângulos do triângulo somam 180°: os 3 cantos recortados formam uma linha reta
+  async function cenaAngTri(s) {
+    const F = figura();
+    await etiqueta('TRIÂNGULO', 'os ângulos de dentro somam 180°');
+    const perg = 'Quanto somam os 3 ângulos de dentro de um triângulo?';
+    await poePergunta(perg, false);
+    const S = F.S, A = [.1 * S, .56 * S], B = [.9 * S, .56 * S];
+    const AB = .8 * S, AC = AB * Math.sin(60 * Math.PI / 180) / Math.sin(70 * Math.PI / 180);
+    const C = [A[0] + AC * Math.cos(50 * Math.PI / 180), A[1] - AC * Math.sin(50 * Math.PI / 180)];
+    F.poli([A, B, C].map(([x, y]) => [x / S, y / S]), []);
+    const r = .1 * S;
+    const fatias = [[A, 0, 50, 'a1'], [B, 120, 180, 'a3'], [C, 230, 300, 'a2']];
+    fatias.forEach(([p, a1, a2, cls]) => F.mk('path', { d: setor(p[0], p[1], r, a1, a2), class: 'fg-ang ' + cls }));
+    const c1 = cartao(), rr = contaQ(c1, '3 ângulos');
+    await ler(perg);
+    let p = await nota(c1.notas, 'Recorta os 3 cantos coloridos e junta um do lado do outro…', 'passo');
+    const O = [.5 * S, .88 * S];
+    F.mk('line', { x1: .12 * S, y1: O[1], x2: .88 * S, y2: O[1], class: 'fg-base' });
+    for (const [i, [a1, a2, cls, gira]] of [[0, 50, 'a1', 0], [120, 180, 'a3', 0], [50, 120, 'a2', 180]].entries()) {
+      const de = fatias[i][0];
+      const e = F.mk('path', { d: setor(O[0], O[1], r * 1.6, a1, a2), class: 'fg-ang fg-move ' + cls });
+      e.style.transformOrigin = `${O[0]}px ${O[1]}px`;
+      e.style.transition = 'none';
+      e.style.transform = `translate(${de[0] - O[0]}px, ${de[1] - O[1]}px) rotate(${gira}deg) scale(.62)`;
+      e.getBoundingClientRect();
+      e.style.transition = ''; e.style.transform = 'none';
+      await wait(1400);
+    }
+    await apagar(p);
+    p = await nota(c1.notas, '…eles formam meia volta: uma linha reta, o ângulo raso, 180°.', 'passo');
+    F.txt(O[0], O[1] + F.fs * 1.3, '180°', 'fg-rot ok');
+    await wait(800); verde(rr, '180°'); await wait(700); await apagar(p);
+    await nota(c1.notas, 'vale para qualquer triângulo', 'detalhe');
+    await respostaFinal('<span>os 3 ângulos somam 180°</span>', { perg });
+    for (const r2 of s.regras || ['Os 3 ângulos de dentro de um triângulo somam 180°.']) await regra(r2);
+  }
+
+  // expressão em linhas: "180 − 50 − 60" / "= 130 − 60" / "= ?" (devolve o "?")
+  async function exprFalta(c, total, angs) {
+    const ex = el('div', 'qd-xpr', '', c.conta), soma = angs.reduce((a, b) => a + b, 0);
+    el('div', 'xl qd-pop', `<span>${total} − ${angs.join(' − ')}</span>`, ex); await wait(900);
+    el('div', 'xl qd-pop', `<span>= ${angs.length === 2 ? `${total - angs[0]} − ${angs[1]}` : `${total} − ${soma}`}</span>`, ex); await wait(900);
+    const ln = el('div', 'xl qd-pop', '<span>=</span><span class="vazio-q qd-rr">?</span>', ex); await wait(500);
+    return ln.querySelector('.qd-rr');
+  }
+  // 11-A p.16) o ângulo que falta no triângulo: 180 − os que já sabe (o triângulo desenhado com os ângulos da questão)
+  async function cenaFaltaTri(s) {
+    const a = Number(s.a), b = Number(s.b), v = 180 - a - b, perg = s.perg || `Um triângulo tem ângulos de ${a}° e ${b}°. Quanto mede o terceiro?`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const r = Math.PI / 180, tA = Math.tan(a * r), tB = Math.tan(b * r), x = tB / (tA + tB), y = x * tA;
+    const xs = [0, 1, x], k = Math.min(.8 / (Math.max(...xs) - Math.min(...xs)), .52 / y), x0 = .5 - (Math.max(...xs) + Math.min(...xs)) / 2 * k;
+    const T3 = F.poli([[x0, .72], [x0 + k, .72], [x0 + x * k, .72 - y * k]], [], { ang: [`${a}°`, `${b}°`, '?'] });
+    const c = cartao();
+    await ler(perg);
+    const p = await nota(c.notas, 'Os 3 somam 180°: tira do 180 o que já sabe.', 'passo');
+    const rr = await exprFalta(c, 180, [a, b]);
+    verde(rr, `${v}°`); T3.angs[2].textContent = `${v}°`; T3.angs[2].classList.add('ok');
+    await wait(600); await apagar(p);
+    await nota(c.notas, `confere: ${a} + ${b} + ${v} = 180 ✔`, 'detalhe');
+    await respostaFinal(`<span>o terceiro ângulo = ${v}°</span>`, { perg });
+    for (const r2 of s.regras || ['Ângulo que falta no triângulo: 180 − os que já sabe.']) await regra(r2);
+  }
+
+  // 11-A p.17) por que os ângulos do quadrilátero somam 360°: retângulo 4 × 90; qualquer um: diagonal → 2 × 180
+  async function cenaAngQuad(s) {
+    const F = figura();
+    await etiqueta('QUADRILÁTERO', 'os ângulos de dentro somam 360°');
+    let perg = 'Quanto somam os 4 ângulos de um retângulo?';
+    await poePergunta(perg, false);
+    const R = F.poli(retPts(6, 4, .6), []);
+    R.P.forEach((p, k) => cantoReto(F, p, R.P[(k + 1) % 4], R.P[(k + 3) % 4]));
+    R.P.forEach((p) => F.txt(p[0] + (F.S / 2 - p[0]) * .3, p[1] + (F.S * .45 - p[1]) * .3, '90°', 'fg-rot'));
+    const c1 = cartao(); let rr = contaQ(c1, '90 + 90 + 90 + 90');
+    await ler(perg);
+    let p = await nota(c1.notas, '4 ângulos retos de 90°.', 'passo');
+    await wait(900); verde(rr, '360°'); await wait(600); await apagar(p);
+    await nota(c1.notas, 'retângulo', 'detalhe');
+    await paraHist(c1);
+    F.limpa();
+    perg = 'E num quadrilátero qualquer?';
+    await poePergunta(perg, false);
+    const Qp = [[.18, .3], [.74, .18], [.86, .66], [.3, .7]];
+    F.poli(Qp, []);
+    const c2 = cartao(); rr = contaQ(c2, '2 × 180');
+    await ler(perg);
+    p = await nota(c2.notas, 'Uma diagonal divide em 2 triângulos. Cada triângulo tem 180°.', 'passo');
+    F.mk('line', { x1: Qp[0][0] * F.S, y1: Qp[0][1] * F.S, x2: Qp[2][0] * F.S, y2: Qp[2][1] * F.S, class: 'fg-diag' });
+    await wait(1100); verde(rr, '360°'); await wait(600); await apagar(p);
+    await respostaFinal('<span>os 4 ângulos somam 360°</span>', { perg: 'Quanto somam os 4 ângulos de um quadrilátero?' });
+    for (const r of s.regras || ['Os 4 ângulos de dentro de um quadrilátero somam 360° (2 triângulos).']) await regra(r);
+  }
+
+  // 11-A p.18) o ângulo que falta no quadrilátero: 360 − os que já sabe
+  async function cenaFaltaQuad(s) {
+    const angs = (s.angs || [90, 90, 100]).map(Number), v = 360 - angs.reduce((a, b) => a + b, 0);
+    const perg = s.perg || `Um quadrilátero tem ângulos de ${angs.slice(0, -1).map(x => `${x}°`).join(', ')} e ${angs[2]}°. Quanto mede o quarto?`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const Q4 = F.poli([[.2, .2], [.8, .2], [.8, .7], [.32, .7]], [], { ang: ['?', ...angs.map(x => `${x}°`)] });
+    const c = cartao();
+    await ler(perg);
+    const p = await nota(c.notas, 'Os 4 somam 360°: tira do 360 o que já sabe.', 'passo');
+    const rr = await exprFalta(c, 360, angs);
+    verde(rr, `${v}°`); Q4.angs[0].textContent = `${v}°`; Q4.angs[0].classList.add('ok');
+    await wait(600); await apagar(p);
+    await respostaFinal(`<span>o quarto ângulo = ${v}°</span>`, { perg });
+    for (const r of s.regras || ['Ângulo que falta no quadrilátero: 360 − os que já sabe.']) await regra(r);
+  }
+
+  // ── 11-B: área ──
+  // p.1) área: conta os quadradinhos
+  async function cenaArea(s) {
+    const c0 = Number(s.c) || 3, l0 = Number(s.l) || 2, n = c0 * l0, perg = s.perg || 'Qual é a área desta figura?';
+    const F = figura();
+    await etiqueta('ÁREA', 'o espaço de dentro');
+    await poePergunta(perg, false);
+    const G = F.grade(c0, l0, { unid: null, tam: .6 });
+    F.txt(F.S / 2, F.S * .86, 'cada quadradinho = 1 cm²', 'fg-leg');
+    const c = cartao(), rr = contaQ(c, 'quadradinhos');
+    await ler(perg);
+    const p = await nota(c.notas, 'Conta os quadradinhos de dentro.', 'passo');
+    await G.conta(msConta(n, 380));
+    verde(rr, String(n)); await wait(600); await apagar(p);
+    await nota(c.notas, `${n} quadradinhos de 1 cm²`, 'detalhe');
+    await respostaFinal(`<span>área = ${n} cm²</span>`, { perg });
+    for (const r of s.regras || ['Área: quantos quadradinhos cabem dentro (em cm²).']) await regra(r);
+  }
+  // p.2, 4, 9) retângulo / quadrado / sala: primeiro conta de 1 até…, depois fileiras × quantos em cada (conta: false = só as fileiras)
+  async function cenaAreaR(s) {
+    const c0 = Number(s.c), l0 = Number(s.l), n = c0 * l0, u = s.unid || 'cm', quad = s.quadrado, sala = s.sala;
+    const perg = s.perg || (sala ? `Uma sala tem ${c0} m por ${l0} m. Qual é a área?` : quad ? `Qual é a área de um quadrado de lado ${c0} cm?` : `Qual é a área de um retângulo de ${c0} cm por ${l0} cm?`);
+    const F = figura();
+    await poePergunta(perg, false);
+    const G = F.grade(c0, l0, { unid: u });
+    let c = null;
+    await ler(perg);
+    if (!sala) {
+      c = cartao(); const rr = contaQ(c, 'quadradinhos');
+      const p = await nota(c.notas, quad ? 'Conta os quadradinhos.' : 'Primeiro conta os quadradinhos: de 1 até…', 'passo');
+      await G.conta(msConta(n, quad ? 120 : 330));
+      verde(rr, String(n)); await wait(500); await apagar(p);
+      await paraHist(c);
+    }
+    c = cartao(); const rr = contaQ(c, `${l0} × ${c0}`);
+    const p = await nota(c.notas, sala ? `Cada quadradinho tem 1 m de lado: 1 m². Fileiras × quantos em cada.` : quad ? `Jeito rápido: ${l0} fileiras com ${c0} em cada (lado × lado).` : `Jeito rápido: ${l0} fileiras com ${c0} em cada.`, 'passo');
+    await G.fileiras(Math.min(sala ? 450 : 650, 3500 / l0));
+    verde(rr, `${n} ${u}²`); await wait(600); await apagar(p);
+    if (!sala && !quad) await nota(c.notas, `deu o mesmo: ${n}`, 'detalhe');
+    await respostaFinal(`<span>área = ${n} ${u}²</span>`, { perg });
+    for (const r of s.regras || [sala ? 'Metro × metro = metro quadrado (m²).' : quad ? 'Quadrado: lado × lado.' : 'Retângulo: comprimento × largura (fileiras × quantos em cada).']) await regra(r);
+  }
+  // p.3) lajotas: conta de 1 até…, depois fileiras × quantas em cada
+  async function cenaLajotas(s) {
+    const c0 = Number(s.c), l0 = Number(s.l), n = c0 * l0, perg = s.perg || `Um piso tem ${l0} fileiras com ${c0} lajotas cada. Quantas lajotas ao todo?`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const G = F.grade(c0, l0, { unid: '' });
+    const c = cartao(), rr = contaQ(c, `${l0} × ${c0}`);
+    await ler(perg);
+    let p = await nota(c.notas, 'Cada lajota é um quadradinho. Conta: de 1 até…', 'passo');
+    await G.conta(msConta(n, 300));
+    await apagar(p);
+    p = await nota(c.notas, `Jeito rápido: ${l0} fileiras × ${c0} em cada.`, 'passo');
+    await G.fileiras(Math.min(600, 3500 / l0));
+    verde(rr, String(n)); await wait(600); await apagar(p);
+    await respostaFinal(`<span>${n} lajotas</span>`, { perg });
+    for (const r of s.regras || ['Fileiras × quantas em cada = o total.']) await regra(r);
+  }
+  // p.5) área × perímetro: o contorno com a linha percorrendo (cm) e os quadradinhos de dentro (cm²); pegadinha
+  async function cenaAreaPer(s) {
+    const c0 = Number(s.c) || 4, l0 = Number(s.l) || 3, P = 2 * (c0 + l0), A = c0 * l0;
+    const perg = s.perg || `Num retângulo de ${c0} cm por ${l0} cm, qual é o perímetro e qual é a área?`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const G = F.grade(c0, l0);
+    const c1 = cartao(); let rr = contaQ(c1, `${c0} + ${l0} + ${c0} + ${l0}`);
+    await ler(perg);
+    let p = await nota(c1.notas, 'Perímetro: o contorno, em cm.', 'passo');
+    await G.contorno(450);
+    verde(rr, `${P} cm`); await wait(600); await apagar(p);
+    await nota(c1.notas, 'perímetro', 'detalhe');
+    await paraHist(c1);
+    const c2 = cartao(); rr = contaQ(c2, `${c0} × ${l0}`);
+    p = await nota(c2.notas, 'Área: os quadradinhos de dentro, em cm².', 'passo');
+    await G.fileiras(450);
+    verde(rr, `${A} cm²`); await wait(600); await apagar(p);
+    await nota(c2.notas, 'área', 'detalhe');
+    await paraHist(c2);
+    const c3 = cartao(); c3.conta.innerHTML = `<div class="qd-fx qd-errado"><span>área = </span><span class="qd-x"><span>${P} cm</span></span></div>`;
+    await nota(c3.notas, 'Pegadinha: o contorno não é a área!', 'passo');
+    await wait(700);
+    await certoEmbaixo(c3, `<span>área = ${A} cm²</span>`);
+    await respostaFinal(`<span class="l2">perímetro = ${P} cm</span><span class="l2">área = ${A} cm²</span>`, { perg: s.perg || perg });
+    for (const r of s.regras || ['Perímetro: o contorno, em cm. Área: o de dentro, em cm².']) await regra(r);
+  }
+  // p.6) comparar áreas: cada figura com a sua cor (laranja e lilás) na pergunta, na figura e na conta
+  async function cenaComparaA(s) {
+    const [ac, al] = s.a.map(Number), [bc, bl] = s.b.map(Number), sa = ac * al, sb = bc * bl;
+    const nome = (c, l) => (c === l ? `quadrado de lado ${c} cm` : `retângulo de ${c} cm por ${l} cm`);
+    const perg = s.perg || `Qual tem área maior?|{A:${nome(ac, al)}} ou|{B:${nome(bc, bl)}}`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const G1 = F.grade(ac, al, { x: .5, y: .3, maxW: .6, maxH: .4, cor: 'cA' });
+    const G2 = F.grade(bc, bl, { x: .5, y: .78, maxW: .6, maxH: .3, cor: 'cB' });
+    const cA = cartao(); cA.conta.innerHTML = `<div class="qd-fx"><span class="qd-cmpA">${ac} × ${al}</span><span class="igual">=</span><span class="vazio-q qd-rr">?</span></div>`;
+    await ler(perg);
+    const tA = ac === al ? 'quadrado' : 'retângulo', tB = bc === bl ? 'quadrado' : 'retângulo';
+    let p = await nota(cA.notas, `Área do ${tA}.`, 'passo');
+    await G1.fileiras(400);
+    verde(cA.conta.querySelector('.qd-rr'), `${sa} cm²`); await wait(500); await apagar(p);
+    await nota(cA.notas, tA, 'detalhe');
+    await paraHist(cA);
+    const cB = cartao(); cB.conta.innerHTML = `<div class="qd-fx"><span class="qd-cmpB">${bc} × ${bl}</span><span class="igual">=</span><span class="vazio-q qd-rr">?</span></div>`;
+    p = await nota(cB.notas, `Área do ${tB}.`, 'passo');
+    await G2.fileiras(400);
+    verde(cB.conta.querySelector('.qd-rr'), `${sb} cm²`); await wait(500); await apagar(p);
+    await nota(cB.notas, tB, 'detalhe');
+    await paraHist(cB);
+    const [mx, mn] = sa >= sb ? [sa, sb] : [sb, sa];
+    const c3 = cartao(); c3.conta.innerHTML = `<div class="qd-fx"><span>${mx} cm²</span><span class="igual">&gt;</span><span>${mn} cm²</span></div>`;
+    p = await nota(c3.notas, `Compara: ${mx} é maior que ${mn}.`, 'passo');
+    await wait(900); await apagar(p);
+    const venc = sa >= sb ? tA : tB;
+    await nota(c3.notas, `o ${venc} tem área maior`, 'detalhe');
+    await respostaFinal(`<span>o ${venc} (${mx} cm²)</span>`, { perg });
+    for (const r of s.regras || ['Para comparar áreas, calcula as duas.']) await regra(r);
+  }
+  // p.7) triângulo: metade do retângulo base × altura
+  async function cenaAreaT(s) {
+    const b = Number(s.b), h = Number(s.h), v = b * h, perg = s.perg || `Qual é a área de um triângulo de base ${b} cm e altura ${h} cm?`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const G = F.grade(b, h);
+    const c1 = cartao(); let rr = contaQ(c1, `${b} × ${h}`);
+    await ler(perg);
+    let p = await nota(c1.notas, 'Primeiro o retângulo todo: base × altura.', 'passo');
+    await G.fileiras(Math.min(350, 3000 / h));
+    verde(rr, String(v)); await wait(500); await apagar(p);
+    await nota(c1.notas, 'o retângulo', 'detalhe');
+    await paraHist(c1);
+    G.apagaCel();
+    const c2 = cartao(); rr = contaQ(c2, `${v} ÷ 2`);
+    p = await nota(c2.notas, 'O triângulo é a metade do retângulo.', 'passo');
+    G.metade();
+    await wait(1000); verde(rr, `${nBR(v / 2)} cm²`); await wait(600); await apagar(p);
+    await respostaFinal(`<span>${virgulas(`área = ${nBR(v / 2)} cm²`)}</span>`, { perg });
+    for (const r of s.regras || ['Triângulo: base × altura ÷ 2.']) await regra(r);
+  }
+  // p.8) paralelogramo: o triângulo da ponta desliza para o outro lado e vira retângulo base × altura
+  async function cenaAreaP(s) {
+    const bb = Number(s.b), hh = Number(s.h), perg = s.perg || `Qual é a área de um paralelogramo de base ${bb} cm e altura ${hh} cm?`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const S = F.S, a = .1, b = .72, d = .16, yb = .66, yt = yb - Math.min(.45, Math.max(.15, (b - a) * hh / bb));
+    const P = F.poli([[a + d, yt], [b + d, yt], [b, yb], [a, yb]], ['', '', `${bb} cm`, '']);
+    F.mk('line', { x1: (a + d) * S, y1: yt * S, x2: (a + d) * S, y2: yb * S, class: 'fg-alt' });
+    F.txt((a + d) * S + F.fs * .5, (yt + yb) / 2 * S, `${hh} cm`, 'fg-rot', F.svg, 'start');
+    const c = cartao(), rr = contaQ(c, `${bb} × ${hh}`);
+    await ler(perg);
+    const p = await nota(c.notas, 'Corta o triângulo da ponta e cola do outro lado: vira um retângulo.', 'passo');
+    const tri = F.mk('polygon', { points: `${a * S},${yb * S} ${(a + d) * S},${yb * S} ${(a + d) * S},${yt * S}`, class: 'fg-corte' });
+    await wait(900);
+    tri.style.transform = `translateX(${(b - a) * S}px)`;
+    await wait(1400);
+    P.lados[3].style.opacity = .15; P.lados[1].style.opacity = .15;
+    F.mk('line', { x1: (a + d) * S, y1: yt * S, x2: (a + d) * S, y2: yb * S, class: 'fg-lado on' });
+    F.mk('line', { x1: (b + d) * S, y1: yt * S, x2: (b + d) * S, y2: yb * S, class: 'fg-lado on' });
+    F.mk('line', { x1: (a + d) * S, y1: yb * S, x2: (b + d) * S, y2: yb * S, class: 'fg-lado on' });
+    await wait(600);
+    verde(rr, `${bb * hh} cm²`); await wait(600); await apagar(p);
+    await nota(c.notas, `retângulo de ${bb} por ${hh}`, 'detalhe');
+    await respostaFinal(`<span>área = ${bb * hh} cm²</span>`, { perg });
+    for (const r of s.regras || ['Paralelogramo: base × altura.']) await regra(r);
+  }
+  // p.10) metade com grama: a área toda; a metade ÷ 2
+  async function cenaMetade(s) {
+    const c0 = Number(s.c), l0 = Number(s.l), v = c0 * l0, perg = s.perg || `Um terreno de ${c0} m por ${l0} m tem grama na metade. Qual é a área com grama?`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const G = F.grade(c0, l0, { unid: 'm' });
+    const c1 = cartao(); let rr = contaQ(c1, `${c0} × ${l0}`);
+    await ler(perg);
+    let p = await nota(c1.notas, 'Primeiro a área do terreno todo.', 'passo');
+    await G.fileiras(Math.min(300, 3000 / l0));
+    verde(rr, `${v} m²`); await wait(500); await apagar(p);
+    await nota(c1.notas, 'o terreno todo', 'detalhe');
+    await paraHist(c1);
+    G.apagaCel();
+    const c2 = cartao(); rr = contaQ(c2, `${v} ÷ 2`);
+    p = await nota(c2.notas, 'A grama é a metade: divide por 2.', 'passo');
+    G.metade();
+    await wait(900); verde(rr, `${nBR(v / 2)} m²`); await wait(600); await apagar(p);
+    await respostaFinal(`<span>${virgulas(`grama = ${nBR(v / 2)} m²`)}</span>`, { perg });
+    for (const r of s.regras || ['Metade da área: divide por 2.']) await regra(r);
+  }
+  // p.11) o lado pela área: qual número vezes ele mesmo dá a área?
+  async function cenaLadoA(s) {
+    const l = Number(s.l), A = l * l, perg = s.perg || `Um quadrado tem área ${A} cm². Quanto mede o lado?`;
+    const F = figura();
+    await poePergunta(perg, false);
+    const G = F.grade(l, l, { unid: null });
+    const c = cartao(); const ex = el('div', 'qd-xpr', '', c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, `Qual número vezes ele mesmo dá ${A}?`, 'passo');
+    if (l > 1) { el('div', 'xl qd-pop', `<span>${l - 1} × ${l - 1} = ${(l - 1) ** 2}</span><span class="tag">✖ falta</span>`, ex); await wait(1000); }
+    el('div', 'xl qd-pop', `<span>${l} × ${l} = ${A}</span><span class="tag">✔</span>`, ex); await wait(700);
+    await G.fileiras(Math.min(250, 2500 / l));
+    await apagar(p);
+    await nota(c.notas, `lado = ${l} cm`, 'detalhe');
+    await respostaFinal(`<span>lado = ${l} cm</span>`, { perg });
+    for (const r of s.regras || ['Lado do quadrado: o número que vezes ele mesmo dá a área.']) await regra(r);
+  }
+
   // ══════════════════ 12: o plano cartesiano (PROMPT-215; protótipos referencia/lousa-12a.html e lousa-12b.html) ══════════════════
   // Fica na lateral larga desde o alto (lado-xl + plano-alto). x sempre laranja, y sempre lilás. Os números do plano: letra mínima.
   const sx = (n) => (n < 0 ? '−' + -n : String(n));
@@ -2876,9 +3612,16 @@ export function criarQuadro(raiz) {
     ler: cenaLer, maior: cenaMaior, total: cenaTotal, amais: cenaAMais, mediatab: cenaMediaTab, fractab: cenaFracTab, pcttab: cenaPctTab,
     afirma: cenaAfirma, dupla: cenaDupla,
     plano: cenaPlano, ponto: cenaPonto, valor: cenaValor, ordem: cenaOrdem, eixos: cenaEixos, maislado: cenaMaisLado, negativos: cenaNegativos,
-    quadrantes: cenaQuadrantes, andar: cenaAndar, caminho: cenaCaminho };
+    quadrantes: cenaQuadrantes, andar: cenaAndar, caminho: cenaCaminho,
+    perim: cenaPerim, iguais: cenaIguais, volta: cenaVolta, ladoq: cenaLadoQ, lador: cenaLadoR, medidas: cenaMedidas, trocar: cenaTrocar,
+    tiposang: cenaTiposAng, poligonos: cenaPoligonos, quadrilateros: cenaQuadrilateros, angtri: cenaAngTri, faltatri: cenaFaltaTri,
+    angquad: cenaAngQuad, faltaquad: cenaFaltaQuad,
+    area: cenaArea, arear: cenaAreaR, lajotas: cenaLajotas, areaper: cenaAreaPer, comparaa: cenaComparaA, areat: cenaAreaT, areap: cenaAreaP,
+    metade: cenaMetade, ladoa: cenaLadoA };
   // PROMPT-215: as páginas do plano põem a pergunta elas mesmas (primeiro a pergunta, depois o plano, depois a pausa de leitura)
-  const PERG_PROPRIA = new Set(['plano', 'ponto', 'valor', 'ordem', 'eixos', 'maislado', 'negativos', 'quadrantes', 'andar', 'caminho']);
+  const PERG_PROPRIA = new Set(['plano', 'ponto', 'valor', 'ordem', 'eixos', 'maislado', 'negativos', 'quadrantes', 'andar', 'caminho',
+    'perim', 'iguais', 'volta', 'ladoq', 'lador', 'medidas', 'trocar', 'tiposang', 'poligonos', 'quadrilateros', 'angtri', 'faltatri', 'angquad', 'faltaquad',
+    'area', 'arear', 'lajotas', 'areaper', 'comparaa', 'areat', 'areap', 'metade', 'ladoa']);   // PROMPT-216: as do mapa 11 também
 
   function limpar() {
     token++;
@@ -2889,7 +3632,8 @@ export function criarQuadro(raiz) {
     RESP.classList.remove('on'); RESP.innerHTML = '';
     PERG.innerHTML = ''; PERG.dataset.txt = ''; PERG.style.top = ''; PERG.style.opacity = '';
     [FOCO, LADO].forEach(e => { e.style.top = ''; });
-    L.classList.remove('com-lado', 'lado-largo', 'lado-xl', 'com-etq', 'sem-hist', 'plano-alto');
+    L.classList.remove('com-lado', 'lado-largo', 'lado-xl', 'com-etq', 'sem-hist', 'plano-alto', 'sem-lado', 'vit-ang');
+    L.querySelectorAll('.qd-palco').forEach(e => e.remove());
     L.ajustaPlano = null;
     L.querySelector('.qd-etq')?.remove();
   }

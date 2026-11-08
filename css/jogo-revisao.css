@@ -4891,6 +4891,9 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-leit-fr .lei { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
 .qd-leit-fr .lei b { font-family: var(--qd-mao); font-weight: 400; font-size: .5em; color: var(--qd-verde); }
 .qd-leit-fr .lei small { font-family: var(--qd-mao); font-weight: 400; font-size: max(.32em, 2cqw); color: var(--qd-giz); }
+/* a leitura ("ou três oitavos") fica na letra mínima: a caixa entra sem o "pulo" (o pop passa de 1 e volta), senão ela fica menor que 2cqw por um instante */
+.qd-caixa-ok.qd-pop:has(.qd-leit-fr) { animation-name: qd-pop-suave; }
+@keyframes qd-pop-suave { from { opacity: 0; } }
 .qd .qd-esconde { visibility: hidden; }
 .qd .ok-pisca { background: var(--qd-amarelo-fundo); color: var(--qd-amarelo) !important; border-radius: .08em; }
 
@@ -5089,3 +5092,70 @@ html.jr-deitado .jr-erro-pulou-balao { font-size: calc(12px * var(--letra, 1)); 
 /* no histórico (escala --hk), as letras miúdas da conta crescem o que for preciso para não ficarem abaixo de 2cqw na tela */
 .qd-hist .qd-pot .pe, .qd-hist .qd-arm .qd-c.r-emp, .qd-hist .qd-arm .qd-c.r-emp2, .qd-hist .qd-arm .qd-c.r-vai, .qd-hist .qd-simp .qd-sd,
 .qd-hist .qd-leit .lrow > span:last-child, .qd-hist .qd-fx .tag, .qd-hist .qd-xpr .tag { font-size: max(.4em, calc(2cqw / var(--hk, .5))); }
+
+/* 🧑‍🏫 PROMPT-216: figuras do mapa 11 (perímetro, ângulos, área) na lateral larga; vitrines; comparação com cores; medidas sublinhadas */
+/* conta larga no histórico: quebra em linhas (nunca cortada) */
+.qd-card.quebra-h, .qd-card.quebra-h .qd-xpr { align-items: flex-start; }
+.qd-card.quebra-h .qd-fx, .qd-card.quebra-h .xl { flex-wrap: wrap; white-space: normal; justify-content: flex-start; }
+/* figura grande ao lado: a conta fica mais afastada e com letra 5,2cqw (também no histórico) */
+.qd.lado-xl .qd-foco, .qd.compacto.lado-xl .qd-foco { right: 41% !important; }
+.qd.plano-alto .qd-card:not(.qd-resp-final) { font-size: 5.2cqw; }
+.qd.sem-lado.lado-xl .qd-foco { right: 4% !important; }
+.qd.sem-lado .qd-foco { right: 4% !important; top: 45% !important; justify-content: center; }
+.qd.sem-lado .qd-lado { display: none; }
+/* medidas sublinhadas na pergunta */
+.qd-pergtop u.qd-med { text-decoration: underline; text-decoration-color: var(--qd-amarelo); text-decoration-thickness: .08em; text-underline-offset: .18em; white-space: nowrap; }
+/* comparação: cada coisa comparada com a sua cor, na pergunta, na figura e na conta */
+.qd-cmpA, .qd-cmpB { white-space: nowrap; padding: 0 .2em; border-radius: .25em; border: .08em solid; font-weight: inherit; }
+.qd-cmpA { border-color: var(--qd-cx); color: #ffc08c; } .qd-cmpB { border-color: var(--qd-cy); color: #e3c4ff; }
+.qd-plano .fg-fundo { fill: rgba(244,240,227,.05); }
+.qd-plano .fg-lado { stroke: var(--qd-giz); stroke-width: 3; stroke-linecap: round; transition: stroke calc(.3s / var(--qd-vel, 1)), stroke-width calc(.3s / var(--qd-vel, 1)), opacity calc(.3s / var(--qd-vel, 1)); }
+.qd-plano .fg-lado.on { stroke: var(--qd-amarelo); stroke-width: 5; }
+.qd-plano .fg-lado.cA { stroke: var(--qd-cx); } .qd-plano .fg-lado.cB { stroke: var(--qd-cy); }
+.qd-plano .fg-rot { fill: var(--qd-giz-2); font-family: var(--qd-num); font-weight: 800; transition: fill calc(.3s / var(--qd-vel, 1)); }
+.qd-plano .fg-rot.on { fill: var(--qd-amarelo); }
+.qd-plano .fg-rot.ok { fill: var(--qd-verde); }
+.qd-plano .fg-cel { fill: rgba(143,211,255,.06); stroke: rgba(244,240,227,.28); stroke-width: 1; transition: fill calc(.25s / var(--qd-vel, 1)); }
+.qd-plano .fg-cel.on { fill: rgba(143,211,255,.32); }
+.qd-plano .fg-n { fill: var(--qd-giz); font-family: var(--qd-num); font-weight: 800; }
+.qd-plano .fg-fila { fill: var(--qd-azul); }
+.qd-plano .fg-metade { fill: rgba(61,220,132,.35); animation: qd-fg-entra calc(.5s / var(--qd-vel, 1)) ease both; }
+.qd-plano .fg-diag { stroke: var(--qd-verde); stroke-width: 3; stroke-dasharray: 7 5; }
+.qd-plano .fg-alt { stroke: var(--qd-azul); stroke-width: 2.5; stroke-dasharray: 6 5; }
+.qd-plano .fg-corte { fill: rgba(255,210,63,.4); stroke: var(--qd-amarelo); stroke-width: 2; transition: transform calc(1.2s / var(--qd-vel, 1)) cubic-bezier(.45,.1,.25,1); }
+.qd-plano .fg-canto { fill: none; stroke: var(--qd-verde); stroke-width: 3; }
+.qd-plano .fg-leg { fill: var(--qd-giz-2); font-family: var(--qd-mao); }
+.qd-plano .fg-barra { fill: rgba(244,240,227,.06); stroke: var(--qd-giz); stroke-width: 2; }
+.qd-plano .fg-seg { fill: rgba(143,211,255,0); stroke: rgba(244,240,227,.4); stroke-width: 1; transition: fill calc(.25s / var(--qd-vel, 1)); }
+.qd-plano .fg-seg.on { fill: rgba(143,211,255,.32); }
+@keyframes qd-fg-entra { from { opacity: 0; } }
+.qd-plano .fg-trilha { stroke: var(--qd-amarelo); stroke-width: 6; stroke-linecap: round; }
+.qd-plano .fg-bola { fill: var(--qd-amarelo); stroke: #1b3a2c; stroke-width: 2; }
+.qd-plano .fg-ang { fill: rgba(255,210,63,.35); stroke: var(--qd-amarelo); stroke-width: 2; }
+.qd-plano .fg-ang.a1 { fill: rgba(255,164,92,.55); stroke: #ffa45c; } .qd-plano .fg-ang.a2 { fill: rgba(212,166,255,.55); stroke: #d4a6ff; } .qd-plano .fg-ang.a3 { fill: rgba(143,211,255,.55); stroke: var(--qd-azul); }
+.qd-plano .fg-move { transition: transform calc(1.3s / var(--qd-vel, 1)) cubic-bezier(.45,.1,.25,1); transform-box: view-box; }
+.qd-plano .fg-base { stroke: var(--qd-giz-2); stroke-width: 2; stroke-dasharray: 6 5; }
+/* vitrine: sem histórico e sem lateral; o grande no alto à esquerda; a cópia voa para a fileira */
+.qd-palco { position: absolute; left: 3%; top: 3.5%; width: 21cqw; height: 21cqw; z-index: 1; }
+.qd-palco svg { width: 100%; height: 100%; overflow: visible; }
+.qd .vt-num { fill: var(--qd-azul); font-family: var(--qd-num); font-weight: 900; font-size: 11px; }
+.qd-galeria { display: grid; gap: 1.6cqw 2.4cqw; width: 100%; align-content: center; justify-items: center; }
+.qd-galeria .gal-item { display: flex; flex-direction: column; align-items: center; }
+.qd-galeria .gal-nome { font-family: var(--qd-num); font-weight: 900; font-size: 2.1cqw; color: var(--qd-giz); margin-top: .3cqw; white-space: nowrap; }
+.qd-galeria .gal-info { font-family: var(--qd-mao); font-size: 2cqw; color: var(--qd-amarelo); text-align: center; line-height: 1.15; max-width: 15cqw; min-height: 2.3cqw; }
+.qd-vitrine { gap: 0 1.4cqw; padding-bottom: .5cqw; }
+.qd-vitrine .gal-item svg { width: 9.5cqw; height: 9.5cqw; overflow: visible; visibility: hidden; }
+.qd-vitrine .gal-item.on svg { visibility: visible; }
+.qd-vitrine .gal-nome, .qd-vitrine .gal-info { opacity: 0; transition: opacity calc(.4s / var(--qd-vel, 1)); }
+.qd-vitrine .gal-item.txt .gal-nome, .qd-vitrine .gal-item.txt .gal-info { opacity: 1; }
+.qd .gl-fundo { fill: rgba(244,240,227,.06); }
+.qd .gl-lado { stroke: var(--qd-giz-2); stroke-width: 2.5; stroke-linecap: round; vector-effect: non-scaling-stroke; transition: stroke calc(.2s / var(--qd-vel, 1)); }
+.qd .gl-lado.on { stroke: var(--qd-amarelo); stroke-width: 3.5; }
+.qd .gl-canto { fill: none; stroke: var(--qd-verde); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+.qd .gl-raio { stroke: var(--qd-giz); stroke-width: 3; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.qd .gl-ang { fill: rgba(255,210,63,.35); stroke: var(--qd-amarelo); stroke-width: 2; vector-effect: non-scaling-stroke; }
+/* ângulos: o grande mais em cima e menor; os da fileira maiores */
+.qd.vit-ang .qd-palco { top: 1.5%; width: 17cqw; height: 12.7cqw; }
+.qd.vit-ang.sem-lado .qd-foco { top: 30% !important; }
+.qd.vit-ang .qd-vitrine .gal-item svg { width: 15cqw; height: 11.3cqw; }
+.qd.vit-ang .qd-vitrine .gal-info { max-width: 17cqw; }
