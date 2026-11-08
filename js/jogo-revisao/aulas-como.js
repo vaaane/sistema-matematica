@@ -299,7 +299,8 @@ const semPergunta = (q) => (q && typeof q === 'object' ? { ...q, enunciado: tira
 export function quadroComoFaz(chave, q, sua = '') {
   if (!q) return null;
   const cs = chave === 'mapa12-A' ? quadro12a(q) : chave === 'mapa12-B' ? quadro12b(q, sua)   // PROMPT-215
-    : chave === 'mapa11-A' ? quadro11a(q) : chave === 'mapa11-B' ? quadro11b(q) : quadroComoFaz0(chave, q);   // PROMPT-216
+    : chave === 'mapa11-A' ? quadro11a(q) : chave === 'mapa11-B' ? quadro11b(q)   // PROMPT-216
+    : chave === 'mapa10-A' ? quadro10a(q) : chave === 'mapa10-B' ? quadro10b(q) : quadroComoFaz0(chave, q);   // PROMPT-217
   // PROMPT-214: a pergunta da questão fica no alto da lousa (o enunciado inteiro, com a pergunta)
   const perg = String(q.enunciado || '').trim();
   if (cs?.[0] && perg && !cs[0].perg) cs[0] = { ...cs[0], perg };
@@ -376,11 +377,101 @@ export function paginaResumo(chave, cenas, q) {
     if (c.t === 'mediana') return c.l.length % 2 ? 6 : 7;
     return { notafalta: 3, medcomp: 8 }[c.t] || 0;
   }
-  if (chave === 'mapa11-A' || chave === 'mapa11-B') return c.pag || 0;   // PROMPT-216: quadro11a / quadro11b marcam a página
+  if (/^mapa1[01]-[AB]$/.test(chave)) return c.pag || 0;   // PROMPT-216/217: quadro10a/b e quadro11a/b marcam a página   // PROMPT-216: quadro11a / quadro11b marcam a página
   if (chave === 'mapa12-A') return { plano: 1, ponto: 2, valor: 3, ordem: 4, eixos: 5, maislado: 6, negativos: 7, quadrantes: 8 }[c.t] || 0;   // PROMPT-215
   if (chave === 'mapa12-B') return c.t === 'caminho' ? 6 : c.t === 'andar' ? c.pag || 0 : 0;
   if (chave === 'mapa13-B') return { ler: 1, maior: 2, total: 3, amais: 4, mediatab: 5, fractab: 6, pcttab: 7, afirma: 8, dupla: 9 }[c.t] || 0;
   return 0;
+}
+// 🧑‍🏫 PROMPT-217: as cenas do quadro do mapa 10 (regra de três), com os números e as grandezas da questão; pag = a página do resumo
+const nR = (t) => Number(String(t).replace(/\./g, '').replace(',', '.'));
+const fR = (v) => (Number.isInteger(v) ? String(v) : (Math.round(v * 100) / 100).toFixed(2).replace('.', ','));   // no mapa 10, decimal é dinheiro: 0,50
+const PLURAL = { pessoa: 'pessoas', torneira: 'torneiras', pintor: 'pintores', pedreiro: 'pedreiros', caixa: 'caixas', garrafa: 'garrafas' };
+// a tabela [[a1, b1], [a2, x]]: a linha do cruzado, o coeficiente do x e o produto (inversa: a 1ª coluna já invertida)
+function cruzado(a1, b1, a2, inversa) {
+  const c = inversa ? a2 : a1, o = inversa ? a1 : a2, P = Math.round(o * b1 * 100) / 100;
+  return { c, o, P, eq: `${fR(c)} · x = ${fR(o)} · ${fR(b1)}` };
+}
+// por que a 2ª seta: mais/menos de cada lado (preço: maior/menor)
+function porqueR3(cab0, cab1, sobe, inversa, aula) {
+  const preco = /^preço/.test(cab1), outra = inversa ? (sobe ? 'MENOS' : 'MAIS') : (sobe ? 'mais' : 'menos');
+  const lado2 = preco && !inversa ? `preço ${sobe ? 'maior' : 'menor'}` : `${outra} ${cab1}`;
+  return `${sobe ? 'Mais' : 'Menos'} ${cab0}, ${lado2}: ${inversa ? 'inversas, seta oposta.' : aula ? 'diretas, seta para baixo também.' : 'diretas.'}`;
+}
+// 10-A: a página com a conta resolvida até o fim
+function r3calc({ perg, cab, a1, b1, a2, inversa = false, final, pag, centavos = false }) {
+  const { c, P, eq } = cruzado(a1, b1, a2, inversa);
+  let linhas = c === 1 ? [eq, `x = ${fR(P)}`] : [eq, `${fR(c)}x = ${fR(P)}`, `x = ${fR(P)} ÷ ${fR(c)}`];
+  if (centavos) {   // 10-A p.4: sobrou real? vira centavos
+    const inteiro = Math.floor(P / c), sobra = Math.round((P - inteiro * c) * 100) / 100;
+    const rs = (v) => (Number.isInteger(v) ? String(v) : v.toFixed(2).replace('.', ','));   // dinheiro: 4,50 (não 4,5)
+    linhas = [eq.replace(/· ([\d,]+)$/, (m0, v) => `· ${rs(nR(v))}`), `x = ${rs(P)} ÷ ${fR(c)}`];
+    if (Number.isInteger(P) && inteiro >= 1 && sobra > 0) linhas.push(`${fR(P)} ÷ ${fR(c)}: dá ${inteiro} e sobra R$ ${fR(sobra)} = ${Math.round(sobra * 100)} centavos`, `${Math.round(sobra * 100)} ÷ ${fR(c)} = ${Math.round(sobra * 100 / c)} centavos`);
+    else linhas.push(`R$ ${rs(P)} = ${Math.round(P * 100)} centavos`, `${Math.round(P * 100)} ÷ ${fR(c)} = ${Math.round(P * 100 / c)} centavos`);
+  }
+  return [{ t: 'r3', perg, cab, lin: [[a1, fR(b1)], [a2, 'x']], inversa, porque: porqueR3(cab[0], cab[1], a2 > a1, inversa, true), linhas, final, resp: `<span>${final}</span>`, pag }];
+}
+function quadro10a(q) {
+  const en = String(q.enunciado || '').trim(), r = String(q.resposta || '').trim();
+  let m;
+  if ((m = /^1 (\S+) custa R\$ ([\d,]+)\. Quanto custam (\d+) (\S+)\?$/.exec(en))) return r3calc({ perg: en, cab: [m[4], 'preço (R$)'], a1: 1, b1: nR(m[2]), a2: Number(m[3]), final: r, pag: 1 });
+  if ((m = /^Um carro anda (\d+) km em 1 hora\. Quantos km anda em (\d+) horas\?$/.exec(en))) return r3calc({ perg: en, cab: ['horas', 'km'], a1: 1, b1: Number(m[1]), a2: Number(m[2]), final: r, pag: 2 });
+  if ((m = /^Uma receita usa (\d+) ovos por bolo\. Quantos ovos para (\d+) bolos\?$/.exec(en))) return r3calc({ perg: en, cab: ['bolos', 'ovos'], a1: 1, b1: Number(m[1]), a2: Number(m[2]), final: r, pag: 2 });
+  if ((m = /^(\d+) (\S+) custam R\$ ([\d,]+)\. Quanto custa 1 (\S+)\?$/.exec(en))) {
+    const u = nR(r.replace('R$ ', '')), dec = !Number.isInteger(u);
+    return r3calc({ perg: en, cab: [m[2], 'preço (R$)'], a1: Number(m[1]), b1: nR(m[3]), a2: 1, final: r, pag: dec ? 4 : 3, centavos: dec });
+  }
+  if (/São grandezas:?$/.test(en)) { const inv = /^Inversas$/i.test(r); return [{ t: 'grandezas', tipo: inv ? 'inversas' : 'diretas', pag: inv ? 6 : 5 }]; }
+  if ((m = /^(\d+) (\S+) custam R\$ ([\d,]+)\. Quanto custam (\d+) \S+\?$/.exec(en))) return r3calc({ perg: en, cab: [m[2], 'preço (R$)'], a1: Number(m[1]), b1: nR(m[3]), a2: Number(m[4]), final: r, pag: 7 });
+  if ((m = /^1 pacote tem (\d+) biscoitos\. Quantos biscoitos há em (\d+) pacotes\?$/.exec(en))) return r3calc({ perg: en, cab: ['pacotes', 'biscoitos'], a1: 1, b1: Number(m[1]), a2: Number(m[2]), final: r, pag: 1 });
+  if ((m = /^(\d+) kg de \S+ custam R\$ ([\d,]+)\. Quanto custa 1 kg\?$/.exec(en))) { const u = nR(r.replace('R$ ', '')), dec = !Number.isInteger(u); return r3calc({ perg: en, cab: ['kg', 'preço (R$)'], a1: Number(m[1]), b1: nR(m[2]), a2: 1, final: r, pag: dec ? 4 : 3, centavos: dec }); }
+  if ((m = /^(\d+) kg de carne custam R\$ (\d+)\. Quanto custam (\d+) kg\?$/.exec(en))) return r3calc({ perg: en, cab: ['kg', 'preço (R$)'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), final: r, pag: 7 });
+  if ((m = /^(\d+) litros? de suco enchem? (\d+) copos\. Quantos copos (\d+) litros enchem\?$/.exec(en))) return r3calc({ perg: en, cab: ['litros', 'copos'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), final: r, pag: 7 });
+  if ((m = /^(\d+) (?:pessoa pinta|pessoas pintam) um muro em (\d+) dias\. Em quantos dias (\d+) pessoas pintam\?$/.exec(en))) return r3calc({ perg: en, cab: ['pessoas', 'dias'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), inversa: true, final: r, pag: 8 });
+  if ((m = /^(\d+) pedreiros levam (\d+) dias para fazer um muro\. Quantos dias levam (\d+) pedreiros\?$/.exec(en))) return r3calc({ perg: en, cab: ['pedreiros', 'dias'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), inversa: true, final: r, pag: 8 });
+  if ((m = /^(\d+) máquinas fazem (\d+) peças em (\d+) horas\. Quantas peças (\d+) máquinas fazem em (\d+) horas\?$/.exec(en))) {
+    const [M1, P1, H1, M2, H2] = m.slice(1).map(Number), k = M1 * H1, tot = P1 * M2 * H2;
+    return [{ t: 'r3comp', perg: en, cab: ['máquinas', 'horas', 'peças'], lin: [[M1, H1, P1], [M2, H2, 'x']],
+      porque: `${M2 > M1 ? 'mais' : 'menos'} máquinas e ${H2 > H1 ? 'mais' : 'menos'} horas, ${M2 * H2 > k ? 'mais' : 'menos'} peças: as duas diretas`,
+      linhas: [`${M1} · ${H1} · x = ${P1} · ${M2} · ${H2}`, `${k}x = ${tot}`, `x = ${tot} ÷ ${k}`], final: r, resp: `<span>${r}</span>`, pag: 9 }];
+  }
+  return null;
+}
+// 10-B: a página termina na conta ("a conta é …"), tirada do cruzado
+function r3conta({ perg, cab, a1, b1, a2, inversa = false, pag }) {
+  const { c, o, eq } = cruzado(a1, b1, a2, inversa);
+  const conta = c === 1 ? `x = ${inversa ? `${fR(b1)} × ${fR(o)}` : `${fR(o)} × ${fR(b1)}`}` : o === 1 ? `x = ${fR(b1)} ÷ ${fR(c)}` : `x = ${fR(b1)} × ${fR(o)} ÷ ${fR(c)}`;
+  const linhas = c !== 1 && o === 1 ? [eq, `${fR(c)}x = ${fR(b1)}`] : [eq];
+  return [{ t: 'r3', perg, cab, lin: [[a1, fR(b1)], [a2, 'x']], inversa, porque: porqueR3(cab[0], cab[1], a2 > a1, inversa, false), linhas, conta, pag }];
+}
+const pagDir = (a1, a2) => (a1 === 1 ? 1 : a2 === 1 ? 2 : 6);
+const pagInv = (a1, a2) => (a1 === 1 && a2 > 1 ? 3 : a2 === 1 ? 4 : 8);
+const DIRETAS_10B = [
+  [/^Uma receita usa (\d+) xícaras de farinha por bolo\. Para (\d+) bolos/, ['bolos', 'xícaras'], (x) => [1, x[1], x[2]]],
+  [/^Um carro anda (\d+) km em 1 hora\. Para saber quanto anda em (\d+) horas/, ['horas', 'km'], (x) => [1, x[1], x[2]]],
+  [/^1 caixa tem (\d+) ovos\. Para saber quantos ovos há em (\d+) caixas/, ['caixas', 'ovos'], (x) => [1, x[1], x[2]]],
+  [/^1 garrafa enche (\d+) copos\. Para saber quantos copos (\d+) garrafas enchem/, ['garrafas', 'copos'], (x) => [1, x[1], x[2]]],
+  [/^Escrevo (\d+) palavras por minuto\. Para saber quantas escrevo em (\d+) minutos/, ['minutos', 'palavras'], (x) => [1, x[1], x[2]]],
+  [/^Uma receita para (\d+) pessoas usa (\d+) xícaras\. Para (\d+) pessoas/, ['pessoas', 'xícaras'], (x) => [x[1], x[2], x[3]]],
+];
+function quadro10b(q) {
+  const en = String(q.enunciado || '').trim();
+  let m;
+  if (/^Se a velocidade dobra/.test(en)) return [{ t: 'r3', perg: 'A 60 km/h, uma viagem leva 4 horas. E a 120 km/h (o dobro)?', cab: ['km/h', 'horas'], lin: [[60, 4], [120, 'x']], inversa: true,
+    porque: 'Mais velocidade, MENOS tempo: inversas.', linhas: ['120 · x = 60 · 4', '120x = 240'], conta: 'x = 240 ÷ 120 = 2', extraNota: 'velocidade dobra → tempo cai pela metade',
+    regras: ['Velocidade e tempo são inversas: uma dobra, a outra cai pela metade.'], pag: 5 }];
+  if ((m = /^No mapa, (\d+) cm valem? (\d+) km\. (?:Para saber quanto valem|Qual conta dá quantos km valem) (\d+) cm/.exec(en))) return r3conta({ perg: en, cab: ['cm no mapa', 'km'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), pag: 7 });
+  if ((m = /^(\d+) (\S+) custam? R\$ ([\d,]+)\. (?:Para achar o preço de|Qual conta dá o preço de) (\d+) ([^\s,:?]+)/.exec(en))) {
+    const a1 = Number(m[1]), a2 = Number(m[4]);
+    return r3conta({ perg: en, cab: [a1 > 1 ? m[2] : m[5], 'preço (R$)'], a1, b1: nR(m[3]), a2, pag: pagDir(a1, a2) });
+  }
+  for (const [re, cab, f] of DIRETAS_10B) if ((m = re.exec(en))) { const [a1, b1, a2] = f(m).map(Number); return r3conta({ perg: en, cab, a1, b1, a2, pag: pagDir(a1, a2) }); }
+  if ((m = /^(\d+) amigos dividem uma pizza e cada um come (\d+) pedaços\. Se forem (\d+) amigos/.exec(en))) { const a1 = Number(m[1]), a2 = Number(m[3]); return r3conta({ perg: en, cab: ['amigos', 'pedaços'], a1, b1: Number(m[2]), a2, inversa: true, pag: pagInv(a1, a2) }); }
+  if ((m = /^(\d+) (\S+) .*?(\d+) (dias|horas)\. (?:Para saber o tempo de|Qual conta dá o tempo com) (\d+)/.exec(en))) {
+    const a1 = Number(m[1]), a2 = Number(m[5]);
+    return r3conta({ perg: en, cab: [PLURAL[m[2]] || m[2], m[4]], a1, b1: Number(m[3]), a2, inversa: true, pag: pagInv(a1, a2) });
+  }
+  return null;
 }
 // 🧑‍🏫 PROMPT-216: as cenas do quadro do mapa 11 (com os números da questão), pelo enunciado e pela figura; pag = a página do resumo
 const nBr = (t) => Number(String(t).replace(',', '.'));

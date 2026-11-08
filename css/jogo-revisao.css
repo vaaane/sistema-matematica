@@ -5159,3 +5159,25 @@ html.jr-deitado .jr-erro-pulou-balao { font-size: calc(12px * var(--letra, 1)); 
 .qd.vit-ang.sem-lado .qd-foco { top: 30% !important; }
 .qd.vit-ang .qd-vitrine .gal-item svg { width: 15cqw; height: 11.3cqw; }
 .qd.vit-ang .qd-vitrine .gal-info { max-width: 17cqw; }
+
+/* 🧑‍🏫 PROMPT-217: regra de três (10-A e 10-B). A tabela é a conta: fica no quadro até o fim, com a resolução ao lado e a resposta embaixo */
+.qd-r3 { position: relative; display: grid; column-gap: .3em; row-gap: .08em; font-size: .78em; font-weight: 900; justify-items: center; align-items: center; margin: 0 auto .25em; }
+.qd-r3 .r3-cab { font-family: var(--qd-mao); font-weight: 400; font-size: max(.5em, 2cqw); color: var(--qd-azul); border-bottom: .06em solid var(--qd-giz-2); padding: 0 .3em .1em; white-space: nowrap; }
+.qd-r3 .r3-c { min-width: 1.5em; text-align: center; padding: 0 .2em; border-radius: .15em;
+  transition: transform calc(.8s / var(--qd-vel, 1)) cubic-bezier(.4,.1,.25,1), background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)); }
+.qd-r3 .r3-c.x { color: var(--qd-amarelo); }
+.qd-r3 .r3-c.p1 { background: rgba(255,164,92,.32); } .qd-r3 .r3-c.p2 { background: rgba(212,166,255,.32); }
+.qd-r3 .r3-seta { font-size: 1.15em; line-height: 1; color: var(--qd-azul); align-self: center; transition: color calc(.3s / var(--qd-vel, 1)); }
+.qd-r3 .r3-seta.oposta { color: var(--qd-vermelho); }
+.qd-r3 svg.r3-x { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.qd-r3 .r3-x line { stroke-width: 3; stroke-linecap: round; }
+.qd-r3 .r3-x line.l1 { stroke: var(--qd-cx); } .qd-r3 .r3-x line.l2 { stroke: var(--qd-cy); }
+.qd.r3p .qd-foco { flex-direction: column; gap: 1cqw; }
+.qd.r3p .qd-pergtop { left: 8%; right: 8%; }
+.qd.r3p .qd-card:not(.qd-resp-final) { font-size: 4.4cqw; }
+.qd.r3p .qd-card.qd-resp-final { font-size: 4.4cqw; }
+.qd-conta.r3-lado { display: flex; flex-direction: row; align-items: center; gap: 1.4em; }
+.qd-conta.r3-lado .qd-r3 { margin: 0; }
+.qd-gr { display: flex; align-items: center; gap: .6em; font-family: var(--qd-mao); font-weight: 400; color: var(--qd-giz); }
+.qd-gr b { font-family: var(--qd-num); font-size: 1.2em; }
+.qd-gr .up { color: var(--qd-verde); } .qd-gr .dn { color: var(--qd-vermelho); }

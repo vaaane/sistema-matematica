@@ -2436,6 +2436,137 @@ export function criarQuadro(raiz) {
     for (const r of s.regras || ['Cada número é o cruzamento de uma linha com uma coluna.']) await regra(r);
   }
 
+  // ══════════════════ 10: regra de três (PROMPT-217; protótipos referencia/lousa-10a.html e lousa-10b.html) ══════════════════
+  // A tabela é a conta: fica no quadro até o fim (sem histórico), com a resolução ao lado e a resposta embaixo.
+  // tabela: cab = nomes das colunas; lin = [[linha 1], [linha 2]] (o 'x' na última coluna, embaixo)
+  function tabelaR3(pai, cab, lin) {
+    const n = cab.length;
+    const t = el('div', 'qd-r3', '', pai);
+    t.style.gridTemplateColumns = Array(n).fill('auto 1.1em').join(' ');
+    const cel = [[], []], setas = [];
+    cab.forEach((c, j) => { const e = el('div', 'r3-cab', esc(c), t); e.style.gridColumn = 2 * j + 1; e.style.gridRow = 1; e.style.visibility = 'hidden'; });
+    lin.forEach((L2, i) => L2.forEach((v, j) => { const e = el('div', 'r3-c' + (v === 'x' ? ' x' : ''), virgulas(String(v)), t); e.style.gridColumn = 2 * j + 1; e.style.gridRow = i + 2; e.style.visibility = 'hidden'; cel[i][j] = e; }));
+    for (let j = 0; j < n; j++) { const s = el('div', 'r3-seta', '', t); s.style.gridColumn = 2 * j + 2; s.style.gridRow = '2 / span 2'; setas.push(s); }
+    const mostra = async (e) => { e.style.visibility = ''; e.classList.add('qd-pop'); await wait(300); };
+    return {
+      t, cel, setas,
+      async monta() { for (const e of t.querySelectorAll('.r3-cab')) await mostra(e); for (const i of [0, 1]) for (const e of cel[i]) await mostra(e); },
+      async seta(j, cima, oposta = false) { setas[j].textContent = cima ? '↑' : '↓'; setas[j].classList.toggle('oposta', oposta); setas[j].classList.remove('qd-pop'); void setas[j].offsetWidth; setas[j].classList.add('qd-pop'); await wait(600); },
+      // inverte a coluna j: os dois números deslizam e trocam de lugar (offsetTop: certo também com a tela girada)
+      async inverte(j) {
+        const a = cel[0][j], b = cel[1][j], dy = b.offsetTop - a.offsetTop;
+        a.style.transform = `translateY(${dy}px)`; b.style.transform = `translateY(${-dy}px)`;
+        await wait(900);
+        a.style.transition = b.style.transition = 'none';
+        const tmp = a.innerHTML; a.innerHTML = b.innerHTML; b.innerHTML = tmp;
+        a.style.transform = b.style.transform = ''; a.getBoundingClientRect();
+        a.style.transition = b.style.transition = '';
+      },
+      // multiplica cruzado (2 colunas): o de cima da 1ª com o x (laranja); o de baixo da 1ª com o de cima da 2ª (lilás)
+      async cruza() {
+        const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'r3-x'); svg.setAttribute('width', t.offsetWidth); svg.setAttribute('height', t.offsetHeight); t.appendChild(svg);
+        const c = (e) => [e.offsetLeft + e.offsetWidth / 2, e.offsetTop + e.offsetHeight / 2];
+        const linha = (p, q, cls) => {
+          const l = document.createElementNS(NS, 'line'), len = Math.hypot(q[0] - p[0], q[1] - p[1]);
+          Object.entries({ x1: p[0], y1: p[1], x2: q[0], y2: q[1], class: cls }).forEach(([k, v]) => l.setAttribute(k, v));
+          l.style.strokeDasharray = len; l.style.strokeDashoffset = len; svg.appendChild(l); l.getBoundingClientRect();
+          l.style.transition = `stroke-dashoffset ${T(.7)} ease`; l.style.strokeDashoffset = 0;
+        };
+        const u = cel[0].length - 1;
+        cel[0][0].classList.add('p1'); cel[1][u].classList.add('p1'); linha(c(cel[0][0]), c(cel[1][u]), 'l1'); await wait(800);
+        cel[1][0].classList.add('p2'); cel[0][u].classList.add('p2'); linha(c(cel[1][0]), c(cel[0][u]), 'l2'); await wait(800);
+      },
+    };
+  }
+  // as linhas da resolução (cada "=" numa linha nova); a última fica verde
+  async function resolveR3(pai, linhas, final) {
+    const ex = el('div', 'qd-xpr', '', pai);
+    for (const l of linhas) { el('div', 'xl qd-pop', `<span>${virgulas(l)}</span>`, ex); await wait(800); }
+    const u = el('div', 'xl qd-pop', '<span class="vazio-q qd-rr">?</span>', ex); await wait(500);
+    verde(u.querySelector('.qd-rr'), final);
+    return ex;
+  }
+  const REGRA_R3 = 'Regra de três: 1º monta a tabela · 2º setas (inversa? inverte uma coluna) · 3º multiplica cruzado.';
+  // a página inteira da regra de três: tabela → setas → (inverte) → cruzado → resolve. Sempre os mesmos passos e textos.
+  //   { perg, cab, lin, inversa, porque, linhas, final, resp, perguntaFinal, extraNota, etq: [nome, sub], regras }
+  //   conta: 'x = 6 × 4' (10-B "qual é a conta?": o final é a conta e a resposta "a conta é …")
+  async function cenaR3(s) {
+    L.classList.add('sem-hist', 'r3p');   // sem histórico: a tabela e a resolução usam a largura toda
+    if (s.etq) await etiqueta(...s.etq);
+    const perg = s.perg;
+    const final = s.conta || s.final, resp = s.resp || (s.conta ? `<span>a conta é ${esc(s.conta.replace('x = ', ''))}</span>` : `<span>${esc(s.final)}</span>`);
+    await poePergunta(perg, false);
+    const c = cartao(); c.conta.classList.add('r3-lado');
+    const Tb = tabelaR3(c.conta, s.cab, s.lin);
+    await ler(perg);
+    let p = await nota(c.notas, '1º Monta a tabela: cada grandeza numa coluna, o que não sabe é o x.', 'passo');
+    await Tb.monta(); await wait(500); await apagar(p);
+    p = await nota(c.notas, '2º Setas: na coluna do x, para baixo.', 'passo');
+    await Tb.seta(1, false); await apagar(p);
+    p = await nota(c.notas, s.porque, 'passo');
+    await Tb.seta(0, !!s.inversa, !!s.inversa); await wait(600); await apagar(p);
+    await nota(c.notas, s.inversa ? 'inversas: setas opostas' : 'diretas: setas no mesmo sentido', 'detalhe');
+    if (s.inversa) {
+      p = await nota(c.notas, 'Inversa: inverte a coluna da seta errada (troca os dois de lugar).', 'passo');
+      await Tb.inverte(0); await Tb.seta(0, false); await wait(400); await apagar(p);
+    }
+    p = await nota(c.notas, '3º Multiplica cruzado e resolve.', 'passo');
+    await Tb.cruza();
+    await resolveR3(c.conta, s.linhas, final);
+    await wait(600); await apagar(p);
+    if (s.extraNota) await nota(c.notas, s.extraNota, 'detalhe');
+    await respostaFinal(resp, { perg: s.perguntaFinal || perg, manter: true });   // a tabela continua no quadro, a resposta embaixo
+    for (const r of s.regras || [REGRA_R3]) await regra(r);
+  }
+  // com três grandezas: uma seta por coluna, comparando cada uma com a do x
+  //   { perg, cab: [a, b, c], lin: [[a1, b1, c1], [a2, b2, 'x']], porque, linhas, final, resp }
+  async function cenaR3Comp(s) {
+    L.classList.add('sem-hist', 'r3p');
+    const perg = s.perg;
+    await poePergunta(perg, false);
+    const c = cartao(); c.conta.classList.add('r3-lado');
+    const Tb = tabelaR3(c.conta, s.cab, s.lin);
+    await ler(perg);
+    let p = await nota(c.notas, '1º Monta a tabela: agora são 3 colunas.', 'passo');
+    await Tb.monta(); await wait(400); await apagar(p);
+    p = await nota(c.notas, '2º Setas: na coluna do x, para baixo. Compara cada coluna com a do x.', 'passo');
+    await Tb.seta(2, false);
+    await Tb.seta(0, false); await wait(400);
+    await Tb.seta(1, false);
+    await nota(c.notas, s.porque || 'as duas diretas', 'detalhe');
+    await apagar(p);
+    p = await nota(c.notas, '3º O x vezes os de cima das outras = o de cima do x vezes os de baixo das outras.', 'passo');
+    await resolveR3(c.conta, s.linhas, s.final);
+    await wait(600); await apagar(p);
+    await respostaFinal(s.resp || `<span>${esc(s.final)}</span>`, { perg, manter: true });
+    for (const r of s.regras || ['Com 3 colunas: setas comparando cada uma com a do x; depois multiplica como na tabela.']) await regra(r);
+  }
+  // grandezas diretas (↑ ↑) ou inversas (↑ ↓): a lista, uma linha de cada vez
+  const GRAND_R3 = {
+    diretas: { etq: ['GRANDEZAS DIRETAS', 'uma aumenta, a outra também'], perg: 'Quando uma aumenta, a outra também aumenta?',
+      itens: [['produtos', 'preço', '↑'], ['ingredientes', 'bolos', '↑'], ['horas trabalhadas', 'salário', '↑'], ['litros de gasolina', 'km rodados', '↑']],
+      nota: 'As duas sobem juntas: na tabela, setas no mesmo sentido.', resp: 'diretas: ↑ e ↑', regra: 'Diretas: uma aumenta e a outra também. Setas no mesmo sentido.' },
+    inversas: { etq: ['GRANDEZAS INVERSAS', 'uma aumenta, a outra diminui'], perg: 'Quando uma aumenta, a outra diminui?',
+      itens: [['trabalhadores', 'tempo de obra', '↓'], ['velocidade', 'tempo de viagem', '↓'], ['torneiras abertas', 'tempo para encher', '↓'], ['pessoas na pizza', 'pedaços para cada um', '↓']],
+      nota: 'Uma sobe e a outra desce: na tabela, setas opostas.', resp: 'inversas: ↑ e ↓', regra: 'Inversas: uma aumenta e a outra diminui. Setas opostas: inverte uma coluna.' },
+  };
+  async function cenaGrandezas(s) {
+    const G = GRAND_R3[s.tipo] || GRAND_R3.diretas;
+    if (!s.perg) await etiqueta(...G.etq);
+    L.classList.add('sem-hist', 'r3p');
+    const perg = s.perg || G.perg;
+    await poePergunta(perg);
+    const c = cartao(); const ex = el('div', 'qd-xpr', '', c.conta);
+    for (const [a, b, sb] of G.itens) {
+      el('div', 'xl qd-pop', `<span class="qd-gr">mais ${esc(a)} <b class="up">↑</b></span><span class="qd-gr">${sb === '↑' ? 'mais' : 'menos'} ${esc(b)} <b class="${sb === '↑' ? 'up' : 'dn'}">${sb}</b></span>`, ex);
+      await wait(1400);
+    }
+    const p = await nota(c.notas, G.nota, 'passo');
+    await wait(1200); await apagar(p);
+    await respostaFinal(`<span>${G.resp}</span>`, { perg: G.perg, manter: true });
+    for (const r of s.regras || [G.regra]) await regra(r);
+  }
+
   // ══════════════════ 11: figuras na lateral (PROMPT-216; protótipos referencia/lousa-11a.html e lousa-11b.html) ══════════════════
   // A figura fica na lateral larga desde o alto (como o plano do 12). Coordenadas em fração do quadro (0 a 1).
   const nU = (v, u) => `${nBR(v)}${u ? ' ' + u : ''}`;
@@ -3617,11 +3748,13 @@ export function criarQuadro(raiz) {
     tiposang: cenaTiposAng, poligonos: cenaPoligonos, quadrilateros: cenaQuadrilateros, angtri: cenaAngTri, faltatri: cenaFaltaTri,
     angquad: cenaAngQuad, faltaquad: cenaFaltaQuad,
     area: cenaArea, arear: cenaAreaR, lajotas: cenaLajotas, areaper: cenaAreaPer, comparaa: cenaComparaA, areat: cenaAreaT, areap: cenaAreaP,
-    metade: cenaMetade, ladoa: cenaLadoA };
+    metade: cenaMetade, ladoa: cenaLadoA,
+    r3: cenaR3, r3comp: cenaR3Comp, grandezas: cenaGrandezas };
   // PROMPT-215: as páginas do plano põem a pergunta elas mesmas (primeiro a pergunta, depois o plano, depois a pausa de leitura)
   const PERG_PROPRIA = new Set(['plano', 'ponto', 'valor', 'ordem', 'eixos', 'maislado', 'negativos', 'quadrantes', 'andar', 'caminho',
     'perim', 'iguais', 'volta', 'ladoq', 'lador', 'medidas', 'trocar', 'tiposang', 'poligonos', 'quadrilateros', 'angtri', 'faltatri', 'angquad', 'faltaquad',
-    'area', 'arear', 'lajotas', 'areaper', 'comparaa', 'areat', 'areap', 'metade', 'ladoa']);   // PROMPT-216: as do mapa 11 também
+    'area', 'arear', 'lajotas', 'areaper', 'comparaa', 'areat', 'areap', 'metade', 'ladoa',
+    'r3', 'r3comp', 'grandezas']);   // PROMPT-217: as do mapa 10   // PROMPT-216: as do mapa 11 também
 
   function limpar() {
     token++;
@@ -3632,7 +3765,7 @@ export function criarQuadro(raiz) {
     RESP.classList.remove('on'); RESP.innerHTML = '';
     PERG.innerHTML = ''; PERG.dataset.txt = ''; PERG.style.top = ''; PERG.style.opacity = '';
     [FOCO, LADO].forEach(e => { e.style.top = ''; });
-    L.classList.remove('com-lado', 'lado-largo', 'lado-xl', 'com-etq', 'sem-hist', 'plano-alto', 'sem-lado', 'vit-ang');
+    L.classList.remove('com-lado', 'lado-largo', 'lado-xl', 'com-etq', 'sem-hist', 'plano-alto', 'sem-lado', 'vit-ang', 'r3p');
     L.querySelectorAll('.qd-palco').forEach(e => e.remove());
     L.ajustaPlano = null;
     L.querySelector('.qd-etq')?.remove();

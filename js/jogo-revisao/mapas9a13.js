@@ -98,24 +98,24 @@ function pedreiros() { const p = 2, d = 2 * int(3, 9), p2 = 4; const v = d * p /
 function carne() { const k = int(3, 6), u = int(5, 9), k2 = k + int(2, 4); const v = u * k2; return Q(`${k} kg de carne custam R$ ${k * u}. Quanto custam ${k2} kg?`, reais(v), erradasNum(v, [k * u + k2, k * u * k2 / 10, v + u], { fmt: reais, inteiro: true }), X(`1 kg: ${k * u} ÷ ${k} = ${u}. Então ${k2} × ${u} = ${v}`)); }
 function composta() { const m = 2, p = 50 * int(1, 3), h = 2, m2 = 4, h2 = 3; const v = p / (m * h) * m2 * h2; return Q(`${m} máquinas fazem ${p} peças em ${h} horas. Quantas peças ${m2} máquinas fazem em ${h2} horas?`, `${v} peças`, erradasNum(v, [p * 2, p * m2 * h2, p * h2, p + 100], { fmt: x => `${num(x)} peças` }), X(`1 máquina em 1 hora: ${p} ÷ ${m} ÷ ${h} = ${p / (m * h)}. Então ${p / (m * h)} × ${m2} × ${h2} = ${v} peças`)); }
 // --- qual é a conta?
-function contaUnit() { const [s, p] = pick(ITENS), q = int(2, 6), u = int(2, 9), T = q * u; return Q(`${q} ${p} custam R$ ${T}. Para achar o preço de 1 ${s}, faço:`, `${T} ÷ ${q}`, [`${T} × ${q}`, ...sample([`${T} + ${q}`, `${T} − ${q}`, `${q} ÷ ${T}`], 2)], X(`Do total para 1 unidade: divide. ${T} ÷ ${q}`)); }
+function contaUnit() { const [s, p] = pick(ITENS), q = int(2, 6), u = int(2, 9), T = q * u; return Q(`${q} ${p} custam R$ ${T}. Para achar o preço de 1 ${s}, faço:`, `${T} ÷ ${q}`, [`${T} × ${q}`, ...sample([`${T} + ${q}`, `${T} − ${q}`, `${q} ÷ ${T}`], 2)], X(`Monta a tabela, multiplica cruzado: ${q} · x = 1 · ${T} → x = ${T} ÷ ${q}`)); }
 function contaTotal() {
   const t = int(0, 3), a = int(2, 9), b = int(2, 9);
   const e = [`1 bala custa R$ ${a}. Para achar o preço de ${b} balas, faço:`, `Uma receita usa ${a} xícaras de farinha por bolo. Para ${b} bolos, faço:`, `Um carro anda ${a * 10} km em 1 hora. Para saber quanto anda em ${b} horas, faço:`, `1 caixa tem ${a} ovos. Para saber quantos ovos há em ${b} caixas, faço:`][t];
   const A = t === 2 ? a * 10 : a;
-  return Q(e, `${A} × ${b}`, [`${A} + ${b}`, `${A} ÷ ${b}`, `${A} − ${b}`], X(`De 1 unidade para várias: multiplica. ${A} × ${b}`));
+  return Q(e, `${b} × ${A}`, [`${b} + ${A}`, `${A} ÷ ${b}`, `${A} − ${b}`], X(`Monta a tabela, multiplica cruzado: 1 · x = ${b} · ${A} → x = ${b} × ${A}`));   // PROMPT-217: a conta do cruzado
 }
 function contaInv() {
   const t = int(0, 2), d = 2 * int(2, 6), k = 2;
   const e = [`1 pessoa pinta um muro em ${d} dias. Para saber o tempo de ${k} pessoas, faço:`, `1 torneira enche um tanque em ${d} horas. Para saber o tempo de ${k} torneiras, faço:`, `${k} pintores levam ${d / 2} dias. Para saber o tempo de 1 pintor sozinho, faço:`][t];
-  if (t === 2) return Q(e, `${d / 2} × ${k}`, [`${d / 2} ÷ ${k}`, `${d / 2} + ${k}`, `${d / 2} − ${k}`], X('Menos pessoas trabalhando, mais tempo (inversa): multiplica.'));
-  return Q(e, `${d} ÷ ${k}`, [`${d} × ${k}`, `${d} + ${k}`, `${d} − ${k}`], X('Mais ajudando, menos tempo (inversa): divide.'));
+  if (t === 2) return Q(e, `${d / 2} × ${k}`, [`${d / 2} ÷ ${k}`, `${d / 2} + ${k}`, `${d / 2} − ${k}`], X(`Inversa: inverte uma coluna e multiplica cruzado: 1 · x = ${k} · ${d / 2} → x = ${d / 2} × ${k}`));
+  return Q(e, `${d} ÷ ${k}`, [`${d} × ${k}`, `${d} + ${k}`, `${d} − ${k}`], X(`Inversa: inverte uma coluna e multiplica cruzado: ${k} · x = 1 · ${d} → x = ${d} ÷ ${k}`));
 }
 const velDobra = () => Q('Se a velocidade dobra, o tempo de viagem:', 'cai pela metade', ['dobra', 'fica igual', 'triplica'], X('Velocidade e tempo são inversas: uma dobra, a outra cai pela metade.'));
 function contaRev(t) {
-  if (t === 0) { const q = int(3, 5), u = int(2, 6), q2 = q + int(2, 4); return Q(`${q} canetas custam R$ ${q * u}. Qual conta dá o preço de ${q2} canetas?`, `${q * u} ÷ ${q} × ${q2}`, [`${q * u} × ${q} ÷ ${q2}`, `${q * u} + ${q2}`, `${q * u} × ${q2}`], X(`Ache o preço de 1 (÷ ${q}) e depois multiplique por ${q2}.`)); }
-  if (t === 1) { const p = 3, d = 2 * int(2, 6), p2 = 6; return Q(`${p} pedreiros fazem um muro em ${d} dias. Qual conta dá o tempo com ${p2} pedreiros?`, `${d} × ${p} ÷ ${p2}`, [`${d} × ${p2} ÷ ${p}`, `${d} + ${p}`, `${d} × ${p2}`], X(`Inversa: tempo de 1 pedreiro sozinho = ${d} × ${p}; com ${p2} pedreiros, divide por ${p2}.`)); }
-  const c = int(2, 3), k = 15 * c, c2 = int(4, 7); return Q(`No mapa, ${c} cm valem ${k} km. Qual conta dá quantos km valem ${c2} cm?`, `${k} ÷ ${c} × ${c2}`, [`${k} × ${c} ÷ ${c2}`, `${k} + ${c2}`, `${k} × ${c2}`], X(`Ache quanto vale 1 cm (÷ ${c}) e depois multiplique por ${c2}.`));
+  if (t === 0) { const q = int(3, 5), u = int(2, 6), q2 = q + int(2, 4); return Q(`${q} canetas custam R$ ${q * u}. Qual conta dá o preço de ${q2} canetas?`, `${q * u} × ${q2} ÷ ${q}`, [`${q * u} × ${q} ÷ ${q2}`, `${q * u} + ${q2}`, `${q * u} × ${q2}`], X(`Monta a tabela, multiplica cruzado: ${q} · x = ${q2} · ${q * u} → x = ${q * u} × ${q2} ÷ ${q}`)); }
+  if (t === 1) { const p = 3, d = 2 * int(2, 6), p2 = 6; return Q(`${p} pedreiros fazem um muro em ${d} dias. Qual conta dá o tempo com ${p2} pedreiros?`, `${d} × ${p} ÷ ${p2}`, [`${d} × ${p2} ÷ ${p}`, `${d} + ${p}`, `${d} × ${p2}`], X(`Inversa: inverte uma coluna e multiplica cruzado: ${p2} · x = ${p} · ${d} → x = ${d} × ${p} ÷ ${p2}`)); }
+  const c = int(2, 3), k = 15 * c, c2 = int(4, 7); return Q(`No mapa, ${c} cm valem ${k} km. Qual conta dá quantos km valem ${c2} cm?`, `${k} × ${c2} ÷ ${c}`, [`${k} × ${c} ÷ ${c2}`, `${k} + ${c2}`, `${k} × ${c2}`], X(`Monta a tabela, multiplica cruzado: ${c} · x = ${c2} · ${k} → x = ${k} × ${c2} ÷ ${c}`));
 }
 const M10 = {
   A: {

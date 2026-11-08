@@ -290,7 +290,7 @@
       {
        "id": "m10B-treinador1-2",
        "enunciado": "1 bala custa R$ 0,50. Para achar o preço de 6 balas, faço:",
-       "resposta": "0,50 × 6",
+       "resposta": "6 × 0,50",
        "erradas": [
         "0,50 ÷ 6",
         "0,50 + 6",
@@ -300,17 +300,17 @@
       {
        "id": "m10B-treinador1-3",
        "enunciado": "3 kg custam R$ 15. Para achar o preço de 6 kg, faço:",
-       "resposta": "15 × 2",
+       "resposta": "15 × 6 ÷ 3",
        "erradas": [
-        "15 ÷ 2",
-        "15 + 3",
-        "15 + 6"
+        "15 × 3 ÷ 6",
+        "15 + 6",
+        "15 × 6"
        ]
       },
       {
        "id": "m10B-treinador1-4",
        "enunciado": "Uma receita usa 3 xícaras de farinha por bolo. Para 4 bolos, faço:",
-       "resposta": "3 × 4",
+       "resposta": "4 × 3",
        "erradas": [
         "3 + 4",
         "4 ÷ 3",
@@ -320,7 +320,7 @@
       {
        "id": "m10B-treinador1-5",
        "enunciado": "Um carro anda 80 km em 1 hora. Para saber quanto anda em 2 horas, faço:",
-       "resposta": "80 × 2",
+       "resposta": "2 × 80",
        "erradas": [
         "80 ÷ 2",
         "80 + 2",
@@ -357,7 +357,7 @@
       {
        "id": "m10B-treinador2-3",
        "enunciado": "1 garrafa enche 4 copos. Para saber quantos copos 7 garrafas enchem, faço:",
-       "resposta": "4 × 7",
+       "resposta": "7 × 4",
        "erradas": [
         "4 + 7",
         "7 ÷ 4",
@@ -377,7 +377,7 @@
       {
        "id": "m10B-treinador2-5",
        "enunciado": "Escrevo 20 palavras por minuto. Para saber quantas escrevo em 5 minutos, faço:",
-       "resposta": "20 × 5",
+       "resposta": "5 × 20",
        "erradas": [
         "20 ÷ 5",
         "20 + 5",
@@ -424,11 +424,11 @@
       {
        "id": "m10B-treinador3-4",
        "enunciado": "4 amigos dividem uma pizza e cada um come 2 pedaços. Se forem 8 amigos, cada um come:",
-       "resposta": "2 ÷ 2",
+       "resposta": "2 × 4 ÷ 8",
        "erradas": [
-        "2 × 2",
+        "2 × 8 ÷ 4",
         "2 + 2",
-        "2 − 2"
+        "2 × 8"
        ]
       },
       {
@@ -461,7 +461,7 @@
       {
        "id": "m10B-lider-2",
        "enunciado": "1 caixa tem 12 ovos. Para saber quantos ovos há em 3 caixas, faço:",
-       "resposta": "12 × 3",
+       "resposta": "3 × 12",
        "erradas": [
         "12 ÷ 3",
         "12 + 3",
@@ -471,27 +471,27 @@
       {
        "id": "m10B-lider-3",
        "enunciado": "2 torneiras enchem uma piscina em 10 horas. Para saber o tempo de 4 torneiras, faço:",
-       "resposta": "10 ÷ 2",
+       "resposta": "10 × 2 ÷ 4",
        "erradas": [
-        "10 × 2",
+        "10 × 4 ÷ 2",
         "10 + 2",
-        "10 − 2"
+        "10 × 4"
        ]
       },
       {
        "id": "m10B-lider-4",
        "enunciado": "Uma receita para 4 pessoas usa 2 xícaras. Para 8 pessoas, faço:",
-       "resposta": "2 × 2",
+       "resposta": "2 × 8 ÷ 4",
        "erradas": [
-        "2 ÷ 2",
+        "2 × 4 ÷ 8",
         "2 + 4",
-        "2 × 4"
+        "2 × 8"
        ]
       },
       {
        "id": "m10B-lider-5",
        "enunciado": "No mapa, 1 cm vale 10 km. Para saber quanto valem 6 cm, faço:",
-       "resposta": "10 × 6",
+       "resposta": "6 × 10",
        "erradas": [
         "10 ÷ 6",
         "10 + 6",
@@ -511,7 +511,7 @@
       {
        "id": "m10B-revanche-1",
        "enunciado": "4 canetas custam R$ 12. Qual conta dá o preço de 7 canetas?",
-       "resposta": "12 ÷ 4 × 7",
+       "resposta": "12 × 7 ÷ 4",
        "erradas": [
         "12 × 4 ÷ 7",
         "12 + 7",
@@ -531,7 +531,7 @@
       {
        "id": "m10B-revanche-3",
        "enunciado": "No mapa, 2 cm valem 30 km. Qual conta dá quantos km valem 5 cm?",
-       "resposta": "30 ÷ 2 × 5",
+       "resposta": "30 × 5 ÷ 2",
        "erradas": [
         "30 × 2 ÷ 5",
         "30 + 5",

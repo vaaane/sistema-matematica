@@ -1,6 +1,6 @@
 # Padrão das lousas (resumos das Aulas e cartão do erro)
 
-Este padrão vale para **todas** as lousas do modelo novo (`layout: "v2"`, `js/jogo-revisao/quadro.js`): 4-A, 4-B, 5-A, 11-A, 11-B, 12-A, 12-B, 13-A e 13-B, e as próximas.
+Este padrão vale para **todas** as lousas do modelo novo (`layout: "v2"`, `js/jogo-revisao/quadro.js`): 4-A, 4-B, 5-A, 10-A, 10-B, 11-A, 11-B, 12-A, 12-B, 13-A e 13-B, e as próximas.
 Os tamanhos estão em **% da largura da lousa** (`cqw`). Assim ficam iguais no PC e no celular.
 
 ## Conteúdo (como montar as páginas)
@@ -63,10 +63,11 @@ Os tamanhos estão em **% da largura da lousa** (`cqw`). Assim ficam iguais no P
 - **Média:** sempre conta quantos números são (1, 2, 3… embaixo de cada um).
 - **Setas:** o número de destino ocupa o lugar dele (invisível) antes de a seta ser desenhada. O rótulo da seta fica fora dos números.
 - **Expressão:** cada "=" começa uma linha nova.
+- **Regra de três:** sempre os mesmos 3 passos, com o mesmo texto: **1º monta a tabela** (cada grandeza numa coluna, o x em amarelo) → **2º setas** (a da coluna do x para baixo; a outra no mesmo sentido se for direta, oposta em vermelho se for inversa, e aí **inverte a coluna**: os dois números trocam de lugar) → **3º multiplica cruzado** (linhas laranja e lilás) e resolve, um "=" por linha. A tabela fica no quadro até o fim (não vai para o histórico), com a resposta embaixo.
 - **Perímetro:** uma linha amarela **percorre o contorno** (com uma bolinha na ponta) e cada lado entra na soma quando ela passa.
 - **Plano cartesiano:** o ponto anda casa por casa (primeiro o x, depois o y) e as casas são contadas. Com negativos, os eixos mostram só os números pares para a letra não ficar abaixo do mínimo.
 - **Celular deitado:** o jogo gira a tela. Toda posição (setas, número voando, ida para o histórico) é medida **nas coordenadas da lousa** (função `mapa()` do protótipo), nunca direto com `getBoundingClientRect`.
 - **Velocidade:** 1× (padrão) é a metade da antiga, e também tem 2× e 4×.
 
 ## Protótipos de referência
-`referencia/lousa-11a.html`, `lousa-11b.html`, `lousa-12a.html`, `lousa-12b.html`, `lousa-13a.html` e `lousa-13b.html` (abrir com `?girar` no fim do endereço para ver a lousa girada como no celular).
+`referencia/lousa-10a.html`, `lousa-10b.html`, `lousa-11a.html`, `lousa-11b.html`, `lousa-12a.html`, `lousa-12b.html`, `lousa-13a.html` e `lousa-13b.html` (abrir com `?girar` no fim do endereço para ver a lousa girada como no celular).

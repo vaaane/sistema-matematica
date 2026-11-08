@@ -755,6 +755,540 @@
     }
    ]
   },
+  "mapa10-A": {
+   "titulo": "Regra de três: calcular",
+   "layout": "v2",
+   "paginas": [
+    {
+     "texto": "Montar a tabela",
+     "quadro": [
+      {
+       "t": "r3",
+       "etq": [
+        "REGRA DE TRÊS",
+        "tabela, setas e multiplica cruzado"
+       ],
+       "perg": "1 pão custa R$ 3. Quanto custam 5 pães?",
+       "cab": [
+        "pães",
+        "preço (R$)"
+       ],
+       "lin": [
+        [
+         1,
+         3
+        ],
+        [
+         5,
+         "x"
+        ]
+       ],
+       "porque": "Mais pães, preço maior: as duas aumentam, seta para baixo também.",
+       "linhas": [
+        "1 · x = 5 · 3",
+        "x = 15"
+       ],
+       "final": "R$ 15",
+       "resp": "<span>5 pães custam R$ 15</span>",
+       "regras": [
+        "Regra de três: 1º monta a tabela · 2º setas (inversa? inverte uma coluna) · 3º multiplica cruzado."
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Por hora",
+     "quadro": [
+      {
+       "t": "r3",
+       "perg": "Um carro anda 60 km em 1 hora. Quantos km anda em 3 horas?",
+       "cab": [
+        "horas",
+        "km"
+       ],
+       "lin": [
+        [
+         1,
+         60
+        ],
+        [
+         3,
+         "x"
+        ]
+       ],
+       "porque": "Mais horas, mais km: seta para baixo também.",
+       "linhas": [
+        "1 · x = 3 · 60",
+        "x = 180"
+       ],
+       "final": "180 km",
+       "resp": "<span>anda 180 km</span>",
+       "regras": [
+        "É o mesmo jeito com outras grandezas: horas e km, bolos e ovos…"
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "De vários para 1",
+     "quadro": [
+      {
+       "t": "r3",
+       "perg": "4 cadernos custam R$ 20. Quanto custa 1 caderno?",
+       "cab": [
+        "cadernos",
+        "preço (R$)"
+       ],
+       "lin": [
+        [
+         4,
+         20
+        ],
+        [
+         1,
+         "x"
+        ]
+       ],
+       "porque": "Menos cadernos, preço menor: as duas diminuem, seta para baixo também.",
+       "linhas": [
+        "4 · x = 1 · 20",
+        "4x = 20",
+        "x = 20 ÷ 4"
+       ],
+       "final": "R$ 5",
+       "resp": "<span>1 caderno custa R$ 5</span>",
+       "regras": [
+        "O número que multiplica o x passa dividindo: 4x = 20 → x = 20 ÷ 4."
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Com centavos",
+     "quadro": [
+      {
+       "t": "r3",
+       "perg": "2 picolés custam R$ 3. Quanto custa 1 picolé?",
+       "cab": [
+        "picolés",
+        "preço (R$)"
+       ],
+       "lin": [
+        [
+         2,
+         3
+        ],
+        [
+         1,
+         "x"
+        ]
+       ],
+       "porque": "Menos picolés, preço menor: seta para baixo também.",
+       "linhas": [
+        "2 · x = 1 · 3",
+        "x = 3 ÷ 2",
+        "3 ÷ 2: dá 1 e sobra R$ 1 = 100 centavos",
+        "100 ÷ 2 = 50 centavos"
+       ],
+       "final": "R$ 1,50",
+       "resp": "<span>1 picolé custa R$ 1,50</span>",
+       "regras": [
+        "Sobrou real? Vira centavos (R$ 1 = 100 centavos) e continua dividindo."
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Grandezas diretas",
+     "quadro": [
+      {
+       "t": "grandezas",
+       "tipo": "diretas"
+      }
+     ]
+    },
+    {
+     "texto": "Grandezas inversas",
+     "quadro": [
+      {
+       "t": "grandezas",
+       "tipo": "inversas"
+      }
+     ]
+    },
+    {
+     "texto": "Regra de três direta",
+     "quadro": [
+      {
+       "t": "r3",
+       "perg": "3 canetas custam R$ 12. Quanto custam 6 canetas?",
+       "cab": [
+        "canetas",
+        "preço (R$)"
+       ],
+       "lin": [
+        [
+         3,
+         12
+        ],
+        [
+         6,
+         "x"
+        ]
+       ],
+       "porque": "Mais canetas, preço maior: diretas, seta para baixo também.",
+       "linhas": [
+        "3 · x = 6 · 12",
+        "3x = 72",
+        "x = 72 ÷ 3"
+       ],
+       "final": "R$ 24",
+       "resp": "<span>6 canetas custam R$ 24</span>",
+       "regras": [
+        "Regra de três: 1º monta a tabela · 2º setas (inversa? inverte uma coluna) · 3º multiplica cruzado."
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Regra de três inversa",
+     "quadro": [
+      {
+       "t": "r3",
+       "perg": "2 pedreiros fazem um muro em 10 dias. Em quantos dias 4 pedreiros fazem?",
+       "cab": [
+        "pedreiros",
+        "dias"
+       ],
+       "lin": [
+        [
+         2,
+         10
+        ],
+        [
+         4,
+         "x"
+        ]
+       ],
+       "inversa": true,
+       "porque": "Mais pedreiros, MENOS dias: inversas, a seta fica para cima (oposta).",
+       "linhas": [
+        "4 · x = 2 · 10",
+        "4x = 20",
+        "x = 20 ÷ 4"
+       ],
+       "final": "5 dias",
+       "resp": "<span>4 pedreiros: 5 dias</span>",
+       "regras": [
+        "Inversa: setas opostas → inverte uma coluna → multiplica cruzado."
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Com três grandezas",
+     "quadro": [
+      {
+       "t": "r3comp",
+       "perg": "2 máquinas fazem 100 peças em 2 horas. Quantas peças 4 máquinas fazem em 3 horas?",
+       "cab": [
+        "máquinas",
+        "horas",
+        "peças"
+       ],
+       "lin": [
+        [
+         2,
+         2,
+         100
+        ],
+        [
+         4,
+         3,
+         "x"
+        ]
+       ],
+       "porque": "mais máquinas e mais horas, mais peças: as duas diretas",
+       "linhas": [
+        "2 · 2 · x = 100 · 4 · 3",
+        "4x = 1200",
+        "x = 1200 ÷ 4"
+       ],
+       "final": "300 peças",
+       "resp": "<span>300 peças</span>"
+      }
+     ]
+    }
+   ]
+  },
+  "mapa10-B": {
+   "titulo": "Regra de três: qual é a conta?",
+   "layout": "v2",
+   "paginas": [
+    {
+     "texto": "De 1 para vários",
+     "quadro": [
+      {
+       "t": "r3",
+       "etq": [
+        "QUAL É A CONTA?",
+        "ela sai da tabela"
+       ],
+       "perg": "1 bala custa R$ 4. Para achar o preço de 6 balas, faço:",
+       "cab": [
+        "balas",
+        "preço (R$)"
+       ],
+       "lin": [
+        [
+         1,
+         4
+        ],
+        [
+         6,
+         "x"
+        ]
+       ],
+       "porque": "Mais balas, preço maior: diretas.",
+       "linhas": [
+        "1 · x = 6 · 4"
+       ],
+       "conta": "x = 6 × 4",
+       "extraNota": "4 + 6 não: é preço de cada vez, multiplica",
+       "regras": [
+        "De 1 para vários: a conta é de vezes."
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "De vários para 1",
+     "quadro": [
+      {
+       "t": "r3",
+       "perg": "5 cadernos custam R$ 30. Para achar o preço de 1 caderno, faço:",
+       "cab": [
+        "cadernos",
+        "preço (R$)"
+       ],
+       "lin": [
+        [
+         5,
+         30
+        ],
+        [
+         1,
+         "x"
+        ]
+       ],
+       "porque": "Menos cadernos, preço menor: diretas.",
+       "linhas": [
+        "5 · x = 1 · 30",
+        "5x = 30"
+       ],
+       "conta": "x = 30 ÷ 5",
+       "extraNota": "30 × 5 não: de vários para 1 divide",
+       "regras": [
+        "De vários para 1: a conta é de dividir."
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Inversa: mais gente",
+     "quadro": [
+      {
+       "t": "r3",
+       "perg": "1 torneira enche um tanque em 8 horas. Para saber o tempo de 2 torneiras, faço:",
+       "cab": [
+        "torneiras",
+        "horas"
+       ],
+       "lin": [
+        [
+         1,
+         8
+        ],
+        [
+         2,
+         "x"
+        ]
+       ],
+       "inversa": true,
+       "porque": "Mais torneiras, MENOS horas: inversas, seta oposta.",
+       "linhas": [
+        "2 · x = 1 · 8",
+        "2x = 8"
+       ],
+       "conta": "x = 8 ÷ 2",
+       "regras": [
+        "Inversa com mais gente ajudando: o tempo diminui (divide)."
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Inversa: menos gente",
+     "quadro": [
+      {
+       "t": "r3",
+       "perg": "2 pintores levam 3 dias. Para saber o tempo de 1 pintor sozinho, faço:",
+       "cab": [
+        "pintores",
+        "dias"
+       ],
+       "lin": [
+        [
+         2,
+         3
+        ],
+        [
+         1,
+         "x"
+        ]
+       ],
+       "inversa": true,
+       "porque": "Menos pintores, MAIS dias: inversas, seta oposta.",
+       "linhas": [
+        "1 · x = 2 · 3"
+       ],
+       "conta": "x = 3 × 2",
+       "regras": [
+        "Inversa com menos gente: o tempo aumenta (multiplica)."
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Velocidade e tempo",
+     "quadro": [
+      {
+       "t": "r3",
+       "perg": "A 60 km/h, uma viagem leva 4 horas. E a 120 km/h (o dobro)?",
+       "cab": [
+        "km/h",
+        "horas"
+       ],
+       "lin": [
+        [
+         60,
+         4
+        ],
+        [
+         120,
+         "x"
+        ]
+       ],
+       "inversa": true,
+       "porque": "Mais velocidade, MENOS tempo: inversas.",
+       "linhas": [
+        "120 · x = 60 · 4",
+        "120x = 240"
+       ],
+       "conta": "x = 240 ÷ 120 = 2",
+       "extraNota": "velocidade dobra → tempo cai pela metade",
+       "regras": [
+        "Velocidade e tempo são inversas: uma dobra, a outra cai pela metade."
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Duas contas",
+     "quadro": [
+      {
+       "t": "r3",
+       "perg": "3 canetas custam R$ 12. Qual conta dá o preço de 5 canetas?",
+       "cab": [
+        "canetas",
+        "preço (R$)"
+       ],
+       "lin": [
+        [
+         3,
+         12
+        ],
+        [
+         5,
+         "x"
+        ]
+       ],
+       "porque": "Mais canetas, preço maior: diretas.",
+       "linhas": [
+        "3 · x = 5 · 12"
+       ],
+       "conta": "x = 12 × 5 ÷ 3",
+       "regras": [
+        "Duas contas: multiplica cruzado e divide pelo número que está com o x."
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Escala do mapa",
+     "quadro": [
+      {
+       "t": "r3",
+       "perg": "No mapa, 2 cm valem 30 km. Qual conta dá quantos km valem 5 cm?",
+       "cab": [
+        "cm no mapa",
+        "km"
+       ],
+       "lin": [
+        [
+         2,
+         30
+        ],
+        [
+         5,
+         "x"
+        ]
+       ],
+       "porque": "Mais cm no mapa, mais km: diretas.",
+       "linhas": [
+        "2 · x = 5 · 30"
+       ],
+       "conta": "x = 30 × 5 ÷ 2",
+       "regras": [
+        "Escala do mapa é regra de três direta."
+       ]
+      }
+     ]
+    },
+    {
+     "texto": "Duas contas (inversa)",
+     "quadro": [
+      {
+       "t": "r3",
+       "perg": "3 pedreiros fazem um muro em 8 dias. Qual conta dá o tempo com 6 pedreiros?",
+       "cab": [
+        "pedreiros",
+        "dias"
+       ],
+       "lin": [
+        [
+         3,
+         8
+        ],
+        [
+         6,
+         "x"
+        ]
+       ],
+       "inversa": true,
+       "porque": "Mais pedreiros, MENOS dias: inversas, seta oposta.",
+       "linhas": [
+        "6 · x = 3 · 8"
+       ],
+       "conta": "x = 8 × 3 ÷ 6",
+       "regras": [
+        "Inversa: inverte uma coluna, multiplica cruzado e divide pelo que está com o x."
+       ]
+      }
+     ]
+    }
+   ]
+  },
   "mapa11-A": {
    "titulo": "Perímetro, medidas e ângulos",
    "layout": "v2",
