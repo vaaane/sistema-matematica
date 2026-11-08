@@ -14674,7 +14674,7 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   // PROMPT-193: a lousa (aulas-como.js) já abre sozinha, só com o jeito certo; não deu para montar → os passos em texto
   erroLousa?.cancelar(); erroQuadro?.cancelar();
   erroComoFaz = comoFazDe(q);
-  erroCenas = quadroDe(q);   // 🧑‍🏫 PROMPT-205/206/207: o 4-A, o 4-B e o 5-A usam o quadro escrito (sem pet, sem balão, sem a 💡)
+  erroCenas = quadroDe(q, sua);   // 🧑‍🏫 PROMPT-205/206/207: o 4-A, o 4-B e o 5-A usam o quadro escrito (sem pet, sem balão, sem a 💡)
   const comQuadro = !!erroCenas, comLousa = comQuadro || !!erroComoFaz?.length;
   // 🧑‍🏫 PROMPT-207: o quadro é a página do resumo daquele tipo, com os números da questão. Pulou essa página (ou nunca viu)?
   // o pet brinca no canto e o Continuar só aparece no fim da animação; já leu: Continuar liberado e o link para o resumo todo
@@ -16931,10 +16931,10 @@ function comoFazDe(q) {   // PROMPT-193: só o jeito certo (sem a coluna "✖ su
   const chave = q.relembre !== undefined ? q.relembre : chaveGinasio(q.mapa ?? pg?.mapa, q.lado ?? pg?.G);
   return comoFaz(chave, q);
 }
-function quadroDe(q) {   // PROMPT-205: as cenas do quadro (só o 4-B) ou null
+function quadroDe(q, sua = '') {   // PROMPT-205: as cenas do quadro ou null (PROMPT-215: com a resposta marcada, para a pegadinha do 12-B)
   if (!q) return null;
   const chave = q.relembre !== undefined ? q.relembre : chaveGinasio(q.mapa ?? pg?.mapa, q.lado ?? pg?.G);
-  return quadroComoFaz(chave, q);
+  return quadroComoFaz(chave, q, sua);
 }
 function abrirComoFaz(passos, titulo = 'Ver como faz') {
   if (!passos?.length) return;

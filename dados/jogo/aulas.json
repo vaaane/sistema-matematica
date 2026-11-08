@@ -755,6 +755,78 @@
     }
    ]
   },
+  "mapa12-A": {
+   "titulo": "Ler coordenadas",
+   "layout": "v2",
+   "paginas": [
+    {
+     "texto": "Plano cartesiano",
+     "quadro": [{"t": "plano"}]
+    },
+    {
+     "texto": "O ponto (x, y)",
+     "quadro": [{"t": "ponto", "x": 3, "y": 2, "plano": {"x0": 0, "x1": 6, "y0": 0, "y1": 6}}]
+    },
+    {
+     "texto": "Valor de x e de y",
+     "quadro": [{"t": "valor", "x": 5, "y": 1, "q": "xy", "plano": {"x0": 0, "x1": 6, "y0": 0, "y1": 6}}]
+    },
+    {
+     "texto": "A ordem importa",
+     "quadro": [{"t": "ordem", "x": 3, "y": 6, "plano": {"x0": 0, "x1": 6, "y0": 0, "y1": 6}, "regras": ["(3, 6) e (6, 3) são pontos diferentes: a ordem importa."]}]
+    },
+    {
+     "texto": "Pontos nos eixos",
+     "quadro": [{"t": "eixos", "pts": [[4, 0], [0, 3]], "plano": {"x0": 0, "x1": 6, "y0": 0, "y1": 6}}]
+    },
+    {
+     "texto": "Mais à direita, mais acima",
+     "quadro": [{"t": "maislado", "a": [2, 5], "b": [4, 1], "q": "xy", "plano": {"x0": 0, "x1": 6, "y0": 0, "y1": 6}}]
+    },
+    {
+     "texto": "Negativos",
+     "quadro": [{"t": "negativos", "anda": [-3, 2], "valor": [-4, -2, "x"], "plano": {"x0": -4, "x1": 4, "y0": -4, "y1": 4}}]
+    },
+    {
+     "texto": "Quadrantes",
+     "quadro": [{"t": "quadrantes", "p": [-3, -4], "plano": {"x0": -4, "x1": 4, "y0": -4, "y1": 4}}]
+    }
+   ]
+  },
+  "mapa12-B": {
+   "titulo": "Andar no plano",
+   "layout": "v2",
+   "paginas": [
+    {
+     "texto": "Saindo da origem",
+     "quadro": [{"t": "andar", "etq": true, "casos": [{"de": [0, 0], "dx": 3, "dy": 2}], "plano": {"x0": 0, "x1": 6, "y0": 0, "y1": 6}}]
+    },
+    {
+     "texto": "Andar só para um lado",
+     "quadro": [{"t": "andar", "casos": [{"de": [0, 0], "dx": 0, "dy": 4}], "plano": {"x0": 0, "x1": 6, "y0": 0, "y1": 6}, "regras": ["Não andou para um lado? Aquele número fica igual."]}]
+    },
+    {
+     "texto": "Saindo de um ponto",
+     "quadro": [{"t": "andar", "casos": [{"de": [2, 3], "dx": 4, "dy": 1}], "plano": {"x0": 0, "x1": 7, "y0": 0, "y1": 7}}]
+    },
+    {
+     "texto": "Esquerda e baixo tiram",
+     "quadro": [{"t": "andar", "casos": [{"de": [5, 4], "dx": -2, "dy": -3}], "plano": {"x0": 0, "x1": 6, "y0": 0, "y1": 6}}]
+    },
+    {
+     "texto": "Passando para o negativo",
+     "quadro": [{"t": "andar", "casos": [{"de": [0, 0], "dx": -3, "dy": -2}, {"de": [1, 2], "dx": -4, "dy": 0}], "plano": {"x0": -4, "x1": 4, "y0": -4, "y1": 4}}]
+    },
+    {
+     "texto": "O caminho de um ponto a outro",
+     "quadro": [{"t": "caminho", "de": [1, 2], "ate": [4, -1], "plano": {"x0": -2, "x1": 5, "y0": -2, "y1": 5}}]
+    },
+    {
+     "texto": "Pegadinha: x ou y?",
+     "quadro": [{"t": "andar", "troca": true, "casos": [{"de": [1, 1], "dx": 3, "dy": 2}], "plano": {"x0": 0, "x1": 6, "y0": 0, "y1": 6}}]
+    }
+   ]
+  },
   "mapa13-A": {
    "titulo": "Média, moda e mediana",
    "layout": "v2",
@@ -765,11 +837,7 @@
     },
     {
      "texto": "Média com vírgula",
-     "quadro": [{"t": "media", "l": [3,5,6,8], "regras": ["Sobrou? Põe vírgula e zero e continua."]}]
-    },
-    {
-     "texto": "Problema de média",
-     "quadro": [{"t": "mediaprob", "l": [8,10,9,7,11], "enun": "Idades de 5 crianças:", "pergunta": "Qual é a média de idade?", "soma": "Soma todas as idades.", "quem": "crianças", "rotulo": "média de idade", "unidade": " anos"}]
+     "quadro": [{"t": "media", "l": [3,5,6,8], "regras": ["Sobrou na divisão? Vírgula no resultado, zero no resto e continua."]}]
     },
     {
      "texto": "A nota que falta",

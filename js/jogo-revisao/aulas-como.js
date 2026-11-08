@@ -296,8 +296,15 @@ export function tirarPergunta(e) {
 }
 const semPergunta = (q) => (q && typeof q === 'object' ? { ...q, enunciado: tirarPergunta(q.enunciado) } : q);
 // 🧑‍🏫 PROMPT-205: o cartão do erro do 4-B usa o quadro escrito (quadro.js): as cenas com os números da questão (null = a lousa de antes)
-export function quadroComoFaz(chave, q) {
+export function quadroComoFaz(chave, q, sua = '') {
   if (!q) return null;
+  const cs = chave === 'mapa12-A' ? quadro12a(q) : chave === 'mapa12-B' ? quadro12b(q, sua) : quadroComoFaz0(chave, q);   // PROMPT-215
+  // PROMPT-214: a pergunta da questão fica no alto da lousa (o enunciado inteiro, com a pergunta)
+  const perg = String(q.enunciado || '').trim();
+  if (cs?.[0] && perg && !cs[0].perg) cs[0] = { ...cs[0], perg };
+  return cs;
+}
+function quadroComoFaz0(chave, q) {
   q = semPergunta(q);
   if (chave === 'mapa4-A') return quadro4a(q);   // PROMPT-206
   if (chave === 'mapa5-A') return quadro5a(q);   // PROMPT-207
@@ -362,14 +369,64 @@ export function paginaResumo(chave, cenas, q) {
     if (c.t === 'cadeia') return c.n === 3 ? 3 : 4;
     return { potencia: 1, quadrado: 2, virapot: 5, dez: 6, umzero: 7, naconta: 8 }[c.t] || 0;
   }
-  if (chave === 'mapa13-A') {   // PROMPT-208
-    if (c.t === 'media') return c.l.reduce((a, b) => a + b, 0) % c.l.length ? 2 : 1;
-    if (c.t === 'moda') return (c.listas || [c.l]).length === 1 && modasDe(c.l).length === 1 ? 5 : 6;
-    if (c.t === 'mediana') return c.l.length % 2 ? 7 : 8;
-    return { mediaprob: 3, notafalta: 4, medcomp: 9 }[c.t] || 0;
+  if (chave === 'mapa13-A') {   // PROMPT-214: 8 páginas (saiu a das idades; o problema de média abre a página 1)
+    if (c.t === 'media' || c.t === 'mediaprob') return c.l.reduce((a, b) => a + b, 0) % c.l.length ? 2 : 1;
+    if (c.t === 'moda') return (c.listas || [c.l]).length === 1 && modasDe(c.l).length === 1 ? 4 : 5;
+    if (c.t === 'mediana') return c.l.length % 2 ? 6 : 7;
+    return { notafalta: 3, medcomp: 8 }[c.t] || 0;
   }
+  if (chave === 'mapa12-A') return { plano: 1, ponto: 2, valor: 3, ordem: 4, eixos: 5, maislado: 6, negativos: 7, quadrantes: 8 }[c.t] || 0;   // PROMPT-215
+  if (chave === 'mapa12-B') return c.t === 'caminho' ? 6 : c.t === 'andar' ? c.pag || 0 : 0;
   if (chave === 'mapa13-B') return { ler: 1, maior: 2, total: 3, amais: 4, mediatab: 5, fractab: 6, pcttab: 7, afirma: 8, dupla: 9 }[c.t] || 0;
   return 0;
+}
+// 🧑‍🏫 PROMPT-215: as cenas do quadro do mapa 12 (o plano do tamanho da questão), pelo plano da pergunta (q.plano) e pelo enunciado
+const nCoord = (t) => Number(String(t).replace(/−/g, '-'));
+const ptDe = (t) => { const m = /^\((−?-?\d+), (−?-?\d+)\)$/.exec(String(t ?? '').trim()); return m ? [nCoord(m[1]), nCoord(m[2])] : null; };
+const ptOk = (p) => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite);
+function quadro12a(q) {
+  const en = String(q.enunciado || '').trim(), pl = q.plano || {}, P = ptOk(pl.ponto) ? pl.ponto.map(Number) : null;
+  let m;
+  if (pl.mostra === 'origem' || /^Qual ponto é a origem\?$/.test(en)) return [{ t: 'plano' }];
+  if ((m = /^No ponto \((−?\d+), (−?\d+)\), qual é o valor de (x|y)\?$/.exec(en))) {
+    const [x, y] = [nCoord(m[1]), nCoord(m[2])];
+    return x < 0 || y < 0 ? [{ t: 'negativos', anda: [x, y], valor: [x, y, m[3]] }] : [{ t: 'valor', x, y, q: m[3] }];
+  }
+  if ((m = /^O ponto \((−?\d+), (−?\d+)\) fica sobre qual eixo\?$/.exec(en))) return [{ t: 'eixos', pts: [[nCoord(m[1]), nCoord(m[2])]] }];
+  if ((m = /^Qual ponto tem x = (−?\d+) e y = (−?\d+)\?$/.exec(en))) return [{ t: 'ordem', x: nCoord(m[1]), y: nCoord(m[2]) }];
+  if ((m = /^Qual ponto fica mais (à direita|acima)\?$/.exec(en))) {
+    const a = ptDe(q.resposta), b = ptDe(q.erradas?.[0]);
+    return a && b ? [{ t: 'maislado', a, b, q: m[1] === 'acima' ? 'y' : 'x' }] : null;
+  }
+  if ((m = /^Em qual quadrante fica o ponto \((−?\d+), (−?\d+)\)\?$/.exec(en)) || (pl.mostra === 'quadrantes' && P)) {
+    const p = m ? [nCoord(m[1]), nCoord(m[2])] : P;
+    return p[0] && p[1] ? [{ t: 'quadrantes', p }] : null;
+  }
+  return null;
+}
+function quadro12b(q, sua) {
+  const en = String(q.enunciado || '').trim(), pl = q.plano || {};
+  let m;
+  if ((m = /^Para ir de (\(.+?\)) até (\(.+?\)), ando:$/.exec(en))) {
+    const de = ptDe(m[1]), ate = ptDe(m[2]);
+    return de && ate ? [{ t: 'caminho', de, ate }] : null;
+  }
+  if (!/Onde paro\?$/.test(en)) return null;
+  // partida e movimentos: do plano da pergunta; senão, do enunciado
+  let de = ptOk(pl.partida) ? pl.partida.map(Number) : null, dx = 0, dy = 0;
+  if (de && Array.isArray(pl.mov)) pl.mov.forEach(([a, b, k]) => { dx += a * k; dy += b * k; });
+  else {
+    m = /^Saindo (?:da origem|de (\(.+?\))), ando (.+)\. Onde paro\?$/.exec(en);
+    if (!m) return null;
+    de = m[1] ? ptDe(m[1]) : [0, 0];
+    for (const [, n, d] of m[2].matchAll(/(\d+) para (?:a |)(direita|esquerda|cima|baixo)/g)) { const v = Number(n); if (d === 'direita') dx += v; if (d === 'esquerda') dx -= v; if (d === 'cima') dy += v; if (d === 'baixo') dy -= v; }
+  }
+  if (!de || (!dx && !dy)) return null;
+  const x = de[0] + dx, y = de[1] + dy, origem = !de[0] && !de[1];
+  // marcou o ponto com x e y trocados? a página da pegadinha (12-B p.7)
+  const sp = ptDe(sua), trocou = sp && x !== y && sp[0] === y && sp[1] === x;
+  const pag = trocou ? 7 : [de[0], de[1], x, y].some(v => v < 0) ? 5 : origem ? (dx && dy ? 1 : 2) : dx < 0 || dy < 0 ? 4 : 3;
+  return [{ t: 'andar', casos: [{ de, dx, dy }], troca: !!trocou, pag }];
 }
 // 🧑‍🏫 PROMPT-208: as cenas do quadro do 13-A (média, moda, mediana), pelo enunciado
 const listaDe = (t) => String(t).split(/,\s*|\s+e\s+/).map(Number);
@@ -393,7 +450,8 @@ function quadro13a(q) {
     m = re.exec(en);
     if (!m) continue;
     const [nTxt, lTxt] = invertido ? [m[2], m[1]] : [m[1], m[2]], l = listaDe(lTxt);
-    return ok(l) && l.length === Number(nTxt) && l.reduce((a, b) => a + b, 0) % l.length === 0 ? [{ t: 'mediaprob', l, ...ctx(l.length) }] : null;
+    // PROMPT-214: o problema de média abre a página 1 (a média), com os números e a pergunta da questão (perg, em quadroComoFaz)
+    return ok(l) && l.length === Number(nTxt) && l.reduce((a, b) => a + b, 0) % l.length === 0 ? [{ t: 'media', l }] : null;
   }
   m = /^Qual é a moda de (.+)\?$/.exec(en);
   if (m) { const l = listaDe(m[1]); return ok(l) ? [{ t: 'moda', l }] : null; }

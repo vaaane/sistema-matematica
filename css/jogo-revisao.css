@@ -4662,11 +4662,11 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd { position: relative; box-sizing: border-box; flex: none; border: 8px solid var(--qd-moldura); border-radius: 14px; overflow: hidden; color: var(--qd-giz);
   background: radial-gradient(ellipse at 30% 25%, var(--qd-lousa-a), var(--qd-lousa-b) 75%); box-shadow: inset 0 0 40px rgba(0,0,0,.45), 0 10px 30px rgba(0,0,0,.35);
   container-type: inline-size; font-family: var(--qd-num); text-align: left; }
-.qd-hist { position: absolute; left: 2.2%; top: 4%; width: 22%; bottom: 25%; display: flex; flex-direction: column; gap: 2.2cqw; align-items: flex-start; overflow: hidden; }
-.qd-foco { position: absolute; left: 26%; right: 4%; top: 4%; bottom: 25%; display: flex; align-items: center; justify-content: center; transition: right calc(.6s / var(--qd-vel, 1)) ease; }
+.qd-hist { position: absolute; left: 2.2%; top: 4%; width: 22%; bottom: 19.5%; display: flex; flex-direction: column; gap: 2.2cqw; align-items: flex-start; overflow: hidden; }
+.qd-foco { position: absolute; left: 26%; right: 4%; top: 4%; bottom: 19.5%; display: flex; align-items: center; justify-content: center; transition: right calc(.6s / var(--qd-vel, 1)) ease; }
 .qd.com-lado .qd-foco { right: 24%; }
-.qd-lado { position: absolute; right: 2.5%; top: 5%; width: 18%; bottom: 25%; display: flex; flex-direction: column; justify-content: center; gap: .35cqw; font-size: max(2cqw, 10px); font-weight: 800; transition: opacity calc(.5s / var(--qd-vel, 1)); }
-.qd-base { position: absolute; left: 3%; right: 3%; bottom: 3%; height: 19%; display: flex; align-items: center; gap: 3cqw; border-top: 2px dashed var(--qd-giz-3); padding-top: 1cqw; box-sizing: border-box; }
+.qd-lado { position: absolute; right: 2.5%; top: 5%; width: 18%; bottom: 19.5%; display: flex; flex-direction: column; justify-content: center; gap: .35cqw; font-size: max(2cqw, 10px); font-weight: 800; transition: opacity calc(.5s / var(--qd-vel, 1)); }
+.qd-base { position: absolute; left: 3%; right: 3%; bottom: 2.5%; height: 15%; display: flex; align-items: center; gap: 3cqw; border-top: 2px dashed var(--qd-giz-3); padding-top: 1cqw; box-sizing: border-box; }
 .qd-regras { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .5cqw; }
 .qd-resp { flex: none; font-size: max(3.6cqw, 15px); font-weight: 900; color: var(--qd-verde); border: .25cqw solid var(--qd-verde); border-radius: 1cqw; padding: .4cqw 1.6cqw; background: rgba(61,220,132,.08);
   opacity: 0; transform: scale(.85); transition: opacity calc(.5s / var(--qd-vel, 1)), transform calc(.5s / var(--qd-vel, 1)) cubic-bezier(.3,1.6,.5,1); white-space: nowrap; }
@@ -4680,8 +4680,8 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-conta { font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.15; display: flex; flex-direction: column; align-items: center; }
 .qd-notas { display: flex; flex-direction: column; align-items: center; gap: .1em; }
 .qd-nota { font-family: var(--qd-mao); font-weight: 400; line-height: 1.15; text-align: center; }
-.qd-nota.passo { font-size: max(.44em, 14px); color: var(--qd-giz); }   /* celular deitado: nunca menor que 14px */
-.qd-nota.detalhe { font-size: max(.42em, 13px); color: var(--qd-amarelo); }
+.qd-nota.passo { font-size: max(.44em, 2.4cqw); color: var(--qd-giz); }   /* PROMPT-214: mínimo de letra em cqw (padrão das lousas) */
+.qd-nota.detalhe { font-size: max(.42em, 2.4cqw); color: var(--qd-amarelo); }
 .qd-nota.regra { font-size: max(2.5cqw, 13px); color: var(--qd-amarelo); text-align: left; text-decoration: underline; text-decoration-thickness: .12cqw; text-underline-offset: .4cqw; }
 .qd-ch { opacity: 0; }
 .qd-ch.on { opacity: 1; transition: opacity calc(.1s / var(--qd-vel, 1)); }
@@ -4704,13 +4704,13 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-expr.qd-errado .qd-v { color: inherit; }
 .qd-dgt { position: relative; display: inline-block; }
 .qd-dgt.casa-on { color: var(--qd-amarelo); text-decoration: underline; text-decoration-thickness: .06em; text-underline-offset: .08em; }
-.qd-badge { position: absolute; top: -.62em; left: 50%; transform: translateX(-50%); font-family: var(--qd-mao); font-size: .42em; color: var(--qd-amarelo); font-weight: 400; }
+.qd-badge { position: absolute; top: -.62em; left: 50%; transform: translateX(-50%); font-family: var(--qd-mao); font-size: max(.42em, 2cqw); color: var(--qd-amarelo); font-weight: 400; }
 .qd-frac { display: inline-flex; flex-direction: column; align-items: stretch; text-align: center; line-height: 1; vertical-align: middle; }
 .qd-frac .qd-fl { min-width: 1em; height: .07em; background: var(--qd-giz); margin: .08em 0; }
 .qd-frac.res { color: var(--qd-verde); }
 .qd-frac.res .qd-fl { background: var(--qd-verde); }
 .qd-simp { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; }
-.qd-simp .qd-sd { font-family: var(--qd-mao); font-weight: 400; font-size: .4em; color: var(--qd-amarelo); }
+.qd-simp .qd-sd { font-family: var(--qd-mao); font-weight: 400; font-size: max(.4em, 2cqw); color: var(--qd-amarelo); }
 .qd-simp .qd-seta { color: var(--qd-amarelo); font-size: .7em; }
 
 /* número com a vírgula andando */
@@ -4722,13 +4722,13 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-nrow .qd-vg.rastro { opacity: .3; }
 .qd-arcw { position: absolute; top: -.62em; height: .6em; transition: left calc(.6s / var(--qd-vel, 1)) ease, opacity calc(.4s / var(--qd-vel, 1)); }
 .qd-arcw svg { position: absolute; inset: 0; overflow: visible; }
-.qd-arcw .rot { position: absolute; top: -.42em; left: 50%; transform: translateX(-50%); font-family: var(--qd-mao); font-size: .3em; color: var(--qd-amarelo); font-weight: 400; white-space: nowrap; }
+.qd-arcw .rot { position: absolute; top: -.42em; left: 50%; transform: translateX(-50%); font-family: var(--qd-mao); font-size: max(.3em, 2cqw); color: var(--qd-amarelo); font-weight: 400; white-space: nowrap; }
 .qd-arcw.velha { opacity: .45; }
 
 /* conta armada (e a chave da divisão) */
 .qd-arm { display: grid; position: relative; font-weight: 900; font-variant-numeric: tabular-nums; justify-content: center; }
 .qd-arm .qd-c { text-align: center; line-height: 1.15em; position: relative; }
-.qd-arm .qd-c.r-emp, .qd-arm .qd-c.r-emp2, .qd-arm .qd-c.r-vai { font-size: .4em; line-height: 1.2em; height: 1.2em; color: var(--qd-amarelo); }
+.qd-arm .qd-c.r-emp, .qd-arm .qd-c.r-emp2, .qd-arm .qd-c.r-vai { font-size: max(.4em, 2cqw); line-height: 1.2em; height: 1.2em; color: var(--qd-amarelo); }
 .qd-arm .qd-c.t-op { color: var(--qd-amarelo); opacity: .85; }
 .qd-arm .qd-c.t-v { color: var(--qd-amarelo); }
 .qd-arm .qd-c.vazio::after { content: ''; position: absolute; inset: .12em .04em .1em; border: .04em dashed var(--qd-azul); border-radius: .08em; }
@@ -4740,7 +4740,7 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd .qd-risca { color: var(--qd-vermelho) !important; }
 .qd .qd-risca::before { content: ''; position: absolute; left: 12%; right: 12%; top: 50%; height: .09em; background: var(--qd-vermelho); transform: rotate(-35deg); border-radius: .05em; }
 .qd-arm svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
-.qd-seta-rot { position: absolute; font-family: var(--qd-mao); font-weight: 400; font-size: .34em; color: var(--qd-verde); white-space: nowrap; transform: translate(-50%, -100%); }
+.qd-seta-rot { position: absolute; font-family: var(--qd-mao); font-weight: 400; font-size: max(.34em, 2cqw); color: var(--qd-verde); white-space: nowrap; transform: translate(-50%, -100%); }
 .qd-divi { display: flex; align-items: flex-start; font-weight: 900; font-variant-numeric: tabular-nums; }
 .qd-arm.qd-dvd { border-right: .07em solid var(--qd-giz); padding-right: .18em; }
 .qd-arm.qd-dvd .qd-arm-line { margin: .04em 0; }
@@ -4809,7 +4809,7 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-fx .op { color: var(--qd-amarelo); opacity: .85; font-weight: 900; }
 .qd-fx .igual { color: var(--qd-giz-2); font-weight: 900; }
 .qd-fx svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
-.qd-fx .rotx { position: absolute; font-family: var(--qd-mao); font-weight: 400; font-size: .36em; color: var(--qd-azul); white-space: nowrap; transform: translate(-50%, -50%); }
+.qd-fx .rotx { position: absolute; font-family: var(--qd-mao); font-weight: 400; font-size: max(.36em, 2cqw); color: var(--qd-azul); white-space: nowrap; transform: translate(-50%, -50%); }
 .qd-card .qd-fx { padding-block: .8em; }
 .qd-fx.qd-errado .qd-fr .fl { background: var(--qd-vermelho); }
 .qd-resp .qd-fx { display: inline-flex; gap: .3em; padding-block: 0; }
@@ -4820,10 +4820,9 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 /* a ajuda mais larga (4-A) e a etiqueta do conceito */
 .qd.lado-largo .qd-foco { right: 33%; }
 .qd.lado-largo .qd-lado { width: 29%; right: 2.5%; font-size: max(2.2cqw, 10px); }
-.qd-etq { position: absolute; top: 2.2%; left: 26%; right: 4%; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 2;
+.qd-etq { position: absolute; top: 2.2%; left: 26%; right: 26%; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 2;
   transition: right calc(.6s / var(--qd-vel, 1)); }
-.qd.lado-largo .qd-etq { right: 33%; }
-.qd.com-etq .qd-foco, .qd.com-etq .qd-lado { top: 17%; }
+.qd.com-etq .qd-foco, .qd.com-etq .qd-lado { top: 19%; }
 .qd-etq b { font-weight: 900; font-size: 2.3cqw; letter-spacing: .12em; color: var(--qd-azul); border: .2cqw solid var(--qd-azul); border-radius: .6cqw; padding: .2cqw 1.2cqw; background: rgba(143,211,255,.08); }
 .qd.compacto .qd-etq { left: 4%; }
 .qd.compacto.lado-largo .qd-foco { right: 33%; }
@@ -4833,7 +4832,7 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-barra-l { display: grid; grid-template-columns: 4.2cqw 1fr; align-items: center; column-gap: 1cqw; row-gap: .3cqw; }
 .qd-barra-l .bf { font-size: 2.3cqw; justify-self: center; }
 .qd-barra-l .bf .fl { background: var(--qd-giz-2); }
-.qd-barra-l .bt { grid-column: 2; font-weight: 700; font-size: max(1.5cqw, 9px); color: var(--qd-giz-2); }
+.qd-barra-l .bt { grid-column: 2; font-weight: 700; font-size: 2cqw; color: var(--qd-giz-2); }
 .qd-barra { grid-column: 2; display: flex; height: 3.8cqw; padding: .35cqw; background: rgba(0,0,0,.28); border-radius: .8cqw; box-sizing: border-box; }
 .qd-barra i { flex: 1; border-radius: .35cqw; background: rgba(244,240,227,.06); border: .12cqw solid rgba(244,240,227,.3);
   transition: background calc(.35s / var(--qd-vel, 1)), border-color calc(.35s / var(--qd-vel, 1)); }
@@ -4845,7 +4844,7 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
   box-shadow: inset .25cqw .25cqw 0 rgba(255,255,255,.12), inset -.25cqw -.25cqw 0 rgba(0,0,0,.25);
   transition: transform calc(.4s / var(--qd-vel, 1)), box-shadow calc(.4s / var(--qd-vel, 1)), opacity calc(.4s / var(--qd-vel, 1)); }
 .qd-choco i.peguei { transform: translateY(-.8cqw) rotate(-4deg); box-shadow: 0 0 0 .25cqw var(--qd-amarelo), 0 .6cqw 1cqw rgba(0,0,0,.4); }
-.qd-choco i .k { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 1.6cqw; color: var(--qd-amarelo); }
+.qd-choco i .k { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 2cqw; color: var(--qd-amarelo); }
 .qd-pizza { width: 82%; align-self: center; overflow: visible; }
 .qd-pizza g path { fill: #f2b84b; stroke: #8a4b1c; stroke-width: 1.2; transition: transform calc(.4s / var(--qd-vel, 1)), fill calc(.4s / var(--qd-vel, 1)); }
 .qd-pizza g.peguei path { fill: #ff8f4a; stroke: var(--qd-amarelo); stroke-width: 1.8; transform: translate(var(--dx), var(--dy)); }
@@ -4859,12 +4858,12 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
   transition: opacity calc(.4s / var(--qd-vel, 1)), border-color calc(.4s / var(--qd-vel, 1)), background calc(.4s / var(--qd-vel, 1)); }
 .qd-bolas .grupo.on { opacity: 1; }
 .qd-bolas .grupo.pega { border: .25cqw solid var(--qd-amarelo); background: var(--qd-amarelo-fundo); }
-.qd-bolas .grupo .gq { position: absolute; bottom: -2.6cqw; left: 50%; transform: translateX(-50%); font-weight: 900; font-size: 1.7cqw; color: var(--qd-giz-2); }
+.qd-bolas .grupo .gq { position: absolute; bottom: -2.6cqw; left: 50%; transform: translateX(-50%); font-weight: 900; font-size: 2cqw; color: var(--qd-giz-2); }
 .qd-grade { display: grid; grid-template-columns: repeat(5, 1fr); width: 92%; max-height: 30cqw; aspect-ratio: 5 / 3; border: .2cqw solid var(--qd-giz); border-radius: .4cqw; overflow: hidden; align-self: center; }
 .qd-grade i { border-right: .12cqw solid rgba(0,0,0,.8); border-bottom: .12cqw solid rgba(0,0,0,.8); transition: background calc(.35s / var(--qd-vel, 1)); }
 .qd-grade i.col { background: rgba(255,159,90,.45); }
 .qd-grade i.ambos { background: var(--qd-amarelo); }
-.qd-vis .bt2 { font-weight: 800; font-size: 1.8cqw; color: var(--qd-giz-2); text-align: center; }
+.qd-vis .bt2 { font-weight: 800; font-size: 2cqw; color: var(--qd-giz-2); text-align: center; }
 .qd-tab .alvo { color: var(--qd-amarelo); }
 
 /* 🧑‍🏫 PROMPT-207: a resposta final no centro, numa caixa verde (a faixa de baixo fica só com as regras); o jeito certo
@@ -4891,7 +4890,7 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-leit-fr { display: flex; align-items: center; gap: .45em; }
 .qd-leit-fr .lei { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
 .qd-leit-fr .lei b { font-family: var(--qd-mao); font-weight: 400; font-size: .5em; color: var(--qd-verde); }
-.qd-leit-fr .lei small { font-family: var(--qd-mao); font-weight: 400; font-size: .32em; color: var(--qd-giz); }
+.qd-leit-fr .lei small { font-family: var(--qd-mao); font-weight: 400; font-size: max(.32em, 2cqw); color: var(--qd-giz); }
 .qd .qd-esconde { visibility: hidden; }
 .qd .ok-pisca { background: var(--qd-amarelo-fundo); color: var(--qd-amarelo) !important; border-radius: .08em; }
 
@@ -4902,7 +4901,7 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-pot .pe { font-size: .55em; color: var(--qd-azul); margin-left: .04em; margin-top: -.15em; border-radius: .08em; padding: 0 .06em;
   transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)); }
 .qd-fat { position: relative; display: inline-block; font-weight: 900; color: var(--qd-laranja); transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)); }
-.qd-cnt { position: absolute; bottom: -.62em; left: 50%; transform: translateX(-50%); font-family: var(--qd-mao); font-weight: 400; font-size: .38em; color: var(--qd-azul); line-height: 1; }
+.qd-cnt { position: absolute; bottom: -.62em; left: 50%; transform: translateX(-50%); font-family: var(--qd-mao); font-weight: 400; font-size: max(.42em, 2cqw); color: var(--qd-azul); line-height: 1; }
 .qd-mil { font-weight: 900; color: var(--qd-verde); display: inline-flex; }
 .qd-mil .z { position: relative; display: inline-block; }
 .qd-quad { display: grid; gap: .9cqw; width: 62%; align-self: center; aspect-ratio: 1; }
@@ -4921,22 +4920,13 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-nb { position: relative; display: inline-block; font-weight: 900; padding: 0 .05em; border-radius: .08em; transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)); }
 .qd-sep { color: var(--qd-giz-2); margin-left: -.25em; }
 .qd-enun { font-family: var(--qd-mao); font-weight: 400; font-size: max(.45em, 13px); color: var(--qd-giz); margin-bottom: .2em; text-align: center; line-height: 1.15; text-wrap: balance; }
-/* PROMPT-209: no mapa 13 o enunciado e o detalhe nunca menores que a anotação de passo (.44em / 14px); no histórico, sem o enunciado */
-/* --qd-k: quanto o quadro diminuiu a conta (caber); estes textos crescem 1/k para ficarem do tamanho certo, sem passar da largura do foco */
-.qd.m13 .qd-enun { font-size: calc(max(.54em, 17px) / var(--qd-k, 1)); margin-bottom: .25em; max-width: calc(var(--qd-fw, 60cqw) / var(--qd-k, 1)); white-space: normal; }
-.qd.m13 .qd-nota.detalhe { font-size: calc(max(.5em, 16px) / var(--qd-k, 1)); max-width: calc(var(--qd-fw, 60cqw) / var(--qd-k, 1)); }
-.qd.m13 .qd-nota.passo { font-size: calc(max(.48em, 15px) / var(--qd-k, 1)); max-width: calc(var(--qd-fw, 60cqw) / var(--qd-k, 1)); }
-.qd.m13 .qd-foco .qd-enun, .qd.m13 .qd-foco .qd-nota.passo, .qd.m13 .qd-foco .qd-nota.detalhe { width: max-content; }   /* passam da largura da conta (até a do foco), centralizados */
-.qd.m13 .qd-hist .qd-enun, .qd.m13 .qd-hist .qd-nota.detalhe { display: none; }
-.qd.m13 .qd-nota.etq-sub { font-size: max(2.6cqw, 15px); }
-.qd.m13 .qd-ttit { font-size: max(1.9cqw, 14px); }
 .qd-pilhas { position: relative; width: 100%; height: 24cqw; border-bottom: .2cqw solid var(--qd-giz-2); }
 .qd-pilhas i { position: absolute; border-radius: .4cqw; background: linear-gradient(180deg, #ffb57e, #ee8638); border: .12cqw solid #ffd0a3; box-sizing: border-box;
   transition: left calc(.6s / var(--qd-vel, 1)) cubic-bezier(.45,.1,.25,1), bottom calc(.6s / var(--qd-vel, 1)) cubic-bezier(.45,.1,.25,1); }
 .qd-pilhas i.anda { background: linear-gradient(180deg, #ffe58a, #efc11d); }
 .qd-pilhas .prot { position: absolute; bottom: -.1cqw; transform: translate(-50%, 0); font-weight: 900; font-size: 2.2cqw; color: var(--qd-giz); }
 .qd-pilhas .prot.ok { color: var(--qd-verde); }
-.qd-tally { display: flex; flex-direction: column; gap: .8cqw; font-size: 2.8cqw; }
+.qd-tally { display: flex; flex-direction: column; gap: .8cqw; font-size: 2.8cqw; align-self: center; min-width: 60%; }
 .qd-tally .trow { display: grid; grid-template-columns: 3cqw 1fr auto; align-items: center; gap: 1cqw; padding: .3cqw 1cqw; border-radius: .6cqw; transition: background calc(.3s / var(--qd-vel, 1)); }
 .qd-tally .trow b { font-weight: 900; }
 .qd-tally .paus { font-family: var(--qd-mao); font-weight: 400; letter-spacing: .3cqw; color: var(--qd-amarelo); font-size: 3.2cqw; }
@@ -4952,7 +4942,7 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-mrow .mi.meio { color: var(--qd-verde); }
 .qd-hist .qd-card .qd-mrow .mi.meio { color: var(--qd-giz); }
 .qd-tabw { display: flex; flex-direction: column; gap: .6cqw; }
-.qd-ttit { font-weight: 800; font-size: max(1.7cqw, 9px); color: var(--qd-giz-2); text-align: center; }
+.qd-ttit { font-weight: 800; font-size: 2cqw; color: var(--qd-giz-2); text-align: center; }
 .qd-tabela { border-collapse: collapse; width: 100%; font-size: max(2.1cqw, 10px); font-weight: 800; }
 .qd-tabela th, .qd-tabela td { border: .12cqw solid rgba(244,240,227,.35); padding: .45cqw .8cqw; text-align: center; position: relative;
   transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)); }
@@ -4961,29 +4951,22 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-tabela .hl { background: var(--qd-amarelo-fundo); }
 .qd-tabela .marca { background: var(--qd-amarelo-2); color: var(--qd-giz); }
 .qd-tabela .cruz { background: rgba(61,220,132,.3); color: var(--qd-verde); }
-.qd-tabela .cnt-t { position: absolute; right: .3cqw; top: 0; font-family: var(--qd-mao); font-weight: 400; font-size: 1.3cqw; color: var(--qd-azul); }
-.qd-tabela.larga { font-size: max(1.75cqw, 9px); }
+.qd-tabela .cnt-t { position: absolute; right: .3cqw; top: 0; font-family: var(--qd-mao); font-weight: 400; font-size: 2cqw; color: var(--qd-azul); }
+.qd-tabela.larga { font-size: 2cqw; }
 .qd-tabela.larga th, .qd-tabela.larga td { padding: .4cqw .45cqw; }
-/* a tabela não coube na lateral (celular deitado, 4 colunas): a lateral alarga e o foco cede espaço */
-.qd.lado-xl .qd-lado { width: 40%; right: 2%; }
-.qd.lado-xl .qd-foco, .qd.lado-xl .qd-etq, .qd.compacto.lado-xl .qd-foco { right: 44%; }
-.qd-afs { display: flex; flex-direction: column; align-items: stretch; gap: .28em; font-family: var(--qd-mao); font-weight: 400; font-size: max(.46em, 14px); }
-/* PROMPT-209: cada frase é uma caixinha de opção (como nas questões do jogo): borda arredondada, A/B/C na frente */
-.qd-af { display: flex; align-items: center; gap: .45em; padding: .22em .55em .22em .3em; border: .08em solid var(--qd-giz-3); border-radius: .45em; line-height: 1.15; white-space: nowrap;
-  background: rgba(255,255,255,.03); transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)), border-color calc(.3s / var(--qd-vel, 1)), opacity calc(.3s / var(--qd-vel, 1)); }
-.qd-af .lt { flex: none; width: 1.35em; height: 1.35em; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: .07em solid currentColor;
-  font-family: var(--qd-num); font-weight: 900; font-size: .78em; }
-.qd-af .tx { flex: 1 1 auto; min-width: 0; }
-.qd-af .mk { flex: none; min-width: 1em; font-family: var(--qd-num); font-weight: 900; text-align: center; }
-.qd-af.olha { border-color: var(--qd-amarelo); box-shadow: 0 0 0 .06em var(--qd-amarelo); background: var(--qd-amarelo-fundo); }
-.qd-af.certa .mk { color: var(--qd-verde); }
-.qd-af.falsa { opacity: .45; }
-.qd-af.falsa .mk { color: var(--qd-vermelho); }
-.qd-af.falsa .tx { text-decoration: line-through; text-decoration-thickness: .06em; text-decoration-color: var(--qd-vermelho); }
-.qd-af.qd-caixa-ok { color: var(--qd-verde); border-color: var(--qd-verde); border-width: .12em; background: rgba(61,220,132,.08); font-family: var(--qd-mao); font-weight: 400; padding: .3em .6em .3em .35em; }
-.qd-caixa-ok .l2 { display: block; font-size: .7em; }
-.qd-afs.quebra { max-width: 100%; }
-.qd-afs.quebra .qd-af { white-space: normal; text-wrap: balance; }
+/* PROMPT-214: tabela de 4 colunas → a lateral mais larga (35%), para a letra não ficar abaixo do mínimo */
+.qd.lado-xl .qd-lado { width: 35%; right: 2%; }
+.qd.lado-xl .qd-foco, .qd.compacto.lado-xl .qd-foco { right: 39%; }
+.qd-afs { display: flex; flex-direction: column; align-items: stretch; gap: .3em; font-family: var(--qd-mao); font-weight: 400; font-size: max(.4em, 2.4cqw); }
+/* PROMPT-214: cada opção num retângulo, uma por vez, com a largura toda; conferida: "A ✖" riscada ou "C ✔" */
+.qd-af { display: flex; align-items: center; gap: .4em; padding: .2em .6em; border: .07em solid rgba(244,240,227,.5); border-radius: .35em; line-height: 1.15; white-space: normal;
+  transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)), border-color calc(.3s / var(--qd-vel, 1)), opacity calc(.3s / var(--qd-vel, 1)); }
+.qd-af .mk { flex: none; min-width: 1em; white-space: nowrap; font-family: var(--qd-num); font-weight: 900; }
+.qd-af .tx { flex: 1 1 auto; min-width: 0; text-wrap: balance; }
+.qd-af.olha { background: var(--qd-amarelo-fundo); border-color: var(--qd-amarelo); }
+.qd-af.certa { color: var(--qd-verde); border-color: var(--qd-verde); }
+.qd-af.falsa { color: var(--qd-vermelho); border-color: rgba(255,107,107,.5); opacity: .7; text-decoration: line-through; text-decoration-thickness: .06em; }
+.qd-af.qd-caixa-ok { font-family: var(--qd-mao); font-weight: 400; font-size: 1.08em; padding: .15em .5em; margin-top: .15em; width: auto; white-space: normal; }
 
 /* os botões 1× 2× 4× (Aula e cartão do erro) */
 .qd-vel { display: none; align-items: center; gap: 4px; }
@@ -5021,3 +5004,88 @@ html.jr-deitado .jr-erro-pulou-balao { font-size: calc(12px * var(--letra, 1)); 
 @media (prefers-reduced-motion: reduce) { .jr-erro-pulou, .jr-erro-pulou-pet { animation: none; } }
 #erro-continuar[hidden] { display: none; }
 .jr-erro-linha #erro-relembre.discreto { background: none; border-color: transparent; box-shadow: none; opacity: .75; font-size: .9em; text-decoration: underline; text-underline-offset: 3px; }
+
+/* 🧑‍🏫 PROMPT-214: o padrão de todas as lousas (docs/padrao-lousa.md; protótipos referencia/lousa-13a.html e lousa-13b.html).
+   A pergunta no alto (faixa do meio, 3,1cqw, uma frase por linha); o histórico desde o alto; nenhuma letra menor que 2cqw;
+   nada passa da linha pontilhada; os detalhes no histórico vão embaixo da conta, no tamanho mínimo */
+.qd-pergtop { position: absolute; left: 26%; right: 26%; top: 3%; text-align: center; font-family: var(--qd-mao); font-weight: 400; font-size: 3.1cqw; line-height: 1.2; color: var(--qd-giz);
+  z-index: 2; pointer-events: none; transition: opacity calc(.3s / var(--qd-vel, 1)); }
+.qd-pergtop:empty { display: none; }
+.qd-sonda { position: absolute; width: 0; height: 0; }
+.qd-hnota { position: absolute; left: 0; font-family: var(--qd-mao); font-weight: 400; font-size: 2cqw; line-height: 1.15; color: var(--qd-amarelo); white-space: normal; width: 22cqw; }
+.qd-hist .qd-cnt, .qd-hist .rotx, .qd-hist .cnt-t { display: none; }
+.qd.sem-hist .qd-foco { left: 4%; }
+.qd-fx .tag, .qd-xpr .tag { font-family: var(--qd-mao); font-weight: 400; font-size: max(.6em, 2cqw); color: var(--qd-amarelo); }
+.qd-fx.qd-lista { font-size: .85em; }
+.qd-nb.nao { opacity: .4; }
+.qd-nb.moda { box-shadow: 0 0 0 .07em var(--qd-amarelo); border-radius: .25em; color: var(--qd-amarelo); }
+.qd-hist .qd-nb.moda { color: var(--qd-giz); box-shadow: 0 0 0 .07em var(--qd-giz-2); }
+.qd-xpr { display: flex; flex-direction: column; align-items: flex-start; gap: .05em; font-size: .8em; font-weight: 900; }
+.qd-xpr .xl { display: flex; align-items: center; gap: .3em; white-space: nowrap; }
+.qd-chave { display: flex; align-items: flex-start; font-weight: 900; font-variant-numeric: tabular-nums; font-size: .72em; line-height: 1.1; }
+.qd-chave .ch-esq { display: grid; grid-auto-rows: 1.15em; text-align: center; padding-right: .25em; }
+.qd-chave .ch-esq .cc.sub { border-bottom: .06em solid var(--qd-giz-2); }
+.qd-chave .ch-esq .cc.novo, .qd-chave .ch-q .novo { color: var(--qd-amarelo); }
+.qd-chave .ch-dir { display: flex; flex-direction: column; }
+.qd-chave .ch-dv { border-left: .07em solid var(--qd-giz); border-bottom: .07em solid var(--qd-giz); padding: 0 .35em; height: 1.15em; min-width: 1.8em; }
+.qd-chave .ch-q { padding: 0 .35em; height: 1.15em; color: var(--qd-verde); white-space: nowrap; }
+.qd-hist .qd-chave .ch-q { color: var(--qd-giz) !important; }
+.qd-caixa-ok .l2 { display: block; font-size: .7em; }
+/* 🧑‍🏫 PROMPT-215: plano cartesiano (12-A e 12-B) na lateral larga desde o alto; x sempre laranja, y sempre lilás */
+.qd { --qd-cx: #ffa45c; --qd-cy: #d4a6ff; }
+.qd-cx { color: var(--qd-cx); } .qd-cy { color: var(--qd-cy); }
+.qd-xpr .xl b.qd-cx, .qd-xpr .xl b.qd-cy { font-family: var(--qd-num); font-weight: 900; }
+.qd.plano-alto .qd-lado { top: 4% !important; }
+.qd.plano-alto .qd-pergtop, .qd.plano-alto .qd-etq { right: 39%; }
+.qd-plano { position: relative; align-self: center; flex: none; }
+.qd-plano svg { overflow: visible; display: block; }
+.qd-plano .pl-grade { stroke: rgba(244,240,227,.13); stroke-width: 1; }
+.qd-plano .pl-eixo { stroke: var(--qd-giz); stroke-width: 2.5; stroke-linecap: round; transition: stroke calc(.3s / var(--qd-vel, 1)), stroke-width calc(.3s / var(--qd-vel, 1)); }
+.qd-plano .pl-eixo.on.ex { stroke: var(--qd-cx); stroke-width: 4.5; } .qd-plano .pl-eixo.on.ey { stroke: var(--qd-cy); stroke-width: 4.5; }
+.qd-plano .pl-ponta { fill: none; stroke: var(--qd-giz); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.qd-plano .pl-num { fill: var(--qd-giz-2); font-family: var(--qd-num); font-weight: 800; }
+.qd-plano .pl-nome { font-family: var(--qd-mao); }
+.qd-plano .pl-nome.nx { fill: var(--qd-cx); } .qd-plano .pl-nome.ny { fill: var(--qd-cy); }
+.qd-plano .pl-pt { animation: qd-pl-entra calc(.4s / var(--qd-vel, 1)) ease both; }
+@keyframes qd-pl-entra { from { opacity: 0; } }
+.qd-plano .pl-pt circle { fill: var(--qd-giz); }
+.qd-plano .pl-pt.ok circle { fill: var(--qd-verde); }
+.qd-plano .pl-pt.err circle { fill: var(--qd-vermelho); }
+.qd-plano .pl-rot { fill: var(--qd-giz); font-family: var(--qd-num); font-weight: 900; }
+.qd-plano .pl-pt.ok .pl-rot { fill: var(--qd-verde); }
+.qd-plano .pl-pt.err .pl-rot { fill: var(--qd-vermelho); text-decoration: line-through; }
+.qd-plano .pl-bola { fill: var(--qd-amarelo); }
+.qd-plano .pl-rastro { stroke-width: 3; stroke-linecap: round; }
+.qd-plano .pl-rastro.rx { stroke: var(--qd-cx); } .qd-plano .pl-rastro.ry { stroke: var(--qd-cy); }
+.qd-plano .pl-anda.err .pl-rastro { stroke: var(--qd-vermelho); opacity: .7; }
+.qd-plano .pl-cnt { font-family: var(--qd-mao); }
+.qd-plano .pl-cnt.rx { fill: var(--qd-cx); } .qd-plano .pl-cnt.ry { fill: var(--qd-cy); }
+.qd-plano .pl-proj line { stroke-width: 2; stroke-dasharray: 5 4; }
+.qd-plano .pl-circ { fill: none; stroke-width: 2; }
+.qd-plano .pl-proj.px line, .qd-plano .pl-proj.px .pl-circ { stroke: var(--qd-cx); } .qd-plano .pl-proj.py line, .qd-plano .pl-proj.py .pl-circ { stroke: var(--qd-cy); }
+.qd-plano .pl-quad { transition: opacity calc(.5s / var(--qd-vel, 1)); animation: qd-pl-entra calc(.5s / var(--qd-vel, 1)) ease both; }
+.qd-plano .pl-quad rect { opacity: .2; }
+.qd-plano .pl-quad.q1 rect { fill: var(--qd-verde); } .qd-plano .pl-quad.q2 rect { fill: var(--qd-azul); } .qd-plano .pl-quad.q3 rect { fill: #ff9f5a; } .qd-plano .pl-quad.q4 rect { fill: #c99bff; }
+.qd-plano .pl-quad.apaga-q { opacity: .25; }
+.qd-plano .pl-qn { fill: var(--qd-giz); font-family: var(--qd-num); font-weight: 900; }
+.qd-plano .pl-qs { fill: var(--qd-giz); font-family: var(--qd-num); font-weight: 800; }
+.qd-pt { white-space: nowrap; }
+.qd-pt .px { color: var(--qd-cx); } .qd-pt .py { color: var(--qd-cy); }
+.qd-pt .px, .qd-pt .py { padding: 0 .06em; border-radius: .12em; transition: background calc(.3s / var(--qd-vel, 1)); }
+.qd-pt .acesa { background: rgba(255,255,255,.14); box-shadow: 0 0 0 .06em currentColor; }
+.qd-sep2 { font-family: var(--qd-mao); font-weight: 400; font-size: max(.6em, 2cqw); color: var(--qd-giz-2); }
+.qd-caixa-ok .qd-pt .px, .qd-caixa-ok .qd-pt .py { color: inherit; }
+.qd-hist .qd-sep2 { font-size: max(.6em, calc(2cqw / var(--hk, .5))); }
+
+/* a resposta final não coube a 3,5cqw (RESP_MIN): quebra em 2 linhas */
+.qd-caixa-ok.quebra { white-space: normal; text-align: center; width: auto; max-width: 100%; text-wrap: balance; }
+
+/* no histórico, os rótulos pequenos (casas, setas, "pega emprestado") saem, como a contagem; a letra nunca abaixo do mínimo */
+.qd-hist .qd-badge, .qd-hist .qd-seta-rot, .qd-hist .qd-arcw .rot { display: none; }
+.qd-tab .ok { font-size: max(.85em, 2cqw); }
+.qd-certo-baixo .ok-ic { font-size: 1em; }
+.qd-xpr .tag { font-size: max(.8em, 2cqw); }
+.qd-pot .pe { font-size: max(.55em, 2cqw); }
+/* no histórico (escala --hk), as letras miúdas da conta crescem o que for preciso para não ficarem abaixo de 2cqw na tela */
+.qd-hist .qd-pot .pe, .qd-hist .qd-arm .qd-c.r-emp, .qd-hist .qd-arm .qd-c.r-emp2, .qd-hist .qd-arm .qd-c.r-vai, .qd-hist .qd-simp .qd-sd,
+.qd-hist .qd-leit .lrow > span:last-child, .qd-hist .qd-fx .tag, .qd-hist .qd-xpr .tag { font-size: max(.4em, calc(2cqw / var(--hk, .5))); }
