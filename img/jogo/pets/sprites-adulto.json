@@ -8,6 +8,13 @@
    "sentado_altura": 439,
    "escala": 0.75
   },
+  "unicornio_adulto": {
+   "tamanho_quadro": [
+    1219,
+    566
+   ],
+   "sentado_altura": 502
+  },
   "dragao_vermelho_adulto": {
    "tamanho_quadro": [
     1219,
@@ -179,6 +186,11 @@
    ],
    "sentado_reto": [
     "pets/dragao_azul_adulto/sentado_reto_1.webp"
+   ]
+  },
+  "unicornio_adulto": {
+   "deitado": [
+    "pets/unicornio_adulto/deitado_1.webp"
    ]
   },
   "dragao_vermelho_adulto": {

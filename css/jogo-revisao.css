@@ -1651,12 +1651,12 @@ html.jr-deitado .bt-busto { width: 56px; height: 64px; }
 @media (prefers-reduced-motion: reduce) { .jr-colega-cartao.pop { animation: none; } }
 
 /* Treinadores: lista 2 × 5 à esquerda, detalhes à direita, sem rolar */
-.bt-lista-caixa { max-width: 960px; width: 100%; height: min(470px, 100%); overflow: hidden; gap: 8px; }
+.bt-lista-caixa { position: relative; max-width: 960px; width: 100%; height: min(470px, 100%); overflow: hidden; gap: 8px; }   /* relative: nada escapa da caixa (PROMPT-209) */
 .bt-lista-topo { width: 100%; display: flex; align-items: center; gap: 10px; }
 .bt-lista-topo .jr-pet-escolha-titulo { flex: 1; min-width: 0; text-align: left; white-space: nowrap; }
 .bt-lista-dia { font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 700; color: #ffe9a8; white-space: nowrap; }
 .bt-lista-x { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.06); color: #fff;
-  font-size: 16px; font-weight: 800; cursor: pointer; }
+  font-size: 16px; font-weight: 800; cursor: pointer; position: relative; z-index: 3; }   /* ✕ sempre por cima (PROMPT-209) */
 .bt-lista-corpo { flex: 1; min-height: 0; width: 100%; display: grid; grid-template-columns: 45fr 55fr; gap: 10px; }
 .bt-cards { min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(34px, 1fr); gap: 5px; align-content: stretch; }
 .bt-linha { min-width: 0; min-height: 0; display: flex; align-items: center; gap: 5px; padding: 2px 6px 2px 3px; cursor: pointer; text-align: left;
@@ -1667,7 +1667,7 @@ html.jr-deitado .bt-busto { width: 56px; height: 64px; }
 /* ⚔️ Duelos: com colegas online a lista rola (treinadores + colegas) */
 .bt-cards.com-colegas { overflow-y: auto; grid-auto-rows: 38px; align-content: start; }
 .bt-grupo { grid-column: 1 / -1; align-self: end; text-align: left; padding: 2px 4px 0; font: 700 14px 'Rajdhani', sans-serif; color: var(--jr-ouro); }
-.bt-rosto-pet { flex: none; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; background: rgba(13,15,26,.6); }
+.bt-rosto-pet { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; background: rgba(13,15,26,.6); }
 .bt-rosto-pet img { max-width: 100%; max-height: 100%; }
 .bt-det-busto.bt-rosto-pet { border-radius: 16px; font-size: 40px; }
 .bt-det-acoes { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
@@ -2827,6 +2827,11 @@ html.jr-girado .dm-lado { width: var(--dm-t); }
 @media (prefers-reduced-motion: reduce) { #jr-app img.jr-pessoa.balanca, .jr-pessoa-brilho { animation: none; } }
 /* loja: os cards crescem até caber tudo (a lista rola se precisar); o seletor fica embaixo do preço, centralizado */
 .lj-itens { grid-auto-rows: min-content; align-content: start; overflow-y: auto; }
+/* PROMPT-209: no computador a lista rola com a roda e com uma barra de rolagem sempre visível (o Chrome esconde a barra fina) */
+.lj-itens { overscroll-behavior: contain; scrollbar-width: auto; scrollbar-color: rgba(255,215,0,.55) rgba(255,255,255,.06); padding-right: 4px; }
+.lj-itens::-webkit-scrollbar { width: 10px; }
+.lj-itens::-webkit-scrollbar-track { background: rgba(255,255,255,.06); border-radius: 6px; }
+.lj-itens::-webkit-scrollbar-thumb { background: rgba(255,215,0,.55); border-radius: 6px; }
 .lj-item { overflow: visible; grid-template-rows: auto auto auto; }
 .lj-qtd { gap: 14px; padding: 2px 0; }
 .lj-qtd button, html.jr-deitado .lj-qtd button { width: 36px; height: 36px; font-size: 20px; }
@@ -3378,6 +3383,13 @@ html.jr-girado .jr-cl-tela i.pingo { animation-name: cl-chove-g; }
 .cs-ferr[hidden] { display: none; }
 .cs-ferr .jr-btn { min-height: 36px; padding: 4px 10px; font-size: 14px; }
 .cs-ferr .jr-btn[hidden] { display: none; }
+/* 💰 Vender (PROMPT-209): a confirmação fica no lugar dos botões, em cima do próprio móvel */
+.cs-ferr.vendendo > .jr-btn, .cs-ferr.vendendo > .cs-cores { display: none; }
+.cs-venda { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border-radius: 12px;
+  background: rgba(13,15,26,.94); border: 1px solid rgba(255,215,0,.45); box-shadow: 0 6px 18px rgba(0,0,0,.45); }
+.cs-venda[hidden] { display: none; }
+.cs-venda > span { flex: 1 1 100%; text-align: center; font: 600 14px/1.3 'Inter', sans-serif; color: #fff; }
+.cs-venda .jr-btn { display: inline-flex; }
 /* celular deitado: faixa mais baixa, para sobrar quarto */
 html.jr-deitado .cs-faixa { padding-top: 5px; padding-bottom: max(5px, var(--sa-b, 0px)); gap: 8px; }
 html.jr-deitado .cs-guardado { width: 62px; padding: 3px; }
@@ -4771,7 +4783,7 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 
 /* 🧑‍🏫 PROMPT-206: o caminho da vírgula fica clarinho; embaixo, ↓ e o resultado limpo; o X grande da pegadinha;
    as peças do 4-A (protótipo referencia/lousa-4a.html): frações, setinhas azuis, barras em bloquinhos, chocolate, pizza,
-   bolinhas, grade, etiqueta do conceito. As durações seguem a velocidade (--qd-vel: 1, 2 ou 4) */
+   bolinhas, grade, etiqueta do conceito. As durações seguem a velocidade (--qd-vel: 0,5, 1 ou 2 — PROMPT-209: o 1× é metade do antigo) */
 .qd-seta-baixo { font-size: .55em; color: var(--qd-giz-2); line-height: 1; margin-top: .15em; }
 .qd-limpo { color: var(--qd-verde); font-size: 1.15em; line-height: 1.1; font-weight: 900; }
 .qd-x { position: relative; display: inline-flex; align-items: center; gap: .25em; }
@@ -4903,6 +4915,75 @@ html.jr-deitado #aula.aula-v2 .aula-pet { left: 14px; right: 14px; bottom: 10px;
 .qd-caixa-ok .qd-pot .pb, .qd-caixa-ok .qd-fat, .qd-certo-baixo .qd-pot .pb, .qd-certo-baixo .qd-fat { color: var(--qd-laranja); }
 .qd-nota.base-cor { color: var(--qd-laranja); }
 .qd-nota.exp-cor { color: var(--qd-azul); }
+
+/* 🧑‍🏫 PROMPT-208: mapa 13 (protótipos referencia/lousa-13a.html e lousa-13b.html) — listas de números, pilhas que se nivelam (média),
+   pauzinhos (moda), números que se ordenam com as pontas riscadas (mediana) e a tabela na lateral (linha, coluna, cruzamento) */
+.qd-nb { position: relative; display: inline-block; font-weight: 900; padding: 0 .05em; border-radius: .08em; transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)); }
+.qd-sep { color: var(--qd-giz-2); margin-left: -.25em; }
+.qd-enun { font-family: var(--qd-mao); font-weight: 400; font-size: max(.45em, 13px); color: var(--qd-giz); margin-bottom: .2em; text-align: center; line-height: 1.15; text-wrap: balance; }
+/* PROMPT-209: no mapa 13 o enunciado e o detalhe nunca menores que a anotação de passo (.44em / 14px); no histórico, sem o enunciado */
+/* --qd-k: quanto o quadro diminuiu a conta (caber); estes textos crescem 1/k para ficarem do tamanho certo, sem passar da largura do foco */
+.qd.m13 .qd-enun { font-size: calc(max(.54em, 17px) / var(--qd-k, 1)); margin-bottom: .25em; max-width: calc(var(--qd-fw, 60cqw) / var(--qd-k, 1)); white-space: normal; }
+.qd.m13 .qd-nota.detalhe { font-size: calc(max(.5em, 16px) / var(--qd-k, 1)); max-width: calc(var(--qd-fw, 60cqw) / var(--qd-k, 1)); }
+.qd.m13 .qd-nota.passo { font-size: calc(max(.48em, 15px) / var(--qd-k, 1)); max-width: calc(var(--qd-fw, 60cqw) / var(--qd-k, 1)); }
+.qd.m13 .qd-foco .qd-enun, .qd.m13 .qd-foco .qd-nota.passo, .qd.m13 .qd-foco .qd-nota.detalhe { width: max-content; }   /* passam da largura da conta (até a do foco), centralizados */
+.qd.m13 .qd-hist .qd-enun, .qd.m13 .qd-hist .qd-nota.detalhe { display: none; }
+.qd.m13 .qd-nota.etq-sub { font-size: max(2.6cqw, 15px); }
+.qd.m13 .qd-ttit { font-size: max(1.9cqw, 14px); }
+.qd-pilhas { position: relative; width: 100%; height: 24cqw; border-bottom: .2cqw solid var(--qd-giz-2); }
+.qd-pilhas i { position: absolute; border-radius: .4cqw; background: linear-gradient(180deg, #ffb57e, #ee8638); border: .12cqw solid #ffd0a3; box-sizing: border-box;
+  transition: left calc(.6s / var(--qd-vel, 1)) cubic-bezier(.45,.1,.25,1), bottom calc(.6s / var(--qd-vel, 1)) cubic-bezier(.45,.1,.25,1); }
+.qd-pilhas i.anda { background: linear-gradient(180deg, #ffe58a, #efc11d); }
+.qd-pilhas .prot { position: absolute; bottom: -.1cqw; transform: translate(-50%, 0); font-weight: 900; font-size: 2.2cqw; color: var(--qd-giz); }
+.qd-pilhas .prot.ok { color: var(--qd-verde); }
+.qd-tally { display: flex; flex-direction: column; gap: .8cqw; font-size: 2.8cqw; }
+.qd-tally .trow { display: grid; grid-template-columns: 3cqw 1fr auto; align-items: center; gap: 1cqw; padding: .3cqw 1cqw; border-radius: .6cqw; transition: background calc(.3s / var(--qd-vel, 1)); }
+.qd-tally .trow b { font-weight: 900; }
+.qd-tally .paus { font-family: var(--qd-mao); font-weight: 400; letter-spacing: .3cqw; color: var(--qd-amarelo); font-size: 3.2cqw; }
+.qd-tally .tq { font-family: var(--qd-mao); font-weight: 400; color: var(--qd-giz-2); font-size: 2.2cqw; }
+.qd-tally .trow.pisca1 { background: var(--qd-amarelo-fundo); }
+.qd-tally .trow.max { background: rgba(61,220,132,.15); }
+.qd-tally .trow.max b, .qd-tally .trow.max .tq { color: var(--qd-verde); }
+.qd-mrow { position: relative; height: 1.3em; font-weight: 900; }
+.qd-mrow .mi { position: absolute; top: 0; text-align: center;
+  transition: left calc(.9s / var(--qd-vel, 1)) cubic-bezier(.45,.1,.25,1), color calc(.3s / var(--qd-vel, 1)), opacity calc(.3s / var(--qd-vel, 1)); }
+.qd-mrow .mi.fora { color: var(--qd-vermelho); opacity: .45; }
+.qd-mrow .mi.fora::after { content: ''; position: absolute; left: 10%; right: 10%; top: 50%; height: .08em; background: var(--qd-vermelho); transform: rotate(-30deg); }
+.qd-mrow .mi.meio { color: var(--qd-verde); }
+.qd-hist .qd-card .qd-mrow .mi.meio { color: var(--qd-giz); }
+.qd-tabw { display: flex; flex-direction: column; gap: .6cqw; }
+.qd-ttit { font-weight: 800; font-size: max(1.7cqw, 9px); color: var(--qd-giz-2); text-align: center; }
+.qd-tabela { border-collapse: collapse; width: 100%; font-size: max(2.1cqw, 10px); font-weight: 800; }
+.qd-tabela th, .qd-tabela td { border: .12cqw solid rgba(244,240,227,.35); padding: .45cqw .8cqw; text-align: center; position: relative;
+  transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)); }
+.qd-tabela th { background: rgba(244,240,227,.08); color: var(--qd-azul); }
+.qd-tabela td:first-child { text-align: left; }
+.qd-tabela .hl { background: var(--qd-amarelo-fundo); }
+.qd-tabela .marca { background: var(--qd-amarelo-2); color: var(--qd-giz); }
+.qd-tabela .cruz { background: rgba(61,220,132,.3); color: var(--qd-verde); }
+.qd-tabela .cnt-t { position: absolute; right: .3cqw; top: 0; font-family: var(--qd-mao); font-weight: 400; font-size: 1.3cqw; color: var(--qd-azul); }
+.qd-tabela.larga { font-size: max(1.75cqw, 9px); }
+.qd-tabela.larga th, .qd-tabela.larga td { padding: .4cqw .45cqw; }
+/* a tabela não coube na lateral (celular deitado, 4 colunas): a lateral alarga e o foco cede espaço */
+.qd.lado-xl .qd-lado { width: 40%; right: 2%; }
+.qd.lado-xl .qd-foco, .qd.lado-xl .qd-etq, .qd.compacto.lado-xl .qd-foco { right: 44%; }
+.qd-afs { display: flex; flex-direction: column; align-items: stretch; gap: .28em; font-family: var(--qd-mao); font-weight: 400; font-size: max(.46em, 14px); }
+/* PROMPT-209: cada frase é uma caixinha de opção (como nas questões do jogo): borda arredondada, A/B/C na frente */
+.qd-af { display: flex; align-items: center; gap: .45em; padding: .22em .55em .22em .3em; border: .08em solid var(--qd-giz-3); border-radius: .45em; line-height: 1.15; white-space: nowrap;
+  background: rgba(255,255,255,.03); transition: background calc(.3s / var(--qd-vel, 1)), color calc(.3s / var(--qd-vel, 1)), border-color calc(.3s / var(--qd-vel, 1)), opacity calc(.3s / var(--qd-vel, 1)); }
+.qd-af .lt { flex: none; width: 1.35em; height: 1.35em; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: .07em solid currentColor;
+  font-family: var(--qd-num); font-weight: 900; font-size: .78em; }
+.qd-af .tx { flex: 1 1 auto; min-width: 0; }
+.qd-af .mk { flex: none; min-width: 1em; font-family: var(--qd-num); font-weight: 900; text-align: center; }
+.qd-af.olha { border-color: var(--qd-amarelo); box-shadow: 0 0 0 .06em var(--qd-amarelo); background: var(--qd-amarelo-fundo); }
+.qd-af.certa .mk { color: var(--qd-verde); }
+.qd-af.falsa { opacity: .45; }
+.qd-af.falsa .mk { color: var(--qd-vermelho); }
+.qd-af.falsa .tx { text-decoration: line-through; text-decoration-thickness: .06em; text-decoration-color: var(--qd-vermelho); }
+.qd-af.qd-caixa-ok { color: var(--qd-verde); border-color: var(--qd-verde); border-width: .12em; background: rgba(61,220,132,.08); font-family: var(--qd-mao); font-weight: 400; padding: .3em .6em .3em .35em; }
+.qd-caixa-ok .l2 { display: block; font-size: .7em; }
+.qd-afs.quebra { max-width: 100%; }
+.qd-afs.quebra .qd-af { white-space: normal; text-wrap: balance; }
 
 /* os botões 1× 2× 4× (Aula e cartão do erro) */
 .qd-vel { display: none; align-items: center; gap: 4px; }

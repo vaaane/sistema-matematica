@@ -841,7 +841,7 @@ function render(){
           <div class="ficha-nota" style="margin-bottom:12px;margin-top:0;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-muted)">
             <svg viewBox="0 0 24 24" style="fill:var(--text-muted)"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
             <span>${bimestre >= 4
-              ? `A nota de <b style="color:var(--text)">comportamento</b> começa em <b style="color:var(--text)">2,0</b>; ocorrência positiva soma <b style="color:var(--text)">0,3</b> e negativa retira <b style="color:var(--text)">0,3</b>.`
+              ? `As ocorrências ficam registradas aqui. No 4º bimestre elas <b style="color:var(--text)">não contam na nota</b>.`
               : `A nota do <b style="color:var(--text)">professor conselheiro</b> começa em <b style="color:var(--text)">1,0</b> e cada ocorrência registrada retira <b style="color:var(--text)">0,3</b> ponto.`}</span>
           </div>
           <div>${ocHtml}</div>

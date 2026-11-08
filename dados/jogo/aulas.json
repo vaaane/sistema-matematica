@@ -754,6 +754,90 @@
      "lousa": [{"t": "compara", "esq": {"passos": [{"t": "linha", "v": "3x + 2x"}, {"t": "linha", "v": "5x²"}]}, "dir": {"passos": [{"t": "linha", "v": "3x + 2x"}, {"t": "linha", "v": "(3 + 2)x"}, {"t": "linha", "v": "5x"}]}}, {"t": "escreve", "v": "(3 + 2)x = 5x", "cor": "certo"}, {"t": "escreve", "v": "A letra não vira x²: só os números somam!", "cor": "errado"}]
     }
    ]
+  },
+  "mapa13-A": {
+   "titulo": "Média, moda e mediana",
+   "layout": "v2",
+   "paginas": [
+    {
+     "texto": "Média",
+     "quadro": [{"t": "media", "l": [2,4,6], "pilhas": true}]
+    },
+    {
+     "texto": "Média com vírgula",
+     "quadro": [{"t": "media", "l": [3,5,6,8], "regras": ["Sobrou? Põe vírgula e zero e continua."]}]
+    },
+    {
+     "texto": "Problema de média",
+     "quadro": [{"t": "mediaprob", "l": [8,10,9,7,11], "enun": "Idades de 5 crianças:", "pergunta": "Qual é a média de idade?", "soma": "Soma todas as idades.", "quem": "crianças", "rotulo": "média de idade", "unidade": " anos"}]
+    },
+    {
+     "texto": "A nota que falta",
+     "quadro": [{"t": "notafalta", "m": 7, "k": 3, "notas": [6,8]}]
+    },
+    {
+     "texto": "Moda",
+     "quadro": [{"t": "moda", "l": [3,5,5,7,5]}]
+    },
+    {
+     "texto": "Duas modas e sem moda",
+     "quadro": [{"t": "moda", "listas": [[2,5,8,2,5],[1,4,6,9]]}]
+    },
+    {
+     "texto": "Mediana",
+     "quadro": [{"t": "mediana", "l": [7,2,9,4,5]}]
+    },
+    {
+     "texto": "Mediana com quantidade par",
+     "quadro": [{"t": "mediana", "l": [8,3,6,1]}]
+    },
+    {
+     "texto": "Média × mediana",
+     "quadro": [{"t": "medcomp", "l": [1,2,3,4,15]}]
+    }
+   ]
+  },
+  "mapa13-B": {
+   "titulo": "Tabelas",
+   "layout": "v2",
+   "paginas": [
+    {
+     "texto": "Ler a tabela",
+     "quadro": [{"t": "ler", "tab": {"titulo": "Vendas da barraca de frutas", "colunas": ["Fruta", "Vendas"], "linhas": [["Maçã",6],["Banana",9],["Uva",2],["Laranja",3]]}, "i": 1, "j": 1, "enun": "Quantas bananas foram vendidas?", "resposta": "9 bananas"}]
+    },
+    {
+     "texto": "Maior e menor",
+     "quadro": [{"t": "maior", "tab": {"titulo": "Vendas da barraca de frutas", "colunas": ["Fruta", "Vendas"], "linhas": [["Maçã",6],["Banana",9],["Uva",2],["Laranja",3]]}, "enun": "Qual fruta vendeu mais?"}]
+    },
+    {
+     "texto": "Total",
+     "quadro": [{"t": "total", "tab": {"titulo": "Vendas da barraca de frutas", "colunas": ["Fruta", "Vendas"], "linhas": [["Maçã",6],["Banana",9],["Uva",2],["Laranja",3]]}, "enun": "Quantas frutas foram vendidas no total?"}]
+    },
+    {
+     "texto": "\"A mais\" e empatar",
+     "quadro": [{"t": "amais", "tab": {"titulo": "Vendas da barraca de frutas", "colunas": ["Fruta", "Vendas"], "linhas": [["Maçã",6],["Banana",9],["Uva",2],["Laranja",3]]}, "casos": [{"a": 1, "b": 2, "enun": "Quantas bananas a mais que uvas?"},{"a": 1, "b": 2, "empate": true, "enun": "Quantas uvas a mais para empatar com a banana?"}]}]
+    },
+    {
+     "texto": "Média da tabela",
+     "quadro": [{"t": "mediatab", "tab": {"titulo": "Vendas da barraca de frutas", "colunas": ["Fruta", "Vendas"], "linhas": [["Maçã",6],["Banana",9],["Uva",2],["Laranja",3]]}, "enun": "Qual foi a média de vendas por fruta?"}]
+    },
+    {
+     "texto": "Fração",
+     "quadro": [{"t": "fractab", "tab": {"titulo": "Vendas da barraca de frutas", "colunas": ["Fruta", "Vendas"], "linhas": [["Maçã",6],["Banana",9],["Uva",2],["Laranja",3]]}, "i": 0, "enun": "Que fração das frutas vendidas foi maçã?"}]
+    },
+    {
+     "texto": "Porcentagem",
+     "quadro": [{"t": "pcttab", "tab": {"titulo": "Vendas da barraca de frutas", "colunas": ["Fruta", "Vendas"], "linhas": [["Maçã",6],["Banana",9],["Uva",2],["Laranja",3]]}, "i": 0, "enun": "Que porcentagem das vendas foi maçã?"}]
+    },
+    {
+     "texto": "Qual afirmação é verdadeira?",
+     "quadro": [{"t": "afirma", "tab": {"titulo": "Vendas da barraca de frutas", "colunas": ["Fruta", "Vendas"], "linhas": [["Maçã",6],["Banana",9],["Uva",2],["Laranja",3]]}, "frases": [["Uva vendeu o dobro de laranja.",[[2,1],[3,1]], "2 não é o dobro de 3",false],["Maçã e laranja juntas venderam 10.",[[0,1],[3,1]], "6 + 3 = 9, não 10",false],["Banana vendeu 3 a mais que maçã.",[[1,1],[0,1]], "9 − 6 = 3",true]]}]
+    },
+    {
+     "texto": "Tabela de dupla entrada",
+     "quadro": [{"t": "dupla", "tab": {"titulo": "Esporte preferido", "colunas": ["Esporte", "Meninos", "Meninas", "Total"], "linhas": [["Futebol",6,3,9],["Vôlei",2,5,7],["Basquete",4,1,5],["Natação",1,3,4]]}, "partes": [{"t": "cel", "i": 1, "j": 2, "enun": "Quantas meninas escolheram vôlei?"},{"t": "col", "j": 1, "enun": "Quantos meninos ao todo?"},{"t": "maxTotal", "j": 3, "enun": "Qual esporte foi o mais votado, somando meninos e meninas?"}]}]
+    }
+   ]
   }
  }
 }

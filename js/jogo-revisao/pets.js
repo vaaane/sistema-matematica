@@ -25,6 +25,19 @@ export async function carregarSprites() {
       if (p && j.sequencias?.[p] && !j.sequencias[f]) j.sequencias[f] = j.sequencias[p];
       if (adultoDaCor(f) && j.quadro_por_pet?.[p] && !j.quadro_por_pet[f]) j.quadro_por_pet[f] = j.quadro_por_pet[p];
     }
+    // 🐱 PROMPT-209: o adulto do gato e do axolote é o próprio filhote, 50% maior: as mesmas imagens (e as das cores),
+    // com o nome {pet}_adulto[_{cor}] só para o jogo saber que evoluiu. O tamanho maior fica em jogo-revisao.js (ALT_PET/DIST_PET).
+    for (const p of ADULTO_E_FILHOTE) {
+      if (!j.pets[p]) continue;
+      const a = `${p}_adulto`;
+      j.evolucao = { ...(j.evolucao || {}), [p]: a };
+      j.pets[a] = j.pets[p];
+      if (j.sequencias?.[p]) j.sequencias[a] = j.sequencias[p];
+      for (const c of CORES_PET[p] || []) if (j.pets[`${p}_${c}`]) {
+        j.pets[`${a}_${c}`] = j.pets[`${p}_${c}`];
+        if (j.sequencias?.[`${p}_${c}`] || j.sequencias?.[p]) j.sequencias[`${a}_${c}`] = j.sequencias[`${p}_${c}`] || j.sequencias[p];
+      }
+    }
     SPR = j;
   }
   return SPR;
@@ -37,7 +50,7 @@ const CORES_TODAS = ['marrom', 'cinza', 'branco', 'roxo', 'azul', 'rosa', 'verde
 export const CORES_PET = {
   elefante: CORES_TODAS, tigre: CORES_TODAS, capivara: CORES_TODAS,
   gato: ['preto'],   // 🐱 PROMPT-194: só o preto (desenho novo); as outras cores compradas voltaram em moedas
-  unicornio: CORES_TODAS.filter(c => !['marrom', 'dourado', 'preto'].includes(c)),   // 🦄 PROMPT-194
+  unicornio: [],   // 🦄 PROMPT-212: sem cores (PROMPT-194 tinha tirado marrom, dourado e preto; as compradas voltaram em moedas)
   gaviao: [],   // 🦅 PROMPT-190: o gavião só no desenho original (as cores compradas voltaram em moedas)
   axolote: CORES_TODAS.filter(c => c !== 'rosa'),
   morcego: ['marrom', 'cinza', 'branco', 'roxo', 'azul', 'vermelho', 'dourado'],
@@ -57,6 +70,14 @@ export const FUNDOS_PET = [
 // gato_azul → 'gato'; o resto (gato, dragao_azul, dragao_vermelho_sombra…) → null
 export const petDaCor = (forma) => { const m = /^([a-z]+)_([a-z]+)$/.exec(forma || ''); return m && CORES_PET[m[1]]?.includes(m[2]) ? m[1] : null; };
 // 🐯 adulto com cor (PROMPT-181): tigre_adulto_azul → 'tigre_adulto'; o resto → null
+// 🐱 PROMPT-209: pets cujo adulto é o filhote 50% maior (sem desenho próprio de adulto)
+export const ADULTO_E_FILHOTE = ['gato', 'axolote'];
+export const CRESCE_ADULTO_FILHOTE = 1.5;
+// gato_adulto, gato_adulto_preto, axolote_adulto_azul → o filhote com a cor (gato, gato_preto, axolote_azul); o resto → null
+export const filhoteDoAdulto = (forma) => {
+  const m = /^([a-z]+)_adulto(?:_([a-z]+))?$/.exec(forma || '');
+  return m && ADULTO_E_FILHOTE.includes(m[1]) && (!m[2] || CORES_PET[m[1]]?.includes(m[2])) ? (m[2] ? `${m[1]}_${m[2]}` : m[1]) : null;
+};
 export const adultoDaCor = (forma) => { const m = /^(([a-z]+)_adulto)_([a-z]+)$/.exec(forma || ''); return m && CORES_PET[m[2]]?.includes(m[3]) ? m[1] : null; };
 export const coresDoPet = (pet) => (CORES_PET[pet] || []).filter(c => SPR?.pets?.[`${pet}_${c}`]);
 
@@ -73,7 +94,9 @@ export const formaAdulta = (pet) => { const a = SPR?.evolucao?.[pet]; return a &
 // dragao_vermelho_{cor}[_adulto] (PROMPT-84: mesmas imagens, mas o nome guarda que é o vermelho, para o tamanho ser o dele).
 export const coresDragao = () => SPR?.cores || {};
 export const aceitaCor = (pet) => /^dragao_vermelho$/.test(pet || '');   // PROMPT-129: cores especiais só no dragão vermelho
-export const ehFormaAdulta = (forma) => /_adulto$/.test(forma || '') || !!adultoDaCor(forma);   // dragao_sombra_adulto, tigre_adulto_azul
+// dragao_sombra_adulto, tigre_adulto_azul. O gato e o axolote adultos (o filhote maior, PROMPT-209) contam como filhote para o
+// desenho (animações, palco, sono): só o tamanho muda.
+export const ehFormaAdulta = (forma) => !filhoteDoAdulto(forma) && (/_adulto$/.test(forma || '') || !!adultoDaCor(forma));
 export function formaComCor(forma, cor) {
   if (cor && CORES_PET[forma]?.includes(cor) && SPR?.pets?.[`${forma}_${cor}`]) return `${forma}_${cor}`;   // 🎨 PROMPT-170
   if (cor && adultoDaCor(`${forma}_${cor}`) === forma && SPR?.pets?.[`${forma}_${cor}`]) return `${forma}_${cor}`;   // 🐯 a cor do filhote vale no adulto (PROMPT-181)
@@ -190,6 +213,10 @@ export function msAtePasso(forma, nome, achar, { deFrente = true } = {}) {
 // Por pet (PROMPT-165): a forma com cor (pet_{cor}) usa a lista do pet; sem lista, a _padrao.
 // Nunca sozinho: o fogo, o voo (fica para o combate e o Meu Pet), o ataque e o 🙃 pendurado da capivara.
 const ACOES_PARADO = ['cheirar', 'lamber_pata', 'lamber_rabo', 'banho'];
+// 🦄 PROMPT-212: pet que, com o personagem parado, pasta (só na grama) e depois deita e fica deitado até o personagem se mexer.
+// ms = tempo com o personagem parado. Por enquanto só o unicórnio adulto.
+const DEITA = { pastar: 20000, deitar: 45000 };
+export const deitaParado = (forma) => /^unicornio_adulto/.test(forma || '') && temSequencia(forma, 'deitar');
 const NUNCA_SOZINHO = new Set(['cuspir_fogo', 'voar', 'voo_campeao', 'ataque_batalha', 'pendurada', 'comer', 'comendo']);
 function acoesParado(forma) {
   const j = SPR?.acoes_parado;
@@ -227,6 +254,9 @@ function ritmo(anim, n, forma = '') {
   if ((anim === 'andar_direita' || anim === 'andar_esquerda') && ehFormaAdulta(forma)) return { ms: 200, loop: true };   // dragão adulto de lado: 200 ms por quadro
   if (anim.startsWith('andar_')) return { ms: n === 2 ? 200 : 150, loop: true };   // andar_frente/andar_costas do adulto: os 8 quadros em ciclo
   if (n === 1 && EMOCOES.has(anim)) return { ms: MS_EMOCAO, loop: false };
+  // 🦄 unicórnio adulto (PROMPT-211): o triste vai deitando (4 quadros) e fica deitado; dormindo = deita e se enrola, fica enrolado
+  if (/^unicornio_adulto/.test(forma) && anim === 'triste_fome') return { ms: 450, loop: true, ultimo: 6000 };
+  if (/^unicornio_adulto/.test(forma) && anim === 'dormindo') return { ms: 1200, loop: true, ultimo: 8000 };
   switch (anim) {
     case 'correndo': return { ms: /^morcego/.test(forma) ? 120 : 90, loop: true };   // 🦇 o morcego corre voando (8 quadros, PROMPT-176)
     case 'voando': return { ms: 120, loop: true };   // 🦇 o morcego batendo as asas, de lado (8 quadros em loop)
@@ -281,6 +311,9 @@ export class PetSeguidor {
     this.evitar = null;             // (x, y) => [x, y] | null: parou em cima de uma porta/saída → para ao lado (PROMPT-155)
     this.desvio = null;             // indo para esse ponto ao lado
     this.desviado = false;          // já foi para o lado: fica lá até o personagem andar de novo
+    this.podePastar = null;         // 🦄 (x, y) => true se o chão embaixo dos pés é grama (quem chamou olha a imagem do mapa)
+    this.deitado = null;            // 🦄 'deitando' | 'deitado' | 'levantando': nada mexe nele até o personagem andar (PROMPT-212)
+    this.pastou = false;            // 🦄 já pastou nesta parada (aos ~20 s)
     SEGUIDORES.add(this);
   }
 
@@ -288,6 +321,7 @@ export class PetSeguidor {
   pararAcao() {
     this.esperaAcao = MS_ANTES_ACAO;
     this.fixa = false;
+    if (this.deitado) return;   // 🦄 deitado: só levanta quando o personagem se mexe (ou ao trocar de cena / de pet)
     if (!this.acao) return;
     this.acao = null;
     pararSequencia(this.img);
@@ -299,6 +333,7 @@ export class PetSeguidor {
   // de fala nem com janela por cima; só se o personagem andar, vier uma reação ou a fome. false = o pet não tem a sequência.
   comemorar(nome = 'vitoria') {
     if (!this.pet || !temSequencia(this.forma, nome)) return false;
+    if (this.deitado) return true;   // 🦄 deitado não comemora (nem fica triste): continua deitado
     this.pararAcao();
     this.reacao = null;
     this.acao = nome; this.fixa = true;
@@ -311,8 +346,10 @@ export class PetSeguidor {
   }
 
   comecarAcao(nome = null) {
+    if (this.deitado) return;
     if (!nome) {
-      const l = comPesoNoturno(acoesParado(this.forma).filter(a => a !== this.ultimaAcao && temSequencia(this.forma, a)));
+      const l = comPesoNoturno(acoesParado(this.forma).filter(a => a !== this.ultimaAcao && temSequencia(this.forma, a)
+        && (a !== 'pastar' || this.pastaAqui())));   // 🦄 pastar só em cima da grama
       if (!l.length) return;
       nome = this.ultimaAcao = l[Math.floor(Math.random() * l.length)];
       if (this.antesDaAcao?.(nome)) { this.esperaAcao = MS_ANTES_ACAO; return; }
@@ -325,8 +362,33 @@ export class PetSeguidor {
     });
   }
 
+  pastaAqui() { return !!this.podePastar?.(this.x, this.y); }
+  // 🦄 deita devagar (triste_fome 1→4) e fica `deitado` (olho fechado), parado, sem ações
+  deitar() {
+    this.pararAcao();
+    this.reacao = null; this.ocioso = false;
+    this.deitado = 'deitando';
+    this.espelhar = this.esquerda;   // as sequências olham para a direita
+    tocarSequencia(this.img, this.forma, 'deitar').then(() => {
+      if (this.deitado !== 'deitando') return;
+      this.deitado = 'deitado';
+      this.trocar('deitado', true); this.desenhar();
+    });
+  }
+  // 🦄 o personagem se mexeu: levanta rápido (triste_fome 4→1) e volta a seguir
+  levantar() {
+    this.deitado = 'levantando';
+    tocarSequencia(this.img, this.forma, 'levantar').then((fim) => {
+      if (this.deitado !== 'levantando') return;
+      this.deitado = null; this.pastou = false; this.esperaAcao = MS_ANTES_ACAO;
+      this.trocar('sentado_girando', true); this.desenhar();
+    });
+  }
+  sairDoChao() { if (!this.deitado) return; this.deitado = null; this.pastou = false; pararSequencia(this.img); }   // troca de cena / de pet
+
   // pet = quem é (cuidados, nome, falas); forma = qual desenho usar (o filhote ou o adulto)
   definir(pet, forma = pet) {
+    this.sairDoChao();
     this.pararAcao();
     this.pet = pet; this.forma = pet ? forma : null;
     this.img.hidden = this.sombra.hidden = !pet;
@@ -339,13 +401,14 @@ export class PetSeguidor {
     this.rastro = [[x, y]];
     this.paradoMs = 0; this.andandoMs = 0; this.ultJog = null; this.esperar = false; this.alcancando = false;
     this.desvio = null; this.desviado = false;
+    this.sairDoChao();
     this.pararAcao();
     if (this.pet) { this.reacao = null; this.trocar('sentado_girando', true); this.desenhar(); }
   }
 
   // Animação especial (feliz, pulo, triste…). Sem loop: volta ao ocioso no fim; com loop: dura `ms`.
   reagir(anim, ms = 0) {
-    if (!this.pet) return;
+    if (!this.pet || this.deitado) return;   // 🦄 deitado: clique e reações não tiram ele do chão
     this.pararAcao();
     this.reacao = { anim, ate: ms ? performance.now() + ms : 0 };
     this.trocar(anim, true);
@@ -385,6 +448,14 @@ export class PetSeguidor {
     if (jogParado) this.esperar = true;                                  // ao voltar a andar, espera 0,5 s
     if (this.esperar && this.andandoMs >= 500) this.esperar = false;
     const esperando = this.esperar && mexeu;
+    if (mexeu) this.pastou = false;
+
+    // 🦄 deitado (PROMPT-212): não anda nem faz nada; o personagem se mexeu → levanta (e só depois segue)
+    if (this.deitado) {
+      if (mexeu && this.deitado !== 'levantando') this.levantar();
+      this.desenhar();
+      return;
+    }
 
     // Caminho que falta até o personagem, seguindo o rastro na ordem: pet → rastro[0] → … → personagem.
     // O pet só anda enquanto esse caminho for maior que `atras`,
@@ -419,6 +490,14 @@ export class PetSeguidor {
     const dx = this.x - x0, dy = this.y - y0;
     const andando = Math.hypot(dx, dy) > 0.05;
     if (Math.abs(dx) > 0.05) this.esquerda = dx < 0;
+    // 🦄 PROMPT-212: personagem parado e o pet já no lugar: ~20 s → pasta (só na grama, uma vez por parada); ~45 s → deita
+    if (deitaParado(this.forma) && !this.pausado && !this.fixa && !mexeu && !andando) {
+      if (this.paradoMs >= DEITA.deitar) { this.deitar(); this.desenhar(); return; }
+      if (this.paradoMs >= DEITA.pastar && !this.pastou && !this.acao && !this.reacao && this.pastaAqui()) {
+        this.pastou = true; this.comecarAcao('pastar');
+        if (this.acao) { this.espelhar = this.esquerda; this.desenhar(); return; }
+      }
+    }
 
     // qual animação mostrar
     if (this.reacao) {

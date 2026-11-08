@@ -175,30 +175,30 @@ const FRASES = [
   ['A metade de um número', 'x ÷ 2', ['2x', 'x − 2', 'x²']], ['O quádruplo de um número', '4x', ['x + 4', 'x⁴', 'x ÷ 4']],
 ];
 function frase() {
-  if (coin()) { const [e, r, x] = pick(FRASES); return Q(`"${e}"`, r, x, X('Dobro = 2x, triplo = 3x, quádruplo = 4x, metade = x ÷ 2.')); }
+  if (coin()) { const [e, r, x] = pick(FRASES); return Q(`Qual expressão representa "${e[0].toLowerCase() + e.slice(1)}"?`, r, x, X('Dobro = 2x, triplo = 3x, quádruplo = 4x, metade = x ÷ 2.')); }
   const k = int(2, 9);
-  return coin() ? Q(`"Um número mais ${k}"`, `x + ${k}`, [`${k}x`, `x − ${k}`, `x ÷ ${k}`], X(`"Mais" é soma: x + ${k}`)) : Q(`"Um número menos ${k}"`, `x − ${k}`, [`${k} − x`, `${k}x`, `x + ${k}`], X(`"Menos" é subtração, e o número vem primeiro: x − ${k}`));
+  return coin() ? Q(`Qual expressão representa "um número mais ${k}"?`, `x + ${k}`, [`${k}x`, `x − ${k}`, `x ÷ ${k}`], X(`"Mais" é soma: x + ${k}`)) : Q(`Qual expressão representa "um número menos ${k}"?`, `x − ${k}`, [`${k} − x`, `${k}x`, `x + ${k}`], X(`"Menos" é subtração, e o número vem primeiro: x − ${k}`));
 }
 const LET = ['x', 'a', 'y', 'm'];
 function valorSoma() {
   const n = int(1, 10), k = int(1, 9), t = int(0, 3);
   const [e, v, c] = [[`x + ${k}`, n + k, [n * k, n - k]], [`x − ${k}`, n - k, [n + k, k - n]], [`${k + n} − x`, k, [2 * n + k, n]], ['x + x', 2 * n, [n * n, n, n + 1]]][t];
   if (v < 0) return valorSoma();
-  return Q(`Valor de ${e} quando x = ${n}`, num(v), erradasNum(v, [...c, v + 1, v - 1]), X(`Troque x por ${n}: ${passos(e.replace(/x/g, n))}`));
+  return Q(`Qual é o valor de ${e} quando x = ${n}?`, num(v), erradasNum(v, [...c, v + 1, v - 1]), X(`Troque x por ${n}: ${passos(e.replace(/x/g, n))}`));
 }
 function valorProd(comConst = false) {
   return () => {
     const a = int(2, 6), n = int(2, 10), c = comConst ? int(1, 5) : 0, op = coin() ? '+' : '−';
     const v = comConst ? (op === '+' ? a * n + c : a * n - c) : a * n;
     const e = comConst ? `${a}x ${op} ${c}` : `${a}x`;
-    return Q(`Valor de ${e} quando x = ${n}`, num(v), erradasNum(v, [Number(`${a}${n}`) > 99 ? a + n : Number(`${a}${n}`), a + n + (comConst ? c : 0), v + 1]), X(`${a}x é ${a} vezes x. Troque x por ${n}: ${passos(e.replace(/x/, ` × ${n}`))}`));
+    return Q(`Qual é o valor de ${e} quando x = ${n}?`, num(v), erradasNum(v, [Number(`${a}${n}`) > 99 ? a + n : Number(`${a}${n}`), a + n + (comConst ? c : 0), v + 1]), X(`${a}x é ${a} vezes x. Troque x por ${n}: ${passos(e.replace(/x/, ` × ${n}`))}`));
   };
 }
-const frase2 = () => { const k = int(1, 5); return pick([() => Q(`"O dobro de um número mais ${k}"`, `2x + ${k}`, [`2(x + ${k})`, `x + 2 + ${k}`, `2x − ${k}`], X(`Primeiro o dobro (2x), depois mais ${k}: 2x + ${k}`)), () => Q('"Um número ao quadrado"', 'x²', ['2x', 'x + 2', 'x³'], X('Ao quadrado = x × x = x²'))])(); };
+const frase2 = () => { const k = int(1, 5); return pick([() => Q(`Qual expressão representa "o dobro de um número mais ${k}"?`, `2x + ${k}`, [`2(x + ${k})`, `x + 2 + ${k}`, `2x − ${k}`], X(`Primeiro o dobro (2x), depois mais ${k}: 2x + ${k}`)), () => Q('Qual expressão representa "um número ao quadrado"?', 'x²', ['2x', 'x + 2', 'x³'], X('Ao quadrado = x × x = x²'))])(); };
 const canetas = () => { const k = int(2, 9); return Q(`Cada caneta custa x reais. Quanto custam ${k} canetas?`, `${k}x`, [`x + ${k}`, `x ÷ ${k}`, `x − ${k}`], X(`${k} canetas de x reais: ${k} × x = ${k}x`)); };
-function valorNeg() { const a = int(2, 5), n = -int(1, 4), c = int(1, 6); const v = a * n - c; return Q(`Valor de ${a}x − ${c} quando x = ${num(n)}`, num(v), erradasNum(v, [a * -n - c, a * n + c, -v], { neg: true }), X(`Troque x por ${num(n)}: ${passos(`${a} × (${num(n)}) − ${c}`)}`)); }
-function valorQuad() { const n = int(2, 6), c = int(1, 9); const v = n * n + c; return Q(`Valor de x² + ${c} quando x = ${n}`, num(v), erradasNum(v, [2 * n + c, n + c, n * n]), X(`x² = x × x. Troque x por ${n}: ${n} × ${n} + ${c} = ${n * n} + ${c} = ${v}`)); }
-function valor2() { const a = int(2, 5), b = int(2, 5), p = int(1, 6), q = int(1, 6); const v = a * p + b * q; return Q(`Valor de ${a}a + ${b}b quando a = ${p} e b = ${q}`, num(v), erradasNum(v, [a + p + b + q, a * q + b * p, v + 1]), X(`Troque a por ${p} e b por ${q}: ${passos(`${a} × ${p} + ${b} × ${q}`)}`)); }
+function valorNeg() { const a = int(2, 5), n = -int(1, 4), c = int(1, 6); const v = a * n - c; return Q(`Qual é o valor de ${a}x − ${c} quando x = ${num(n)}?`, num(v), erradasNum(v, [a * -n - c, a * n + c, -v], { neg: true }), X(`Troque x por ${num(n)}: ${passos(`${a} × (${num(n)}) − ${c}`)}`)); }
+function valorQuad() { const n = int(2, 6), c = int(1, 9); const v = n * n + c; return Q(`Qual é o valor de x² + ${c} quando x = ${n}?`, num(v), erradasNum(v, [2 * n + c, n + c, n * n]), X(`x² = x × x. Troque x por ${n}: ${n} × ${n} + ${c} = ${n * n} + ${c} = ${v}`)); }
+function valor2() { const a = int(2, 5), b = int(2, 5), p = int(1, 6), q = int(1, 6); const v = a * p + b * q; return Q(`Qual é o valor de ${a}a + ${b}b quando a = ${p} e b = ${q}?`, num(v), erradasNum(v, [a + p + b + q, a * q + b * p, v + 1]), X(`Troque a por ${p} e b por ${q}: ${passos(`${a} × ${p} + ${b} × ${q}`)}`)); }
 const mono = (k, l) => k === 1 ? l : k === 0 ? '0' : `${k}${l}`;
 function somaSem(sub = false) {
   return () => {
@@ -214,8 +214,8 @@ function semelhantes() {
   if (t === 1) { const l2 = pick(LET.filter(x => x !== l)); return SN(false, `${mono(a, l)} e ${mono(b, l2)} são termos semelhantes?`, SEM); }
   return SN(false, `${l} e ${l}² são termos semelhantes?`, SEM);
 }
-const perimQ = () => Q('Perímetro de um quadrado de lado x', '4x', ['x⁴', '2x', 'x + 4'], X('Perímetro é a soma dos lados: x + x + x + x = 4x'));
-const perimR = () => { const k = int(2, 9); return Q(`Perímetro de um retângulo de lados x e ${k}`, `2x + ${2 * k}`, [`2x + ${k}`, `x + ${k}`, `${2 + 2 * k}x`], X(`x + ${k} + x + ${k} = 2x + ${2 * k}`)); };
+const perimQ = () => Q('Qual é o perímetro de um quadrado de lado x?', '4x', ['x⁴', '2x', 'x + 4'], X('Perímetro é a soma dos lados: x + x + x + x = 4x'));
+const perimR = () => { const k = int(2, 9); return Q(`Qual é o perímetro de um retângulo de lados x e ${k}?`, `2x + ${2 * k}`, [`2x + ${k}`, `x + ${k}`, `${2 + 2 * k}x`], X(`x + ${k} + x + ${k} = 2x + ${2 * k}`)); };
 const tres = () => { const l = pick(LET), a = int(2, 6), b = int(2, 6), c = int(1, 4); const r = a + b + c; return Q(`${mono(a, l)} + ${mono(b, l)} + ${mono(c, l)}`, mono(r, l), [mono(r + 1, l), `${r}${l}³`, mono(a + b, l)], X(`Mesma letra: some os números (${a} + ${b} + ${c} = ${r}) e repita a letra.`)); };
 const xkx = () => { const k = int(1, 9); return Q(`Simplifique x + ${k} + x`, `2x + ${k}`, [`${k + 2}x`, `x + ${k}`, `2x + ${k + 1}`], X(`Junte os x: x + x = 2x. O ${k} fica sozinho: 2x + ${k}`)); };
 function simpl2() {

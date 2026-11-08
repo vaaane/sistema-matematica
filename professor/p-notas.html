@@ -408,7 +408,7 @@ function renderCabecalho() {
       `<th class="col-aluno">Aluno</th>` +
       campos.map(c => `<th>${c.label}${campoAuto(c, turmaAtual) ? " 🔄" : ""}<span class="max">máx ${Number.isInteger(c.max) ? c.max : fmt(c.max)}</span></th>`).join("") +
       (emColunas
-        ? `<th>Subtotal<span class="max">máx 10</span></th>` + COLUNAS_EXTRAS_B4.map(x => `<th>${x.t} 🔄<span class="max">${x.max}</span></th>`).join("")
+        ? COLUNAS_EXTRAS_B4.map(x => `<th>${x.t} 🔄<span class="max">${x.max}</span></th>`).join("")
         : comBonus ? `<th>Extras</th>` : ``) +
       `<th>Total</th>`;
   }
@@ -416,7 +416,7 @@ function renderCabecalho() {
   if (trFoot) {
     trFoot.innerHTML =
       `<td class="col-aluno">Média da turma</td>` +
-      `<td colspan="${campos.length + (emColunas ? 1 + COLUNAS_EXTRAS_B4.length : comBonus ? 1 : 0)}"></td>` +
+      `<td colspan="${campos.length + (emColunas ? COLUNAS_EXTRAS_B4.length : comBonus ? 1 : 0)}"></td>` +
       `<td id="mediaTurma">—</td>`;
   }
   // Legenda de bônus — mostra só os extras que valem NESTE bimestre
@@ -476,16 +476,14 @@ function renderTabela() {
   atualizarMedia();
 }
 
-// Subtotal (travado em 10) + uma célula por extra — só no 4º bim em diante
+// Uma célula por extra — só no 4º bim em diante (PROMPT-209: sem a coluna da nota parcial; o subtotal travado em 10 continua no Total)
 function subtotalCapado(r) {
   return Math.min(camposAtivos().reduce((s,c) => s + (parseFloat(r[c.key]) || 0), 0), 10);
 }
 function celulasExtrasB4(nome, r) {
   const a = autoDados[turmaAtual]?.[nome] || {};
   const auto = extrasAutoAtivos(nome);
-  const sub = subtotalCapado(r);
-  return `<td class="auto-cell"><span class="auto-display${sub ? "" : " zero"}" id="sub-${slug(nome)}">${fmt(sub)}</span></td>` +
-    COLUNAS_EXTRAS_B4.map(x => {
+  return COLUNAS_EXTRAS_B4.map(x => {
       const v = x.valor(a, auto);
       return `<td class="auto-cell" title="${x.titulo(a)}"><span class="auto-display${v ? "" : " zero"}">${v ? `+${fmt(v)}` : "—"}</span></td>`;
     }).join("");
@@ -917,7 +915,7 @@ function exportarCSV(){
   const esc = s => `"${String(s).replace(/"/g, '""')}"`;
   const emColunas = bonusAtivo() && extrasEmColunas();
   const head = emColunas
-    ? ["Nº", "Aluno", ...campos.map(c => c.label), "Subtotal", ...COLUNAS_EXTRAS_B4.map(x => x.t), "Total"]
+    ? ["Nº", "Aluno", ...campos.map(c => c.label), ...COLUNAS_EXTRAS_B4.map(x => x.t), "Total"]
     : ["Nº", "Aluno", ...campos.map(c => c.label), "Bônus", "Total"];
   const linhas = [head.join(sep)];
   alunos.forEach((nome, i) => {
@@ -933,7 +931,7 @@ function exportarCSV(){
       esc(nome),
       ...vals,
       ...(emColunas
-        ? [fmt(subtotalCapado(r)), ...COLUNAS_EXTRAS_B4.map(x => fmt(x.valor(a, auto)))]
+        ? COLUNAS_EXTRAS_B4.map(x => fmt(x.valor(a, auto)))
         : [fmt(calcularBonus(nome, r))]),
       fmt(calcularTotal(nome, r)),
     ].join(sep));

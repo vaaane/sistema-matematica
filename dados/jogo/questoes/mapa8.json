@@ -13,7 +13,7 @@
      "questoes": [
       {
        "id": "m8A-treinador1-1",
-       "enunciado": "\"O dobro de um número\"",
+       "enunciado": "Qual expressão representa \"o dobro de um número\"?",
        "resposta": "2x",
        "erradas": [
         "x + 2",
@@ -23,7 +23,7 @@
       },
       {
        "id": "m8A-treinador1-2",
-       "enunciado": "\"Um número mais 5\"",
+       "enunciado": "Qual expressão representa \"um número mais 5\"?",
        "resposta": "x + 5",
        "erradas": [
         "5x",
@@ -33,7 +33,7 @@
       },
       {
        "id": "m8A-treinador1-3",
-       "enunciado": "\"O triplo de um número\"",
+       "enunciado": "Qual expressão representa \"o triplo de um número\"?",
        "resposta": "3x",
        "erradas": [
         "x + 3",
@@ -43,7 +43,7 @@
       },
       {
        "id": "m8A-treinador1-4",
-       "enunciado": "\"Um número menos 4\"",
+       "enunciado": "Qual expressão representa \"um número menos 4\"?",
        "resposta": "x − 4",
        "erradas": [
         "4 − x",
@@ -53,7 +53,7 @@
       },
       {
        "id": "m8A-treinador1-5",
-       "enunciado": "\"A metade de um número\"",
+       "enunciado": "Qual expressão representa \"a metade de um número\"?",
        "resposta": "x ÷ 2",
        "erradas": [
         "2x",
@@ -70,7 +70,7 @@
      "questoes": [
       {
        "id": "m8A-treinador2-1",
-       "enunciado": "Valor de x + 3 quando x = 4",
+       "enunciado": "Qual é o valor de x + 3 quando x = 4?",
        "resposta": "7",
        "erradas": [
         "12",
@@ -80,7 +80,7 @@
       },
       {
        "id": "m8A-treinador2-2",
-       "enunciado": "Valor de x − 2 quando x = 10",
+       "enunciado": "Qual é o valor de x − 2 quando x = 10?",
        "resposta": "8",
        "erradas": [
         "12",
@@ -90,7 +90,7 @@
       },
       {
        "id": "m8A-treinador2-3",
-       "enunciado": "Valor de x + 7 quando x = 1",
+       "enunciado": "Qual é o valor de x + 7 quando x = 1?",
        "resposta": "8",
        "erradas": [
         "7",
@@ -100,7 +100,7 @@
       },
       {
        "id": "m8A-treinador2-4",
-       "enunciado": "Valor de 10 − x quando x = 3",
+       "enunciado": "Qual é o valor de 10 − x quando x = 3?",
        "resposta": "7",
        "erradas": [
         "13",
@@ -110,7 +110,7 @@
       },
       {
        "id": "m8A-treinador2-5",
-       "enunciado": "Valor de x + x quando x = 5",
+       "enunciado": "Qual é o valor de x + x quando x = 5?",
        "resposta": "10",
        "erradas": [
         "11",
@@ -127,7 +127,7 @@
      "questoes": [
       {
        "id": "m8A-treinador3-1",
-       "enunciado": "Valor de 2x quando x = 6",
+       "enunciado": "Qual é o valor de 2x quando x = 6?",
        "resposta": "12",
        "erradas": [
         "8",
@@ -137,7 +137,7 @@
       },
       {
        "id": "m8A-treinador3-2",
-       "enunciado": "Valor de 3x quando x = 2",
+       "enunciado": "Qual é o valor de 3x quando x = 2?",
        "resposta": "6",
        "erradas": [
         "5",
@@ -147,7 +147,7 @@
       },
       {
        "id": "m8A-treinador3-3",
-       "enunciado": "Valor de 5x quando x = 4",
+       "enunciado": "Qual é o valor de 5x quando x = 4?",
        "resposta": "20",
        "erradas": [
         "9",
@@ -157,7 +157,7 @@
       },
       {
        "id": "m8A-treinador3-4",
-       "enunciado": "Valor de 2x + 1 quando x = 3",
+       "enunciado": "Qual é o valor de 2x + 1 quando x = 3?",
        "resposta": "7",
        "erradas": [
         "3",
@@ -167,7 +167,7 @@
       },
       {
        "id": "m8A-treinador3-5",
-       "enunciado": "Valor de 4x − 2 quando x = 5",
+       "enunciado": "Qual é o valor de 4x − 2 quando x = 5?",
        "resposta": "18",
        "erradas": [
         "6",
@@ -184,7 +184,7 @@
      "questoes": [
       {
        "id": "m8A-lider-1",
-       "enunciado": "\"O dobro de um número mais 1\"",
+       "enunciado": "Qual expressão representa \"o dobro de um número mais 1\"?",
        "resposta": "2x + 1",
        "erradas": [
         "2(x + 1)",
@@ -194,7 +194,7 @@
       },
       {
        "id": "m8A-lider-2",
-       "enunciado": "\"Um número ao quadrado\"",
+       "enunciado": "Qual expressão representa \"um número ao quadrado\"?",
        "resposta": "x²",
        "erradas": [
         "2x",
@@ -204,7 +204,7 @@
       },
       {
        "id": "m8A-lider-3",
-       "enunciado": "Valor de 3x quando x = 10",
+       "enunciado": "Qual é o valor de 3x quando x = 10?",
        "resposta": "30",
        "erradas": [
         "13",
@@ -214,7 +214,7 @@
       },
       {
        "id": "m8A-lider-4",
-       "enunciado": "Valor de x + 8 quando x = 2",
+       "enunciado": "Qual é o valor de x + 8 quando x = 2?",
        "resposta": "10",
        "erradas": [
         "16",
@@ -244,7 +244,7 @@
      "questoes": [
       {
        "id": "m8A-revanche-1",
-       "enunciado": "Valor de 2x − 3 quando x = −1",
+       "enunciado": "Qual é o valor de 2x − 3 quando x = −1?",
        "resposta": "−5",
        "erradas": [
         "5",
@@ -254,7 +254,7 @@
       },
       {
        "id": "m8A-revanche-2",
-       "enunciado": "Valor de x² + 1 quando x = 3",
+       "enunciado": "Qual é o valor de x² + 1 quando x = 3?",
        "resposta": "10",
        "erradas": [
         "4",
@@ -264,7 +264,7 @@
       },
       {
        "id": "m8A-revanche-3",
-       "enunciado": "Valor de 3a + 2b quando a = 2 e b = 5",
+       "enunciado": "Qual é o valor de 3a + 2b quando a = 2 e b = 5?",
        "resposta": "16",
        "erradas": [
         "5",
@@ -450,7 +450,7 @@
      "questoes": [
       {
        "id": "m8B-lider-1",
-       "enunciado": "Perímetro de um quadrado de lado x",
+       "enunciado": "Qual é o perímetro de um quadrado de lado x?",
        "resposta": "4x",
        "erradas": [
         "5x",
@@ -460,7 +460,7 @@
       },
       {
        "id": "m8B-lider-2",
-       "enunciado": "Perímetro de um retângulo de lados x e 3",
+       "enunciado": "Qual é o perímetro de um retângulo de lados x e 3?",
        "resposta": "2x + 6",
        "erradas": [
         "8x",

@@ -13,7 +13,7 @@
      "questoes": [
       {
        "id": "m11A-treinador1-1",
-       "enunciado": "Perímetro de um quadrado de lado 5 cm",
+       "enunciado": "Qual é o perímetro de um quadrado de lado 5 cm?",
        "resposta": "20 cm",
        "erradas": [
         "21 cm",
@@ -34,7 +34,7 @@
       },
       {
        "id": "m11A-treinador1-2",
-       "enunciado": "Perímetro de um quadrado de lado 3 cm",
+       "enunciado": "Qual é o perímetro de um quadrado de lado 3 cm?",
        "resposta": "12 cm",
        "erradas": [
         "13 cm",
@@ -55,7 +55,7 @@
       },
       {
        "id": "m11A-treinador1-3",
-       "enunciado": "Perímetro de um retângulo de 6 cm por 2 cm",
+       "enunciado": "Qual é o perímetro de um retângulo de 6 cm por 2 cm?",
        "resposta": "16 cm",
        "erradas": [
         "12 cm",
@@ -76,7 +76,7 @@
       },
       {
        "id": "m11A-treinador1-4",
-       "enunciado": "Perímetro de um retângulo de 4 cm por 3 cm",
+       "enunciado": "Qual é o perímetro de um retângulo de 4 cm por 3 cm?",
        "resposta": "14 cm",
        "erradas": [
         "12 cm",
@@ -97,7 +97,7 @@
       },
       {
        "id": "m11A-treinador1-5",
-       "enunciado": "Perímetro de um quadrado de lado 10 cm",
+       "enunciado": "Qual é o perímetro de um quadrado de lado 10 cm?",
        "resposta": "40 cm",
        "erradas": [
         "41 cm",
@@ -125,7 +125,7 @@
      "questoes": [
       {
        "id": "m11A-treinador2-1",
-       "enunciado": "Perímetro de um triângulo de lados 3 cm, 4 cm e 5 cm",
+       "enunciado": "Qual é o perímetro de um triângulo de lados 3 cm, 4 cm e 5 cm?",
        "resposta": "12 cm",
        "erradas": [
         "7 cm",
@@ -145,7 +145,7 @@
       },
       {
        "id": "m11A-treinador2-2",
-       "enunciado": "Perímetro de um triângulo com 3 lados iguais de 6 cm",
+       "enunciado": "Qual é o perímetro de um triângulo com 3 lados iguais de 6 cm?",
        "resposta": "18 cm",
        "erradas": [
         "9 cm",
@@ -165,7 +165,7 @@
       },
       {
        "id": "m11A-treinador2-3",
-       "enunciado": "Perímetro de um pentágono com 5 lados iguais de 2 cm",
+       "enunciado": "Qual é o perímetro de um pentágono com 5 lados iguais de 2 cm?",
        "resposta": "10 cm",
        "erradas": [
         "7 cm",
@@ -187,7 +187,7 @@
       },
       {
        "id": "m11A-treinador2-4",
-       "enunciado": "Perímetro de um hexágono com 6 lados iguais de 1 cm",
+       "enunciado": "Qual é o perímetro de um hexágono com 6 lados iguais de 1 cm?",
        "resposta": "6 cm",
        "erradas": [
         "7 cm",
@@ -210,7 +210,7 @@
       },
       {
        "id": "m11A-treinador2-5",
-       "enunciado": "Perímetro de um triângulo de lados 5 cm, 5 cm e 4 cm",
+       "enunciado": "Qual é o perímetro de um triângulo de lados 5 cm, 5 cm e 4 cm?",
        "resposta": "14 cm",
        "erradas": [
         "25 cm",
@@ -407,7 +407,7 @@
       },
       {
        "id": "m11A-lider-5",
-       "enunciado": "Perímetro de um retângulo de 7 cm por 3 cm",
+       "enunciado": "Qual é o perímetro de um retângulo de 7 cm por 3 cm?",
        "resposta": "20 cm",
        "erradas": [
         "21 cm",
@@ -487,7 +487,7 @@
       },
       {
        "id": "m11A-revanche-3",
-       "enunciado": "Perímetro de um quadrado de lado 2,5 cm",
+       "enunciado": "Qual é o perímetro de um quadrado de lado 2,5 cm?",
        "resposta": "10 cm",
        "erradas": [
         "11 cm",
@@ -523,7 +523,7 @@
      "questoes": [
       {
        "id": "m11B-treinador1-1",
-       "enunciado": "Área de um quadrado de lado 3 cm",
+       "enunciado": "Qual é a área de um quadrado de lado 3 cm?",
        "resposta": "9 cm²",
        "erradas": [
         "10 cm²",
@@ -539,7 +539,7 @@
       },
       {
        "id": "m11B-treinador1-2",
-       "enunciado": "Área de um quadrado de lado 5 cm",
+       "enunciado": "Qual é a área de um quadrado de lado 5 cm?",
        "resposta": "25 cm²",
        "erradas": [
         "26 cm²",
@@ -555,7 +555,7 @@
       },
       {
        "id": "m11B-treinador1-3",
-       "enunciado": "Área de um quadrado de lado 2 cm",
+       "enunciado": "Qual é a área de um quadrado de lado 2 cm?",
        "resposta": "4 cm²",
        "erradas": [
         "5 cm²",
@@ -571,7 +571,7 @@
       },
       {
        "id": "m11B-treinador1-4",
-       "enunciado": "Área de um quadrado de lado 10 cm",
+       "enunciado": "Qual é a área de um quadrado de lado 10 cm?",
        "resposta": "100 cm²",
        "erradas": [
         "101 cm²",
@@ -587,7 +587,7 @@
       },
       {
        "id": "m11B-treinador1-5",
-       "enunciado": "Área de um quadrado de lado 1 cm",
+       "enunciado": "Qual é a área de um quadrado de lado 1 cm?",
        "resposta": "1 cm²",
        "erradas": [
         "2 cm²",
@@ -610,7 +610,7 @@
      "questoes": [
       {
        "id": "m11B-treinador2-1",
-       "enunciado": "Área de um retângulo de 5 cm por 4 cm",
+       "enunciado": "Qual é a área de um retângulo de 5 cm por 4 cm?",
        "resposta": "20 cm²",
        "erradas": [
         "18 cm²",
@@ -626,7 +626,7 @@
       },
       {
        "id": "m11B-treinador2-2",
-       "enunciado": "Área de um retângulo de 6 cm por 2 cm",
+       "enunciado": "Qual é a área de um retângulo de 6 cm por 2 cm?",
        "resposta": "12 cm²",
        "erradas": [
         "16 cm²",
@@ -642,7 +642,7 @@
       },
       {
        "id": "m11B-treinador2-3",
-       "enunciado": "Área de um retângulo de 3 cm por 7 cm",
+       "enunciado": "Qual é a área de um retângulo de 3 cm por 7 cm?",
        "resposta": "21 cm²",
        "erradas": [
         "20 cm²",
@@ -658,7 +658,7 @@
       },
       {
        "id": "m11B-treinador2-4",
-       "enunciado": "Área de um retângulo de 10 cm por 3 cm",
+       "enunciado": "Qual é a área de um retângulo de 10 cm por 3 cm?",
        "resposta": "30 cm²",
        "erradas": [
         "26 cm²",
@@ -674,7 +674,7 @@
       },
       {
        "id": "m11B-treinador2-5",
-       "enunciado": "Área de um retângulo de 8 cm por 1 cm",
+       "enunciado": "Qual é a área de um retângulo de 8 cm por 1 cm?",
        "resposta": "8 cm²",
        "erradas": [
         "18 cm²",
@@ -805,7 +805,7 @@
       },
       {
        "id": "m11B-lider-2",
-       "enunciado": "Área de um quadrado de lado 6 cm",
+       "enunciado": "Qual é a área de um quadrado de lado 6 cm?",
        "resposta": "36 cm²",
        "erradas": [
         "37 cm²",
@@ -821,7 +821,7 @@
       },
       {
        "id": "m11B-lider-3",
-       "enunciado": "Área de um triângulo de base 6 cm e altura 4 cm",
+       "enunciado": "Qual é a área de um triângulo de base 6 cm e altura 4 cm?",
        "resposta": "12 cm²",
        "erradas": [
         "20 cm²",
@@ -837,7 +837,7 @@
       },
       {
        "id": "m11B-lider-4",
-       "enunciado": "Área de um retângulo de 9 cm por 2 cm",
+       "enunciado": "Qual é a área de um retângulo de 9 cm por 2 cm?",
        "resposta": "18 cm²",
        "erradas": [
         "22 cm²",
@@ -881,7 +881,7 @@
      "questoes": [
       {
        "id": "m11B-revanche-1",
-       "enunciado": "Área de um paralelogramo de base 8 cm e altura 3 cm",
+       "enunciado": "Qual é a área de um paralelogramo de base 8 cm e altura 3 cm?",
        "resposta": "24 cm²",
        "erradas": [
         "22 cm²",
@@ -897,7 +897,7 @@
       },
       {
        "id": "m11B-revanche-2",
-       "enunciado": "Área de um triângulo de base 10 cm e altura 5 cm",
+       "enunciado": "Qual é a área de um triângulo de base 10 cm e altura 5 cm?",
        "resposta": "25 cm²",
        "erradas": [
         "30 cm²",

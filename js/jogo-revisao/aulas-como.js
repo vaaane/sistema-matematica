@@ -7,6 +7,7 @@
 import { tokU, num, arred } from './base.js';
 import { passosExpressao, passosSemOrdem, lousaDePassos } from './lousa.js';
 import { QUADRO_FD } from './quadro.js';
+import { conferirAfirmacao } from './mapas9a13.js';
 
 const soExpressao = (s) => /^[\d\s,+−×÷()[\]{}-]+$/.test(s) && /[+−×÷]/.test(s) && /\d/.test(s);
 const limpa = (e) => String(e || '').replace(/\s*=\s*\??\s*$/, '').replace(/^Quanto (é|dá)\s+/i, '').replace(/\?$/, '').trim();
@@ -281,11 +282,27 @@ function gin4b(q) {
   }
   return null;
 }
+// ✏️ PROMPT-209: os enunciados ganharam a pergunta no fim ("Qual é o valor de 2x quando x = 3?", "… Qual equação representa
+// a balança?"). As lousas leem o enunciado do jeito antigo: aqui ele volta ao formato antigo antes de qualquer leitura.
+export function tirarPergunta(e) {
+  let s = String(e ?? '').trim(), m;
+  s = s.replace(/\s*(?:Qual equação representa (?:a balança|essa situação)|Qual é a equação)\?$/, '');
+  if ((m = /^Qual (?:equação|expressão) representa "(.)(.*)"\?$/.exec(s))) return `"${m[1].toUpperCase()}${m[2]}"`;
+  if ((m = /^Quanto é (\d+\/\d+ em número decimal)\?$/.exec(s))) return m[1];
+  if ((m = /^Qual é o valor de (.+)\?$/.exec(s))) return `Valor de ${m[1]}`;
+  if ((m = /^Qual é o perímetro de (.+)\?$/.exec(s))) return `Perímetro de ${m[1]}`;
+  if ((m = /^Qual é a área de (.+)\?$/.exec(s))) return `Área de ${m[1]}`;
+  return s;
+}
+const semPergunta = (q) => (q && typeof q === 'object' ? { ...q, enunciado: tirarPergunta(q.enunciado) } : q);
 // 🧑‍🏫 PROMPT-205: o cartão do erro do 4-B usa o quadro escrito (quadro.js): as cenas com os números da questão (null = a lousa de antes)
 export function quadroComoFaz(chave, q) {
   if (!q) return null;
+  q = semPergunta(q);
   if (chave === 'mapa4-A') return quadro4a(q);   // PROMPT-206
   if (chave === 'mapa5-A') return quadro5a(q);   // PROMPT-207
+  if (chave === 'mapa13-A') return quadro13a(q);   // PROMPT-208
+  if (chave === 'mapa13-B') return quadro13b(q);
   if (chave !== 'mapa4-B') return null;
   const en = String(q.enunciado || '').trim();
   const c = contaDec(q);
@@ -332,6 +349,7 @@ function quadro5a(q) {
 }
 // 🧑‍🏫 PROMPT-207: a página do resumo (da Aula) de cada tipo de questão, pelas cenas do cartão do erro (1 = a primeira; 0 = nenhuma)
 export function paginaResumo(chave, cenas, q) {
+  q = semPergunta(q);
   const c = cenas?.[0];
   if (!c) return 0;
   if (chave === 'mapa4-A') return { fracao: 1, equiv: 2, simplif: 3, compunit: 6, dendif: 7, multfr: 8, partede: 9, divfr: 10 }[c.t] || (c.t === 'mesmoden' ? (c.op === '+' ? 4 : 5) : 0);
@@ -344,7 +362,76 @@ export function paginaResumo(chave, cenas, q) {
     if (c.t === 'cadeia') return c.n === 3 ? 3 : 4;
     return { potencia: 1, quadrado: 2, virapot: 5, dez: 6, umzero: 7, naconta: 8 }[c.t] || 0;
   }
+  if (chave === 'mapa13-A') {   // PROMPT-208
+    if (c.t === 'media') return c.l.reduce((a, b) => a + b, 0) % c.l.length ? 2 : 1;
+    if (c.t === 'moda') return (c.listas || [c.l]).length === 1 && modasDe(c.l).length === 1 ? 5 : 6;
+    if (c.t === 'mediana') return c.l.length % 2 ? 7 : 8;
+    return { mediaprob: 3, notafalta: 4, medcomp: 9 }[c.t] || 0;
+  }
+  if (chave === 'mapa13-B') return { ler: 1, maior: 2, total: 3, amais: 4, mediatab: 5, fractab: 6, pcttab: 7, afirma: 8, dupla: 9 }[c.t] || 0;
   return 0;
+}
+// 🧑‍🏫 PROMPT-208: as cenas do quadro do 13-A (média, moda, mediana), pelo enunciado
+const listaDe = (t) => String(t).split(/,\s*|\s+e\s+/).map(Number);
+const modasDe = (l) => { const n = new Map(); l.forEach(v => n.set(v, (n.get(v) || 0) + 1)); const mx = Math.max(...n.values()); return mx > 1 ? [...n].filter(([, k]) => k === mx).map(([v]) => v) : []; };
+const PROB_MEDIA = [
+  [/^As idades de (\d+) amigos são (.+) anos\. Qual é a média de idade\?$/, (n) => ({ enun: `Idades de ${n} amigos:`, pergunta: 'Qual é a média de idade?', soma: 'Soma todas as idades.', quem: 'amigos', rotulo: 'média de idade', unidade: ' anos' })],
+  [/^Num jogo, um time fez (.+) pontos em (\d+) partidas\. Qual a média de pontos por partida\?$/, (n) => ({ enun: `Pontos em ${n} partidas:`, pergunta: 'Qual é a média de pontos?', soma: 'Soma todos os pontos.', quem: 'partidas', rotulo: 'média', unidade: ' pontos' }), true],
+  [/^Em (\d+) dias, choveu (.+) milímetros\. Qual foi a média por dia\?$/, (n) => ({ enun: `Chuva em ${n} dias (mm):`, pergunta: 'Qual é a média por dia?', soma: 'Soma toda a chuva.', quem: 'dias', rotulo: 'média por dia', unidade: ' mm' })],
+];
+function quadro13a(q) {
+  const en = String(q.enunciado || '').trim();
+  const ok = (l) => l.length >= 2 && l.every(Number.isFinite);
+  let m = /^Qual é a diferença entre a média e a mediana de (.+)\?$/.exec(en);
+  if (m) { const l = listaDe(m[1]); return ok(l) && l.length % 2 ? [{ t: 'medcomp', l }] : null; }
+  m = /^Qual é a média (?:de|das notas) (.+)\?$/.exec(en) || /^Tirei (\d+ e \d+) em duas provas\. Qual a minha média\?$/.exec(en);
+  if (m) {
+    const l = listaDe(m[1]), n = l.length, r = ok(l) ? l.reduce((a, b) => a + b, 0) % n : 0;
+    return ok(l) && (r * 10) % n === 0 ? [{ t: 'media', l }] : null;   // a vírgula com uma casa só (o resto vezes 10 divide)
+  }
+  for (const [re, ctx, invertido] of PROB_MEDIA) {
+    m = re.exec(en);
+    if (!m) continue;
+    const [nTxt, lTxt] = invertido ? [m[2], m[1]] : [m[1], m[2]], l = listaDe(lTxt);
+    return ok(l) && l.length === Number(nTxt) && l.reduce((a, b) => a + b, 0) % l.length === 0 ? [{ t: 'mediaprob', l, ...ctx(l.length) }] : null;
+  }
+  m = /^Qual é a moda de (.+)\?$/.exec(en);
+  if (m) { const l = listaDe(m[1]); return ok(l) ? [{ t: 'moda', l }] : null; }
+  m = /^Qual é a mediana de (.+?)\?(?: \(organize antes\))?$/.exec(en);
+  if (m) { const l = listaDe(m[1]); return ok(l) ? [{ t: 'mediana', l }] : null; }
+  m = /^A média de (\d+) provas foi (\d+)\. Duas notas foram (\d+) e (\d+)\. Qual foi a terceira\?$/.exec(en);
+  if (m) return Number(m[1]) === 3 ? [{ t: 'notafalta', m: Number(m[2]), k: 3, notas: [Number(m[3]), Number(m[4])] }] : null;
+  return null;
+}
+// 🧑‍🏫 PROMPT-208: as cenas do quadro do 13-B, pelo enunciado e pela tabela que o personagem sorteou (q.tabela)
+function quadro13b(q) {
+  const tab = q.tabela;
+  if (!tab?.linhas?.length || !tab.colunas?.length) return null;
+  const en = String(q.enunciado || '').trim(), it = tab.linhas.map(l => String(l[0])), J = tab.colunas.length > 2 ? tab.colunas.length - 1 : 1;
+  const base = { tab: { titulo: tab.titulo, colunas: tab.colunas, linhas: tab.linhas }, enun: en };
+  // as linhas citadas, na ordem em que aparecem no enunciado
+  const citadas = () => it.map((nm, i) => ({ i, p: en.toLowerCase().indexOf(nm.toLowerCase()) })).filter(x => x.p >= 0).sort((a, b) => a.p - b.p).map(x => x.i);
+  const col = (nome) => tab.colunas.findIndex(c => c.toLowerCase() === nome);
+  let m;
+  if (en === 'Qual afirmação é verdadeira?') {
+    const fs = [q.resposta, ...(q.erradas || [])].sort((a, b) => String(a).localeCompare(String(b), 'pt'));
+    const fr = fs.map(f => { const c = conferirAfirmacao(tab, f); return c && [f, c.cels, c.conta, c.ok]; });
+    return fr.every(Boolean) && fr.filter(f => f[3]).length === 1 ? [{ t: 'afirma', ...base, frases: fr }] : null;
+  }
+  if (J === 3) {   // dupla entrada: Meninos | Meninas | Total
+    if ((m = /^Quantas meninas escolheram (.+)\?$/.exec(en))) { const [i] = citadas(); return i == null ? null : [{ t: 'dupla', tab: base.tab, partes: [{ t: 'cel', i, j: col('meninas'), enun: en }] }]; }
+    if (/mais votado somando/.test(en)) return [{ t: 'dupla', tab: base.tab, partes: [{ t: 'maxTotal', j: 3, enun: en }] }];
+    if ((m = /^Quant[oa]s (meninos|meninas) votaram ao todo\?$/.exec(en))) return [{ t: 'dupla', tab: base.tab, partes: [{ t: 'col', j: col(m[1]), enun: en }] }];
+    if ((m = /quantos votos de (meninos|meninas) a mais que de (meninos|meninas)\?$/.exec(en))) { const [i] = citadas(); return i == null ? null : [{ t: 'dupla', tab: base.tab, partes: [{ t: 'difLinha', i, a: col(m[1]), b: col(m[2]), enun: en }] }]; }
+  }
+  if (/porcentagem/i.test(en)) { const [i] = citadas(); return i == null ? null : [{ t: 'pcttab', ...base, i, j: J }]; }
+  if (/fração/i.test(en)) { const [i] = citadas(); return i == null ? null : [{ t: 'fractab', ...base, i, j: J }]; }
+  if (/média/i.test(en)) return [{ t: 'mediatab', ...base, j: J }];
+  if (/empatar|a mais que/.test(en)) { const [a, b] = citadas(); return b == null ? null : [{ t: 'amais', tab: base.tab, j: J, casos: [{ a, b, enun: en, empate: /empatar/.test(en) }] }]; }
+  if (/(?:vendeu|teve|saíram) (mais|menos)(?: votos| gols)?\?$/.test(en) && J === 1) return [{ t: 'maior', ...base, j: J, menor: /menos(?: votos| gols)?\?$/.test(en) }];
+  if ((m = /^Quantas unidades de (.+) foram vendidas\?$/.exec(en))) { const [i] = citadas(); return i == null ? null : [{ t: 'ler', ...base, i, j: J }]; }
+  if (/no total\?$|ao todo\?$|na semana\?$/.test(en)) return [{ t: 'total', ...base, j: J }];
+  return null;
 }
 // PROMPT-206: as cenas do quadro do 4-A, pela figura da questão (ou pelo enunciado: × e ÷ de frações)
 function quadro4a(q) {
@@ -661,6 +748,7 @@ const PROBLEMAS = [
     marcas: [[`Paguei R$ ${m[1]}`, m[1]], [`lanche de R$ ${m[2]}`, `− ${m[2]}`], ['troco', '−', 'Troco é conta de menos.']] })],
 ];
 export function problemaConta(enunciado) {
+  enunciado = tirarPergunta(enunciado);
   const E = String(enunciado || '');
   for (const [rx, f] of PROBLEMAS) { const m = rx.exec(E); if (m) return f(m); }
   return null;
@@ -688,6 +776,7 @@ function comBlocosDoProblema(q, certo) {
 }
 
 export function comoFaz(chave, q, sua) {
+  q = semPergunta(q);
   const f = GERA[chave];
   if (!f || !q) return null;
   let certo;
@@ -704,7 +793,7 @@ export function comoFaz(chave, q, sua) {
 
 // 💡 PROMPT-196: a dica curta (máx. ~6 palavras) do cartão do erro, pelo tipo de conta de cada ginásio. null = fora dos mapas 1 a 4
 export function dicaCurta(chave, q) {
-  const e = String(q?.enunciado || '');
+  const e = tirarPergunta(q?.enunciado || '');
   switch (chave) {
     case 'mapa1-A': return '× e ÷ antes de + e −';
     case 'mapa1-B': return '( ) primeiro, depois [ ]';

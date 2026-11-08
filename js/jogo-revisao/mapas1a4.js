@@ -255,7 +255,7 @@ const DEC = (op) => () => {
   }
 };
 const FD = [[1, 2, 0.5], [1, 10, 0.1], [1, 4, 0.25], [3, 10, 0.3], [1, 5, 0.2], [7, 10, 0.7], [9, 10, 0.9], [3, 4, 0.75]];
-function fracDec() { const [p, q, d] = pick(FD.slice(0, 7)); return Q(`${frac(p, q)} em número decimal`, num(d), erradasNum(d, [d * 10, d / 10, d + 0.1, p + q / 10], { inteiro: false }), X(`A fração é uma divisão: ${p} ÷ ${q} = ${num(d)}`)); }
+function fracDec() { const [p, q, d] = pick(FD.slice(0, 7)); return Q(`Quanto é ${frac(p, q)} em número decimal?`, num(d), erradasNum(d, [d * 10, d / 10, d + 0.1, p + q / 10], { inteiro: false }), X(`A fração é uma divisão: ${p} ÷ ${q} = ${num(d)}`)); }
 function decFrac() { const [p, q, d] = pick(FD.slice(0, 7)); return Q(`${num(d)} em fração`, frac(p, q), erradasFrac(p, q, [[q, p], [p, q * 10], [Math.round(d * 10), 100], [p + 1, q], [p, q + 1]]), X(`${num(d)} = ${frac(Math.round(d * 100), 100)} = ${frac(p, q)} (porque ${p} ÷ ${q} = ${num(d)})`)); }
 function comparaDec() { const a = int(1, 9), b = int(10, 99); const x = arred(a / 10), y = arred(b / 100); const r = Math.max(x, y); if (x === y) return comparaDec(); return Q('Qual é maior?', num(r), [num(r === x ? y : x)], X(`Iguale as casas: ${num(x)} = ${(x).toFixed(2).replace('.', ',')} e ${num(y)} = ${(y).toFixed(2).replace('.', ',')}. Agora compare.`)); }
 function somaReais() { const a = arred(int(2, 9) + pick([0.5, 0.25, 0.75])), b = arred(int(1, 5) + pick([0.5, 0.25, 0.5])); const v = arred(a + b); return Q(`${reais(a)} + ${reais(b)}`, reais(v), erradasNum(v, [v + 1, v - 0.5, v + 0.1, Math.floor(a) + Math.floor(b)], { fmt: reais, inteiro: false }), X(`${reais(a)} + ${reais(b)} = ${reais(v)}`)); }
@@ -273,7 +273,7 @@ const M4 = {
     treinador2: [DEC('−'), DEC('−'), DEC('−'), DEC('−'), DEC('−')],
     treinador3: [fracDec, fracDec, fracDec, fracDec, decFrac],
     lider: [comparaDec, somaReais, E('a × 1,5', { a: [2, 8] }, { cand: v => [v * 10, v + 0.5] }), decFrac, trocoDec],
-    revanche: [() => Q('3/4 em número decimal', '0,75', ['7,5', '0,34', '0,25'], X('3 ÷ 4 = 0,75')), E('a × b', { a: [2.5, 2.5], b: [2, 8] }, { lista: ['a'], inteiro: false, cand: v => [v * 10, v + 2] }), () => { const a = arred(int(11, 49) / 10), b = arred(int(101, 499) / 100); const v = arred(a + b); return Q(`${num(a)} + ${num(b)}`, num(v), erradasNum(v, [v * 10, v + 0.1, v - 0.1, arred(a / 10 + b)], { inteiro: false }), X(`Vírgula embaixo de vírgula: ${a.toFixed(2).replace('.', ',')} + ${num(b)} = ${num(v)}`)); }],
+    revanche: [() => Q('Quanto é 3/4 em número decimal?', '0,75', ['7,5', '0,34', '0,25'], X('3 ÷ 4 = 0,75')), E('a × b', { a: [2.5, 2.5], b: [2, 8] }, { lista: ['a'], inteiro: false, cand: v => [v * 10, v + 2] }), () => { const a = arred(int(11, 49) / 10), b = arred(int(101, 499) / 100); const v = arred(a + b); return Q(`${num(a)} + ${num(b)}`, num(v), erradasNum(v, [v * 10, v + 0.1, v - 0.1, arred(a / 10 + b)], { inteiro: false }), X(`Vírgula embaixo de vírgula: ${a.toFixed(2).replace('.', ',')} + ${num(b)} = ${num(v)}`)); }],
   },
 };
 M4.B.revanche[1] = () => { const b = int(2, 8) * 2; const v = 2.5 * b; return Q(`2,5 × ${b}`, num(v), erradasNum(v, [v * 10, v + 2.5, 2 * b], { inteiro: false }), X(`2 × ${b} = ${2 * b} e 0,5 × ${b} = ${num(b / 2)}. Somando: ${num(v)}`)); };

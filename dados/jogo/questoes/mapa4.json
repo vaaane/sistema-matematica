@@ -659,7 +659,7 @@
      "questoes": [
       {
        "id": "m4B-treinador3-1",
-       "enunciado": "1/2 em número decimal",
+       "enunciado": "Quanto é 1/2 em número decimal?",
        "resposta": "0,5",
        "erradas": [
         "5",
@@ -669,7 +669,7 @@
       },
       {
        "id": "m4B-treinador3-2",
-       "enunciado": "1/10 em número decimal",
+       "enunciado": "Quanto é 1/10 em número decimal?",
        "resposta": "0,1",
        "erradas": [
         "1",
@@ -679,7 +679,7 @@
       },
       {
        "id": "m4B-treinador3-3",
-       "enunciado": "1/4 em número decimal",
+       "enunciado": "Quanto é 1/4 em número decimal?",
        "resposta": "0,25",
        "erradas": [
         "2,5",
@@ -689,7 +689,7 @@
       },
       {
        "id": "m4B-treinador3-4",
-       "enunciado": "3/10 em número decimal",
+       "enunciado": "Quanto é 3/10 em número decimal?",
        "resposta": "0,3",
        "erradas": [
         "3",
@@ -774,7 +774,7 @@
      "questoes": [
       {
        "id": "m4B-revanche-1",
-       "enunciado": "3/4 em número decimal",
+       "enunciado": "Quanto é 3/4 em número decimal?",
        "resposta": "0,75",
        "erradas": [
         "7,5",

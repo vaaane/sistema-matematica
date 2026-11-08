@@ -40,6 +40,12 @@ export const DICAS = {
 };
 
 export const PERSONAGENS = ['treinador1', 'treinador2', 'treinador3', 'lider', 'revanche'];
+// PROMPT-209: treinadores 6 perguntas, líder 8, revanche 5. As listas de tipos (5 ou 3) ganham os tipos que faltam
+// repetindo os da própria lista, na ordem (a 6ª pergunta é do tipo da 1ª, a 7ª da 2ª…), sem repetir a mesma questão.
+export const N_PERGUNTAS = { treinador1: 6, treinador2: 6, treinador3: 6, lider: 8, revanche: 5 };
+export const nPerguntas = (personagem) => N_PERGUNTAS[personagem] || 6;
+// o tipo da posição `indice` (0 a n − 1) numa lista de tipos menor que n
+const tipoDa = (fns, indice) => fns[indice % fns.length];
 // Assunto de uma pergunta (PROMPT-97): o formato da conta, com os números trocados por # ("5 + 2 × 3" → "# + # × #").
 // Os geradores não têm um tipo com nome; o formato é o mesmo para cada tipo de pergunta, com quaisquer números.
 export const assuntoDe = (enunciado) => String(enunciado || '').replace(/[−-]?\d+(?:[.,]\d+)*/g, '#').replace(/\s+/g, ' ').trim().slice(0, 80);
@@ -47,27 +53,35 @@ export const assuntoDe = (enunciado) => String(enunciado || '').replace(/[−-]?
 export function gerarQuestoes(mapa, lado, personagem) {
   const g = BANCO[mapa]?.[lado];
   if (!g) throw new Error(`Mapa ${mapa}${lado} não existe`);
-  const n = personagem === 'revanche' ? 3 : 5;
+  const n = nPerguntas(personagem);
   let qs;
   if (g === 'tabelas') qs = perguntasTabela(personagem, n);
   else {
     const fns = g[personagem]; if (!fns) throw new Error(`Personagem ${personagem} não existe em ${mapa}${lado}`);
     const vistos = new Set(); qs = [];
-    for (const f of fns) {
-      let q, k; for (let t = 0; t < 30; t++) { q = f(); k = q.enunciado + '|' + q.resposta; if (!vistos.has(k)) break; }
-      vistos.add(k); qs.push(q);
+    for (let i = 0; i < n; i++) {
+      // o tipo da posição; se ele só tem uma pergunta (fixa) já usada, o próximo tipo da lista que ainda dê pergunta nova
+      let q, k, tipo = i % fns.length;
+      for (let d = 0; d < fns.length; d++) {
+        const j = (i + d) % fns.length;
+        for (let t = 0; t < 40; t++) { q = fns[j](); k = q.enunciado + '|' + q.resposta; if (!vistos.has(k)) break; }
+        tipo = j;
+        if (!vistos.has(k)) break;
+      }
+      vistos.add(k); qs.push(tipo === i % fns.length ? q : { ...q, tipoIndice: tipo });   // tipoIndice: para gerarUma repetir o mesmo tipo
     }
   }
   const dica = DICAS[`${mapa}${lado}`];
   return qs.map((q, i) => ({ id: `m${mapa}${lado}-${personagem}-${i + 1}`, ...q, dica }));
 }
 
-// Gera UMA pergunta nova do mesmo tipo da posição `indice` (0 a 4; revanche 0 a 2).
+// Gera UMA pergunta nova do mesmo tipo da posição `indice` (0 a n − 1: treinadores 0 a 5, líder 0 a 7, revanche 0 a 4).
 // Use quando o aluno erra: a pergunta volta para o fim da fila com outros números.
 // Retorna null no Mapa 13 B (tabelas): nesse caso, repita a mesma pergunta.
 export function gerarUma(mapa, lado, personagem, indice) {
   const g = BANCO[mapa]?.[lado];
   if (!g || g === 'tabelas') return null;
-  const f = g[personagem]?.[indice]; if (!f) return null;
+  const fns = g[personagem]; if (!fns?.length || !(indice >= 0)) return null;
+  const f = tipoDa(fns, indice);
   return { id: `m${mapa}${lado}-${personagem}-${indice + 1}`, ...f(), dica: DICAS[`${mapa}${lado}`] };
 }

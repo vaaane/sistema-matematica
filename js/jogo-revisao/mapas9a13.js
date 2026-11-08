@@ -48,11 +48,13 @@ const BAL = [
   (k, t) => [`Numa balança, 1 caixa de peso x equilibra um peso de ${t} kg e outro de ${k} kg.`, `x = ${t} + ${k}`, [`x = ${t} × ${k}`, `x + ${k} = ${t}`, `x = ${t} − ${k}`]],
 ];
 const EQX = X('Troque as palavras por sinais: "mais/ganhei" é +, "menos/gastei" é −, "dobro/vezes" é ×, "metade/dividi" é ÷.');
-const deLista = lista => () => { const k = int(2, 6), t = int(3, 20); const [e, r, x] = pick(lista)(k, t); return Q(e, r, x, EQX); };
+// PROMPT-209: o enunciado termina com a pergunta. Frase entre aspas: "Qual equação representa …?"; situação: "… Qual é a equação?" (balança: "… Qual equação representa a balança?")
+const comPergunta = (e) => (e.startsWith('"') ? `Qual equação representa "${e[1].toLowerCase()}${e.slice(2)}?` : `${e} ${/balança/.test(e) ? 'Qual equação representa a balança?' : 'Qual é a equação?'}`);
+const deLista = lista => () => { const k = int(2, 6), t = int(3, 20); const [e, r, x] = pick(lista)(k, t); return Q(comPergunta(e), r, x, EQX); };
 const eqRev = [
-  () => { const k = int(1, 5), t = 2 * int(2, 8) + k; return Q(`"O dobro de um número mais ${k} é igual a ${t}"`, `2x + ${k} = ${t}`, [`2(x + ${k}) = ${t}`, `x + 2 + ${k} = ${t}`, `2x − ${k} = ${t}`], X(`O dobro do número é 2x; depois soma ${k}: 2x + ${k} = ${t}`)); },
-  () => { const k = int(2, 4), x = int(8, 14), t = x + k * x; return Q(`Ana tem x anos e o pai tem o ${['', '', 'dobro', 'triplo', 'quádruplo'][k]} da idade dela. Juntos somam ${t} anos.`, `x + ${k}x = ${t}`, [`${k}x = ${t}`, `x + ${k} = ${t}`, `${k}x − x = ${t}`], X(`Ana: x. Pai: ${k}x. Juntos: x + ${k}x = ${t}`)); },
-  () => { const k = int(2, 3), b = int(1, 5), t = k * int(1, 5) + b; return Q(`Numa balança, ${k} caixas de peso x e mais ${b} kg equilibram ${t} kg.`, `${k}x + ${b} = ${t}`, [`x + ${b} = ${t}`, `${k}x = ${t} + ${b}`, `${k} + x + ${b} = ${t}`], X(`${k} caixas pesam ${k}x; mais ${b} kg: ${k}x + ${b} = ${t}`)); },
+  () => { const k = int(1, 5), t = 2 * int(2, 8) + k; return Q(comPergunta(`"O dobro de um número mais ${k} é igual a ${t}"`), `2x + ${k} = ${t}`, [`2(x + ${k}) = ${t}`, `x + 2 + ${k} = ${t}`, `2x − ${k} = ${t}`], X(`O dobro do número é 2x; depois soma ${k}: 2x + ${k} = ${t}`)); },
+  () => { const k = int(2, 4), x = int(8, 14), t = x + k * x; return Q(`Ana tem x anos e o pai tem o ${['', '', 'dobro', 'triplo', 'quádruplo'][k]} da idade dela. Juntos somam ${t} anos. Qual é a equação?`, `x + ${k}x = ${t}`, [`${k}x = ${t}`, `x + ${k} = ${t}`, `${k}x − x = ${t}`], X(`Ana: x. Pai: ${k}x. Juntos: x + ${k}x = ${t}`)); },
+  () => { const k = int(2, 3), b = int(1, 5), t = k * int(1, 5) + b; return Q(`Numa balança, ${k} caixas de peso x e mais ${b} kg equilibram ${t} kg. Qual equação representa a balança?`, `${k}x + ${b} = ${t}`, [`x + ${b} = ${t}`, `${k}x = ${t} + ${b}`, `${k} + x + ${b} = ${t}`], X(`${k} caixas pesam ${k}x; mais ${b} kg: ${k}x + ${b} = ${t}`)); },
 ];
 const M9 = {
   A: {
@@ -138,11 +140,11 @@ const FG = (x, figura) => ({ ...x, figura });
 const POL = (forma, lados, unid = 'cm', extra = {}) => ({ tipo: 'poligono', forma, lados, unid, ...extra });
 const GR = (c, l, unid = 'cm', extra = {}) => ({ tipo: 'grade', c, l, unid, ...extra });
 const cm = x => `${num(x)} cm`, cm2 = x => `${num(x)} cm²`, m_ = x => `${num(x)} m`, m2 = x => `${num(x)} m²`;
-const perQ = () => { const l = int(2, 15); const v = 4 * l; return Q(`Perímetro de um quadrado de lado ${l} cm`, cm(v), erradasNum(v, [l * l, 2 * l, l + 4], { fmt: cm }), FG(X(`Perímetro é a soma dos 4 lados: 4 × ${l} = ${v} cm`), POL('quadrado', [l, l, l, l]))); };
-const perR = () => { const a = int(3, 12), b = int(1, a - 1); const v = 2 * (a + b); return Q(`Perímetro de um retângulo de ${a} cm por ${b} cm`, cm(v), erradasNum(v, [a * b, a + b, 2 * a + b], { fmt: cm }), FG(X(`Some os 4 lados: ${a} + ${b} + ${a} + ${b} = ${v} cm`), POL('retangulo', [a, b, a, b]))); };
-const perT = () => { const a = int(3, 9), b = int(3, 9), c = int(Math.abs(a - b) + 1, a + b - 1); const v = a + b + c; return Q(`Perímetro de um triângulo de lados ${a} cm, ${b} cm e ${c} cm`, cm(v), erradasNum(v, [a * b, v + 1, v - 1], { fmt: cm }), FG(X(`Some os 3 lados: ${a} + ${b} + ${c} = ${v} cm`), POL('triangulo', [a, b, c]))); };
+const perQ = () => { const l = int(2, 15); const v = 4 * l; return Q(`Qual é o perímetro de um quadrado de lado ${l} cm?`, cm(v), erradasNum(v, [l * l, 2 * l, l + 4], { fmt: cm }), FG(X(`Perímetro é a soma dos 4 lados: 4 × ${l} = ${v} cm`), POL('quadrado', [l, l, l, l]))); };
+const perR = () => { const a = int(3, 12), b = int(1, a - 1); const v = 2 * (a + b); return Q(`Qual é o perímetro de um retângulo de ${a} cm por ${b} cm?`, cm(v), erradasNum(v, [a * b, a + b, 2 * a + b], { fmt: cm }), FG(X(`Some os 4 lados: ${a} + ${b} + ${a} + ${b} = ${v} cm`), POL('retangulo', [a, b, a, b]))); };
+const perT = () => { const a = int(3, 9), b = int(3, 9), c = int(Math.abs(a - b) + 1, a + b - 1); const v = a + b + c; return Q(`Qual é o perímetro de um triângulo de lados ${a} cm, ${b} cm e ${c} cm?`, cm(v), erradasNum(v, [a * b, v + 1, v - 1], { fmt: cm }), FG(X(`Some os 3 lados: ${a} + ${b} + ${c} = ${v} cm`), POL('triangulo', [a, b, c]))); };
 const POLI = [['triângulo', 3], ['quadrado', 4], ['pentágono', 5], ['hexágono', 6], ['octógono', 8]];
-const perP = () => { const [n, k] = pick(POLI.filter(p => p[1] !== 4)), l = int(1, 9); const v = k * l; return Q(`Perímetro de um ${n} com ${k} lados iguais de ${l} cm`, cm(v), erradasNum(v, [v + l, k + l, v - l], { fmt: cm }), FG(X(`${k} lados de ${l} cm: ${k} × ${l} = ${v} cm`), POL('regular', Array(k).fill(l)))); };
+const perP = () => { const [n, k] = pick(POLI.filter(p => p[1] !== 4)), l = int(1, 9); const v = k * l; return Q(`Qual é o perímetro de um ${n} com ${k} lados iguais de ${l} cm?`, cm(v), erradasNum(v, [v + l, k + l, v - l], { fmt: cm }), FG(X(`${k} lados de ${l} cm: ${k} × ${l} = ${v} cm`), POL('regular', Array(k).fill(l)))); };
 const FATOS = [
   () => Q('1 metro tem quantos centímetros?', '100 cm', ['10 cm', '1000 cm', '50 cm'], FG(X('"Centi" quer dizer centésimo: 1 m = 100 cm.'), { tipo: 'regua', texto: '1 m = 100 cm', de: '1 m', para: '100 cm', partes: 100 })),
   () => Q('1 quilômetro tem quantos metros?', '1000 m', ['100 m', '10 m', '10000 m'], FG(X('"Quilo" quer dizer mil: 1 km = 1000 m.'), { tipo: 'regua', texto: '1 km = 1000 m', de: '1 km', para: '1000 m', partes: 10 })),
@@ -156,16 +158,16 @@ const ladoDoQ = () => { const l = int(2, 12); const p = 4 * l; return Q(`Um quad
 const cmM = () => { const k = int(2, 9); return Q(`${k * 100} cm são quantos metros?`, m_(k), erradasNum(k, [k * 10, k * 100, k + 1], { fmt: m_ }), FG(X(`100 cm = 1 m. ${k * 100} ÷ 100 = ${k} m`), { tipo: 'regua', texto: `100 cm = 1 m → ${k * 100} cm = ${k} m`, de: `${k * 100} cm`, para: `${k} m`, metros: k })); };
 const ladoR = () => { const a = int(3, 9), b = int(1, 9); const p = 2 * (a + b); return Q(`Um retângulo tem perímetro ${p} cm e um dos lados mede ${a} cm. Quanto mede o outro?`, cm(b), erradasNum(b, [p - a, p / 2, p - 2 * a], { fmt: cm }), FG(X(`Metade do perímetro é um lado de cada: ${p} ÷ 2 = ${p / 2}. Então ${p / 2} − ${a} = ${b} cm`), POL('retangulo', [a, '?', a, '?'], 'cm', { revela: [a, b, a, b], total: p, conta: `${p} − ${a} − ${a} = ${p - 2 * a} · ${p - 2 * a} ÷ 2 = ${b} cm` }))); };
 const angulo = () => { const a = int(30, 80), b = int(30, 150 - a); const v = 180 - a - b; return Q(`Um triângulo tem ângulos de ${a}° e ${b}°. Quanto mede o terceiro?`, `${v}°`, erradasNum(v, [360 - a - b, 90 - a + b > 0 ? 90 - a + b : v + 10, a + b], { fmt: x => `${x}°` }), FG(X(`Os ângulos do triângulo somam 180°: 180 − ${a} − ${b} = ${v}°`), { tipo: 'angulos', angulos: [a, b, '?'], revela: v, conta: `180° − ${a}° − ${b}° = ${v}°` })); };
-const areaQ = () => { const l = int(2, 12); const v = l * l; return Q(`Área de um quadrado de lado ${l} cm`, cm2(v), erradasNum(v, [4 * l, 2 * l, v + l], { fmt: cm2 }), FG(X(`Área do quadrado = lado × lado: ${l} × ${l} = ${v} cm²`), GR(l, l))); };
-const areaR = () => { const a = int(2, 12), b = int(2, 9); const v = a * b; return Q(`Área de um retângulo de ${a} cm por ${b} cm`, cm2(v), erradasNum(v, [2 * (a + b), a + b, v + a], { fmt: cm2 }), FG(X(`Área do retângulo = comprimento × largura: ${a} × ${b} = ${v} cm²`), GR(a, b))); };
+const areaQ = () => { const l = int(2, 12); const v = l * l; return Q(`Qual é a área de um quadrado de lado ${l} cm?`, cm2(v), erradasNum(v, [4 * l, 2 * l, v + l], { fmt: cm2 }), FG(X(`Área do quadrado = lado × lado: ${l} × ${l} = ${v} cm²`), GR(l, l))); };
+const areaR = () => { const a = int(2, 12), b = int(2, 9); const v = a * b; return Q(`Qual é a área de um retângulo de ${a} cm por ${b} cm?`, cm2(v), erradasNum(v, [2 * (a + b), a + b, v + a], { fmt: cm2 }), FG(X(`Área do retângulo = comprimento × largura: ${a} × ${b} = ${v} cm²`), GR(a, b))); };
 const quadradinhos = () => { const r = int(2, 5), c = int(2, 6); const v = r * c; return pick([() => Q(`Uma figura é formada por ${v} quadradinhos de 1 cm². Qual a área?`, cm2(v), erradasNum(v, [v * 4, v + 4], { fmt: cm2 }), FG(X(`Cada quadradinho vale 1 cm²: ${v} quadradinhos = ${v} cm²`), GR(c, r))), () => Q(`Um piso tem ${r} fileiras com ${c} lajotas cada. Quantas lajotas ao todo?`, num(v), erradasNum(v, [r + c, 2 * (r + c), v + c]), FG(X(`${r} fileiras × ${c} lajotas = ${v}`), GR(c, r, '', { rotulo: 'lajotas' })))])(); };
 const UNIDS = [() => Q('Área é medida em:', 'cm²', ['cm', 'kg', 'L'], FG(X('Área é o espaço de dentro (quadradinhos): cm². Perímetro é o contorno: cm.'), { tipo: 'medida', o: 'area' })), () => Q('Perímetro é medido em:', 'cm', ['cm²', 'L', 'kg'], FG(X('Perímetro é o contorno: cm. Área é o espaço de dentro: cm².'), { tipo: 'medida', o: 'perimetro' }))];
 const unid = () => pick(UNIDS)();
 const comparaA = () => { for (; ;) { const l = int(3, 7), a = int(2, 9), b = int(2, 9); if (l * l === a * b) continue; const q = `quadrado de lado ${l} cm`, r = `retângulo de ${a} cm por ${b} cm`; return Q('Qual tem área maior?', l * l > a * b ? q : r, [l * l > a * b ? r : q], FG(X(`Quadrado: ${l} × ${l} = ${l * l} cm². Retângulo: ${a} × ${b} = ${a * b} cm².`), { tipo: 'compara_area', figuras: [{ c: l, l, nome: q }, { c: a, l: b, nome: r }], unid: 'cm' })); } };
 const sala = () => { const a = int(3, 8), b = int(2, 6); const v = a * b; return Q(`Uma sala retangular tem ${a} m por ${b} m. Qual a área?`, m2(v), erradasNum(v, [2 * (a + b), a + b, v + 2], { fmt: m2 }), FG(X(`${a} × ${b} = ${v} m²`), GR(a, b, 'm'))); };
-const areaT = () => { const b = 2 * int(2, 7), h = int(2, 9); const v = b * h / 2; return Q(`Área de um triângulo de base ${b} cm e altura ${h} cm`, cm2(v), erradasNum(v, [b * h, b + h, v + h], { fmt: cm2 }), FG(X(`Área do triângulo = base × altura ÷ 2: ${b} × ${h} ÷ 2 = ${num(v)} cm²`), { tipo: 'triangulo_area', base: b, altura: h, unid: 'cm' })); };
+const areaT = () => { const b = 2 * int(2, 7), h = int(2, 9); const v = b * h / 2; return Q(`Qual é a área de um triângulo de base ${b} cm e altura ${h} cm?`, cm2(v), erradasNum(v, [b * h, b + h, v + h], { fmt: cm2 }), FG(X(`Área do triângulo = base × altura ÷ 2: ${b} × ${h} ÷ 2 = ${num(v)} cm²`), { tipo: 'triangulo_area', base: b, altura: h, unid: 'cm' })); };
 const ladoA = () => { const l = int(3, 10); return Q(`Um quadrado tem área ${l * l} cm². Quanto mede o lado?`, cm(l), erradasNum(l, [l * l / 2, l * l / 4, l + 1], { fmt: cm }), FG(X(`Qual número vezes ele mesmo dá ${l * l}? ${l} × ${l} = ${l * l}. Lado: ${l} cm`), GR(l, l, 'cm', { lado_oculto: true, conta: `${l} × ${l} = ${l * l} → lado ${l} cm` }))); };
-const areaP = () => { const b = int(4, 12), h = int(2, 8); const v = b * h; return Q(`Área de um paralelogramo de base ${b} cm e altura ${h} cm`, cm2(v), erradasNum(v, [v / 2, 2 * (b + h), b + h], { fmt: cm2 }), FG(X(`Área do paralelogramo = base × altura: ${b} × ${h} = ${v} cm²`), { tipo: 'paralelogramo', base: b, altura: h, unid: 'cm' })); };
+const areaP = () => { const b = int(4, 12), h = int(2, 8); const v = b * h; return Q(`Qual é a área de um paralelogramo de base ${b} cm e altura ${h} cm?`, cm2(v), erradasNum(v, [v / 2, 2 * (b + h), b + h], { fmt: cm2 }), FG(X(`Área do paralelogramo = base × altura: ${b} × ${h} = ${v} cm²`), { tipo: 'paralelogramo', base: b, altura: h, unid: 'cm' })); };
 const metade = () => { const a = 2 * int(3, 8), b = int(4, 10); const v = a * b / 2; return Q(`Um terreno de ${a} m por ${b} m tem grama em metade dele. Qual a área com grama?`, m2(v), erradasNum(v, [a * b, a + b, (a + b)], { fmt: m2 }), FG(X(`Área total: ${a} × ${b} = ${a * b}. Metade: ${a * b} ÷ 2 = ${v} m²`), GR(a, b, 'm', { metade: true }))); };
 const M11 = {
   A: {
@@ -173,7 +175,7 @@ const M11 = {
     treinador2: [perT, perP, perP, perP, perT],
     treinador3: [fato, fato, fato, fato, fato],
     lider: [cerca, ladoDoQ, cmM, () => { const l = 10 * int(1, 5); return Q(`Dei uma volta numa quadra quadrada de lado ${l} m. Quanto andei?`, m_(4 * l), erradasNum(4 * l, [l * l, 2 * l, l + 4], { fmt: m_ }), FG(X(`Uma volta é o perímetro: 4 × ${l} = ${4 * l} m`), POL('quadrado', [l, l, l, l], 'm'))); }, perR],
-    revanche: [angulo, ladoR, () => { const l = arred(int(1, 4) + 0.5); const v = 4 * l; return Q(`Perímetro de um quadrado de lado ${num(l)} cm`, cm(v), erradasNum(v, [l * l, 2 * l, v + 1], { fmt: cm, inteiro: false }), FG(X(`4 × ${num(l)} = ${num(v)} cm`), POL('quadrado', [l, l, l, l]))); }],
+    revanche: [angulo, ladoR, () => { const l = arred(int(1, 4) + 0.5); const v = 4 * l; return Q(`Qual é o perímetro de um quadrado de lado ${num(l)} cm?`, cm(v), erradasNum(v, [l * l, 2 * l, v + 1], { fmt: cm, inteiro: false }), FG(X(`4 × ${num(l)} = ${num(v)} cm`), POL('quadrado', [l, l, l, l]))); }],
   },
   B: {
     treinador1: [areaQ, areaQ, areaQ, areaQ, areaQ],
@@ -415,6 +417,27 @@ function perguntasComuns(it, vs, txt, af) {
   };
   return qs;
 }
+// PROMPT-208: a lousa do cartão do erro confere cada frase da "Qual afirmação é verdadeira?" com os números da tabela
+//   → { cels: [[linha, coluna], …], conta, ok } ou null (frase que não saiu destes modelos)
+export function conferirAfirmacao(tabela, frase) {
+  const T = Object.values(TAB).find(x => x.titulo === tabela?.titulo);
+  if (!T) return null;
+  const af = T.af || TAB.treinador2.af, j = T.dupla ? 3 : 1;
+  const it = tabela.linhas.map(l => l[0]), vs = tabela.linhas.map(l => Number(l[j])), iMax = vs.indexOf(Math.max(...vs));
+  for (let a = 0; a < it.length; a++) {
+    if (af.maior(it[a]) === frase) return a === iMax ? { cels: [[a, j]], conta: `${vs[a]} é o maior`, ok: true } : { cels: [[a, j], [iMax, j]], conta: `o maior é ${vs[iMax]} (${it[iMax]})`, ok: false };
+    for (let b = 0; b < it.length; b++) {
+      if (a === b) continue;
+      const cels = [[a, j], [b, j]], d = vs[a] - vs[b], s = vs[a] + vs[b];
+      if (af.dobro(it[a], it[b]) === frase) { const ok = vs[a] === 2 * vs[b]; return { cels, conta: ok ? `${vs[a]} = 2 × ${vs[b]}` : `${vs[a]} não é o dobro de ${vs[b]}`, ok }; }
+      for (let k = 1; k <= 60; k++) {
+        if (af.mais(it[a], it[b], k) === frase) return { cels, conta: d === k ? `${vs[a]} − ${vs[b]} = ${k}` : `${vs[a]} − ${vs[b]} = ${d}, não ${k}`, ok: d === k };
+        if (af.juntos(it[a], it[b], k) === frase) return { cels, conta: s === k ? `${vs[a]} + ${vs[b]} = ${k}` : `${vs[a]} + ${vs[b]} = ${s}, não ${k}`, ok: s === k };
+      }
+    }
+  }
+  return null;
+}
 export function perguntasTabela(chave, n) {
   const tab = tabelaSorteada(chave); const T = tab._T; const it = tab.linhas.map(l => l[0]);
   const tabela = { titulo: tab.titulo, colunas: tab.colunas, linhas: tab.linhas };
@@ -450,8 +473,17 @@ export function perguntasTabela(chave, n) {
       tipos = [ler, ...shuffle(tipos)];
     }
   }
-  const out = [];
-  for (const f of chave === 'treinador1' ? tipos : shuffle(tipos)) { if (out.length >= n) break; const q = f(); if (q && q.erradas.length >= 3) out.push({ ...q, tabela }); }
+  // PROMPT-209: n pode passar do número de tipos (líder 8): dá mais voltas nos tipos, sorteando outros itens, sem repetir a mesma pergunta
+  const out = [], vistos = new Set();
+  const ordem = chave === 'treinador1' ? tipos : shuffle(tipos);
+  for (let volta = 0; volta < 6 && out.length < n; volta++) {
+    for (const f of volta ? shuffle(tipos.filter(t => !(chave === 'treinador1' && t === tipos[0]))) : ordem) {
+      if (out.length >= n) break;
+      let q = null;
+      for (let t = 0; t < (volta ? 12 : 1); t++) { const c = f(); if (c && c.erradas.length >= 3 && !vistos.has(c.enunciado + '|' + c.resposta)) { q = c; break; } }
+      if (q) { vistos.add(q.enunciado + '|' + q.resposta); out.push({ ...q, tabela }); }
+    }
+  }
   return shuffle(out);
 }
 const M13 = {

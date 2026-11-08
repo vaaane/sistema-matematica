@@ -202,7 +202,7 @@ import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/
 import {
   CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS, BONUS_FIXO, EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL,
   BIMESTRE, setBimestre, camposAtivos, bonusAtivo, bonusConfig, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas, campoPendente, campoDiferido,
-  bonusCadernoVistosAtivo, campoAuto, CADERNO_COMPLETO, EXTRA_REVISAO, cadernoCompletoAtivo,
+  bonusCadernoVistosAtivo, campoAuto, CADERNO_COMPLETO, EXTRA_REVISAO, cadernoCompletoAtivo, fixarBimestre,
 } from "/js/notas.js";
 import { BIMESTRES, bimestreAtual } from "/js/constants.js";
 import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
@@ -687,7 +687,10 @@ async function mostrarBimestre(n) {
   setBimestre(String(n));
   const content = document.getElementById("content");
   content.innerHTML = `<div class="empty-state"><p>Carregando…</p></div>`;
-  const boletim = await montarBoletim(turma, nome);
+  const boletim = await montarBoletim(turma, nome, { bimestre: n });
+  if (token !== viewToken) return;                     // PROMPT-209: o aluno já trocou de bimestre
+  await fixarBimestre(String(n));                      // os textos da página usam o bimestre mostrado
+  if (token !== viewToken) return;
   if (!boletim) { content.innerHTML = `<div class="empty-state"><p>As notas foram disponibilizadas e serão lançadas em breve.</p></div>`; return; }
   content.innerHTML = todasLancadas(boletim) ? renderRendimento(boletim) : renderAndamento(boletim);
   // gráfico de evolução (busca as notas dos outros bimestres em segundo plano)
@@ -699,13 +702,11 @@ async function mostrarBimestre(n) {
 async function pintarGraficoHistorico(atual, token) {
   const historico = [];
   for (const b of [1, 2, 3, 4]) {
-    setBimestre(String(b));
     try {
-      const bo = await montarBoletim(turma, nome);   // null se ainda não liberado
+      const bo = await montarBoletim(turma, nome, { bimestre: b });   // null se ainda não liberado; não troca o bimestre da página (PROMPT-209)
       historico.push({ n: b, total: bo ? bo.total : null });
     } catch (e) { historico.push({ n: b, total: null }); }
   }
-  setBimestre(String(atual));                          // restaura o bimestre visualizado
   if (token !== viewToken) return;                     // usuário já trocou de bimestre
   const host = document.getElementById("rh-chart");
   if (host) host.innerHTML = svgEvolucao(historico, atual);

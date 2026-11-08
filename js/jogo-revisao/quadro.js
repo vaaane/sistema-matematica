@@ -9,7 +9,13 @@
 //           4-A: { t: 'fracao', n, d, pizza? }, { t: 'equiv', a, b, k }, { t: 'simplif', n, d }, { t: 'mesmoden', a, b, d, op, simplifica?, pegadinha? },
 //           { t: 'compunit', a, b }, { t: 'dendif', p, a, r, b }, { t: 'multfr', a, b, c, d }, { t: 'partede', p, q, N }, { t: 'divfr', a, b, c, d },
 //           5-A (PROMPT-207): { t: 'potencia', b, n, leitura? }, { t: 'quadrado', b, pegadinha? }, { t: 'cadeia', b, n }, { t: 'virapot', b, n },
-//           { t: 'dez', n, n2? }, { t: 'umzero', casos: [[b, n], …] }, { t: 'naconta', a, n, op, b, m }]
+//           { t: 'dez', n, n2? }, { t: 'umzero', casos: [[b, n], …] }, { t: 'naconta', a, n, op, b, m },
+//           13-A (PROMPT-208): { t: 'media', l, pilhas? }, { t: 'mediaprob', l, enun, pergunta, soma, quem, rotulo, unidade },
+//           { t: 'notafalta', m, k, notas }, { t: 'moda', l | listas }, { t: 'mediana', l }, { t: 'medcomp', l },
+//           13-B (tab = { titulo, colunas, linhas }; j = a coluna dos números): { t: 'ler', tab, i, j, enun, resposta? },
+//           { t: 'maior', tab, j, menor?, enun }, { t: 'total', tab, j, enun }, { t: 'amais', tab, j, casos: [{ a, b, enun, empate? }] },
+//           { t: 'mediatab', tab, j, enun }, { t: 'fractab', tab, i, j, enun }, { t: 'pcttab', tab, i, j, enun },
+//           { t: 'afirma', tab, frases: [[texto, [[linha, coluna], …], conta, ok]] }, { t: 'dupla', tab, partes: [{ t: 'cel'|'col'|'maxTotal'|'difLinha', … }] }]
 //   PROMPT-207: no fim de cada página a resposta certa aparece grande no centro, numa caixa verde (a última conta vai para
 //   o histórico e a tabuada sai); a pegadinha termina com o jeito certo embaixo (✔); o histórico encolhe junto quando enche.
 //   (todas com regras?: [...] e resposta?: '...').  Velocidade 1× 2× 4× (todos os tempos, também as transições do CSS):
@@ -35,14 +41,17 @@ function comVirgula(n, casas) {
   return (neg ? '−' : '') + i + (d ? ',' + d : '');
 }
 // ── velocidade 1× 2× 4× (PROMPT-206): multiplica as esperas e, pela variável --qd-vel, as transições e animações do CSS ──
-const CHAVE_VEL = 'jr_lousa_vel';
+// PROMPT-209: tudo 2× mais devagar. O novo 1× (padrão) é metade da velocidade antiga; o 2× é o antigo 1×; o 4×, o antigo 2×.
+// FATOR = quanto as esperas andam por ms (VEL × 0,5). Chave nova no localStorage: quem tinha uma velocidade salva volta para o 1×.
+const CHAVE_VEL = 'jr_lousa_vel2';
 let VEL = (() => { try { const v = Number(localStorage.getItem(CHAVE_VEL)); return [1, 2, 4].includes(v) ? v : 1; } catch (_) { return 1; } })();
+const FATOR = () => VEL / 2;
 const QUADROS = new Set();
 export const velocidade = () => VEL;
 export function mudarVelocidade(v) {
   VEL = [1, 2, 4].includes(Number(v)) ? Number(v) : 1;
-  try { localStorage.setItem(CHAVE_VEL, String(VEL)); } catch (_) {}
-  QUADROS.forEach(q => q.style.setProperty('--qd-vel', VEL));
+  try { localStorage.setItem(CHAVE_VEL, String(VEL)); localStorage.removeItem('jr_lousa_vel'); } catch (_) {}
+  QUADROS.forEach(q => q.style.setProperty('--qd-vel', FATOR()));
 }
 const T = (s) => `calc(${s}s / var(--qd-vel, 1))`;   // duração de transição (inline) na velocidade escolhida
 // "0,060" → "0,06"; "10,0" → "10"
@@ -53,7 +62,7 @@ export function criarQuadro(raiz) {
   raiz.innerHTML = '';
   raiz.classList.add('qd-raiz');
   const L = el('div', 'qd', '', raiz);
-  QUADROS.add(L); L.style.setProperty('--qd-vel', VEL);
+  QUADROS.add(L); L.style.setProperty('--qd-vel', FATOR());
   const HIST = el('div', 'qd-hist', '', L), FOCO = el('div', 'qd-foco', '', L), LADO = el('div', 'qd-lado', '', L);
   const BASE = el('div', 'qd-base', '', L), REGRAS = el('div', 'qd-regras', '', BASE), RESP = el('div', 'qd-resp', '', BASE);
   let token = 0, pausado = false, compacto = false, Wmedido = 0, ultCenas = null, rz = 0;
@@ -63,10 +72,15 @@ export function criarQuadro(raiz) {
   function caber() {
     for (const card of FOCO.querySelectorAll(':scope > .qd-card')) {
       const h = card.offsetHeight;
-      const w = Math.max(card.offsetWidth, ...[...card.querySelectorAll(':scope > .qd-conta > *, :scope > .qd-caixa-ok')].map(e => e.offsetWidth));
+      // PROMPT-209: no mapa 13 o enunciado não conta na largura (ele quebra linha e não encolhe com a conta)
+      const m13 = L.classList.contains('m13'), sel = m13 ? ':scope > .qd-conta > :not(.qd-enun), :scope > .qd-caixa-ok' : ':scope > .qd-conta > *, :scope > .qd-caixa-ok';
+      const w = Math.max(m13 ? 0 : card.offsetWidth, ...[...card.querySelectorAll(sel)].map(e => e.offsetWidth));
       if (!w || !h) continue;
       const k = Math.min(1, FOCO.clientWidth / w, FOCO.clientHeight / h);
       card.style.scale = k < 0.999 ? String(k * 0.97) : '';
+      // a conta diminuiu: no mapa 13 o enunciado e as anotações crescem na mesma proporção (ficam do tamanho certo na tela)
+      card.style.setProperty('--qd-k', k < 0.999 ? String(Math.max(0.35, k * 0.97)) : '1');
+      card.style.setProperty('--qd-fw', FOCO.clientWidth + 'px');
     }
   }
   function medir() {
@@ -95,7 +109,7 @@ export function criarQuadro(raiz) {
       const passo = () => {
         if (meu !== token) return falha(new Cancel());
         const agora = performance.now();
-        if (!pausado) resta -= (agora - ult) * VEL;
+        if (!pausado) resta -= (agora - ult) * FATOR();
         ult = agora;
         if (resta <= 0) return ok();
         requestAnimationFrame(passo);
@@ -185,7 +199,7 @@ export function criarQuadro(raiz) {
     card.style.transition = 'none';
     card.style.transform = `scale(${K})`;
     const total = usado + h * K, livre = HIST.clientHeight - 2;
-    if (total > livre) {
+    if (total > livre && !L.classList.contains('m13')) {   // PROMPT-209: no mapa 13 o histórico não encolhe; sai a conta mais antiga
       const gaps = gap * (HIST.children.length - 1);   // os espaços entre as contas não encolhem
       const fat = Math.max(0.45, (livre - gaps) / Math.max(1, total - gaps));
       for (const s of HIST.children) {
@@ -894,8 +908,8 @@ export function criarQuadro(raiz) {
   }
   const temLado = () => LADO.children.length > 0;
   const novoLado = async (monta) => (temLado() ? trocaLado(monta) : monta());
-  function tabuadaA(n, ate = 10) {
-    return Array.from({ length: ate }, (_, k) => el('div', 'qd-tab', `<span>${n} × ${k + 1} = <span class="res">${n * (k + 1)}</span></span><span class="ok"></span>`, LADO));
+  function tabuadaA(n, ate = 10, ini = 1) {
+    return Array.from({ length: ate - ini + 1 }, (_, k) => el('div', 'qd-tab', `<span>${n} × ${k + ini} = <span class="res">${n * (k + ini)}</span></span><span class="ok"></span>`, LADO));
   }
   // o marcador desce pela tabuada procurando o número: acha (✔ e linha verde) ou passa (✖)
   async function procuraAlvo(T, alvo) {
@@ -1686,10 +1700,625 @@ export function criarQuadro(raiz) {
     for (const r of s.regras || ['Primeiro as potências, depois + e −.']) await regra(r);
   }
 
+  // ══════════════════ PROMPT-208: 13-A (média, moda, mediana) e 13-B (tabelas) — protótipos referencia/lousa-13a.html e lousa-13b.html ══════════════════
+  const nBR = (v) => String(Number(Number(v).toFixed(2))).replace('.', ',');
+  const fmtL = (l) => l.map(nBR).join(', ');
+  const eFinal = (l) => (l.length < 2 ? fmtL(l) : `${fmtL(l.slice(0, -1))} e ${nBR(l[l.length - 1])}`);
+  const somaL = (l) => l.reduce((a, b) => a + b, 0);
+  const listaH = (arr) => arr.map(v => `<span class="qd-nb">${virgulas(nBR(v))}</span>`).join('<span class="qd-sep">,</span>');
+  async function contaNums(els) { for (const [i, e] of els.entries()) { el('span', 'qd-cnt qd-pop', String(i + 1), e); await wait(330); } }
+  const verde = (e, txt) => { e.innerHTML = virgulas(String(txt)); e.className = 'qd-pop'; e.style.color = 'var(--qd-verde)'; };
+  // "a ÷ b = ?" (as partes separadas por "="): devolve o "?" que vira o resultado
+  function contaQ(c, partes, pre = '') {
+    c.conta.innerHTML = `${pre}<div class="qd-fx">${[].concat(partes).map(p => `<span>${p}</span><span class="igual">=</span>`).join('')}<span class="vazio-q qd-rr">?</span></div>`;
+    return c.conta.querySelector('.qd-rr');
+  }
+  // a tabuada do n com 10 linhas, até a linha kMax (quando passa de × 10, começa mais embaixo)
+  const tabuadaPara = (n, kMax) => { const ate = Math.max(10, kMax); return tabuadaA(n, ate, ate - 9); };
+  const limpaTab13 = (T) => T.forEach(x => { x.classList.remove('achou', 'cabe'); x.querySelector('.ok').textContent = ''; });
+  // a tabuada desce até passar do número e volta uma: quanto cabe
+  async function procuraAte(T, alvo) {
+    let ant = null;
+    for (const t of T) {
+      const v = Number(t.querySelector('.res').textContent);
+      t.classList.add('atual'); await wait(330); t.classList.remove('atual');
+      if (v === alvo) { t.classList.add('achou'); t.querySelector('.ok').textContent = '✔ exato!'; await wait(400); return t; }
+      if (v > alvo) { t.querySelector('.ok').textContent = '✖ passou'; await wait(500); if (ant) { ant.classList.add('achou'); ant.querySelector('.ok').textContent = '✔'; } await wait(400); return ant; }
+      t.classList.add('cabe'); t.querySelector('.ok').textContent = '✔'; ant = t;
+    }
+    return ant;
+  }
+  // pilhas de blocos que se nivelam (média = dividir igualzinho)
+  function pilhas(vals) {
+    const box = el('div', 'qd-pilhas', '', LADO);
+    const W = box.offsetWidth, H = box.offsetHeight, n = vals.length, b = Math.min(W / (n * 1.9), H / 7.5);
+    const x = i => (i + .5) * W / n - b / 2, y = lvl => lvl * b * 1.08;
+    const cols = vals.map((v, i) => Array.from({ length: v }, (_, k) => { const e = el('i', '', '', box); Object.assign(e.style, { width: b + 'px', height: b + 'px', left: x(i) + 'px', bottom: y(k) + b * .9 + 'px' }); return e; }));
+    const rot = vals.map((v, i) => { const r = el('span', 'prot', String(v), box); r.style.left = x(i) + b / 2 + 'px'; return r; });
+    const move = async (de, para) => {
+      const e = cols[de].pop(); cols[para].push(e); e.classList.add('anda');
+      e.style.left = x(para) + 'px'; e.style.bottom = y(cols[para].length - 1) + b * .9 + 'px';
+      await wait(700);
+      rot[de].textContent = cols[de].length; rot[para].textContent = cols[para].length;
+    };
+    return {
+      // passa do maior para o menor até todos ficarem com m
+      async nivela(m) { for (let g = 0; g < 30; g++) { const h = cols.map(c => c.length), de = h.indexOf(Math.max(...h)), para = h.indexOf(Math.min(...h)); if (h[de] <= m) break; await move(de, para); } },
+      igual() { rot.forEach(r => r.classList.add('ok')); },
+    };
+  }
+  // contagem com pauzinhos (moda)
+  function pauzinhos(valores) {
+    const box = el('div', 'qd-tally', '', LADO);
+    const rows = {};
+    for (const v of [...new Set(valores)].sort((a, b) => a - b)) rows[v] = el('div', 'trow', `<b>${nBR(v)}</b><span class="paus"></span><span class="tq"></span>`, box);
+    return {
+      async marca(v) { const r = rows[v]; r.querySelector('.paus').textContent += '|'; r.classList.add('pisca1'); await wait(300); r.classList.remove('pisca1'); },
+      destaca(vs) { for (const [v, r] of Object.entries(rows)) { r.querySelector('.tq').textContent = `${r.querySelector('.paus').textContent.length}×`; r.classList.toggle('max', vs.includes(Number(v))); } },
+    };
+  }
+  // linha de números que se ordena e tem as pontas riscadas (mediana)
+  function linhaOrdena(pai, vals) {
+    const box = el('div', 'qd-mrow', '', pai);
+    const P = vals.some(v => String(v).length > 1) ? 1.7 : 1.25;
+    box.style.width = vals.length * P + 'em';
+    const its = vals.map((v, i) => { const e = el('span', 'mi', nBR(v), box); e.style.left = i * P + 'em'; e.style.width = P - .15 + 'em'; return { v, e }; });
+    return {
+      async ordena() {
+        const ord = [...its].sort((a, b) => a.v - b.v);
+        ord.forEach((it, i) => { it.e.style.left = i * P + 'em'; });
+        await wait(1000);
+        return ord;
+      },
+      async risca(ord) {
+        let i = 0, j = ord.length - 1;
+        while (j - i >= 2) { ord[i].e.classList.add('fora'); ord[j].e.classList.add('fora'); await wait(650); i++; j--; }
+        for (let k = i; k <= j; k++) ord[k].e.classList.add('meio');
+        await wait(500);
+        return ord.slice(i, j + 1).map(o => o.v);
+      },
+    };
+  }
+  const ehOrdem = (l) => l.every((v, i) => !i || l[i - 1] <= v);
+
+  // 13-A p.1 e p.2) média: (as pilhas se nivelam) soma tudo, divide pela quantidade; sobrou? vírgula e zero
+  async function cenaMedia(s) {
+    const l = s.l.map(Number), n = l.length, S = somaL(l), q = Math.floor(S / n), r = S % n, d = r * 10 / n, m = S / n;
+    if (n < 2 || (r && !Number.isInteger(d))) return;
+    const virg = r > 0;
+    ladoLargo();
+    const comPilhas = !virg && s.pilhas !== false && n <= 5 && Math.max(...l) <= 6 && l.some(v => v !== m) && somaL(l.map(v => Math.max(0, v - m))) <= 6;
+    if (!virg) await etiqueta('MÉDIA', 'dividir igualzinho entre todos');
+    let c, p, p2, rr;
+    if (comPilhas) {
+      const P = pilhas(l);
+      c = cartao();
+      c.conta.innerHTML = `<div class="qd-fx">${listaH(l)}</div>`;
+      await wait(600);
+      p = await nota(c.notas, 'Média é deixar todos iguais.', 'passo');
+      await wait(400);
+      p2 = await nota(c.notas, 'Passa do maior para o menor…', 'passo');
+      await P.nivela(m); P.igual();
+      await apagar(p, p2);
+      p = await nota(c.notas, `Ficou ${m} em cada: a média é ${m}.`, 'passo');
+      await wait(900); await apagar(p);
+      await paraHist(c);
+    }
+    c = cartao();
+    rr = contaQ(c, l.map(nBR).join(' + '));
+    p = await nota(c.notas, comPilhas ? 'Na conta: primeiro soma tudo.' : `Média de ${eFinal(l)}: soma tudo.`, 'passo');
+    await wait(500); verde(rr, S);
+    await wait(virg ? 500 : 600); await apagar(p);
+    await paraHist(c);
+    let T = await novoLado(() => tabuadaPara(n, virg ? q + 1 : q));
+    c = cartao();
+    rr = contaQ(c, `${S} ÷ ${n}`);
+    if (!virg) {
+      p = await nota(c.notas, `Depois divide pela quantidade: são ${n} números.`, 'passo');
+      await procuraAlvo(T, S);
+      verde(rr, m);
+      await wait(600); await apagar(p);
+      await respostaFinal(`<span>média${n <= 4 ? ` de ${eFinal(l)}` : ''} = ${m}</span>`);
+    } else {
+      p = await nota(c.notas, `São ${n} números: divide por ${n}. Quanto o ${n} cabe no ${S}?`, 'passo');
+      await procuraAte(T, S);
+      verde(rr, q);
+      await nota(c.notas, `cabe ${q} (${n} × ${q} = ${n * q}), sobra ${r}`, 'detalhe');
+      await wait(500); await apagar(p);
+      await paraHist(c);
+      if (T.some(t => Number(t.querySelector('.res').textContent) === r * 10)) limpaTab13(T);
+      else T = await trocaLado(() => tabuadaA(n));
+      c = cartao();
+      rr = contaQ(c, `${r * 10} ÷ ${n}`);
+      p = await nota(c.notas, `Sobrou ${r}? Põe a vírgula e um zero: o ${r} vira ${r * 10}.`, 'passo');
+      await procuraAlvo(T, r * 10);
+      verde(rr, d);
+      await nota(c.notas, `depois da vírgula: ${d}`, 'detalhe');
+      await wait(600); await apagar(p);
+      await respostaFinal(`<span>${virgulas(`média = ${q},${d}`)}</span>`);
+    }
+    for (const x of s.regras || ['Média: soma tudo e divide pela quantidade.', ...(virg ? ['Sobrou? Põe vírgula e zero e continua.'] : [])]) await regra(x);
+  }
+
+  // 13-A p.3) problema de média: conta quantos números são, soma, divide pela quantidade
+  async function cenaMediaProb(s) {
+    const l = s.l.map(Number), n = l.length, S = somaL(l), m = S / n;
+    if (!Number.isInteger(m)) return;
+    ladoLargo();
+    const c1 = cartao();
+    c1.conta.innerHTML = `<div class="qd-enun">${esc(s.enun || `${n} números:`)}</div><div class="qd-fx">${listaH(l)}</div>`;
+    await wait(600);
+    let p = await nota(c1.notas, `${s.pergunta || 'Qual é a média?'} Primeiro: quantos números são?`, 'passo');
+    await contaNums([...c1.conta.querySelectorAll('.qd-nb')]);
+    await nota(c1.notas, `${n} números`, 'detalhe');
+    await apagar(p);
+    await paraHist(c1);
+    const c2 = cartao();
+    let rr = contaQ(c2, l.join(' + '));
+    p = await nota(c2.notas, s.soma || 'Soma todos os números.', 'passo');
+    await wait(500); verde(rr, S);
+    await wait(500); await apagar(p);
+    await paraHist(c2);
+    const T = tabuadaPara(n, m);
+    const c3 = cartao();
+    rr = contaQ(c3, `${S} ÷ ${n}`);
+    p = await nota(c3.notas, `Divide por ${n}, a quantidade de ${s.quem || 'números'}.`, 'passo');
+    await procuraAlvo(T, S);
+    verde(rr, m);
+    await wait(600); await apagar(p);
+    await respostaFinal(`<span>${esc(s.rotulo || 'média')} = ${m}${esc(s.unidade || '')}</span>`);
+    for (const r of s.regras || ['A quantidade é quantos números a lista tem.']) await regra(r);
+  }
+
+  // 13-A p.4) a nota que falta: média × quantidade = total; total − o que já tem = o que falta
+  const ORD_F = ['', 'primeira', 'segunda', 'terceira', 'quarta', 'quinta', 'sexta'];
+  async function cenaNotaFalta(s) {
+    const notas = s.notas.map(Number), m = Number(s.m), k = Number(s.k) || notas.length + 1, tot = m * k, ja = somaL(notas), f = tot - ja;
+    const ord = ORD_F[k] || `${k}ª`;
+    const c0 = cartao();
+    c0.conta.innerHTML = `<div class="qd-enun">Média ${nBR(m)} em ${k} provas. Notas: ${eFinal(notas)}. E a ${ord}?</div>`;
+    await wait(900);
+    await paraHist(c0);
+    const passos = [
+      [`${nBR(m)} × ${k}`, tot, `Média ${nBR(m)} em ${k} provas: o total tem que ser ${nBR(m)} × ${k}.`, `tem que dar ${nBR(tot)}`],
+      [notas.map(nBR).join(' + '), ja, notas.length === 2 ? 'As duas notas que já tem somam:' : 'As notas que já tem somam:', `já tem ${nBR(ja)}`],
+      [`${nBR(tot)} − ${nBR(ja)}`, f, 'Falta o que não chegou ainda:', ''],
+    ];
+    for (const [i, [conta, res, txt, det]] of passos.entries()) {
+      const c = cartao();
+      const rr = contaQ(c, conta);
+      const p = await nota(c.notas, txt, 'passo');
+      await wait(500); verde(rr, nBR(res));
+      if (det) await nota(c.notas, det, 'detalhe');
+      await wait(500); await apagar(p);
+      if (i < passos.length - 1) await paraHist(c);
+    }
+    await respostaFinal(`<span>${virgulas(`a ${ord} nota é ${nBR(f)}`)}</span>`);
+    for (const r of s.regras || ['Média × quantidade = total. Total − o que já tem = o que falta.']) await regra(r);
+  }
+
+  // 13-A p.5 e p.6) moda: cada número ganha um pauzinho na sua linha; a que tem mais fica verde (empate: as duas; ninguém repete: não tem)
+  const infoModa = (l) => {
+    const cnt = new Map(); l.forEach(v => cnt.set(v, (cnt.get(v) || 0) + 1));
+    const mx = Math.max(...cnt.values());
+    return { mx, modas: mx > 1 ? [...cnt].filter(([, k]) => k === mx).map(([v]) => v).sort((a, b) => a - b) : [] };
+  };
+  const modaTxt = (I) => (!I.modas.length ? 'não tem moda' : I.modas.length === 1 ? `moda = ${nBR(I.modas[0])}` : `moda: ${eFinal(I.modas)}`);
+  async function cenaModa(s) {
+    const ls = (s.listas || [s.l]).map(l => l.map(Number)), varias = ls.length > 1;
+    ladoLargo();
+    await etiqueta('MODA', 'o número que mais aparece');
+    const infos = ls.map(infoModa);
+    let Tl = null;
+    for (const [i, l] of ls.entries()) {
+      const I = infos[i];
+      Tl = i ? await trocaLado(() => pauzinhos(l)) : pauzinhos(l);
+      const c = cartao();
+      c.conta.innerHTML = `<div class="qd-fx">${listaH(l)}</div>`;
+      await wait(varias ? 500 : 600);
+      let p = i ? null : await nota(c.notas, varias ? 'Conta cada um…' : 'Conta quantas vezes cada número aparece.', 'passo');
+      const els = [...c.conta.querySelectorAll('.qd-nb')];
+      for (const [k, v] of l.entries()) { acende(els[k]); await Tl.marca(v); acende(els[k], false); }
+      Tl.destaca(I.modas);
+      if (p) await apagar(p);
+      if (I.modas.length === 1) {
+        p = await nota(c.notas, `O ${nBR(I.modas[0])} aparece ${plural(I.mx, 'vez', 'vezes')}: é a moda.`, 'passo');
+        await wait(800); await apagar(p);
+      } else if (I.modas.length) {
+        const nomes = I.modas.map(v => `o ${nBR(v)}`), quem = `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}`;
+        p = await nota(c.notas, `${quem[0].toUpperCase()}${quem.slice(1)} empatam com ${I.mx} vezes: a moda são ${I.modas.length === 2 ? 'os dois' : 'todos eles'}.`, 'passo');
+        await wait(600);
+        await nota(c.notas, modaTxt(I), 'detalhe');
+        await apagar(p);
+      } else {
+        p = await nota(c.notas, 'Ninguém se repete: não tem moda.', 'passo');
+        await wait(800); await apagar(p);
+      }
+      if (i < ls.length - 1) await paraHist(c);
+    }
+    await respostaFinal(varias ? ls.map((l, i) => `<span class="l2">${fmtL(l)} → ${modaTxt(infos[i])}</span>`).join('') : `<span>${modaTxt(infos[0])}</span>`);
+    const simples = infos.every(I => I.modas.length === 1);
+    for (const r of s.regras || [simples ? 'Moda: o que mais aparece (o que está "na moda").' : 'Empatou? Os dois são moda. Ninguém repete? Não tem moda.']) await regra(r);
+  }
+
+  // 13-A p.7 e p.8) mediana: os números deslizam até ficar em ordem; as pontas são riscadas aos pares; sobra o do meio
+  //   (quantidade par: sobram dois, a mediana é a média deles). Pegadinha (ímpar): pegar o do meio sem ordenar
+  async function cenaMediana(s) {
+    const l = s.l.map(Number), n = l.length, par = n % 2 === 0;
+    if (n < 2) return;
+    await etiqueta('MEDIANA', 'o número do meio, depois de pôr em ordem');
+    const c1 = cartao();
+    const R = linhaOrdena(c1.conta, l);
+    await wait(700);
+    let p = await nota(c1.notas, par ? 'Põe em ordem.' : 'Primeiro põe em ordem, do menor para o maior.', 'passo');
+    const ord = await R.ordena();
+    await apagar(p);
+    p = await nota(c1.notas, par ? 'Risca as pontas.' : 'Agora risca uma ponta de cada lado.', 'passo');
+    const meio = await R.risca(ord);
+    await apagar(p);
+    p = await nota(c1.notas, par ? 'Sobraram dois no meio: a mediana é a média deles.' : `Sobrou o do meio: ${nBR(meio[0])}.`, 'passo');
+    await wait(700); await apagar(p);
+    await paraHist(c1);
+    if (!par) {
+      const md = meio[0], im = (n - 1) / 2;
+      if (s.pegadinha !== false && l[im] !== md) {
+        const c2 = cartao();
+        c2.conta.innerHTML = `<div class="qd-fx qd-errado"><span>${l.map((v, k) => (k === im ? `<span class="qd-x"><span>${nBR(v)}</span></span>` : nBR(v))).join(', ')}</span></div>`;
+        await nota(c2.notas, 'Pegadinha: sem pôr em ordem, o do meio dá errado!', 'passo');
+        await wait(500);
+        await certoEmbaixo(c2, `<span>${fmtL([...l].sort((a, b) => a - b))} → ${nBR(md)}</span>`);
+      }
+      await respostaFinal(`<span>mediana = ${nBR(md)}</span>`);
+      for (const r of s.regras || ['Mediana: põe em ordem e pega o do meio.']) await regra(r);
+      return;
+    }
+    const [a, b] = meio, S = a + b, v = S / 2;
+    const c2 = cartao();
+    const rr = contaQ(c2, [`(${nBR(a)} + ${nBR(b)}) ÷ 2`, `${nBR(S)} ÷ 2`]);
+    p = await nota(c2.notas, S % 2 ? `${S} ÷ 2 = ${(S - 1) / 2} e sobra 1. Põe vírgula e zero: 10 ÷ 2 = 5.` : `${nBR(S)} ÷ 2 = ${nBR(v)}.`, 'passo');
+    await wait(800); verde(rr, nBR(v));
+    await wait(600); await apagar(p);
+    await respostaFinal(`<span>${virgulas(`mediana = ${nBR(v)}`)}</span>`);
+    for (const r of s.regras || ['Quantidade par? Soma os dois do meio e divide por 2.']) await regra(r);
+  }
+
+  // 13-A p.9) média × mediana: a média, a mediana (riscando as pontas) e a diferença; o número grande puxa a média
+  async function cenaMedComp(s) {
+    const l = s.l.map(Number), n = l.length, S = somaL(l), me = S / n, srt = [...l].sort((a, b) => a - b);
+    const md = n % 2 ? srt[(n - 1) / 2] : (srt[n / 2 - 1] + srt[n / 2]) / 2, v = Math.abs(me - md);
+    const c1 = cartao();
+    c1.conta.innerHTML = `<div class="qd-enun">Média:</div><div class="qd-fx"><span>${l.map(nBR).join(' + ')} = ${nBR(S)}</span><span class="igual">→</span><span>${nBR(S)} ÷ ${n}</span><span class="igual">=</span><span class="vazio-q qd-rr">?</span></div>`;
+    let rr = c1.conta.querySelector('.qd-rr');
+    let p = await nota(c1.notas, `Média: soma e divide por ${n}.`, 'passo');
+    await wait(600); verde(rr, nBR(me));
+    await wait(500); await apagar(p);
+    await paraHist(c1);
+    const c2 = cartao();
+    c2.conta.innerHTML = '<div class="qd-enun">Mediana:</div>';
+    const R = linhaOrdena(c2.conta, l);
+    p = await nota(c2.notas, ehOrdem(l) ? 'Mediana: já está em ordem. Risca as pontas.' : 'Mediana: põe em ordem e risca as pontas.', 'passo');
+    const ord = await R.ordena();
+    await R.risca(ord);
+    await nota(c2.notas, `mediana = ${nBR(md)}`, 'detalhe');
+    await apagar(p);
+    await paraHist(c2);
+    const c3 = cartao();
+    rr = contaQ(c3, `${nBR(Math.max(me, md))} − ${nBR(Math.min(me, md))}`);
+    p = await nota(c3.notas, 'Diferença: o maior menos o menor.', 'passo');
+    await wait(500); verde(rr, nBR(v));
+    if (me !== md) await nota(c3.notas, me > md ? `O ${nBR(srt[n - 1])} é grande e puxa a média para cima.` : `O ${nBR(srt[0])} é pequeno e puxa a média para baixo.`, 'detalhe');
+    await apagar(p);
+    await respostaFinal(`<span>${virgulas(me >= md ? `média ${nBR(me)} − mediana ${nBR(md)} = ${nBR(v)}` : `mediana ${nBR(md)} − média ${nBR(me)} = ${nBR(v)}`)}</span>`);
+    for (const r of s.regras || [me >= md ? 'Um número muito grande puxa a média, mas não a mediana.' : 'Um número muito pequeno puxa a média, mas não a mediana.']) await regra(r);
+  }
+
+  // ── 13-B: a tabela fica na lateral a página toda; linha, coluna e cruzamento acendem ──
+  const COL_TXT = { Vendas: 'das vendas', Votos: 'dos votos', Gols: 'dos gols', Meninos: 'dos meninos', Meninas: 'das meninas', Total: 'Total' };
+  const UNID = { Vendas: 'frutas', Votos: 'votos', Gols: 'gols', Meninos: 'meninos', Meninas: 'meninas', Total: 'votos' };
+  const LINHA_UN = { Fruta: ['fruta', 'frutas'], Esporte: ['esporte', 'esportes'], Dia: ['dia', 'dias'] };
+  const VERBO = { Vendas: 'vendeu', Votos: 'teve', Gols: 'teve', Total: 'teve' };
+  const MASC = new Set(['Futebol', 'Vôlei', 'Basquete']);
+  const oA = (nome) => `${MASC.has(nome) ? 'o' : 'a'} ${String(nome).toLowerCase()}`;
+  const daLinha = (nome) => `${MASC.has(nome) ? 'do' : 'da'} ${String(nome).toLowerCase()}`;
+  const todosOs = (u) => (/^(frutas|meninas)$/.test(u) ? `todas as ${u}` : `todos os ${u}`);
+  const colTxt = (tab, j) => COL_TXT[tab.colunas[j]] || `"${tab.colunas[j]}"`;
+  const unid = (tab, j) => UNID[tab.colunas[j]] || '';
+  const linhasUn = (tab) => LINHA_UN[tab.colunas[0]] || ['linha', 'linhas'];
+  const valsCol = (tab, j) => tab.linhas.map(l => Number(l[j]));
+  function tabela(Tb) {
+    const box = el('div', 'qd-tabw', `<div class="qd-ttit">${esc(Tb.titulo)}</div>`, LADO);
+    const t = el('table', 'qd-tabela' + (Tb.colunas.length > 2 ? ' larga' : ''), '', box);
+    t.innerHTML = `<thead><tr>${Tb.colunas.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${Tb.linhas.map(l => `<tr>${l.map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody>`;
+    const th = [...t.querySelectorAll('th')], rows = [...t.querySelectorAll('tbody tr')].map(r => [...r.children]);
+    // celular deitado: a tabela de 4 colunas não coube? a lateral alarga; ainda não coube, a letra diminui até caber
+    const sobra = () => t.offsetWidth - LADO.clientWidth;
+    if (sobra() > 1) L.classList.add('lado-xl');
+    if (sobra() > 1) t.style.fontSize = parseFloat(getComputedStyle(t).fontSize) * LADO.clientWidth / t.offsetWidth * .97 + 'px';
+    return {
+      limpa() { t.querySelectorAll('.hl, .cruz, .marca').forEach(e => e.classList.remove('hl', 'cruz', 'marca')); },
+      linha(i) { rows[i].forEach(c => c.classList.add('hl')); },
+      coluna(j) { th[j].classList.add('hl'); rows.forEach(r => r[j].classList.add('hl')); },
+      cel(i, j) { return rows[i][j]; },
+    };
+  }
+  const enunH = (txt) => `<div class="qd-enun">${esc(txt)}</div>`;
+
+  // 13-B p.1) ler a tabela: a linha, a coluna, o cruzamento fica verde e o número voa para o centro
+  async function cenaLer(s) {
+    const tab = s.tab, i = Number(s.i), j = Number(s.j ?? 1), nome = tab.linhas[i][0], v = tab.linhas[i][j];
+    ladoLargo();
+    await etiqueta('TABELA', 'linhas deitadas, colunas em pé');
+    const T = tabela(tab);
+    const c = cartao();
+    c.conta.innerHTML = `${enunH(s.enun)}<div class="qd-fx"><span class="vazio-q qd-rr">?</span></div>`;
+    await wait(700);
+    let p = await nota(c.notas, `Primeiro acha a linha ${daLinha(nome)}.`, 'passo');
+    T.linha(i); await wait(900); await apagar(p);
+    p = await nota(c.notas, `Depois a coluna ${colTxt(tab, j)}.`, 'passo');
+    T.coluna(j); await wait(900); await apagar(p);
+    p = await nota(c.notas, 'A resposta está onde as duas se cruzam.', 'passo');
+    T.cel(i, j).classList.add('cruz'); await wait(600);
+    const rr = c.conta.querySelector('.qd-rr');
+    rr.textContent = String(v); rr.className = 'qd-esconde'; rr.style.color = 'var(--qd-verde)';
+    await voar(T.cel(i, j), rr, String(v));
+    await wait(600); await apagar(p);
+    await respostaFinal(`<span>${esc(s.resposta || `${nome}: ${v}`)}</span>`);
+    for (const r of s.regras || ['Acha a linha, depois a coluna: a resposta está no cruzamento.']) await regra(r);
+  }
+
+  // 13-B p.2) maior e menor: o marcador desce a coluna e o centro mostra "maior até agora"
+  async function cenaMaior(s) {
+    const tab = s.tab, j = Number(s.j ?? 1), menor = !!s.menor, vs = valsCol(tab, j), verbo = VERBO[tab.colunas[j]] || 'teve';
+    ladoLargo();
+    const T = tabela(tab);
+    const c = cartao();
+    c.conta.innerHTML = `${enunH(s.enun)}<div class="qd-fx"><span>${menor ? 'menor' : 'maior'} até agora:</span><span class="vazio-q qd-m">?</span></div>`;
+    await wait(600);
+    let p = await nota(c.notas, `Desce a coluna ${colTxt(tab, j)} comparando.`, 'passo');
+    T.coluna(j);
+    let best = null, iM = 0;
+    const m = c.conta.querySelector('.qd-m');
+    for (const [i, v] of vs.entries()) {
+      T.cel(i, j).classList.add('marca'); await wait(500);
+      if (best == null || (menor ? v < best : v > best)) { best = v; iM = i; m.textContent = `${v} (${tab.linhas[i][0]})`; m.className = 'qd-pop'; await wait(300); m.className = ''; }
+      T.cel(i, j).classList.remove('marca');
+    }
+    T.limpa(); T.linha(iM); T.cel(iM, j).classList.add('cruz');
+    await apagar(p);
+    const nome = tab.linhas[iM][0];
+    p = await nota(c.notas, `O ${menor ? 'menor' : 'maior'} número é ${best}: ${oA(nome)} ${verbo} ${menor ? 'menos' : 'mais'}.`, 'passo');
+    await wait(700); await apagar(p);
+    const outro = menor ? Math.max(...vs) : Math.min(...vs), iO = vs.indexOf(outro);
+    await nota(c.notas, `o ${menor ? 'maior' : 'menor'} é ${outro}: ${oA(tab.linhas[iO][0])} ${verbo} ${menor ? 'mais' : 'menos'}`, 'detalhe');
+    await respostaFinal(`<span>${esc(`${verbo} ${menor ? 'menos' : 'mais'}: ${nome} (${best})`)}</span>`);
+    for (const r of s.regras || ['Mais = o maior número da coluna. Menos = o menor.']) await regra(r);
+  }
+
+  // 13-B p.3) total: cada número voa da tabela para a soma
+  async function cenaTotal(s) {
+    const tab = s.tab, j = Number(s.j ?? 1), vs = valsCol(tab, j), S = somaL(vs);
+    ladoLargo();
+    const T = tabela(tab);
+    const c = cartao();
+    c.conta.innerHTML = `${enunH(s.enun)}<div class="qd-fx qd-soma"></div>`;
+    await wait(600);
+    let p = await nota(c.notas, `${/ao todo/i.test(s.enun || '') ? '"Ao todo"' : '"No total"'} é somar a coluna toda.`, 'passo');
+    T.coluna(j);
+    const sm = c.conta.querySelector('.qd-soma');
+    for (const [i, v] of vs.entries()) {
+      if (i) el('span', 'op', '+', sm);
+      const alvo = el('span', 'qd-esconde', String(v), sm);
+      await voar(T.cel(i, j), alvo, String(v));
+    }
+    el('span', 'igual', '=', sm); verde(el('span', '', '', sm), S);
+    await wait(600); await apagar(p);
+    await respostaFinal(`<span>${esc(s.resposta || `total = ${S} ${unid(tab, j)}`.trim())}</span>`);
+    for (const r of s.regras || ['Total: soma todos os números da coluna.']) await regra(r);
+  }
+
+  // 13-B p.4) "a mais" e "para empatar": o maior menos o menor
+  async function cenaAMais(s) {
+    const tab = s.tab, j = Number(s.j ?? 1), casos = s.casos || [];
+    ladoLargo();
+    const T = tabela(tab);
+    let ult = null;
+    for (const [k, cs] of casos.entries()) {
+      const [a, b] = [Number(cs.a), Number(cs.b)].sort((x, y) => tab.linhas[y][j] - tab.linhas[x][j]), va = tab.linhas[a][j], vb = tab.linhas[b][j];
+      T.limpa(); T.cel(a, j).classList.add('cruz'); T.cel(b, j).classList.add('cruz');
+      const c = cartao();
+      const rr = contaQ(c, `${va} − ${vb}`, enunH(cs.enun));
+      const p = await nota(c.notas, !cs.empate ? '"A mais" é conta de menos: o maior menos o menor.' : k ? 'Para empatar, falta a diferença: é a mesma conta.' : 'Para empatar, falta a diferença: o maior menos o menor.', 'passo');
+      await wait(600); verde(rr, va - vb);
+      await wait(600); await apagar(p);
+      if (k < casos.length - 1) await paraHist(c);
+      ult = [va, vb];
+    }
+    if (!ult) return;
+    const conta = `${ult[0]} − ${ult[1]} = ${ult[0] - ult[1]}`;
+    await respostaFinal(`<span>${esc(casos.length > 1 ? `"a mais" e "empatar": ${conta}` : conta)}</span>`);
+    for (const r of s.regras || ['"A mais" e "para empatar": subtrai.']) await regra(r);
+  }
+
+  // 13-B p.5) média da tabela: soma a coluna e divide pela quantidade de linhas (contadas na tabela)
+  async function cenaMediaTab(s) {
+    const tab = s.tab, j = Number(s.j ?? 1), vs = valsCol(tab, j), n = vs.length, S = somaL(vs), v = S / n, [un1, unN] = linhasUn(tab);
+    ladoLargo();
+    const T = tabela(tab);
+    const c1 = cartao();
+    let rr = contaQ(c1, vs.join(' + '), enunH(s.enun));
+    T.coluna(j);
+    let p = await nota(c1.notas, 'Média: soma tudo…', 'passo');
+    await wait(600); verde(rr, S);
+    await wait(400); await apagar(p);
+    await paraHist(c1);
+    const c2 = cartao();
+    rr = contaQ(c2, `${S} ÷ ${n}`);
+    p = await nota(c2.notas, `…e divide pela quantidade de linhas: ${n} ${unN}.`, 'passo');
+    T.limpa();
+    for (let i = 0; i < n; i++) { const td = T.cel(i, 0); td.classList.add('marca'); el('span', 'cnt-t qd-pop', String(i + 1), td); await wait(350); }
+    verde(rr, nBR(v));
+    if (!Number.isInteger(v)) { const q = Math.floor(S / n), r = S % n; await nota(c2.notas, `cabe ${q}, sobra ${r}: vírgula e zero → ${r * 10} ÷ ${n} = ${nBR(r * 10 / n)}`, 'detalhe'); }
+    await wait(600); await apagar(p);
+    await respostaFinal(`<span>${virgulas(`média = ${nBR(v)} por ${un1}`)}</span>`);
+    for (const r of s.regras || ['Média da tabela: total ÷ quantidade de linhas.']) await regra(r);
+  }
+
+  // 13-B p.6) fração: a parte em cima, o total embaixo; depois simplifica
+  async function cenaFracTab(s) {
+    const tab = s.tab, i = Number(s.i), j = Number(s.j ?? 1), v = Number(tab.linhas[i][j]), S = somaL(valsCol(tab, j)), g = mdc(v, S);
+    ladoLargo();
+    const T = tabela(tab);
+    const c1 = cartao();
+    c1.conta.innerHTML = `${enunH(s.enun)}<div class="qd-fx">${fracH(Qm, Qm)}</div>`;
+    const f = c1.conta.querySelector('.qd-fr');
+    await wait(600);
+    let p = await nota(c1.notas, `Em cima: a parte (${String(tab.linhas[i][0]).toLowerCase()}).`, 'passo');
+    T.cel(i, j).classList.add('cruz'); await poe(f, 'n', v);
+    const p2 = await nota(c1.notas, `Embaixo: o total (${todosOs(unid(tab, j) || 'números')}, ${S}).`, 'passo');
+    T.coluna(j); await poe(f, 'd', S);
+    await wait(400); await apagar(p, p2);
+    if (g > 1) {
+      await paraHist(c1);
+      const c2 = cartao();
+      const F = fx(c2.conta, `${fracH(v, S)}<span class="igual">=</span>${fracH(Qm, Qm)}`), a = F.fr(0), b = F.fr(1);
+      p = await nota(c2.notas, `Simplifica: ${v} e ${S} dividem por ${g}.`, 'passo');
+      await arcoX(F, parte(a, 'n'), parte(b, 'n'), 'cima', `÷ ${g}`); await poe(b, 'n', v / g);
+      await arcoX(F, parte(a, 'd'), parte(b, 'd'), 'baixo', `÷ ${g}`); await poe(b, 'd', S / g);
+      await wait(500); await apagar(p);
+    }
+    await respostaFinal(g > 1 ? fxR([v, S], '=', [v / g, S / g]) : fxR([v, S]));
+    for (const r of s.regras || ['Fração: a parte em cima, o total embaixo.']) await regra(r);
+  }
+
+  // 13-B p.7) porcentagem: a fração; deixa o de baixo 100 (× em cima e embaixo) e o de cima é o %
+  async function cenaPctTab(s) {
+    const tab = s.tab, i = Number(s.i), j = Number(s.j ?? 1), v = Number(tab.linhas[i][j]), S = somaL(valsCol(tab, j));
+    const d0 = 100 % S ? S / mdc(S, 100) : 1;   // 40 embaixo: primeiro ÷ 2 (vira 20), depois × 5
+    if (v % d0 || 100 % (S / d0)) return;
+    const x = v / d0, y = S / d0, k = 100 / y, pct = x * k;
+    ladoLargo();
+    const T = tabela(tab);
+    const c1 = cartao();
+    c1.conta.innerHTML = `${enunH(s.enun)}<div class="qd-fx">${fracH(v, S)}</div>`;
+    T.cel(i, j).classList.add('cruz');
+    let p = await nota(c1.notas, `Escreve como fração: ${v} de ${S}.`, 'passo');
+    await wait(700); await apagar(p);
+    await paraHist(c1);
+    if (d0 > 1) {
+      const c0 = cartao();
+      const F = fx(c0.conta, `${fracH(v, S)}<span class="igual">=</span>${fracH(Qm, Qm)}`), a = F.fr(0), b = F.fr(1);
+      p = await nota(c0.notas, `Primeiro simplifica: ${v} e ${S} dividem por ${d0}.`, 'passo');
+      await arcoX(F, parte(a, 'd'), parte(b, 'd'), 'baixo', `÷ ${d0}`); await poe(b, 'd', y);
+      await arcoX(F, parte(a, 'n'), parte(b, 'n'), 'cima', `÷ ${d0}`); await poe(b, 'n', x);
+      await wait(400); await apagar(p);
+      await paraHist(c0);
+    }
+    const c2 = cartao();
+    const F = fx(c2.conta, `${fracH(x, y)}<span class="igual">=</span>${fracH(Qm, Qm)}`), a = F.fr(0), b = F.fr(1);
+    p = await nota(c2.notas, 'Porcentagem é "de cada 100": deixa o de baixo 100.', 'passo');
+    await wait(400);
+    const p2 = await nota(c2.notas, `${y} × ${k} = 100: multiplica embaixo por ${k}…`, 'passo');
+    await arcoX(F, parte(a, 'd'), parte(b, 'd'), 'baixo', `× ${k}`); await poe(b, 'd', 100);
+    await apagar(p);
+    p = await nota(c2.notas, `…e em cima também: ${x} × ${k} = ${pct}.`, 'passo');
+    await arcoX(F, parte(a, 'n'), parte(b, 'n'), 'cima', `× ${k}`); await poe(b, 'n', pct);
+    await wait(400); await apagar(p, p2);
+    p = await nota(c2.notas, `${pct} de cada 100 = ${pct}%.`, 'passo');
+    await wait(800); await apagar(p);
+    await respostaFinal(fxR([v, S], '=', ...(d0 > 1 ? [[x, y], '='] : []), [pct, 100], `= ${pct}%`));
+    for (const r of s.regras || ['Porcentagem: deixa o de baixo 100. O de cima é o %.']) await regra(r);
+  }
+
+  // 13-B p.8) qual afirmação é verdadeira: cada frase é conferida (as células acendem, a conta no detalhe) e ganha ✖ ou ✔;
+  //   a verdadeira fica no centro, dentro do retângulo verde (sem caixa de resposta separada)
+  async function cenaAfirma(s) {
+    const frases = s.frases || [];
+    if (!frases.length) return;
+    ladoLargo();
+    const T = tabela(s.tab);
+    const c = cartao();
+    c.conta.innerHTML = `${enunH(s.enun || 'Qual afirmação é verdadeira?')}<div class="qd-afs">${frases.map((f, i) => `<div class="qd-af"><b class="lt">${'ABCDE'[i]}</b><span class="tx">${esc(f[0])}</span><span class="mk"></span></div>`).join('')}</div>`;   // PROMPT-209: caixinhas de opção A, B, C
+    const afs = [...c.conta.querySelectorAll('.qd-af')], caixa = c.conta.querySelector('.qd-afs');
+    await wait(650);   // o foco termina de encolher (a tabela entrou na lateral)
+    if (caixa.scrollWidth > FOCO.clientWidth) { caixa.classList.add('quebra'); caber(); }   // frase longa em tela pequena: quebra a linha em vez de encolher tudo
+    const p = await nota(c.notas, 'Confere uma por uma na tabela.', 'passo');
+    for (const [i, [, cels, conta, ok]] of frases.entries()) {
+      T.limpa();
+      for (const [r, k] of cels) T.cel(r, k)?.classList.add('cruz');
+      afs[i].classList.add('olha');
+      const q = await nota(c.notas, conta, 'detalhe');
+      await wait(500);
+      afs[i].classList.remove('olha');
+      afs[i].classList.add(ok ? 'certa' : 'falsa');
+      afs[i].querySelector('.mk').textContent = ok ? '✔' : '✖';
+      await wait(600); await apagar(q);
+    }
+    await apagar(p);
+    afs[frases.findIndex(f => f[3])]?.classList.add('qd-caixa-ok', 'qd-pop');
+    await wait(700);
+    for (const r of s.regras || ['Confere cada frase com os números da tabela.']) await regra(r);
+  }
+
+  // 13-B p.9) dupla entrada: cruzamento de uma linha com uma coluna, soma de uma coluna, o maior da coluna Total
+  //   partes: { t: 'cel', i, j } · { t: 'col', j } · { t: 'maxTotal', j? } · { t: 'difLinha', i, a, b } (todas com enun)
+  async function cenaDupla(s) {
+    const tab = s.tab, partes = s.partes || [];
+    ladoLargo();
+    await etiqueta('DUPLA ENTRADA', 'cada número tem uma linha e uma coluna');
+    const T = tabela(tab);
+    let resp = '';
+    for (const [k, pt] of partes.entries()) {
+      if (k) T.limpa();
+      const c = cartao();
+      let p, rr;
+      if (pt.t === 'cel') {
+        const i = Number(pt.i), j = Number(pt.j), v = tab.linhas[i][j];
+        c.conta.innerHTML = `${enunH(pt.enun)}<div class="qd-fx"><span class="vazio-q qd-rr">?</span></div>`;
+        rr = c.conta.querySelector('.qd-rr');
+        p = await nota(c.notas, `Linha ${daLinha(tab.linhas[i][0])}, coluna ${colTxt(tab, j)}.`, 'passo');
+        T.linha(i); await wait(600); T.coluna(j); await wait(600);
+        T.cel(i, j).classList.add('cruz'); await wait(400);
+        verde(rr, v);
+        resp = `${v} ${String(tab.colunas[j]).toLowerCase()}`;
+      } else if (pt.t === 'col') {
+        const j = Number(pt.j), vs = valsCol(tab, j), S = somaL(vs);
+        rr = contaQ(c, vs.join(' + '), enunH(pt.enun));
+        p = await nota(c.notas, `Soma a coluna ${colTxt(tab, j)}.`, 'passo');
+        T.coluna(j); await wait(800); verde(rr, S);
+        resp = `${String(tab.colunas[j]).toLowerCase()} ao todo: ${S}`;
+      } else if (pt.t === 'maxTotal') {
+        const j = Number(pt.j ?? tab.colunas.length - 1), vs = valsCol(tab, j), iM = vs.indexOf(Math.max(...vs)), nome = tab.linhas[iM][0];
+        c.conta.innerHTML = `${enunH(pt.enun)}<div class="qd-fx"><span class="vazio-q qd-rr">?</span></div>`;
+        rr = c.conta.querySelector('.qd-rr');
+        p = await nota(c.notas, '"Somando" está pronto na coluna Total: procura o maior.', 'passo');
+        T.coluna(j); await wait(500);
+        for (let i = 0; i < vs.length; i++) { T.cel(i, j).classList.add('marca'); await wait(380); T.cel(i, j).classList.remove('marca'); }
+        T.limpa(); T.linha(iM); T.cel(iM, j).classList.add('cruz');
+        verde(rr, `${nome} (${vs[iM]})`);
+        resp = `mais votado: ${nome} (${vs[iM]} votos)`;
+      } else if (pt.t === 'difLinha') {
+        const i = Number(pt.i), [a, b] = [Number(pt.a), Number(pt.b)].sort((x, y) => tab.linhas[i][y] - tab.linhas[i][x]), va = tab.linhas[i][a], vb = tab.linhas[i][b];
+        rr = contaQ(c, `${va} − ${vb}`, enunH(pt.enun));
+        p = await nota(c.notas, `Linha ${daLinha(tab.linhas[i][0])}: "a mais" é conta de menos.`, 'passo');
+        T.linha(i); T.cel(i, a).classList.add('cruz'); T.cel(i, b).classList.add('cruz');
+        await wait(600); verde(rr, va - vb);
+        resp = `${va} − ${vb} = ${va - vb}`;
+      } else continue;
+      await wait(500); await apagar(p);
+      if (k < partes.length - 1) await paraHist(c);
+    }
+    if (!resp) return;
+    await respostaFinal(`<span>${esc(s.resposta || resp)}</span>`);
+    for (const r of s.regras || ['Cada número é o cruzamento de uma linha com uma coluna.']) await regra(r);
+  }
+
   const CENAS = { armada: cenaArmada, mult: cenaMult, compara: cenaCompara, fracdec: cenaFracDec, divk: cenaDivK, decfrac: cenaDecFrac,
     fracao: cenaFracao, equiv: cenaEquiv, simplif: cenaSimplif, mesmoden: cenaMesmoDen, compunit: cenaCompUnit, dendif: cenaDenDif,
     multfr: cenaMultFr, partede: cenaParteDe, divfr: cenaDivFr,
-    potencia: cenaPotencia, quadrado: cenaQuadrado, cadeia: cenaCadeia, virapot: cenaViraPot, dez: cenaDez, umzero: cenaUmZero, naconta: cenaNaConta };
+    potencia: cenaPotencia, quadrado: cenaQuadrado, cadeia: cenaCadeia, virapot: cenaViraPot, dez: cenaDez, umzero: cenaUmZero, naconta: cenaNaConta,
+    media: cenaMedia, mediaprob: cenaMediaProb, notafalta: cenaNotaFalta, moda: cenaModa, mediana: cenaMediana, medcomp: cenaMedComp,
+    ler: cenaLer, maior: cenaMaior, total: cenaTotal, amais: cenaAMais, mediatab: cenaMediaTab, fractab: cenaFracTab, pcttab: cenaPctTab,
+    afirma: cenaAfirma, dupla: cenaDupla };
 
   function limpar() {
     token++;
@@ -1697,7 +2326,7 @@ export function criarQuadro(raiz) {
     L.querySelectorAll('.qd-voa').forEach(e => e.remove());
     HIST.innerHTML = ''; FOCO.innerHTML = ''; LADO.innerHTML = ''; LADO.style.opacity = ''; REGRAS.innerHTML = '';
     RESP.classList.remove('on'); RESP.innerHTML = '';
-    L.classList.remove('com-lado', 'lado-largo', 'com-etq');
+    L.classList.remove('com-lado', 'lado-largo', 'lado-xl', 'com-etq');
     L.querySelector('.qd-etq')?.remove();
   }
   async function tocar(cenas) {
@@ -1705,6 +2334,7 @@ export function criarQuadro(raiz) {
     medir();
     const meu = token;
     ultCenas = cenas;
+    L.classList.toggle('m13', (cenas || []).some(c => CENAS_13.has(c.t)));   // PROMPT-209: letras maiores no 13-A e no 13-B
     try {
       await (document.fonts?.ready || Promise.resolve());
       await wait(300);
@@ -1719,6 +2349,8 @@ export function criarQuadro(raiz) {
   };
 }
 
+// PROMPT-209: cenas do mapa 13 (13-A e 13-B)
+const CENAS_13 = new Set(['media', 'mediaprob', 'notafalta', 'moda', 'mediana', 'medcomp', 'ler', 'maior', 'total', 'amais', 'mediatab', 'fractab', 'pcttab', 'afirma', 'dupla']);
 // os números que o quadro sabe resolver (para o cartão do erro: senão, a lousa de antes)
 export const QUADRO_FD = (p, d) => {
   if (!(p > 0 && d > 1 && p < d)) return false;

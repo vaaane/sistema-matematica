@@ -151,14 +151,14 @@
     <div id="pet-faro" class="jr-pet-faro" hidden aria-hidden="true">👃</div>
     <button id="btn-revanche" class="jr-btn jr-btn-ouro jr-revanche" hidden>⚔ Revanche</button>
     <!-- 🏠 Casinha (PROMPT-105): Arrumar, faixa dos guardados e botões em cima do móvel tocado -->
-    <div id="cs-botoes" class="cs-botoes" hidden><button id="cs-arrumar" class="jr-btn jr-btn-ouro">🛠️ Arrumar</button><button id="cs-comprar" class="jr-btn">🛒 Móveis</button><button id="cs-tema" class="jr-btn" hidden>🎨 Tema</button><button id="btn-curtidas" class="jr-btn" aria-label="Casinhas mais curtidas">⭐ Mais curtidas</button></div>
+    <div id="cs-botoes" class="cs-botoes" hidden><button id="cs-arrumar" class="jr-btn jr-btn-ouro">🛠️ Arrumar</button><button id="cs-comprar" class="jr-btn">🛒 Móveis</button><button id="cs-tema" class="jr-btn" hidden>🎨 Tema</button><button id="btn-curtidas" class="jr-btn" aria-label="Casinhas mais curtidas">⭐ Mais curtidas</button><button id="cs-visitas" class="jr-btn" hidden aria-label="Quem pode visitar">🔒 Só amigos</button></div>
     <div id="cs-cama-balao" class="jr-pessoa-balao cs-cama-balao" hidden></div>
     <!-- 🏘️ Vila (PROMPT-109): balão sobre a casa (cor do telhado · visitar / deixar de ser vizinho) -->
     <div id="vila-balao" class="jr-pessoa-balao vila-balao" hidden></div>
     <!-- PROMPT-107: ❤️ na casinha do colega · selo dos corações na minha -->
     <button id="cs-curtir" class="jr-btn cs-btn-arrumar cs-curtir" hidden aria-pressed="false">❤️ Curtir casinha</button>
     <div id="cs-selo" class="cs-selo" hidden></div>
-    <div id="cs-ferr" class="cs-ferr" hidden><div class="cs-cores" id="cs-cores" hidden></div><div class="cs-cores ex-tam" id="cs-tam" hidden><button class="jr-btn" data-cs-tam="-1" aria-label="Menor">➖</button><b id="cs-tam-v">100%</b><button class="jr-btn" data-cs-tam="1" aria-label="Maior">➕</button></div><button class="jr-btn" data-cs="cor">🎨 Cor</button><button class="jr-btn" data-cs="tam">📏 Tamanho</button><button class="jr-btn" data-cs="girar">🔄 Girar</button><button class="jr-btn" data-cs="imagem" hidden>📷 Escolher imagem</button><button class="jr-btn" data-cs="guardar">📦 Guardar</button></div>
+    <div id="cs-ferr" class="cs-ferr" hidden><div class="cs-cores" id="cs-cores" hidden></div><div class="cs-cores ex-tam" id="cs-tam" hidden><button class="jr-btn" data-cs-tam="-1" aria-label="Menor">➖</button><b id="cs-tam-v">100%</b><button class="jr-btn" data-cs-tam="1" aria-label="Maior">➕</button></div><button class="jr-btn" data-cs="cor">🎨 Cor</button><button class="jr-btn" data-cs="tam">📏 Tamanho</button><button class="jr-btn" data-cs="girar">🔄 Girar</button><button class="jr-btn" data-cs="imagem" hidden>📷 Escolher imagem</button><button class="jr-btn" data-cs="guardar">📦 Guardar</button><button class="jr-btn" data-cs="vender" hidden>💰 Vender</button><div class="cs-venda" id="cs-venda" hidden></div></div>
     <input type="file" id="cs-arquivo" accept="image/*" hidden/>
     <!-- 🖼️ editor da sala da Exposição (PROMPT-EXPOSICAO-2) -->
     <div id="ex-ferr" class="cs-ferr ex-ferr" hidden><div class="cs-cores ex-cores" id="ex-cores" hidden></div><div class="cs-cores ex-tam" id="ex-tam" hidden><button class="jr-btn" data-ex-tam="-1" aria-label="Menor">➖</button><b id="ex-tam-v">100%</b><button class="jr-btn" data-ex-tam="1" aria-label="Maior">➕</button></div><button class="jr-btn" data-exf="girar" aria-label="Girar">🔄</button><button class="jr-btn" data-exf="espelhar" aria-label="Espelhar">↔️</button><button class="jr-btn" data-exf="tam" aria-label="Tamanho">📏</button><button class="jr-btn" data-exf="cor" aria-label="Cor">🎨</button><button class="jr-btn" data-exf="conteudo" aria-label="Conteúdo">✏️</button><button class="jr-btn" data-exf="apagar" aria-label="Apagar">🗑️</button></div>
@@ -340,7 +340,15 @@
   <div id="amizade-pedido" class="jr-pet-escolha" hidden role="dialog" aria-label="Pedido de amizade">
     <div class="jr-pet-escolha-caixa pres-caixa">
       <div class="jr-pet-escolha-titulo" id="amizade-ped-txt"></div>
-      <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-amz="sim">✔ Aceitar</button><button class="jr-btn jr-btn-sec" data-amz="nao">✖ Agora não</button></div>
+      <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-amz="sim">✔ Aceitar</button><button class="jr-btn jr-btn-sec" data-amz="nao">✖ Recusar</button></div>
+    </div>
+  </div>
+  <!-- 🚪 Quem pode visitar a minha casa (PROMPT-209): só amigos (padrão) ou todos -->
+  <div id="cs-visitas-escolha" class="jr-pet-escolha" hidden role="dialog" aria-label="Quem pode visitar">
+    <div class="jr-pet-escolha-caixa pres-caixa">
+      <div class="jr-pet-escolha-titulo">🚪 Quem pode visitar a sua casa?</div>
+      <div class="jr-pessoa-botoes cs-visitas-op"><button class="jr-btn" data-visitas="amigos">🔒 Só amigos</button><button class="jr-btn" data-visitas="todos">🌍 Todos</button></div>
+      <button class="jr-btn jr-btn-sec" data-fechar="cs-visitas-escolha">Fechar</button>
     </div>
   </div>
   <div id="amigo-presente" class="jr-pet-escolha" hidden role="dialog" aria-label="Presente para amigo">
@@ -951,6 +959,7 @@
       <div class="jr-pet-escolha-titulo" id="online-titulo"></div>
       <div class="jr-online-abas" id="online-abas" hidden><button data-online-aba="todos">👥 Online</button><button data-online-aba="amigos">🤝 Amigos <b id="online-ped-n" hidden></b></button><button data-online-aba="site" hidden>🎮 Outros jogos</button><button data-online-aba="busca" hidden>🔎 Alunos</button></div>
       <input type="search" class="jr-online-busca" id="online-busca" hidden placeholder="Nome do aluno ou turma (ex.: 8D)" autocomplete="off" aria-label="Pesquisar aluno">
+      <input type="search" class="jr-online-busca" id="amigos-busca" hidden placeholder="🔎 Buscar aluno pelo nome" autocomplete="off" aria-label="Buscar aluno pelo nome">
       <ul class="jr-online-itens" id="online-itens"></ul>
       <div class="jr-online-bloq" id="online-bloqueado" hidden>🔒 Vença o mapa anterior para entrar</div>
       <div class="jr-mp-botoes">

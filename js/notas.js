@@ -19,7 +19,11 @@ export let BIMESTRE = "2";
 // Troca o bimestre corrente em memória (o seletor da página de Notas chama isto).
 // Como os imports de ES module são "live bindings", todas as funções deste arquivo
 // e das páginas passam a usar o novo valor automaticamente.
-export function setBimestre(b) { BIMESTRE = String(b); }
+// PROMPT-209: enquanto um boletim está sendo montado (montarBoletim tem vários `await`), trocar o bimestre não
+// mexe no que ele lê: o pedido fica guardado e vale quando ele terminar. Antes, o gráfico de evolução da página
+// de notas trocava o bimestre no meio e o boletim do 4º lia a Prova Multi de notas_bimestre/3.
+let bimestrePedido = BIMESTRE, montando = 0;
+export function setBimestre(b) { bimestrePedido = String(b); if (!montando) BIMESTRE = bimestrePedido; }
 
 // Pesos confirmados em 30/06/2026. Soma das 6 notas pode chegar a 11
 // (Prova Multi 3 + Projeto 3 + Caderno 2 + Perímetro 1 + Área 1 + Lista 1) —
@@ -100,8 +104,9 @@ export const CAMPOS_POR_BIMESTRE = {
   "2": ["provaMulti", "projeto", "caderno", "ativ4", "triangulos", "participacao"], // como sempre foram
   // 3º (soma 10,0): Ativ.1 1,5 + Ativ.2 1,5 + Caderno 2,0 + Prova Multi 3,0 + Conselheiro 1,0 + PD 1,0
   "3": ["equacoes", "razaoProp", "cadernoVistos", "provaMulti", "conselheiro", "pd"],
-  // 4º (soma 13, trava em 10): Caderno 5,0 + Comportamento 2,0 + Prova Multi 3,0 + Consciência Negra 3,0
-  "4": ["cadernoB4", "comportamento", "provaMulti", "consciencia"],
+  // 4º (soma 11, trava em 10): Caderno 5,0 + Prova Multi 3,0 + Consciência Negra 3,0
+  // PROMPT-209: sem nota de comportamento no 4º (fora da coluna e do cálculo)
+  "4": ["cadernoB4", "provaMulti", "consciencia"],
 };
 // Componentes que ainda NÃO têm fonte de dados pronta neste bimestre.
 // Aparecem na composição como "Ainda não disponibilizada" até a atividade existir.
@@ -115,7 +120,7 @@ export const CAMPOS_DIFERIDOS_POR_BIMESTRE = {
   // 3º bim: Caderno e Conselheiro passaram a aparecer ao vivo pro aluno (25/09/2026),
   // pra nota dele bater com a do professor sem precisar congelar.
   // 4º bim: Caderno e Comportamento só aparecem ao aluno quando o bimestre for fechado (congelado).
-  "4": ["cadernoB4", "comportamento"],
+  "4": ["cadernoB4"],
 };
 export function camposDiferidos() { return new Set(CAMPOS_DIFERIDOS_POR_BIMESTRE[BIMESTRE] || []); }
 export function campoDiferido(key) { return camposDiferidos().has(key); }
@@ -605,7 +610,26 @@ export async function contarOcorrenciasAluno(turma, nome) {
 // Monta o boletim completo de um aluno — usado em a-notas.html e no card da home.
 // Retorna null apenas se as notas ainda não foram disponibilizadas pelo professor.
 // Se liberado mas sem nota salva, retorna boletim com dados automáticos + manuais nulos.
-export async function montarBoletim(turma, nome, opcoes = {}) {
+// opcoes.bimestre: monta o boletim desse bimestre sem trocar o da página (o gráfico de evolução usa).
+// Um boletim por vez, cada um do começo ao fim no bimestre pedido na hora da chamada.
+let filaBoletim = Promise.resolve();
+export function montarBoletim(turma, nome, opcoes = {}) {
+  const bim = String(opcoes.bimestre ?? bimestrePedido);
+  const vez = filaBoletim.then(async () => {
+    montando++;
+    BIMESTRE = bim;
+    try { return await montarBoletimDoBimestre(turma, nome, opcoes); }
+    finally { if (!--montando) BIMESTRE = bimestrePedido; }
+  });
+  filaBoletim = vez.catch(() => {});
+  return vez;
+}
+// Espera não ter boletim sendo montado e deixa o bimestre da página em `b` (para desenhar a página logo em seguida).
+export async function fixarBimestre(b) {
+  for (let i = 0; i < 20; i++) { await filaBoletim; setBimestre(b); if (!montando && BIMESTRE === String(b)) return; }
+  setBimestre(b);
+}
+async function montarBoletimDoBimestre(turma, nome, opcoes) {
   if (!opcoes.ignorarLiberacao) {
     const liberado = await notasLiberadas(turma);
     if (!liberado) return null;

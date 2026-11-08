@@ -289,7 +289,7 @@
      "questoes": [
       {
        "id": "m9B-treinador1-1",
-       "enunciado": "\"Um número mais 4 é igual a 10\"",
+       "enunciado": "Qual equação representa \"um número mais 4 é igual a 10\"?",
        "resposta": "x + 4 = 10",
        "erradas": [
         "4x = 10",
@@ -299,7 +299,7 @@
       },
       {
        "id": "m9B-treinador1-2",
-       "enunciado": "\"O dobro de um número é 18\"",
+       "enunciado": "Qual equação representa \"o dobro de um número é 18\"?",
        "resposta": "2x = 18",
        "erradas": [
         "x + 2 = 18",
@@ -309,7 +309,7 @@
       },
       {
        "id": "m9B-treinador1-3",
-       "enunciado": "\"Um número menos 7 é igual a 3\"",
+       "enunciado": "Qual equação representa \"um número menos 7 é igual a 3\"?",
        "resposta": "x − 7 = 3",
        "erradas": [
         "7 − x = 3",
@@ -319,7 +319,7 @@
       },
       {
        "id": "m9B-treinador1-4",
-       "enunciado": "\"O triplo de um número é 12\"",
+       "enunciado": "Qual equação representa \"o triplo de um número é 12\"?",
        "resposta": "3x = 12",
        "erradas": [
         "x + 3 = 12",
@@ -329,7 +329,7 @@
       },
       {
        "id": "m9B-treinador1-5",
-       "enunciado": "\"A metade de um número é 5\"",
+       "enunciado": "Qual equação representa \"a metade de um número é 5\"?",
        "resposta": "x ÷ 2 = 5",
        "erradas": [
         "2x = 5",
@@ -346,7 +346,7 @@
      "questoes": [
       {
        "id": "m9B-treinador2-1",
-       "enunciado": "Tinha x figurinhas, ganhei 5 e fiquei com 20.",
+       "enunciado": "Tinha x figurinhas, ganhei 5 e fiquei com 20. Qual é a equação?",
        "resposta": "x + 5 = 20",
        "erradas": [
         "5x = 20",
@@ -356,7 +356,7 @@
       },
       {
        "id": "m9B-treinador2-2",
-       "enunciado": "Cada caderno custa x reais. 3 cadernos custaram R$ 15.",
+       "enunciado": "Cada caderno custa x reais. 3 cadernos custaram R$ 15. Qual é a equação?",
        "resposta": "3x = 15",
        "erradas": [
         "x + 3 = 15",
@@ -366,7 +366,7 @@
       },
       {
        "id": "m9B-treinador2-3",
-       "enunciado": "Tinha x reais, gastei 8 e sobraram 12.",
+       "enunciado": "Tinha x reais, gastei 8 e sobraram 12. Qual é a equação?",
        "resposta": "x − 8 = 12",
        "erradas": [
         "x + 8 = 12",
@@ -376,7 +376,7 @@
       },
       {
        "id": "m9B-treinador2-4",
-       "enunciado": "Dividi x balas entre 4 amigos e cada um ganhou 6.",
+       "enunciado": "Dividi x balas entre 4 amigos e cada um ganhou 6. Qual é a equação?",
        "resposta": "x ÷ 4 = 6",
        "erradas": [
         "4x = 6",
@@ -386,7 +386,7 @@
       },
       {
        "id": "m9B-treinador2-5",
-       "enunciado": "Tinha x reais, ganhei 10 e fiquei com 25.",
+       "enunciado": "Tinha x reais, ganhei 10 e fiquei com 25. Qual é a equação?",
        "resposta": "x + 10 = 25",
        "erradas": [
         "10x = 25",
@@ -403,7 +403,7 @@
      "questoes": [
       {
        "id": "m9B-treinador3-1",
-       "enunciado": "Numa balança, 1 caixa de peso x e mais 3 kg equilibram 8 kg.",
+       "enunciado": "Numa balança, 1 caixa de peso x e mais 3 kg equilibram 8 kg. Qual equação representa a balança?",
        "resposta": "x + 3 = 8",
        "erradas": [
         "3x = 8",
@@ -413,7 +413,7 @@
       },
       {
        "id": "m9B-treinador3-2",
-       "enunciado": "Numa balança, 2 caixas de peso x equilibram 10 kg.",
+       "enunciado": "Numa balança, 2 caixas de peso x equilibram 10 kg. Qual equação representa a balança?",
        "resposta": "2x = 10",
        "erradas": [
         "x + 2 = 10",
@@ -423,7 +423,7 @@
       },
       {
        "id": "m9B-treinador3-3",
-       "enunciado": "Numa balança, 3 caixas de peso x equilibram 12 kg.",
+       "enunciado": "Numa balança, 3 caixas de peso x equilibram 12 kg. Qual equação representa a balança?",
        "resposta": "3x = 12",
        "erradas": [
         "x + 3 = 12",
@@ -433,7 +433,7 @@
       },
       {
        "id": "m9B-treinador3-4",
-       "enunciado": "Numa balança, 1 caixa de peso x equilibra um peso de 5 kg e outro de 2 kg.",
+       "enunciado": "Numa balança, 1 caixa de peso x equilibra um peso de 5 kg e outro de 2 kg. Qual equação representa a balança?",
        "resposta": "x = 5 + 2",
        "erradas": [
         "x = 5 × 2",
@@ -443,7 +443,7 @@
       },
       {
        "id": "m9B-treinador3-5",
-       "enunciado": "Numa balança, 1 caixa de peso x e mais 1 kg equilibram 6 kg.",
+       "enunciado": "Numa balança, 1 caixa de peso x e mais 1 kg equilibram 6 kg. Qual equação representa a balança?",
        "resposta": "x + 1 = 6",
        "erradas": [
         "x = 6 + 1",
@@ -460,7 +460,7 @@
      "questoes": [
       {
        "id": "m9B-lider-1",
-       "enunciado": "\"Um número mais 12 é igual a 30\"",
+       "enunciado": "Qual equação representa \"um número mais 12 é igual a 30\"?",
        "resposta": "x + 12 = 30",
        "erradas": [
         "12x = 30",
@@ -470,7 +470,7 @@
       },
       {
        "id": "m9B-lider-2",
-       "enunciado": "\"O quádruplo de um número é 20\"",
+       "enunciado": "Qual equação representa \"o quádruplo de um número é 20\"?",
        "resposta": "4x = 20",
        "erradas": [
         "x + 4 = 20",
@@ -480,7 +480,7 @@
       },
       {
        "id": "m9B-lider-3",
-       "enunciado": "Pedro tem x anos. Daqui a 5 anos terá 18.",
+       "enunciado": "Pedro tem x anos. Daqui a 5 anos terá 18. Qual é a equação?",
        "resposta": "x + 5 = 18",
        "erradas": [
         "x − 5 = 18",
@@ -490,7 +490,7 @@
       },
       {
        "id": "m9B-lider-4",
-       "enunciado": "Cada ingresso custa x reais. 3 ingressos custaram R$ 45.",
+       "enunciado": "Cada ingresso custa x reais. 3 ingressos custaram R$ 45. Qual é a equação?",
        "resposta": "3x = 45",
        "erradas": [
         "x + 3 = 45",
@@ -500,7 +500,7 @@
       },
       {
        "id": "m9B-lider-5",
-       "enunciado": "Tinha x reais, gastei a metade e fiquei com 10.",
+       "enunciado": "Tinha x reais, gastei a metade e fiquei com 10. Qual é a equação?",
        "resposta": "x ÷ 2 = 10",
        "erradas": [
         "2x = 10",
@@ -520,7 +520,7 @@
      "questoes": [
       {
        "id": "m9B-revanche-1",
-       "enunciado": "\"O dobro de um número mais 3 é igual a 11\"",
+       "enunciado": "Qual equação representa \"o dobro de um número mais 3 é igual a 11\"?",
        "resposta": "2x + 3 = 11",
        "erradas": [
         "2(x + 3) = 11",
@@ -530,7 +530,7 @@
       },
       {
        "id": "m9B-revanche-2",
-       "enunciado": "Ana tem x anos e o pai tem o triplo da idade dela. Juntos somam 48 anos.",
+       "enunciado": "Ana tem x anos e o pai tem o triplo da idade dela. Juntos somam 48 anos. Qual é a equação?",
        "resposta": "x + 3x = 48",
        "erradas": [
         "3x = 48",
@@ -540,7 +540,7 @@
       },
       {
        "id": "m9B-revanche-3",
-       "enunciado": "Numa balança, 2 caixas de peso x e mais 4 kg equilibram 10 kg.",
+       "enunciado": "Numa balança, 2 caixas de peso x e mais 4 kg equilibram 10 kg. Qual equação representa a balança?",
        "resposta": "2x + 4 = 10",
        "erradas": [
         "x + 4 = 10",
