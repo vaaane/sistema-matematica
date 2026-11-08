@@ -91,8 +91,13 @@ ALT_PET.dragao_azul_adulto = ALT_PET.dragao_vermelho_adulto = ALT_BASE_PERSONAGE
 // 🐯 PROMPT-181: o tigre adulto sentado na altura do personagem (sentado_altura 433 no quadro de 566); PROMPT-194: 20% maior (55 → 66)
 const CRESCE_TIGRE_ADULTO = 1.2;
 ALT_PET.tigre_adulto = ALT_BASE_PERSONAGEM * CRESCE_TIGRE_ADULTO;
-// 🦄 PROMPT-211: o unicórnio adulto em pé na altura do personagem, como o tigre adulto sem os +20% (sentado_altura 502 = do chifre ao casco)
-ALT_PET.unicornio_adulto = ALT_BASE_PERSONAGEM;
+// 🦄 PROMPT-211: o unicórnio adulto medido em pé (sentado_altura 502 = do chifre ao casco); PROMPT-213: 20% maior, igual ao tigre adulto (66)
+ALT_PET.unicornio_adulto = ALT_BASE_PERSONAGEM * CRESCE_TIGRE_ADULTO;
+// 🐘 PROMPT-213: o elefante adulto 20% maior que o tigre adulto (79,2), medido de frente em pé (sentado_altura 538 = da orelha ao pé)
+ALT_PET.elefante_adulto = ALT_PET.tigre_adulto * 1.2;
+// Telas com tamanho relativo (batalha, duelo do ginásio, Meu Pet): o desenho do adulto em relação ao tigre adulto
+// (o quadro é o mesmo, 1219 × 566; a altura do desenho vem de sentado_altura). PROMPT-213: unicórnio = tigre, elefante = 1,2 × o tigre.
+const TAM_ADULTO_TIGRE = { tigre_adulto: 1, unicornio_adulto: 1, elefante_adulto: 1.2 };
 // 🐱 PROMPT-209: gato e axolote adultos = o filhote 50% maior (as mesmas imagens; DIST_PET cresce junto, logo abaixo)
 for (const p of ADULTO_E_FILHOTE) ALT_PET[`${p}_adulto`] = ALT_PET[p] * CRESCE_ADULTO_FILHOTE;
 // 🦄 largura do desenho em pé (das poses do mapa: parado, pastando, comendo), em fração da ALTURA do quadro (566): o unicórnio adulto
@@ -120,7 +125,13 @@ const DUELO_ADULTO = 1.3;
 const fatorDuelo = (pet, forma) => fatorForma(pet, forma) * (ehFormaAdulta(forma) ? DUELO_ADULTO : 1);
 // Duelo do ginásio e batalha (PROMPT-81): o dragão adulto fica o maior que couber na arena (o CSS calcula com cqw/cqh).
 // O de maior escala (vermelho) ocupa o máximo; os outros ficam com escala / escalaMax disso (azul = 0,75 / 1,75).
-const relDuelo = (forma) => escalaPet(forma) / escalaMax() * (/^tigre_adulto/.test(forma) ? CRESCE_TIGRE_ADULTO : 1);   // 🐯 PROMPT-194: tigre adulto +20%
+// 🐯 PROMPT-194: tigre adulto +20%; PROMPT-213: unicórnio e elefante pela tabela TAM_ADULTO_TIGRE (o desenho, não o quadro)
+const relDuelo = (forma) => {
+  const f = formaDeTamanho(forma), k = TAM_ADULTO_TIGRE[f];
+  return escalaPet(forma) / escalaMax() * (k ? CRESCE_TIGRE_ADULTO * k * sentadoNoQuadro('tigre_adulto') / sentadoNoQuadro(f) : 1);
+};
+// Meu Pet e foto na parede: fração da altura do palco que o desenho do adulto ocupa (dragões 0,86; o tigre, alto de pé, 0,76)
+const fracaoPalco = (forma) => { const k = TAM_ADULTO_TIGRE[formaDeTamanho(forma)]; return k ? Math.min(0.76 * k, 0.86) : 0.86; };
 // caixas pequenas feitas para o filhote (coleção, HUD, chips, cartões): sem a escala, para nada ser cortado
 const fatorFormaCaixa = (pet, forma) => fatorForma(pet, forma) / (ehFormaAdulta(forma) ? escalaPet(forma) : 1);
 // Imagem pequena numa caixa feita para o filhote (coleção, HUD, chips, cartões): o quadro do adulto é mais largo
@@ -344,7 +355,8 @@ const DIST_PET = {
 // cresce junto com o tamanho (mesma proporção distância/altura do filhote vermelho; distPet ainda × a escala do vermelho)
 DIST_PET.dragao_azul_adulto = DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * ALT_PET.dragao_azul_adulto / ALT_PET.dragao_vermelho;
 DIST_PET.tigre_adulto = DIST_PET.tigre * ALT_PET.tigre_adulto / ALT_PET.tigre;   // a distância cresce junto (PROMPT-194: 79,2)
-DIST_PET.unicornio_adulto = DIST_PET.unicornio * ALT_PET.unicornio_adulto / ALT_PET.unicornio;   // 🦄 PROMPT-211
+DIST_PET.unicornio_adulto = DIST_PET.tigre_adulto;   // 🦄 PROMPT-213: 79,2, como o tigre adulto (dispara a partir de 2,5 × isso, pets.js)
+DIST_PET.elefante_adulto = DIST_PET.elefante * ALT_PET.elefante_adulto / ALT_PET.elefante;   // 🐘 PROMPT-213: 36 × 79,2 / 36 = 79,2
 for (const p of ADULTO_E_FILHOTE) DIST_PET[`${p}_adulto`] = DIST_PET[p] * CRESCE_ADULTO_FILHOTE;   // 🐱 PROMPT-209
 const DIST_PET_PADRAO = 36;
 const distPet = (pet) => (DIST_PET[pet] ?? DIST_PET[formaDeTamanho(pet)] ?? DIST_PET_PADRAO) * escalaPet(pet);
@@ -882,7 +894,8 @@ export async function iniciarJogo(sess) {
     mapa: (n) => abrirMapa(n, 'entrada'), pescar: () => { const p = pontosDoMapa(cena.n)[0]; if (p) sentarPesca(p); return !!p; }, pergunta: (chave, p) => abrirPergunta(chave, p),
     festa: (t) => mostrarFestaMestre(t || 'mestre'), hall: () => abrirHallMestres(), estado: () => estado, geral: () => abrirMapaGeral(),
     batalhar: (id) => iniciarBatalha(id), pg: () => pg, meuPet: () => (abrirMeuPet(), mp), mp: () => mp, carinho: () => carinhoPet(),
-    truque: (id) => fazerTruque(id), comer: (id) => darComida(id) };
+    truque: (id) => fazerTruque(id), comer: (id) => darComida(id),
+    tamanho: (f) => ({ alt: +altPet(f).toFixed(2), dist: +distPet(f).toFixed(2), rel: +relDuelo(f).toFixed(3) }) };   // 🐘 PROMPT-213: conferir a tabela
 
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
@@ -1888,7 +1901,7 @@ function medirMeuPet() {
   if (ehFormaAdulta(forma)) {
     // (sentado_altura + ~1% de folga embaixo do pé, em fração do quadro)
     // 🐯 o tigre adulto (sem asas, de pé ele é alto) um pouco menor, para as orelhas não baterem no topo (PROMPT-181)
-    h = palco.clientHeight * (/^(tigre|unicornio)_adulto/.test(forma) ? 0.76 : 0.86) / (sentadoNoQuadro(forma) + 0.01);
+    h = palco.clientHeight * fracaoPalco(forma) / (sentadoNoQuadro(forma) + 0.01);
     if (LARGURA_EM_PE[forma]) h = Math.min(h, palco.clientWidth * 0.94 / LARGURA_EM_PE[forma]);   // 🦄 em pé ele é largo: cabe na largura do palco
   } else if (tamVisual(forma) !== 1) {
     h = Math.min(h * tamVisual(forma), palco.clientHeight * 0.94);   // capivara: 20% maior, sem passar do palco
@@ -3064,6 +3077,14 @@ function renderCores() {
   const cores = aceitaCor(pet) ? [] : coresDoPet(pet);   // 🎨 os outros pets: as cores compradas (PROMPT-170)
   $('mp-cores-bloco').hidden = !ok && !cores.length;   // PROMPT-129: das cores especiais, só o vermelho
   $('mp-cor-msg').textContent = '';
+  // 🐘 PROMPT-213: adulto sem desenho colorido (elefante): ele aparece no original; as cores compradas ficam guardadas para o filhote
+  const fb = formaBase(pet);
+  if (cores.length && ehFormaAdulta(fb) && !cores.some(cor => formaComCor(fb, cor) !== fb)) {
+    $('mp-cores-rot').textContent = '🎨 Cores';
+    $('mp-visual-cores').innerHTML = '';
+    $('mp-cor-msg').textContent = `O ${String(NOME_PET[pet] || 'pet').toLowerCase()} adulto não tem cores: ele aparece na cor original. As cores que você tem continuam guardadas e voltam quando você mostra o filhote.`;
+    return;
+  }
   if (cores.length) { renderCoresPet(pet, cores); return; }
   if (!ok) return;
   $('mp-cores-rot').textContent = '🐉 Cores do dragão';
@@ -10493,7 +10514,7 @@ function quadroPetAgora() {
 // altura da imagem do pet no palco (em fração da altura do palco), como em medirMeuPet
 // (proporcao = largura ÷ altura do quadro na parede: 2/3, como o palco do Meu Pet; o unicórnio adulto, largo em pé, cabe na largura)
 const altPetPalco = (forma, proporcao = 2 / 3) => (ehFormaAdulta(forma)
-  ? Math.min((/^(tigre|unicornio)_adulto/.test(forma) ? 0.76 : 0.86) / (sentadoNoQuadro(forma) + 0.01), LARGURA_EM_PE[forma] ? 0.94 * proporcao / LARGURA_EM_PE[forma] : Infinity)
+  ? Math.min(fracaoPalco(forma) / (sentadoNoQuadro(forma) + 0.01), LARGURA_EM_PE[forma] ? 0.94 * proporcao / LARGURA_EM_PE[forma] : Infinity)
   : Math.min(0.68 * tamVisual(forma), 0.94));
 function pintarQuadrosPet() {
   const q = quadroPetAgora(), chave = JSON.stringify(q);

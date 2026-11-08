@@ -11,6 +11,7 @@
  "quadro_por_pet": {
   "tigre_adulto": { "tamanho_quadro": [1219, 566], "sentado_altura": 433 },
   "unicornio_adulto": { "tamanho_quadro": [1219, 566], "sentado_altura": 502 },
+  "elefante_adulto": { "tamanho_quadro": [1219, 566], "sentado_altura": 538 },
   "morcego": { "tamanho_quadro": [1400, 704] },
   "morcego_marrom": { "tamanho_quadro": [1400, 704] },
   "morcego_cinza": { "tamanho_quadro": [1400, 704] },
@@ -87,10 +88,125 @@
  "evolucao": {
   "tigre": "tigre_adulto",
   "unicornio": "unicornio_adulto",
+  "elefante": "elefante_adulto",
   "dragao_azul": "dragao_azul_adulto",
   "dragao_vermelho": "dragao_vermelho_adulto"
  },
  "pets": {
+  "elefante_adulto": {
+   "parado_frente": [
+    "pets/elefante_adulto/parado_frente_1.webp",
+    "pets/elefante_adulto/parado_frente_2.webp",
+    "pets/elefante_adulto/parado_frente_3.webp",
+    "pets/elefante_adulto/parado_frente_4.webp"
+   ],
+   "sentado_girando": [
+    "pets/elefante_adulto/parado_frente_1.webp",
+    "pets/elefante_adulto/parado_frente_2.webp",
+    "pets/elefante_adulto/parado_frente_3.webp",
+    "pets/elefante_adulto/parado_frente_4.webp",
+    "pets/elefante_adulto/parado_frente_3.webp",
+    "pets/elefante_adulto/parado_frente_2.webp"
+   ],
+   "andar_esquerda": [
+    "pets/elefante_adulto/andar_esquerda_1.webp",
+    "pets/elefante_adulto/andar_esquerda_2.webp",
+    "pets/elefante_adulto/andar_esquerda_3.webp",
+    "pets/elefante_adulto/andar_esquerda_4.webp"
+   ],
+   "andar_direita": [
+    "pets/elefante_adulto/direita/andar_direita_1.webp",
+    "pets/elefante_adulto/direita/andar_direita_2.webp",
+    "pets/elefante_adulto/direita/andar_direita_3.webp",
+    "pets/elefante_adulto/direita/andar_direita_4.webp"
+   ],
+   "correndo": [
+    "pets/elefante_adulto/direita/andar_direita_1.webp",
+    "pets/elefante_adulto/direita/andar_direita_2.webp",
+    "pets/elefante_adulto/direita/andar_direita_3.webp",
+    "pets/elefante_adulto/direita/andar_direita_4.webp"
+   ],
+   "andar_frente": [
+    "pets/elefante_adulto/andar_frente_1.webp",
+    "pets/elefante_adulto/andar_frente_2.webp",
+    "pets/elefante_adulto/andar_frente_3.webp",
+    "pets/elefante_adulto/andar_frente_4.webp"
+   ],
+   "andar_costas": [
+    "pets/elefante_adulto/andar_costas_1.webp",
+    "pets/elefante_adulto/andar_costas_2.webp"
+   ],
+   "costas_parado": [
+    "pets/elefante_adulto/andar_costas_1.webp"
+   ],
+   "costas_sentado": [
+    "pets/elefante_adulto/andar_costas_1.webp"
+   ],
+   "feliz": [
+    "pets/elefante_adulto/feliz_1.webp",
+    "pets/elefante_adulto/feliz_2.webp",
+    "pets/elefante_adulto/feliz_3.webp",
+    "pets/elefante_adulto/feliz_4.webp"
+   ],
+   "carinho": [
+    "pets/elefante_adulto/feliz_1.webp",
+    "pets/elefante_adulto/feliz_2.webp",
+    "pets/elefante_adulto/feliz_3.webp",
+    "pets/elefante_adulto/feliz_4.webp"
+   ],
+   "animado": [
+    "pets/elefante_adulto/feliz_2.webp"
+   ],
+   "orgulhoso": [
+    "pets/elefante_adulto/feliz_2.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/elefante_adulto/feliz_2.webp"
+   ],
+   "salto_pouso": [
+    "pets/elefante_adulto/feliz_1.webp"
+   ],
+   "sentado": [
+    "pets/elefante_adulto/sentado_1.webp",
+    "pets/elefante_adulto/direita/sentado_2.webp",
+    "pets/elefante_adulto/sentado_3.webp",
+    "pets/elefante_adulto/direita/sentado_4.webp"
+   ],
+   "sentado_2": [
+    "pets/elefante_adulto/direita/sentado_2.webp"
+   ],
+   "sentado_lado": [
+    "pets/elefante_adulto/direita/sentado_2.webp"
+   ],
+   "sentado_reto": [
+    "pets/elefante_adulto/sentado_3.webp"
+   ],
+   "calmo": [
+    "pets/elefante_adulto/sentado_3.webp"
+   ],
+   "triste_fome": [
+    "pets/elefante_adulto/sentado_3.webp"
+   ],
+   "descansando": [
+    "pets/elefante_adulto/direita/descansando_1.webp"
+   ],
+   "dormindo": [
+    "pets/elefante_adulto/direita/dormindo_1.webp",
+    "pets/elefante_adulto/direita/dormindo_2.webp"
+   ],
+   "bravo": [
+    "pets/elefante_adulto/bravo_1.webp",
+    "pets/elefante_adulto/direita/bravo_2.webp",
+    "pets/elefante_adulto/bravo_3.webp",
+    "pets/elefante_adulto/direita/bravo_4.webp"
+   ],
+   "comendo": [
+    "pets/elefante_adulto/comendo_1.webp",
+    "pets/elefante_adulto/direita/comendo_2.webp",
+    "pets/elefante_adulto/comendo_3.webp",
+    "pets/elefante_adulto/direita/comendo_4.webp"
+   ]
+  },
   "axolote": {
    "andar_costas": [
     "pets/axolote/andar_costas_1.webp",
@@ -550,7 +666,10 @@
     "pets/unicornio_adulto/direita/parado_lado_1.webp"
    ],
    "andar_costas": [
-    "pets/unicornio_adulto/direita/parado_lado_1.webp"
+    "pets/unicornio_adulto/andar_costas_1.webp",
+    "pets/unicornio_adulto/andar_costas_2.webp",
+    "pets/unicornio_adulto/andar_costas_3.webp",
+    "pets/unicornio_adulto/andar_costas_4.webp"
    ],
    "andar_esquerda": [
     "pets/unicornio_adulto/andar_esquerda_1.webp"
@@ -559,7 +678,10 @@
     "pets/unicornio_adulto/direita/andar_direita_1.webp"
    ],
    "correndo": [
-    "pets/unicornio_adulto/direita/andar_direita_1.webp"
+    "pets/unicornio_adulto/correndo_1.webp",
+    "pets/unicornio_adulto/correndo_2.webp",
+    "pets/unicornio_adulto/correndo_3.webp",
+    "pets/unicornio_adulto/correndo_4.webp"
    ],
    "andar_frente": [
     "pets/unicornio_adulto/frente_1.webp",
@@ -2831,6 +2953,89 @@
   "carinho": "feliz"
  },
  "sequencias": {
+  "elefante_adulto": {
+   "sentar": [
+    ["parado_frente", 1, 500],
+    ["sentado", 1, 500],
+    ["sentado", 3, 3500],
+    ["sentado", 1, 500],
+    ["parado_frente", 1, 500]
+   ],
+   "olhar_lado": [
+    ["parado_frente", 1, 500],
+    ["sentado", 1, 400],
+    ["sentado", 2, 1500],
+    ["sentado", 4, 2500],
+    ["sentado", 2, 900],
+    ["sentado", 1, 400],
+    ["parado_frente", 1, 500]
+   ],
+   "tromba": [
+    ["parado_frente", 1, 500],
+    ["feliz", 1, 350],
+    ["feliz", 2, 700],
+    ["feliz", 3, 350],
+    ["feliz", 4, 350],
+    ["feliz", 3, 350],
+    ["feliz", 2, 700],
+    ["feliz", 1, 350],
+    ["parado_frente", 1, 500]
+   ],
+   "descansar": [
+    ["parado_frente", 1, 600],
+    ["descansando", 1, 1500],
+    ["dormindo", 1, 1200],
+    ["dormindo", 2, 1200],
+    ["dormindo", 1, 1200],
+    ["dormindo", 2, 1200],
+    ["dormindo", 1, 1200],
+    ["dormindo", 2, 1200],
+    ["descansando", 1, 1000],
+    ["parado_frente", 1, 600]
+   ],
+   "carinho": [
+    ["parado_frente", 1, 400],
+    ["feliz", 1, 400],
+    ["feliz", 2, 600],
+    ["feliz", 3, 400],
+    ["feliz", 4, 400],
+    ["feliz", 2, 600],
+    ["parado_frente", 1, 500]
+   ],
+   "comer": [
+    ["parado_frente", 1, 500],
+    ["comendo", 1, 700],
+    ["comendo", 2, 600],
+    ["comendo", 3, 600],
+    ["comendo", 4, 700],
+    ["comendo", 2, 600],
+    ["comendo", 3, 600],
+    ["feliz", 2, 700],
+    ["parado_frente", 1, 500]
+   ],
+   "vitoria": [
+    ["parado_frente", 1, 400],
+    ["feliz", 1, 350],
+    ["feliz", 2, 900],
+    ["feliz", 3, 350],
+    ["feliz", 4, 350],
+    ["feliz", 2, 1100]
+   ],
+   "ataque_batalha": [
+    ["bravo", 1, 300],
+    ["bravo", 2, 250],
+    ["bravo", 3, 250],
+    ["bravo", 4, 250]
+   ],
+   "perdeu": [
+    ["bravo", 1, 600],
+    ["bravo", 2, 400],
+    ["bravo", 3, 400],
+    ["bravo", 4, 1200],
+    ["bravo", 3, 400],
+    ["bravo", 4, 1500]
+   ]
+  },
   "unicornio_adulto": {
    "pastar": [
     ["parado_lado", 1, 700],
@@ -4695,7 +4900,8 @@
   "_padrao": ["cheirar", "lamber_pata", "lamber_rabo", "banho", "rugir", "descansar"],
   "morcego": ["banho", "bolinha", "brincar", "lamber_pata", "descansar"],
   "capivara": ["acenar", "flor", "borboleta", "cambalhota"],
-  "unicornio_adulto": ["pastar", "descansar", "brilhar", "empinar"]
+  "unicornio_adulto": ["pastar", "descansar", "brilhar", "empinar"],
+  "elefante_adulto": ["sentar", "olhar_lado", "tromba", "descansar"]
  },
  "cores": {
   "sombra": {
