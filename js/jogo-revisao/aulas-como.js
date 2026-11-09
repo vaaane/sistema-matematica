@@ -411,29 +411,44 @@ function r3calc({ perg, cab, a1, b1, a2, inversa = false, final, pag, centavos =
   }
   return [{ t: 'r3', perg, cab, lin: [[a1, fR(b1)], [a2, 'x']], inversa, porque: porqueR3(cab[0], cab[1], a2 > a1, inversa, true), linhas, final, resp: `<span>${final}</span>`, pag }];
 }
+// PROMPT-218: as páginas 1, 2 e 4 do 10-A mostram o exemplo da aula (a pergunta da aula, não a da questão)
+const PERG_10A = { direta: 'Cada pão custa R$ 3. Quando os pães aumentam, o preço aumenta ou diminui?', inversa: '1 pedreiro faz um muro em 12 dias. Com mais pedreiros, os dias aumentam ou diminuem?',
+  diminui: '4 cadernos custam R$ 20. Quanto custa 1 caderno? É direta ou inversa?' };
 function quadro10a(q) {
   const en = String(q.enunciado || '').trim(), r = String(q.resposta || '').trim();
   let m;
-  if ((m = /^1 (\S+) custa R\$ ([\d,]+)\. Quanto custam (\d+) (\S+)\?$/.exec(en))) return r3calc({ perg: en, cab: [m[4], 'preço (R$)'], a1: 1, b1: nR(m[2]), a2: Number(m[3]), final: r, pag: 1 });
-  if ((m = /^Um carro anda (\d+) km em 1 hora\. Quantos km anda em (\d+) horas\?$/.exec(en))) return r3calc({ perg: en, cab: ['horas', 'km'], a1: 1, b1: Number(m[1]), a2: Number(m[2]), final: r, pag: 2 });
-  if ((m = /^Uma receita usa (\d+) ovos por bolo\. Quantos ovos para (\d+) bolos\?$/.exec(en))) return r3calc({ perg: en, cab: ['bolos', 'ovos'], a1: 1, b1: Number(m[1]), a2: Number(m[2]), final: r, pag: 2 });
+  if ((m = /^1 (\S+) custa R\$ ([\d,]+)\. Quanto custam (\d+) (\S+)\?$/.exec(en))) return r3calc({ perg: en, cab: [m[4], 'preço (R$)'], a1: 1, b1: nR(m[2]), a2: Number(m[3]), final: r, pag: 6 });
+  if ((m = /^Um carro anda (\d+) km em 1 hora\. Quantos km anda em (\d+) horas\?$/.exec(en))) return r3calc({ perg: en, cab: ['horas', 'km'], a1: 1, b1: Number(m[1]), a2: Number(m[2]), final: r, pag: 7 });
+  if ((m = /^Uma receita usa (\d+) ovos por bolo\. Quantos ovos para (\d+) bolos\?$/.exec(en))) return r3calc({ perg: en, cab: ['bolos', 'ovos'], a1: 1, b1: Number(m[1]), a2: Number(m[2]), final: r, pag: 7 });
   if ((m = /^(\d+) (\S+) custam R\$ ([\d,]+)\. Quanto custa 1 (\S+)\?$/.exec(en))) {
     const u = nR(r.replace('R$ ', '')), dec = !Number.isInteger(u);
-    return r3calc({ perg: en, cab: [m[2], 'preço (R$)'], a1: Number(m[1]), b1: nR(m[3]), a2: 1, final: r, pag: dec ? 4 : 3, centavos: dec });
+    return r3calc({ perg: en, cab: [m[2], 'preço (R$)'], a1: Number(m[1]), b1: nR(m[3]), a2: 1, final: r, pag: dec ? 9 : 8, centavos: dec });
   }
-  if (/São grandezas:?$/.test(en)) { const inv = /^Inversas$/i.test(r); return [{ t: 'grandezas', tipo: inv ? 'inversas' : 'diretas', pag: inv ? 6 : 5 }]; }
-  if ((m = /^(\d+) (\S+) custam R\$ ([\d,]+)\. Quanto custam (\d+) \S+\?$/.exec(en))) return r3calc({ perg: en, cab: [m[2], 'preço (R$)'], a1: Number(m[1]), b1: nR(m[3]), a2: Number(m[4]), final: r, pag: 7 });
-  if ((m = /^1 pacote tem (\d+) biscoitos\. Quantos biscoitos há em (\d+) pacotes\?$/.exec(en))) return r3calc({ perg: en, cab: ['pacotes', 'biscoitos'], a1: 1, b1: Number(m[1]), a2: Number(m[2]), final: r, pag: 1 });
-  if ((m = /^(\d+) kg de \S+ custam R\$ ([\d,]+)\. Quanto custa 1 kg\?$/.exec(en))) { const u = nR(r.replace('R$ ', '')), dec = !Number.isInteger(u); return r3calc({ perg: en, cab: ['kg', 'preço (R$)'], a1: Number(m[1]), b1: nR(m[2]), a2: 1, final: r, pag: dec ? 4 : 3, centavos: dec }); }
-  if ((m = /^(\d+) kg de carne custam R\$ (\d+)\. Quanto custam (\d+) kg\?$/.exec(en))) return r3calc({ perg: en, cab: ['kg', 'preço (R$)'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), final: r, pag: 7 });
-  if ((m = /^(\d+) litros? de suco enchem? (\d+) copos\. Quantos copos (\d+) litros enchem\?$/.exec(en))) return r3calc({ perg: en, cab: ['litros', 'copos'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), final: r, pag: 7 });
-  if ((m = /^(\d+) (?:pessoa pinta|pessoas pintam) um muro em (\d+) dias\. Em quantos dias (\d+) pessoas pintam\?$/.exec(en))) return r3calc({ perg: en, cab: ['pessoas', 'dias'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), inversa: true, final: r, pag: 8 });
-  if ((m = /^(\d+) pedreiros levam (\d+) dias para fazer um muro\. Quantos dias levam (\d+) pedreiros\?$/.exec(en))) return r3calc({ perg: en, cab: ['pedreiros', 'dias'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), inversa: true, final: r, pag: 8 });
+  // PROMPT-218: direta ou inversa (páginas 1 a 4, sem conta)
+  if (/São grandezas:?$/.test(en)) {
+    if (/^Menos /.test(en) && /^Diretas$/i.test(r)) return [{ t: 'diminui', perg: PERG_10A.diminui, pag: 4 }];
+    const inv = /^Inversas$/i.test(r); return [{ t: 'prop', tipo: inv ? 'inversa' : 'direta', perg: PERG_10A[inv ? 'inversa' : 'direta'], pag: inv ? 2 : 1 }];
+  }
+  if (/^Se .* dobra[m]?, /.test(en)) { const inv = /metade/.test(r); return [{ t: 'prop', tipo: inv ? 'inversa' : 'direta', perg: PERG_10A[inv ? 'inversa' : 'direta'], pag: inv ? 2 : 1 }]; }
+  if ((m = /^Na tabela, a seta do x aponta para baixo\. (.+?) A seta .+ aponta:$/.exec(en)) && q.figura?.tipo === 'setas_r3') {
+    const f = q.figura, inv = !!f.inversa, menos = /^Menos /.test(m[1]), dim = menos ? 'diminuem' : 'aumentam';
+    const ex = { cap: m[1], cab: f.cab, lin: f.lin, inversa: inv,
+      n2: inv ? `2º ${m[1]} Uma ${menos ? 'diminui' : 'aumenta'} e a outra ${menos ? 'aumenta' : 'diminui'}.` : `2º ${m[1]} As duas ${dim}.`,
+      n3: inv ? `3º ${menos ? 'Uma sobe e a outra desce' : 'Diminui'}: a seta vai na direção contrária, para cima.` : `3º ${menos ? 'As duas andam juntas' : 'Aumenta'}: a seta vai na mesma direção da do x.` };
+    return [{ t: 'setas', perg: en, [inv ? 'B' : 'A']: ex, ...(menos ? { resp: '<span>juntas: direta · contrárias: inversa</span>', regras: ['Andam juntas (as duas sobem ou as duas descem): mesma direção, direta. Uma sobe e a outra desce: contrária, inversa.'] } : {}), pag: 3 }];
+  }
+  if ((m = /^(\d+) (\S+) custam R\$ ([\d,]+)\. Quanto custam (\d+) \S+\?$/.exec(en))) return r3calc({ perg: en, cab: [m[2], 'preço (R$)'], a1: Number(m[1]), b1: nR(m[3]), a2: Number(m[4]), final: r, pag: 10 });
+  if ((m = /^1 pacote tem (\d+) biscoitos\. Quantos biscoitos há em (\d+) pacotes\?$/.exec(en))) return r3calc({ perg: en, cab: ['pacotes', 'biscoitos'], a1: 1, b1: Number(m[1]), a2: Number(m[2]), final: r, pag: 6 });
+  if ((m = /^(\d+) kg de \S+ custam R\$ ([\d,]+)\. Quanto custa 1 kg\?$/.exec(en))) { const u = nR(r.replace('R$ ', '')), dec = !Number.isInteger(u); return r3calc({ perg: en, cab: ['kg', 'preço (R$)'], a1: Number(m[1]), b1: nR(m[2]), a2: 1, final: r, pag: dec ? 9 : 8, centavos: dec }); }
+  if ((m = /^(\d+) kg de carne custam R\$ (\d+)\. Quanto custam (\d+) kg\?$/.exec(en))) return r3calc({ perg: en, cab: ['kg', 'preço (R$)'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), final: r, pag: 10 });
+  if ((m = /^(\d+) litros? de suco enchem? (\d+) copos\. Quantos copos (\d+) litros enchem\?$/.exec(en))) return r3calc({ perg: en, cab: ['litros', 'copos'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), final: r, pag: 10 });
+  if ((m = /^(\d+) (?:pessoa pinta|pessoas pintam) um muro em (\d+) dias\. Em quantos dias (\d+) pessoas pintam\?$/.exec(en))) return r3calc({ perg: en, cab: ['pessoas', 'dias'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), inversa: true, final: r, pag: 11 });
+  if ((m = /^(\d+) pedreiros levam (\d+) dias para fazer um muro\. Quantos dias levam (\d+) pedreiros\?$/.exec(en))) return r3calc({ perg: en, cab: ['pedreiros', 'dias'], a1: Number(m[1]), b1: Number(m[2]), a2: Number(m[3]), inversa: true, final: r, pag: 11 });
   if ((m = /^(\d+) máquinas fazem (\d+) peças em (\d+) horas\. Quantas peças (\d+) máquinas fazem em (\d+) horas\?$/.exec(en))) {
     const [M1, P1, H1, M2, H2] = m.slice(1).map(Number), k = M1 * H1, tot = P1 * M2 * H2;
     return [{ t: 'r3comp', perg: en, cab: ['máquinas', 'horas', 'peças'], lin: [[M1, H1, P1], [M2, H2, 'x']],
       porque: `${M2 > M1 ? 'mais' : 'menos'} máquinas e ${H2 > H1 ? 'mais' : 'menos'} horas, ${M2 * H2 > k ? 'mais' : 'menos'} peças: as duas diretas`,
-      linhas: [`${M1} · ${H1} · x = ${P1} · ${M2} · ${H2}`, `${k}x = ${tot}`, `x = ${tot} ÷ ${k}`], final: r, resp: `<span>${r}</span>`, pag: 9 }];
+      linhas: [`${M1} · ${H1} · x = ${P1} · ${M2} · ${H2}`, `${k}x = ${tot}`, `x = ${tot} ÷ ${k}`], final: r, resp: `<span>${r}</span>`, pag: 12 }];
   }
   return null;
 }

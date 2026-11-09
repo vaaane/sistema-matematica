@@ -2567,6 +2567,145 @@ export function criarQuadro(raiz) {
     for (const r of s.regras || [G.regra]) await regra(r);
   }
 
+  // ══════════════════ 10-A: direta ou inversa, antes da regra de três (PROMPT-218; protótipo referencia/lousa-10a.html) ══════════════════
+  // tabela com várias linhas: uma seta por coluna (ocupa todas as linhas), que aponta para o número MAIOR
+  function tabProp(pai, cab, lin) {
+    const n = cab.length, t = el('div', 'qd-r3', '', pai);
+    t.style.gridTemplateColumns = Array(n).fill('auto 1.1em').join(' ');
+    const cel = lin.map(() => []), setas = [];
+    cab.forEach((c, j) => { const e = el('div', 'r3-cab', esc(c), t); e.style.gridColumn = 2 * j + 1; e.style.gridRow = 1; e.style.visibility = 'hidden'; });
+    lin.forEach((L2, i) => L2.forEach((v, j) => { const e = el('div', 'r3-c' + (v === 'x' ? ' x' : ''), virgulas(String(v)), t); e.style.gridColumn = 2 * j + 1; e.style.gridRow = i + 2; e.style.visibility = 'hidden'; cel[i][j] = e; }));
+    for (let j = 0; j < n; j++) { const s = el('div', 'r3-seta', '', t); s.style.gridColumn = 2 * j + 2; s.style.gridRow = `2 / span ${lin.length}`; setas.push(s); }
+    const mostra = async (e) => { e.style.visibility = ''; e.classList.add('qd-pop'); await wait(300); };
+    return { t, cel, setas,
+      async cab() { for (const e of t.querySelectorAll('.r3-cab')) await mostra(e); },
+      async linha(i) { for (const e of cel[i]) await mostra(e); await wait(250); },
+      async monta() { await this.cab(); for (let i = 0; i < lin.length; i++) await this.linha(i); },
+      async seta(j, cima, oposta = false) { setas[j].textContent = cima ? '↑' : '↓'; setas[j].classList.toggle('oposta', oposta); setas[j].classList.remove('qd-pop'); void setas[j].offsetWidth; setas[j].classList.add('qd-pop'); await wait(700); },
+      marca(i, cls = 'p1') { cel[i].forEach((e) => e.classList.add(cls)); },
+    };
+  }
+  // uma coluna com um enunciado curto (letra de mão) em cima de uma tabela: dois exemplos lado a lado (.dois-ex)
+  const exCol = (pai, txt) => { const c = el('div', 'ex-col', '', pai); el('div', 'ex-cap', esc(txt), c); return c; };
+  const REGRA_SETA = 'A seta aponta para o número maior. Mesma direção: direta. Direções contrárias: inversa.';
+  // 1 e 2) diretamente / inversamente proporcional: tabela de 3 linhas, as setas uma por vez, "dobrou → dobrou / caiu pela metade"
+  const PROP_R3 = {
+    direta: { etq: ['DIRETA OU INVERSA?', 'compara as duas colunas'], perg: 'Cada pão custa R$ 3. Quando os pães aumentam, o preço aumenta ou diminui?',
+      cab: ['pães', 'preço (R$)'], lin: [[1, 3], [2, 6], [3, 9]], inversa: false,
+      notas: ['Monta a tabela: 1, 2, 3 pães e o preço de cada.', 'Os pães aumentam (1, 2, 3): a seta aponta para o maior, para baixo.', 'O preço também aumenta (3, 6, 9): seta para baixo também.'],
+      detalhe: 'as duas aumentam: setas na mesma direção', repara: 'Repara: dobrou os pães, dobrou o preço.',
+      cmp: ['1 → 2 pães: <b class="qd-cmpA">× 2</b>', 'R$ 3 → R$ 6: <b class="qd-cmpA">× 2</b>'],
+      resp: 'diretamente proporcionais', regra: 'Direta: uma aumenta e a outra também. Setas na mesma direção.' },
+    inversa: { perg: '1 pedreiro faz um muro em 12 dias. Com mais pedreiros, os dias aumentam ou diminuem?',
+      cab: ['pedreiros', 'dias'], lin: [[1, 12], [2, 6], [3, 4]], inversa: true,
+      notas: ['Monta a tabela: mais gente trabalhando, o muro fica pronto antes.', 'Os pedreiros aumentam (1, 2, 3): seta para baixo, onde está o maior.', 'Os dias diminuem (12, 6, 4): o maior está em cima, a seta aponta para cima.'],
+      detalhe: 'um aumenta, o outro diminui: setas em direções contrárias', repara: 'Repara: dobrou os pedreiros, os dias caíram pela metade.',
+      cmp: ['1 → 2 pedreiros: <b class="qd-cmpA">× 2</b>', '12 → 6 dias: <b class="qd-cmpB">÷ 2</b>'],
+      resp: 'inversamente proporcionais', regra: 'Inversa: uma aumenta e a outra diminui. Setas em direções contrárias.' },
+  };
+  async function cenaProp(s) {
+    const P = { ...(PROP_R3[s.tipo] || PROP_R3.direta), ...s };
+    if (P.etq) { await etiqueta(...P.etq); ajustaTopo(); }
+    L.classList.add('sem-hist', 'r3p');
+    await poePergunta(P.perg, false);
+    const c = cartao(); c.conta.classList.add('r3-lado');
+    const Tb = tabProp(c.conta, P.cab, P.lin);
+    const ex = el('div', 'qd-xpr', '', c.conta);
+    await ler(P.perg);
+    let p = await nota(c.notas, P.notas[0], 'passo');
+    await Tb.monta(); await apagar(p);
+    p = await nota(c.notas, P.notas[1], 'passo');
+    await Tb.seta(0, false); await apagar(p);
+    p = await nota(c.notas, P.notas[2], 'passo');
+    await Tb.seta(1, P.inversa, P.inversa); await apagar(p);
+    await nota(c.notas, P.detalhe, 'detalhe');
+    p = await nota(c.notas, P.repara, 'passo');
+    Tb.marca(0, 'p1'); Tb.marca(1, 'p2');
+    el('div', 'xl qd-pop', `<span>${P.cmp[0]}</span>`, ex); await wait(900);
+    el('div', 'xl qd-pop', `<span>${P.cmp[1]}</span>`, ex); await wait(1200);
+    await apagar(p);
+    await respostaFinal(`<span>${P.resp}</span>`, { perg: P.perg, manter: true });
+    for (const r of s.regras || [P.regra]) await regra(r);
+  }
+  // 3) como pôr as setas: dois exemplos lado a lado (direta à esquerda, inversa à direita), cada um com os 3 passos
+  //   ex: { cap, cab, lin, inversa, n2, n3 } (o cartão do erro troca um deles pela tabela da questão)
+  const SETAS_EX = {
+    A: { cap: '3 canetas custam R$ 12. Quanto custam 6?', cab: ['canetas', 'preço (R$)'], lin: [[3, 12], [6, 'x']], inversa: false,
+      n2: '2º Pergunta: mais canetas, o preço aumenta ou diminui? Aumenta.', n3: '3º Aumenta: a seta vai na mesma direção da do x.' },
+    B: { cap: '2 pedreiros: 10 dias. E 4 pedreiros?', cab: ['pedreiros', 'dias'], lin: [[2, 10], [4, 'x']], inversa: true,
+      n2: '2º Pergunta: mais pedreiros, os dias aumentam ou diminuem? Diminuem.', n3: '3º Diminui: a seta vai na direção contrária, para cima.' },
+  };
+  async function cenaSetas(s) {
+    L.classList.add('sem-hist', 'r3p');
+    const perg = s.perg || 'Como colocar as setas na tabela da regra de três?';
+    await poePergunta(perg, false);
+    const c = cartao(); c.conta.classList.add('r3-lado', 'dois-ex');
+    const exs = [{ ...SETAS_EX.A, ...(s.A || {}) }, { ...SETAS_EX.B, ...(s.B || {}) }].map((e) => {
+      const col = exCol(c.conta, e.cap); col.style.visibility = 'hidden';
+      return { ...e, col, Tb: tabelaR3(col, e.cab, e.lin) };
+    });
+    await ler(perg);
+    for (const e of exs) {
+      e.col.style.visibility = ''; e.col.classList.add('qd-pop'); await wait(1500);
+      await e.Tb.monta();
+      let p = await nota(c.notas, '1º Na coluna do x, a seta é sempre para baixo.', 'passo');
+      await e.Tb.seta(1, false); await apagar(p);
+      p = await nota(c.notas, e.n2, 'passo');
+      await wait(1400); await apagar(p);
+      p = await nota(c.notas, e.n3, 'passo');
+      await e.Tb.seta(0, e.inversa, e.inversa);
+      el('div', `ex-vd${e.inversa ? ' inv' : ''} qd-pop`, e.inversa ? '↑ ↓ inversa' : '↓ ↓ direta', e.col); await wait(900); await apagar(p);
+    }
+    await respostaFinal(s.resp || '<span>aumenta: mesma direção · diminui: contrária</span>', { perg, manter: true });
+    for (const r of s.regras || ['1º seta do x para baixo · 2º "aumenta ou diminui?" · 3º aumenta: igual; diminui: contrária.']) await regra(r);
+  }
+  // 4) pegadinha: as duas diminuem também é direta
+  async function cenaDiminui(s) {
+    L.classList.add('sem-hist', 'r3p');
+    const perg = s.perg || '4 cadernos custam R$ 20. Quanto custa 1 caderno? É direta ou inversa?';
+    await poePergunta(perg, false);
+    const c = cartao(); c.conta.classList.add('r3-lado');
+    const Tb = tabelaR3(c.conta, s.cab || ['cadernos', 'preço (R$)'], s.lin || [[4, 20], [1, 'x']]);
+    const ex = el('div', 'qd-xpr', '', c.conta);
+    await ler(perg);
+    await Tb.monta();
+    let p = await nota(c.notas, s.n1 || 'Seta do x para baixo. Menos cadernos, o preço aumenta ou diminui? Diminui.', 'passo');
+    await Tb.seta(1, false); await wait(800); await apagar(p);
+    p = await nota(c.notas, 'Cuidado: diminuir não quer dizer inversa.', 'passo');
+    el('div', 'xl qd-pop', '<span class="qd-risca-inv">diminuiu → inversa</span><span class="qd-v-inv">✖</span>', ex); await wait(1300);
+    await apagar(p);
+    p = await nota(c.notas, s.n2 || 'Os cadernos diminuem E o preço diminui: as duas andam juntas.', 'passo');
+    await Tb.seta(0, false); await wait(500); await apagar(p);
+    el('div', 'qd-certo-baixo qd-pop', '<span>as duas diminuem: direta</span><span class="ok-ic">✔</span>', ex); await wait(1200);
+    await nota(c.notas, 'inversa é quando uma aumenta e a outra diminui', 'detalhe');
+    await wait(600);
+    await respostaFinal('<span>diretamente proporcionais</span>', { perg, manter: true });
+    for (const r of s.regras || ['As duas diminuem também é direta: o que importa é se andam juntas.']) await regra(r);
+  }
+  // 5) treino rápido: as frases entram uma por vez; a resposta de cada uma depois de uma pausa
+  const TREINO_DI = [
+    ['mais velocidade', 'menos tempo de viagem', false], ['mais litros de gasolina', 'mais km rodados', true],
+    ['mais torneiras abertas', 'menos tempo para encher', false], ['menos horas trabalhadas', 'menor salário', true],
+    ['mais pessoas na pizza', 'menos pedaços para cada um', false],
+  ];
+  async function cenaTreinoDI(s) {
+    L.classList.add('sem-hist', 'r3p');
+    const perg = s.perg || 'Direta ou inversa?';
+    await poePergunta(perg, false);
+    const c = cartao(); const ex = el('div', 'qd-xpr treino', '', c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, 'Para cada frase: as duas andam juntas ou uma sobe e a outra desce?', 'passo');
+    for (const [a, b, dir] of s.itens || TREINO_DI) {
+      const r = el('div', 'tr-l qd-pop', `<span class="tr-f">${esc(a)}</span><span class="tr-f">${esc(b)}</span><span class="vd" style="visibility: hidden">${dir ? '↓ ↓ direta' : '↑ ↓ inversa'}</span>`, ex);
+      await wait(2200);
+      const v = r.querySelector('.vd'); v.style.visibility = ''; v.classList.add('qd-pop', dir ? 'dir' : 'inv');
+      await wait(900);
+    }
+    await apagar(p);
+    await respostaFinal('<span>juntas: direta · contrárias: inversa</span>', { perg, manter: true });
+    for (const r of s.regras || [REGRA_SETA]) await regra(r);
+  }
+
   // ══════════════════ 11: figuras na lateral (PROMPT-216; protótipos referencia/lousa-11a.html e lousa-11b.html) ══════════════════
   // A figura fica na lateral larga desde o alto (como o plano do 12). Coordenadas em fração do quadro (0 a 1).
   const nU = (v, u) => `${nBR(v)}${u ? ' ' + u : ''}`;
@@ -3749,12 +3888,13 @@ export function criarQuadro(raiz) {
     angquad: cenaAngQuad, faltaquad: cenaFaltaQuad,
     area: cenaArea, arear: cenaAreaR, lajotas: cenaLajotas, areaper: cenaAreaPer, comparaa: cenaComparaA, areat: cenaAreaT, areap: cenaAreaP,
     metade: cenaMetade, ladoa: cenaLadoA,
-    r3: cenaR3, r3comp: cenaR3Comp, grandezas: cenaGrandezas };
+    r3: cenaR3, r3comp: cenaR3Comp, grandezas: cenaGrandezas,
+    prop: cenaProp, setas: cenaSetas, diminui: cenaDiminui, treinodi: cenaTreinoDI };   // PROMPT-218
   // PROMPT-215: as páginas do plano põem a pergunta elas mesmas (primeiro a pergunta, depois o plano, depois a pausa de leitura)
   const PERG_PROPRIA = new Set(['plano', 'ponto', 'valor', 'ordem', 'eixos', 'maislado', 'negativos', 'quadrantes', 'andar', 'caminho',
     'perim', 'iguais', 'volta', 'ladoq', 'lador', 'medidas', 'trocar', 'tiposang', 'poligonos', 'quadrilateros', 'angtri', 'faltatri', 'angquad', 'faltaquad',
     'area', 'arear', 'lajotas', 'areaper', 'comparaa', 'areat', 'areap', 'metade', 'ladoa',
-    'r3', 'r3comp', 'grandezas']);   // PROMPT-217: as do mapa 10   // PROMPT-216: as do mapa 11 também
+    'r3', 'r3comp', 'grandezas', 'prop', 'setas', 'diminui', 'treinodi']);   // PROMPT-218: direta ou inversa   // PROMPT-217: as do mapa 10   // PROMPT-216: as do mapa 11 também
 
   function limpar() {
     token++;

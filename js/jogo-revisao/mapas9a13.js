@@ -91,6 +91,29 @@ const GRAND = [
   ['Mais litros de gasolina, mais quilômetros rodados.', 'Diretas'], ['Mais pessoas dividindo uma pizza, menos pedaços para cada um.', 'Inversas'],
 ];
 const grandezas = () => { const [e, r] = pick(GRAND); return Q(`${e} São grandezas:`, r, [r === 'Diretas' ? 'Inversas' : 'Diretas'], X('Diretas: um aumenta e o outro também aumenta. Inversas: um aumenta e o outro diminui.')); };
+// PROMPT-218: treinador 1 só sobre direta/inversa e as setas (antes de qualquer conta)
+// setas: a seta do x já está para baixo; para onde aponta a outra? (figura setas_r3: a tabela com "?" no lugar da seta)
+const SIT_SETAS = [
+  { cab: ['canetas', 'preço (R$)'], de: 'das canetas', mais: 'Mais canetas, preço maior.', menos: 'Menos canetas, preço menor.', inversa: false, n: () => { const a = int(2, 5), u = int(2, 6); return [a, a * u, a * int(2, 3)]; } },
+  { cab: ['pães', 'preço (R$)'], de: 'dos pães', mais: 'Mais pães, preço maior.', menos: 'Menos pães, preço menor.', inversa: false, n: () => { const a = int(2, 5), u = int(2, 4); return [a, a * u, a * int(2, 3)]; } },
+  { cab: ['horas', 'km'], de: 'das horas', mais: 'Mais horas, mais km.', menos: 'Menos horas, menos km.', inversa: false, n: () => { const a = int(2, 3), k = 10 * int(5, 8); return [a, a * k, a + int(1, 3)]; } },
+  { cab: ['pedreiros', 'dias'], de: 'dos pedreiros', mais: 'Mais pedreiros, menos dias.', menos: 'Menos pedreiros, mais dias.', inversa: true, n: () => { const a = 2, d = 2 * int(3, 8); return [a, d, 4]; } },
+  { cab: ['torneiras', 'horas'], de: 'das torneiras', mais: 'Mais torneiras, menos tempo.', menos: 'Menos torneiras, mais tempo.', inversa: true, n: () => { const a = 2, d = 2 * int(3, 6); return [a, d, 4]; } },
+  { cab: ['km/h', 'horas'], de: 'da velocidade', mais: 'Mais velocidade, menos tempo.', menos: 'Menos velocidade, mais tempo.', inversa: true, n: () => { const v = 10 * int(4, 6); return [v, 2 * int(2, 4), 2 * v]; } },
+];
+function setas() {
+  const S = pick(SIT_SETAS), [a, b, c] = S.n(), menos = coin();
+  const [a1, a2] = menos ? [c, a] : [a, c];   // "menos": a 1ª coluna diminui (e o número ao lado acompanha: direta × c/a, inversa × a/c)
+  const b1 = menos ? (S.inversa ? b * a / c : b / a * c) : b;
+  const cima = S.inversa, r = cima ? 'para cima' : 'para baixo';
+  return Q(`Na tabela, a seta do x aponta para baixo. ${menos ? S.menos : S.mais} A seta ${S.de} aponta:`, r, [cima ? 'para baixo' : 'para cima'],
+    { ...X(S.inversa ? 'Uma aumenta e a outra diminui: inversa, a seta vai na direção contrária da do x (para cima).' : `As duas ${menos ? 'diminuem' : 'aumentam'}: andam juntas, é direta. A seta vai na mesma direção da do x (para baixo).`),
+      figura: { tipo: 'setas_r3', cab: S.cab, lin: [[a1, b1], [a2, 'x']], inversa: S.inversa } });
+}
+const DOBRA = [['Se o número de pães dobra, o preço:', 'dobra'], ['Se os pedreiros dobram, os dias da obra:', 'cai pela metade'], ['Se a velocidade dobra, o tempo de viagem:', 'cai pela metade'], ['Se os ingredientes dobram, os bolos:', 'dobra']];
+const dobra = () => { const [e, r] = pick(DOBRA); return Q(e, r, ['dobra', 'cai pela metade', 'fica igual', 'triplica'].filter((x) => x !== r), X('Direta: dobra junto. Inversa: cai pela metade.')); };
+const DIMINUI = ['Menos cadernos, menos dinheiro gasto.', 'Menos horas trabalhadas, menor salário.', 'Menos gasolina, menos km rodados.', 'Menos ovos, menos bolos.'];
+const diminui = () => Q(`${pick(DIMINUI)} São grandezas:`, 'Diretas', ['Inversas'], X('As duas diminuem: andam juntas, é direta. Inversa é quando uma aumenta e a outra diminui.'));
 function proporcao() { const [s, p] = pick(ITENS), q1 = int(2, 5), u = int(2, 8), k = int(2, 3), q2 = q1 * k; const T1 = q1 * u, v = q2 * u; return Q(`${q1} ${p} custam R$ ${T1}. Quanto custam ${q2} ${p}?`, reais(v), erradasNum(v, [T1 + q2, T1 * q2, v + u], { fmt: reais }), X(`Preço de 1: ${T1} ÷ ${q1} = ${u}. Então ${q2} × ${u} = ${v}`)); }
 function inversa() { const p = int(1, 3), k = 2, d = 2 * int(2, 6) * p; const v = d / k; return Q(`${p} ${p === 1 ? 'pessoa pinta' : 'pessoas pintam'} um muro em ${d} dias. Em quantos dias ${p * k} pessoas pintam?`, `${num(v)} dias`, erradasNum(v, [d * k, d + k, d - k], { fmt: x => `${num(x)} dias` }), X(`Mais pessoas, menos dias (inversa): o dobro de pessoas leva a metade do tempo. ${d} ÷ 2 = ${num(v)} dias`)); }
 function suco() { const l = int(1, 3), c = 4 * l, l2 = l * int(2, 3), v = c / l * l2; return Q(`${l} ${l === 1 ? 'litro' : 'litros'} de suco ${l === 1 ? 'enche' : 'enchem'} ${c} copos. Quantos copos ${l2} litros enchem?`, `${v} copos`, erradasNum(v, [c + l2, v + c, c * l2 / 2 === v ? v + 2 : c * l2 / 2], { fmt: x => `${num(x)} copos` }), X(`1 litro enche ${c / l} copos. ${l2} × ${c / l} = ${v} copos`)); }
@@ -119,9 +142,9 @@ function contaRev(t) {
 }
 const M10 = {
   A: {
-    treinador1: [unitTotal, unitTotal, velocidade, receita, unitTotal],
-    treinador2: [totalUnit(), totalUnit(), totalUnit(), totalUnit(true), totalUnit(true)],
-    treinador3: [grandezas, grandezas, grandezas, grandezas, grandezas],
+    treinador1: [grandezas, setas, dobra, diminui, setas, grandezas],   // PROMPT-218: só direta/inversa e setas
+    treinador2: [unitTotal, unitTotal, velocidade, receita, totalUnit(), unitTotal],
+    treinador3: [totalUnit(), totalUnit(), totalUnit(true), totalUnit(true), proporcao, totalUnit()],
     lider: [proporcao, proporcao, proporcao, inversa, suco],
     revanche: [pedreiros, carne, composta],
   },

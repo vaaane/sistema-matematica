@@ -12,6 +12,93 @@
      "sprite": "mapa10-A-treinador1",
      "questoes": [
       {
+       "enunciado": "Mais trabalhadores, menos tempo de obra. São grandezas:",
+       "resposta": "Inversas",
+       "erradas": [
+        "Diretas"
+       ]
+      },
+      {
+       "enunciado": "Mais litros de gasolina, mais km rodados. São grandezas:",
+       "resposta": "Diretas",
+       "erradas": [
+        "Inversas"
+       ]
+      },
+      {
+       "enunciado": "Na tabela, a seta do x aponta para baixo. Mais canetas, preço maior. A seta das canetas aponta:",
+       "resposta": "para baixo",
+       "erradas": [
+        "para cima"
+       ],
+       "figura": {
+        "tipo": "setas_r3",
+        "cab": [
+         "canetas",
+         "preço (R$)"
+        ],
+        "lin": [
+         [
+          3,
+          12
+         ],
+         [
+          6,
+          "x"
+         ]
+        ],
+        "inversa": false
+       }
+      },
+      {
+       "enunciado": "Na tabela, a seta do x aponta para baixo. Mais pedreiros, menos dias. A seta dos pedreiros aponta:",
+       "resposta": "para cima",
+       "erradas": [
+        "para baixo"
+       ],
+       "figura": {
+        "tipo": "setas_r3",
+        "cab": [
+         "pedreiros",
+         "dias"
+        ],
+        "lin": [
+         [
+          2,
+          10
+         ],
+         [
+          4,
+          "x"
+         ]
+        ],
+        "inversa": true
+       }
+      },
+      {
+       "enunciado": "Se o número de pedreiros dobra, os dias da obra:",
+       "resposta": "cai pela metade",
+       "erradas": [
+        "dobra",
+        "fica igual",
+        "triplica"
+       ]
+      },
+      {
+       "enunciado": "Menos cadernos, menos dinheiro gasto. São grandezas:",
+       "resposta": "Diretas",
+       "erradas": [
+        "Inversas"
+       ]
+      }
+     ],
+     "fala": "Diretas ou inversas? Pense bem!",
+     "fala_vencido": "Diretas ou inversas, você reconhece! Pode passar."
+    },
+    "treinador2": {
+     "sprite": "mapa10-A-treinador2",
+     "questoes": [
+      {
        "id": "m10A-treinador1-1",
        "enunciado": "1 pão custa R$ 2. Quanto custam 5 pães?",
        "resposta": "R$ 10",
@@ -63,10 +150,10 @@
       }
      ],
      "fala": "Se um pão custa 2, quanto custam 5?",
-     "fala_vencido": "Preço de um, preço de vários: você sabe! Pode passar."
+     "fala_vencido": "Preço de um, preço de vários: você sabe! Siga."
     },
-    "treinador2": {
-     "sprite": "mapa10-A-treinador2",
+    "treinador3": {
+     "sprite": "mapa10-A-treinador3",
      "questoes": [
       {
        "id": "m10A-treinador2-1",
@@ -120,54 +207,7 @@
       }
      ],
      "fala": "Descubra o preço de um só!",
-     "fala_vencido": "Achou o valor de 1 direitinho! Siga."
-    },
-    "treinador3": {
-     "sprite": "mapa10-A-treinador3",
-     "questoes": [
-      {
-       "id": "m10A-treinador3-1",
-       "enunciado": "Mais trabalhadores, menos tempo de obra. São grandezas:",
-       "resposta": "Inversas",
-       "erradas": [
-        "Diretas"
-       ]
-      },
-      {
-       "id": "m10A-treinador3-2",
-       "enunciado": "Mais produtos, preço total maior. São grandezas:",
-       "resposta": "Diretas",
-       "erradas": [
-        "Inversas"
-       ]
-      },
-      {
-       "id": "m10A-treinador3-3",
-       "enunciado": "Mais velocidade, menos tempo de viagem. São grandezas:",
-       "resposta": "Inversas",
-       "erradas": [
-        "Diretas"
-       ]
-      },
-      {
-       "id": "m10A-treinador3-4",
-       "enunciado": "Mais ingredientes, mais bolos. São grandezas:",
-       "resposta": "Diretas",
-       "erradas": [
-        "Inversas"
-       ]
-      },
-      {
-       "id": "m10A-treinador3-5",
-       "enunciado": "Mais horas trabalhadas, maior salário. São grandezas:",
-       "resposta": "Diretas",
-       "erradas": [
-        "Inversas"
-       ]
-      }
-     ],
-     "fala": "Diretas ou inversas? Pense bem!",
-     "fala_vencido": "Diretas ou inversas, você reconhece! Agora, o desafio final do ginásio!"
+     "fala_vencido": "Achou o valor de 1 direitinho! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa10-A-lider",

@@ -5181,3 +5181,18 @@ html.jr-deitado .jr-erro-pulou-balao { font-size: calc(12px * var(--letra, 1)); 
 .qd-gr { display: flex; align-items: center; gap: .6em; font-family: var(--qd-mao); font-weight: 400; color: var(--qd-giz); }
 .qd-gr b { font-family: var(--qd-num); font-size: 1.2em; }
 .qd-gr .up { color: var(--qd-verde); } .qd-gr .dn { color: var(--qd-vermelho); }
+
+/* 🧑‍🏫 PROMPT-218: 10-A, direta ou inversa (antes da regra de três): dois exemplos lado a lado e o treino em grade */
+.qd-conta.dois-ex { gap: 2.2em; align-items: flex-start; }
+.qd .ex-col { display: flex; flex-direction: column; align-items: center; gap: .2em; }
+.qd .ex-cap { font-family: var(--qd-mao); font-weight: 400; font-size: max(.5em, 2.2cqw); color: var(--qd-giz); text-align: center; max-width: 11em; white-space: normal; line-height: 1.15; margin-bottom: .2em; }
+.qd .ex-vd { font-size: .6em; color: var(--qd-amarelo); font-weight: 900; }
+.qd .ex-vd.inv { color: var(--qd-vermelho); }
+.qd-xpr.treino { display: grid; grid-template-columns: auto auto auto; column-gap: 1em; row-gap: .25em; align-items: center; font-size: .55em; }
+.qd-xpr.treino .tr-l { display: contents; }
+.qd-xpr.treino .tr-f { font-family: var(--qd-mao); font-weight: 400; color: var(--qd-giz); font-size: max(1em, 2.2cqw); white-space: nowrap; }
+.qd-xpr.treino .vd { font-weight: 900; white-space: nowrap; }
+.qd-xpr.treino .vd.dir { color: var(--qd-amarelo); } .qd-xpr.treino .vd.inv { color: var(--qd-vermelho); }
+.qd-r3 .r3-c.p1 b, .qd-r3 .r3-c.p2 b { font-weight: 900; }
+.qd-risca-inv { color: var(--qd-vermelho); text-decoration: line-through; text-decoration-thickness: .1em; }
+.qd-v-inv { color: var(--qd-vermelho); }

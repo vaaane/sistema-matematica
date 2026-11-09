@@ -6,7 +6,7 @@
 //   await f.animar()              roda o "depois" (lança CANCELADA se outra começar)
 // Tipos (o campo `figura` das perguntas, montado pelos geradores): poligono, grade, triangulo_area, paralelogramo,
 // compara_area, medida, contar_lados, angulo_reto, angulos, regua, barras_iguais, simplificar, soma_fracao, parte_de,
-// compara_fracoes, pizza, quadrilatero, tipo_angulo, angulos4 (PROMPT-216). Cores do jogo: laranja = 1ª medida, azul = 2ª, ouro = contorno, verde = resultado.
+// compara_fracoes, pizza, quadrilatero, tipo_angulo, angulos4 (PROMPT-216), setas_r3 (PROMPT-218). Cores do jogo: laranja = 1ª medida, azul = 2ª, ouro = contorno, verde = resultado.
 // A legenda da conta fica numa faixa embaixo da figura: [[laranja]], <<azul>>, **verde**.
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -332,6 +332,33 @@ export function criarFigura(svg) {
       legenda(`**${f.conta || ''}**`);
     };
   }
+  // ── PROMPT-218: as setas da regra de três — a do x já para baixo, "?" no lugar da outra; depois a seta certa aparece ──
+  // { cab: [a, b], lin: [[a1, b1], [a2, 'x']], inversa } — o mesmo visual da tabela da lousa (cabeçalho azul, x amarelo)
+  function setasR3(f) {
+    const AZL = '#8fd3ff', AMA = '#ffd23f', VERM = '#ff6b6b', cx = [210, 430], sx = [305, 525], ys = [190, 300], cw = 130, ch = 84;
+    f.cab.forEach((c, j) => { txt(c, cx[j], 95, { fill: AZL, 'font-size': 30, 'font-weight': 600 }); el('line', { x1: cx[j] - 70, y1: 122, x2: cx[j] + 70, y2: 122, stroke: 'rgba(244,240,227,.55)', 'stroke-width': 2 }); });
+    f.lin.forEach((L, i) => L.forEach((v, j) => {
+      el('rect', { x: cx[j] - cw / 2, y: ys[i] - ch / 2, width: cw, height: ch, rx: 12, fill: 'rgba(255,255,255,.07)' });
+      txt(fmtN(v), cx[j], ys[i] + 2, { fill: v === 'x' ? AMA : '#fff', 'font-size': 46, 'font-weight': 900 });
+    }));
+    const seta = (x, cima, cor) => {
+      const y0 = cima ? 330 : 160, y1 = cima ? 160 : 330, d = cima ? 1 : -1, g = el('g', { stroke: cor, 'stroke-width': 9, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', fill: 'none' });
+      el('line', { x1: x, y1: y0, x2: x, y2: y1 }, g);
+      el('path', { d: `M${x - 26} ${y1 + d * 30} L${x} ${y1} L${x + 26} ${y1 + d * 30}` }, g);
+      return g;
+    };
+    seta(sx[1], false, AZL);
+    const q = txt('?', sx[0], 245, { fill: AMA, 'font-size': 72, 'font-weight': 900 });
+    legenda('A seta do x aponta para baixo. E a outra?');
+    return async (t) => {
+      await dorme(300, t);
+      q.remove();
+      const g = seta(sx[0], !!f.inversa, f.inversa ? VERM : AZL);
+      g.style.opacity = 0; g.style.transition = 'opacity .5s'; g.getBoundingClientRect?.(); g.style.opacity = 1;
+      await dorme(700, t);
+      legenda(f.inversa ? 'Uma sobe e a outra desce: **↑ ↓ inversa**' : 'As duas andam juntas: **↓ ↓ direta**');
+    };
+  }
   // ── régua: a fita se marca em partes ──
   function regua(f) {
     const x0 = 60, w = 520, y0 = 170, h = 70;
@@ -470,7 +497,7 @@ export function criarFigura(svg) {
 
   const TIPOS = { poligono, grade, triangulo_area: trianguloArea, paralelogramo, compara_area: comparaArea, medida, contar_lados: contarLados,
     angulo_reto: anguloReto, angulos, regua, barras_iguais: barrasIguais, simplificar, soma_fracao: somaFracao, parte_de: parteDe,
-    compara_fracoes: comparaFracoes, pizza: pizzaFig, quadrilatero, tipo_angulo: tipoAngulo, angulos4 };
+    compara_fracoes: comparaFracoes, pizza: pizzaFig, quadrilatero, tipo_angulo: tipoAngulo, angulos4, setas_r3: setasR3 };
 
   return {
     mostrar(fig) {

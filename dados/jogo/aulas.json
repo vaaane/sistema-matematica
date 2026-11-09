@@ -760,6 +760,48 @@
    "layout": "v2",
    "paginas": [
     {
+     "texto": "Diretamente proporcional",
+     "quadro": [
+      {
+       "t": "prop",
+       "tipo": "direta"
+      }
+     ]
+    },
+    {
+     "texto": "Inversamente proporcional",
+     "quadro": [
+      {
+       "t": "prop",
+       "tipo": "inversa"
+      }
+     ]
+    },
+    {
+     "texto": "Como pôr as setas",
+     "quadro": [
+      {
+       "t": "setas"
+      }
+     ]
+    },
+    {
+     "texto": "As duas diminuem",
+     "quadro": [
+      {
+       "t": "diminui"
+      }
+     ]
+    },
+    {
+     "texto": "Direta ou inversa?",
+     "quadro": [
+      {
+       "t": "treinodi"
+      }
+     ]
+    },
+    {
      "texto": "Montar a tabela",
      "quadro": [
       {
@@ -895,24 +937,6 @@
        "regras": [
         "Sobrou real? Vira centavos (R$ 1 = 100 centavos) e continua dividindo."
        ]
-      }
-     ]
-    },
-    {
-     "texto": "Grandezas diretas",
-     "quadro": [
-      {
-       "t": "grandezas",
-       "tipo": "diretas"
-      }
-     ]
-    },
-    {
-     "texto": "Grandezas inversas",
-     "quadro": [
-      {
-       "t": "grandezas",
-       "tipo": "inversas"
       }
      ]
     },
