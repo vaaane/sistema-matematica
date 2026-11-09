@@ -300,7 +300,14 @@ export function quadroComoFaz(chave, q, sua = '') {
   if (!q) return null;
   const cs = chave === 'mapa12-A' ? quadro12a(q) : chave === 'mapa12-B' ? quadro12b(q, sua)   // PROMPT-215
     : chave === 'mapa11-A' ? quadro11a(q) : chave === 'mapa11-B' ? quadro11b(q)   // PROMPT-216
-    : chave === 'mapa10-A' ? quadro10a(q) : chave === 'mapa10-B' ? quadro10b(q) : quadroComoFaz0(chave, q);   // PROMPT-217
+    : chave === 'mapa10-A' ? quadro10a(q) : chave === 'mapa10-B' ? quadro10b(q)   // PROMPT-217
+    : chave === 'mapa9-A' ? quadro9a(q) : chave === 'mapa9-B' ? quadro9b(q)   // PROMPT-219
+    : chave === 'mapa8-A' ? quadro8a(q) : chave === 'mapa8-B' ? quadro8b(q, sua)   // PROMPT-220
+    : chave === 'mapa5-B' ? quadro5b(q) : chave === 'mapa6-A' ? quadro6a(q) : chave === 'mapa6-B' ? quadro6b(q)   // PROMPT-221
+    : chave === 'mapa7-A' ? quadro7a(q) : chave === 'mapa7-B' ? quadro7b(q)
+    : chave === 'mapa2-A' ? quadro2a(q) : chave === 'mapa2-B' ? quadro2b(q) : chave === 'mapa3-A' ? quadro3a(q) : chave === 'mapa3-B' ? quadro3b(q)   // PROMPT-222
+    : chave === 'mapa1-A' ? quadro1a(q) : chave === 'mapa1-B' ? quadro1b(q)   // PROMPT-223
+    : quadroComoFaz0(chave, q);
   // PROMPT-214: a pergunta da questão fica no alto da lousa (o enunciado inteiro, com a pergunta)
   const perg = String(q.enunciado || '').trim();
   if (cs?.[0] && perg && !cs[0].perg) cs[0] = { ...cs[0], perg };
@@ -377,7 +384,7 @@ export function paginaResumo(chave, cenas, q) {
     if (c.t === 'mediana') return c.l.length % 2 ? 6 : 7;
     return { notafalta: 3, medcomp: 8 }[c.t] || 0;
   }
-  if (/^mapa1[01]-[AB]$/.test(chave)) return c.pag || 0;   // PROMPT-216/217: quadro10a/b e quadro11a/b marcam a página   // PROMPT-216: quadro11a / quadro11b marcam a página
+  if (/^mapa([12367-9]|1[01])-[AB]$|^mapa5-B$/.test(chave)) return c.pag || 0;   // PROMPT-223: 1 também   // PROMPT-222: 2 e 3 também   // PROMPT-221: 5-B, 6 e 7 também   // PROMPT-216/217/219/220: quadro8a/b, quadro9a/b, quadro10a/b e quadro11a/b marcam a página
   if (chave === 'mapa12-A') return { plano: 1, ponto: 2, valor: 3, ordem: 4, eixos: 5, maislado: 6, negativos: 7, quadrantes: 8 }[c.t] || 0;   // PROMPT-215
   if (chave === 'mapa12-B') return c.t === 'caminho' ? 6 : c.t === 'andar' ? c.pag || 0 : 0;
   if (chave === 'mapa13-B') return { ler: 1, maior: 2, total: 3, amais: 4, mediatab: 5, fractab: 6, pcttab: 7, afirma: 8, dupla: 9 }[c.t] || 0;
@@ -410,6 +417,437 @@ function r3calc({ perg, cab, a1, b1, a2, inversa = false, final, pag, centavos =
     else linhas.push(`R$ ${rs(P)} = ${Math.round(P * 100)} centavos`, `${Math.round(P * 100)} ÷ ${fR(c)} = ${Math.round(P * 100 / c)} centavos`);
   }
   return [{ t: 'r3', perg, cab, lin: [[a1, fR(b1)], [a2, 'x']], inversa, porque: porqueR3(cab[0], cab[1], a2 > a1, inversa, true), linhas, final, resp: `<span>${final}</span>`, pag }];
+}
+// 🧑‍🏫 PROMPT-223: as cenas do quadro do mapa 1 (a ordem das operações), com os números da questão; pag = a página do resumo
+const ETQ1 = { A1: ['EXPRESSÕES', 'quem vem primeiro'], B1: ['PARÊNTESES', 'o que está dentro vem antes'], B4: ['COLCHETES', 'de dentro para fora'], B6: ['CHAVES', 'o último a ser resolvido'], B8: ['PROBLEMAS', 'a frase vira expressão'] };
+const INTRO1 = {
+  A1: ['Numa expressão, a conta não vai sempre da esquerda para a direita. × e ÷ vêm primeiro.', 1600],
+  B1: ['Os parênteses mandam: o que está dentro deles vem antes de tudo.', 1500],
+  B4: ['Parênteses dentro dos colchetes: começa pelo mais de dentro.', 1400],
+};
+const pg1 = (l, pag, o) => {
+  const k = l + pag, c = { t: 'ordem1', pag, ...o };
+  if (l === 'B') c.b = true;
+  if (ETQ1[k]) c.etq = ETQ1[k];
+  if (INTRO1[k]) [c.intro, c.introMs] = INTRO1[k];
+  return [c];
+};
+const ok1 = (v) => Number.isInteger(v) && v >= 0;   // a pegadinha só aparece com um número que dá para mostrar
+function quadro1a(q) {
+  const en = String(q.enunciado || '').trim();
+  if (!/^[\d +−×÷]+$/.test(en)) return null;
+  const n = (en.match(/\d+/g) || []).map(Number), sh = en.replace(/\d+/g, '#'), ops = en.match(/[+−×÷]/g) || [];
+  const [a, b, c, d] = n;
+  switch (sh) {
+    case '# + # × #': return pg1('A', 1, { expr: en, notas: ['Primeiro o ×: {c}.'], peg: [`${a + b} × ${c} = ${(a + b) * c}`, 'não faz o + primeiro só porque está antes', `${a} + ${b * c} = ${a + b * c}`], regra: 'Primeiro × e ÷. Depois + e −.' });
+    case '# × # + #': case '# × # − #': return pg1('A', 2, { expr: en, notas: ['O × já está no começo: faz ele.'], regra: '× primeiro, esteja onde estiver.' });
+    case '# − # ÷ #': { const e = (a - b) / c; return pg1('A', 3, { expr: en, notas: ['Primeiro o ÷: {c}.'], peg: ok1(e) && e !== a - b / c ? [`${a - b} ÷ ${c} = ${e}`, 'o − espera: o ÷ vem antes', `${a} − ${b / c} = ${a - b / c}`] : undefined, regra: '÷ vem antes do −.' }); }
+    case '# + # ÷ #': case '# ÷ # + #': return pg1('A', 4, { expr: en, notas: ['Primeiro o ÷: {c}.'], regra: '÷ vem antes do +.' });
+    case '# − # × #': { const e = (a - b) * c; return pg1('A', 5, { expr: en, notas: ['Primeiro o ×: {c}.'], peg: ok1(e) && e !== a - b * c ? [`${a - b} × ${c} = ${e}`, 'fez o − antes do ×', `${a} − ${b * c} = ${a - b * c}`] : undefined, regra: '× vem antes do −.' }); }
+    case '# × # + # × #': case '# ÷ # + # × #': case '# × # − # ÷ #': {
+      const [o1, , o3] = ops;
+      return pg1('A', 6, { expr: en, notas: [o1 === o3 ? `Dois ${o1}: faz os dois. Cada um no seu lugar.` : `Um ${o1} e um ${o3}: faz os dois. Cada um no seu lugar.`], regra: ops[1] === '−' ? 'Vários × e ÷: resolve todos antes do + e do −.' : 'Vários × e ÷: resolve todos antes de somar.' });
+    }
+    case '# − # × # + #': { const e = a - (b * c + d); return pg1('A', 7, { expr: en, notas: ['Primeiro o ×.', 'Sobrou − e +: vai da esquerda para a direita. Primeiro o −.'], peg: ok1(e) ? [`${a} − ${b * c + d} = ${e}`, 'não faz o + antes do −: vai da esquerda', `${a - b * c} + ${d} = ${a - b * c + d}`] : undefined, regra: '+ e − juntos: da esquerda para a direita.' }); }
+    case '# + # ÷ # − #': return pg1('A', 7, { expr: en, notas: ['Primeiro o ÷.', 'Sobrou + e −: vai da esquerda para a direita. Primeiro o +.'], regra: '+ e − juntos: da esquerda para a direita.' });
+    case '# × # × # + # ÷ #': return pg1('A', 8, { expr: en, notas: ['× e ÷: da esquerda para a direita. {c}.', 'Depois {c}.'], regra: '× e ÷ juntos: da esquerda para a direita.' });
+  }
+  if (ops.length >= 4) return pg1('A', 9, { expr: en, notas: ['Primeiro todos os × e ÷.', 'Depois + e −, da esquerda.'], regra: 'Expressão longa: uma linha por passo, um "=" por linha.' });
+  return null;
+}
+function quadro1b(q) {
+  const en = String(q.enunciado || '').trim();
+  let m;
+  // os problemas: a frase em pedaços, como na compra
+  if ((m = /^Comprei (\d+) (\S+) de R\$ (\d+) e 1 suco de R\$ (\d+)\. Quanto gastei\?$/.exec(en))) {
+    const [, q1, it, p, p2] = m;
+    return pg1('B', 8, { expr: `${q1} × ${p} + ${p2}`, perg: en, rs: true, frase: { pares: [[`${q1} ${it} de R$ ${p}`, `${q1} × ${p}`], ['e', '+'], [`1 suco de R$ ${p2}`, p2]], nota: 'Cada pedaço da frase vira um pedaço da conta.' }, notas: ['Agora a ordem: × primeiro.'], regra: `"De R$ ${p} cada" é ×. "E" junta: +.` });
+  }
+  if ((m = /^Tinha R\$ (\d+) e comprei (\d+) cadernos de R\$ (\d+)\. Quanto sobrou\?$/.exec(en))) {
+    const [T, k, p] = m.slice(1).map(Number);
+    return pg1('B', 9, { expr: `${T} − ${k} × ${p}`, perg: en, rs: true, frase: { pares: [[`tinha R$ ${T}`, String(T)], ['comprei (sai)', '−'], [`${k} cadernos de R$ ${p}`, `${k} × ${p}`]], nota: '"Sobrou": o que tinha menos o que gastou.' }, notas: [`× primeiro: ${k} × ${p} = ${k * p}.`], peg: [`${T - k} × ${p}`, 'o − espera o ×', `${T} − ${k * p} = ${T - k * p}`], regra: '"Sobrou", "troco": tinha − gastou.' });
+  }
+  if ((m = /^Comprei (\d+) pacotes de R\$ (\d+) e paguei com R\$ (\d+)\. Qual o troco\?$/.exec(en))) {
+    const [k, p, T] = m.slice(1).map(Number);
+    return pg1('B', 9, { expr: `${T} − ${k} × ${p}`, perg: en, rs: true, frase: { pares: [[`paguei com R$ ${T}`, String(T)], ['o troco (sai o gasto)', '−'], [`${k} pacotes de R$ ${p}`, `${k} × ${p}`]], nota: '"Troco": o que pagou menos o que gastou.' }, notas: [`× primeiro: ${k} × ${p} = ${k * p}.`], peg: [`${T - k} × ${p}`, 'o − espera o ×', `${T} − ${k * p} = ${T - k * p}`], regra: '"Sobrou", "troco": tinha − gastou.' });
+  }
+  if ((m = /^São (\d+) caixas com (\d+) lápis cada e mais (\d+) lápis soltos\./.exec(en))) {
+    const [n, k, s] = m.slice(1).map(Number);
+    return pg1('B', 10, { expr: `${n} × ${k} + ${s}`, perg: en, resp: `${n * k + s} lápis`, frase: { pares: [[`${n} caixas com ${k}`, `${n} × ${k}`], [`e mais ${s} soltos`, `+ ${s}`]], nota: `"Com ${k} cada" é ×. "Mais" é +.` }, notas: ['× primeiro.'], regra: 'Grupos iguais: ×. O que sobra solto: +.' });
+  }
+  if ((m = /^(\d+) balas foram divididas entre (\d+) amigos e cada um ganhou mais (\d+)\./.exec(en))) {
+    const [N, k, e] = m.slice(1).map(Number);
+    return pg1('B', 10, { expr: `${N} ÷ ${k} + ${e}`, perg: en, resp: `${N / k + e} balas`, frase: { pares: [[`${N} balas entre ${k} amigos`, `${N} ÷ ${k}`], [`cada um ganhou mais ${e}`, `+ ${e}`]], nota: '"Dividir entre" é ÷. "Mais" é +.' }, notas: ['÷ primeiro.'], regra: 'Repartir em partes iguais: ÷. O que ganha a mais: +.' });
+  }
+  if ((m = /^(\d+) adultos compraram ingressos de R\$ (\d+) cada e ganharam R\$ (\d+) de desconto no total\./.exec(en))) {
+    const [k, p, d] = m.slice(1).map(Number);
+    return pg1('B', 10, { expr: `${k} × ${p} − ${d}`, perg: en, rs: true, frase: { pares: [[`${k} ingressos de R$ ${p}`, `${k} × ${p}`], [`R$ ${d} de desconto`, `− ${d}`]], nota: `"De R$ ${p} cada" é ×. "Desconto" tira: −.` }, notas: ['× primeiro.'], regra: 'Grupos iguais: ×. O desconto: −.' });
+  }
+  // fora da tabela do PROMPT-223: "ganhei por dia e gastei" tem a forma do ingresso (× e depois −)
+  if ((m = /^Ganhei R\$ (\d+) por dia durante (\d+) dias e gastei R\$ (\d+)\./.exec(en))) {
+    const [g, d, c] = m.slice(1).map(Number);
+    return pg1('B', 10, { expr: `${g} × ${d} − ${c}`, perg: en, rs: true, frase: { pares: [[`R$ ${g} por dia, ${d} dias`, `${g} × ${d}`], [`gastei R$ ${c}`, `− ${c}`]], nota: '"Por dia, tantos dias" é ×. "Gastei" tira: −.' }, notas: ['× primeiro.'], regra: 'Grupos iguais: ×. O que gastou: −.' });
+  }
+  if (!/^[\d +−×÷()[\]{}]+$/.test(en)) return null;
+  const n = (en.match(/\d+/g) || []).map(Number), sh = en.replace(/\d+/g, '#');
+  const [a, b, c] = n;
+  switch (sh) {
+    case '(# + #) × #': return pg1('B', 1, { expr: en, notas: ['Primeiro dentro: {c}.'], peg: [`${a} + ${b} × ${c} = ${a + b * c}`, 'sem os parênteses daria outro número', `(${a} + ${b}) × ${c} = ${(a + b) * c}`], regra: 'Parênteses primeiro, mesmo que dentro tenha + ou −.' });
+    case '(# − #) ÷ #': { const e = a - b / c; return pg1('B', 1, { expr: en, notas: ['Primeiro dentro: {c}.'], peg: ok1(e) && e !== (a - b) / c ? [`${a} − ${b} ÷ ${c} = ${e}`, 'sem os parênteses daria outro número', `(${a} − ${b}) ÷ ${c} = ${(a - b) / c}`] : undefined, regra: 'Parênteses primeiro, mesmo que dentro tenha + ou −.' }); }
+    case '# − (# + #)': return pg1('B', 2, { expr: en, notas: ['Primeiro dentro: {c}.'], peg: [`${a} − ${b} + ${c} = ${a - b + c}`, `o − tira o parêntese inteiro: tira ${b + c}`, `${a} − ${b + c} = ${a - b - c}`], regra: 'Menos na frente do parêntese tira o resultado inteiro de dentro.' });
+    case '# × (# − #)': { const e = a * b - c; return pg1('B', 3, { expr: en, notas: ['Primeiro dentro: {c}.'], peg: ok1(e) ? [`${a} × ${b} − ${c} = ${e}`, `o ${a} multiplica o parêntese inteiro`, `${a} × ${b - c} = ${a * (b - c)}`] : undefined, regra: 'Número colado no parêntese multiplica o resultado de dentro.' }); }
+    case '[# − (# + #)] × #': case '[# − (# + #)] ÷ #': case '[(# + #) × #] − #': case '[# ÷ (# + #)] + #': case '[# − (# × #)] ÷ #':
+      return pg1('B', 4, { expr: en, notas: ['Primeiro ( ): {c}.', 'Depois [ ]: {c}.'], regra: '( ) primeiro, depois [ ], depois { }: de dentro para fora.' });
+    case '# × [# + (# − #)]': case '# × [# − (# − #)] + #':
+      return pg1('B', 5, { expr: en, notas: ['Primeiro ( ): {c}.', 'Depois [ ]: {c}.', 'Sem colchetes: a ordem de sempre. × antes do +.'], regra: 'O × fora dos colchetes espera: ele multiplica o resultado de dentro.' });
+    case '(# + #) × # − #': return pg1('B', 7, { expr: en, notas: ['Primeiro ( ).', 'Sem parênteses: a ordem de sempre. × antes do −.'], regra: 'Acabaram os parênteses? Segue a ordem: × e ÷, depois + e −.' });
+    case '# × (# − #) + #': return pg1('B', 7, { expr: en, notas: ['Primeiro ( ).', 'Sem parênteses: a ordem de sempre. × antes do +.'], regra: 'Acabaram os parênteses? Segue a ordem: × e ÷, depois + e −.' });
+    case '# ÷ (# + #) × #': return pg1('B', 7, { expr: en, notas: ['Primeiro ( ).', 'Sem parênteses: ÷ e × da esquerda para a direita.'], regra: 'Acabaram os parênteses? Segue a ordem: × e ÷, depois + e −.' });
+  }
+  if (sh.startsWith('{')) return pg1('B', 6, { expr: en, notas: ['( ): {c}.', '[ ]: {c}.', '{ }: {c}.'], regra: 'Chaves por último: ( ), [ ], { }, e depois o que sobrou.' });
+  return null;
+}
+
+// 🧑‍🏫 PROMPT-222: as cenas do quadro do mapa 2 (casas) e do mapa 3 (negativos), com os números da questão; pag = a página do resumo
+const n222 = (t) => Number(String(t).replace(/[()\s]/g, '').replace('−', '-').replace(',', '.'));
+function quadro2a(q) {
+  const en = String(q.enunciado || '').trim();
+  let m;
+  if ((m = /^(\d+) × 10 × 10$/.exec(en))) return [{ t: 'duasvezes', a: +m[1], pag: 6 }];
+  if ((m = /^(\d+) ÷ 10 ÷ 10$/.exec(en))) return [{ t: 'duasvezes', a: +m[1], op: '÷', pag: 6 }];
+  if ((m = /^(\d+) × 100 \+ (\d+) × 10$/.exec(en))) return [{ t: 'juntando', a: +m[1], b: +m[2], pag: 7 }];
+  if ((m = /^(\d+) × (10|100|1000)$/.exec(en))) { const k = +m[2]; return [{ t: 'casasvz', itens: [[+m[1], k]], pag: k === 10 ? 1 : 2 }]; }
+  if ((m = /^(\d+) ÷ (10|100|1000)$/.exec(en))) {
+    const a = +m[1], k = +m[2], s = m[1];
+    if (a % k) return null;
+    // ÷ 10 com algarismo diferente de zero antes do último zero (450, 170): a página do zero do meio
+    if (k === 10) return [s.length >= 2 && s[s.length - 2] !== '0' ? { t: 'zeromeio', a, pag: 5 } : { t: 'casasdv', itens: [[a, 10]], pag: 3 }];
+    return [{ t: 'casasdv', itens: [[a, k]], pag: 4 }];
+  }
+  return null;
+}
+const UN222 = { metro: 'm', metros: 'm', m: 'm', quilo: 'kg', quilos: 'kg', kg: 'kg', litro: 'L', litros: 'L', L: 'L' };
+const K222 = { m: 100, kg: 1000, L: 1000 }, SU222 = { m: 'cm', kg: 'g', L: 'mL' };
+function quadro2b(q) {
+  const en = String(q.enunciado || '').trim();
+  let m;
+  if ((m = /^(\d+(?:,\d+)?) × (10|100|1000)$/.exec(en))) { const k = +m[2]; return [k === 10 ? { t: 'decx10', a: m[1], pag: 1 } : { t: 'decx100', a: m[1], k, pag: 2 }]; }
+  if ((m = /^(\d+) ÷ (10|100)$/.exec(en))) return [m[2] === '10' ? { t: 'decdv10', itens: [+m[1]], pag: 3 } : { t: 'decdv100', a: +m[1], pag: 4 }];
+  if ((m = /^(\d+(?:,\d+)?) (metros?|quilos?|litros?|m|kg|L) são quantos (centímetros|gramas|mililitros)\?$/.exec(en))) {
+    const u = UN222[m[2]];
+    if (m[1] === '1') return [{ t: 'medidas2', resp: `1 ${u} = ${K222[u]} ${SU222[u]}`, pag: 5 }];
+    return [{ t: 'convmaior', a: m[1], u, pag: 6 }];
+  }
+  if ((m = /^(\d+) (centímetros|gramas|mililitros|cm|g|mL) são quantos (metros|quilos|litros)\?$/.exec(en))) {
+    const u = UN222[m[3]], a = +m[1];
+    if (a === K222[u]) return [{ t: 'medidas2', resp: `1 ${u} = ${K222[u]} ${SU222[u]}`, pag: 5 }];
+    return [{ t: 'convmenor', a, u, pag: 7 }];
+  }
+  if ((m = /^Um pacote custa R\$ (\d+(?:,\d+)?)\. Quanto custam (\d+) pacotes\?$/.exec(en))) return [{ t: 'dinheiro', p: m[1], k: +m[2], item: 'pacotes', pag: 8 }];
+  if ((m = /^Uma bala custa R\$ (\d+(?:,\d+)?)\. Quanto custam (\d+) balas\?$/.exec(en))) return [{ t: 'dinheiro', p: m[1], k: +m[2], item: 'balas', pag: 8 }];
+  return null;
+}
+const X222 = '(\\(−\\d+\\)|−?\\d+)';   // número da conta: 5, −5 ou (−5)
+function quadro3a(q) {
+  const en = String(q.enunciado || '').trim();
+  let m;
+  if ((m = /^Qual é (maior|menor)\?$/.exec(en))) {
+    const er = (q.erradas || []).map(n222), r = n222(q.resposta);
+    const ns = [er[0], r, ...er.slice(1)].filter((v) => Number.isFinite(v));
+    return [{ t: 'negmaior', ns, menor: m[1] === 'menor', perg: `Qual é ${m[1]}: ${ns.slice(0, -1).map((v) => String(v).replace('-', '−')).join(', ')} ou ${String(ns[ns.length - 1]).replace('-', '−')}?`, pag: 2 }];
+  }
+  if ((m = /^A temperatura era (−?\d+) °C e subiu (\d+) graus\./.exec(en))) return [{ t: 'temperatura', a: n222(m[1]), b: +m[2], pag: 10 }];
+  if ((m = /^Estou no andar (−?\d+) \(garagem\) e subo (\d+) andares\./.exec(en))) return [{ t: 'temperatura', a: n222(m[1]), b: +m[2], elevador: true, pag: 10 }];
+  if ((m = /^Tinha R\$ (\d+) na conta e gastei R\$ (\d+)\./.exec(en))) return [{ t: 'saldo', tinha: +m[1], g: +m[2], pag: 11 }];
+  if ((m = new RegExp(`^${X222} \\+ ${X222} − ${X222}$`).exec(en))) return [{ t: 'negtres', a: n222(m[1]), b: n222(m[2]), c: n222(m[3]), pag: 3 }];
+  if ((m = new RegExp(`^${X222} − \\(−(\\d+)\\)$`).exec(en))) return [{ t: 'menosmenos', a: n222(m[1]), b: +m[2], pag: 9 }];
+  if ((m = new RegExp(`^${X222} \\+ ${X222}$`).exec(en))) {
+    const a = n222(m[1]), b = n222(m[2]);
+    return [{ t: 'negsoma', a, b, pag: b < 0 ? (a < 0 ? 4 : 5) : a + b === 0 ? 6 : 3 }];
+  }
+  if ((m = new RegExp(`^${X222} − (\\d+)$`).exec(en))) { const a = n222(m[1]); return [{ t: 'negsub', a, b: +m[2], pag: a < 0 ? 8 : 7 }]; }
+  return null;
+}
+const SIN222 = { Negativo: '−', Positivo: '+', negativo: '−', positivo: '+' };
+function quadro3b(q) {
+  const en = String(q.enunciado || '').trim();
+  let m;
+  if ((m = /^(Negativo|Positivo) (×|÷) (negativo|positivo) dá:?$/.exec(en))) {
+    const a = SIN222[m[1]], b = SIN222[m[3]];
+    return [{ t: 'regrasinais', resp: `${a} ${m[2]} ${b} = ${a === b ? '+' : '−'}`, pag: 1 }];
+  }
+  if ((m = new RegExp(`^${X222} × ${X222} × ${X222}$`).exec(en))) return [{ t: 'tresnum', a: n222(m[1]), b: n222(m[2]), c: n222(m[3]), pag: 8 }];
+  if ((m = new RegExp(`^${X222} (×|÷) ${X222} \\+ ${X222}$`).exec(en))) return [{ t: 'vezesmais', a: n222(m[1]), op: m[2], b: n222(m[3]), c: n222(m[4]), pag: 9 }];
+  if ((m = new RegExp(`^${X222} (×|÷) ${X222}$`).exec(en))) {
+    const a = n222(m[1]), op = m[2], b = n222(m[3]);
+    if (op === '×' && (a === 0 || b === 0)) return [{ t: 'vezeszero', a: a || b, pag: 7 }];
+    if (op === '×' && a < 0 && b > 0) return [{ t: 'negvezes', a, b, pag: 2 }];
+    if (op === '÷' && (a % b !== 0 || b === 0)) return null;
+    const ig = (a < 0) === (b < 0);
+    return [{ t: 'negsinal', a, b, op, pag: op === '×' ? (ig ? 3 : 4) : (ig ? 6 : 5) }];
+  }
+  return null;
+}
+
+// 🧑‍🏫 PROMPT-221: as cenas do quadro do 5-B, 6-A, 6-B, 7-A e 7-B, com os números da questão; pag = a página do resumo
+const n221 = (t) => Number(String(t).replace(/R\$\s*/, '').replace('−', '-').replace(/\./g, '').replace(',', '.'));
+// as opções na ordem de tamanho (a certa no meio delas, como apareceu)
+const opcoes221 = (q) => [q.resposta, ...(q.erradas || [])].map(n221).filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+function quadro5b(q) {
+  const en = String(q.enunciado || '').trim();
+  let m;
+  if ((m = /^√(\d+)$/.exec(en))) {
+    const n = +m[1], r = Math.round(Math.sqrt(n));
+    if (r * r !== n) return null;
+    if (n === 1 || n === 100) return [{ t: 'quadtab', resp: `√${n} = ${r}`, pag: 3 }];
+    return [r <= 4 ? { t: 'raiz1', r, pag: 1 } : { t: 'raiz2', r, pag: 2 }];
+  }
+  if ((m = /^(\d+)([⁰¹])$/.exec(en))) return [m[2] === '¹' ? { t: 'exp1', b: +m[1], pag: 4 } : { t: 'exp0', b: +m[1], pag: 5 }];
+  if ((m = /^\(−(\d+)\)([⁰¹²³⁴⁵⁶⁷⁸⁹]+)$/.exec(en))) { const b = -m[1], n = deSup(m[2]); if (n < 2) return null; return [n % 2 ? { t: 'negimpar', b, n, pag: 7 } : { t: 'negpar', b, n, pag: 6 }]; }
+  if ((m = /^√(\d+) ([+−]) (\d+)([⁰¹²³⁴⁵⁶⁷⁸⁹]+)$/.exec(en))) {
+    const r = Math.round(Math.sqrt(+m[1]));
+    if (r * r !== +m[1]) return null;
+    return [{ t: 'raizpot', r, op: m[2], b: +m[3], n: deSup(m[4]), pag: 8 }];
+  }
+  return null;
+}
+function quadro6a(q) {
+  const en = String(q.enunciado || '').trim();
+  let m;
+  if ((m = /^(\d+) é múltiplo de (\d+)\?$/.exec(en))) {
+    const n = +m[1], k = +m[2];
+    if (k === 2) return [{ t: 'mult2', n, pag: 4 }];
+    if (k === 5 || k === 10) return [{ t: 'mult510', n, so: k, pag: 5 }];
+    return [{ t: 'ehmult', n, k, pag: n % k ? 3 : 2 }];
+  }
+  if ((m = /^Qual é múltiplo de (\d+)\?$/.exec(en))) return [{ t: 'qualmult', k: +m[1], ops: opcoes221(q), pag: 6 }];
+  if ((m = /^Qual é múltiplo de (\d+) e de (\d+) ao mesmo tempo\?$/.exec(en))) return [{ t: 'multdois', a: +m[1], b: +m[2], pag: 7 }];
+  if ((m = /^Quais são os 4 primeiros múltiplos de (\d+)/.exec(en))) return [{ t: 'primmult', k: +m[1], pag: 8 }];
+  return null;
+}
+const primo221 = (n) => n > 1 && Array.from({ length: n - 2 }, (_, i) => i + 2).every((d) => n % d);
+function quadro6b(q) {
+  const en = String(q.enunciado || '').trim();
+  let m;
+  if (/^1 é divisor de qualquer número\?$/.test(en)) return [{ t: 'divprimo', n: 7, ops: [], resp: 'sim: o 1 divide todos', regras: ['O 1 divide qualquer número: n ÷ 1 = n, sem sobrar.'], pag: 5 }];
+  if ((m = /^(\d+) é divisor de (\d+)\?$/.exec(en))) { const d = +m[1], n = +m[2]; return [{ t: 'ehdiv', d, n, pag: n % d ? 2 : 1 }]; }
+  if ((m = /^Qual é divisor de (\d+)\?$/.exec(en))) {
+    const n = +m[1];
+    if (primo221(n)) return [{ t: 'divprimo', n, ops: opcoes221(q).filter((k) => k !== n && k !== 1), pag: 5 }];
+    return [{ t: 'todosdiv', n, pag: 4 }];
+  }
+  if ((m = /^Quais são todos os divisores de (\d+)\?$/.exec(en))) return [{ t: 'todosdiv', n: +m[1], pag: 4 }];
+  if ((m = /^Quantos divisores tem o número (\d+)\?$/.exec(en))) return [{ t: 'primo', n: +m[1], pag: 6 }];
+  if ((m = /^Qual NÃO é divisor de (\d+)\?$/.exec(en))) return [{ t: 'naodiv', n: +m[1], ops: opcoes221(q), pag: 7 }];
+  return null;
+}
+const PAG7A = { 10: 3, 25: 4, 75: 4, 20: 5, 1: 6 };
+const PF221 = { '1/2': 50, '1/4': 25, '3/4': 75, '1/10': 10, '1/5': 20, '2/5': 40 };
+function quadro7a(q) {
+  const en = String(q.enunciado || '').trim();
+  let m;
+  if ((m = /^Quanto é (\d+)% de (\d+)\?$/.exec(en))) {
+    const p = +m[1], N = +m[2];
+    if (p === 50 || p === 100) return [{ t: 'pct50', N, p, pag: 2 }];
+    return PAG7A[p] ? [{ t: 'pctatalho', p, N, pag: PAG7A[p] }] : null;
+  }
+  if ((m = /^Numa turma de (\d+) alunos, 50% são meninas\./.exec(en))) return [{ t: 'pct50', N: +m[1], p: 50, pag: 2 }];
+  if (/^100% de algo significa/.test(en)) return [{ t: 'pct50', N: 40, p: 100, resp: 'o todo', pag: 2 }];
+  if ((m = /^(\d+)% é igual a qual fração\?$/.exec(en)) || (m = /^(\d+\/\d+) é igual a quantos por cento\?$/.exec(en))) {
+    const p = /\//.test(m[1]) ? PF221[m[1]] : +m[1];
+    if (!p || ![50, 25, 75, 10, 20, 40].includes(p)) return null;
+    const outros = [50, 25, 75, 10].filter((x) => x !== p).slice(0, 3);
+    return [{ t: 'pctfrac', ps: [p, ...outros], resp: /\//.test(m[1]) ? `${m[1]} = ${p}%` : `${p}% = ${String(q.resposta)}`, pag: 7 }];
+  }
+  if ((m = /^Uma camiseta de R\$ (\d+) tem (\d+)% de desconto\. Quanto é o desconto\?$/.exec(en))) return [{ t: 'desconto', P: +m[1], p: +m[2], pag: 8 }];
+  if ((m = /^Um tênis de R\$ (\d+) tem (\d+)% de desconto\. Qual (?:é )?o preço final\?$/.exec(en))) return [{ t: 'precofinal', P: +m[1], p: +m[2], pag: 9 }];
+  if ((m = /^Numa turma de (\d+) alunos, (\d+) faltaram\./.exec(en))) { const N = +m[1], f = +m[2]; return N % f || ![2, 4, 5, 10].includes(N / f) ? null : [{ t: 'qualpct', N, f, pag: 10 }]; }
+  return null;
+}
+// 7-B: o "de quanto" de cada problema (para a tradução da frase e o detalhe)
+const CTX221 = [
+  [/^(?:Uma|Um) (\S+) de R\$ (\d+) tem (\d+)% de desconto\. Qual conta dá o desconto\?$/, (m, v) => ({ N: +m[2], p: +m[3], oQue: `R$ ${m[2]}`, passo: `O desconto é ${m[3]}% DE R$ ${m[2]}.`, detalhe: `desconto de R$ ${v}` })],
+  [/^Numa turma de (\d+) alunos, (\d+)% são meninas\./, (m) => ({ N: +m[1], p: +m[2] })],
+  [/^Acertei (\d+)% de (\d+) questões\./, (m, v) => ({ N: +m[2], p: +m[1], oQue: `${m[2]} questões`, passo: `Acertei ${m[1]}% DE ${m[2]} questões.`, detalhe: `acertei ${v} questões` })],
+  [/^Num show com (\d+) pessoas, (\d+)% eram crianças\./, (m, v) => ({ N: +m[1], p: +m[2], oQue: `${m[1]} pessoas`, passo: `As crianças são ${m[2]}% DE ${m[1]} pessoas.`, detalhe: `${v} crianças` })],
+  [/^Comi (\d+)% de uma pizza de (\d+) pedaços\./, (m, v) => ({ N: +m[2], p: +m[1], oQue: `${m[2]} pedaços`, passo: `Comi ${m[1]}% DE ${m[2]} pedaços.`, detalhe: `comi ${v} pedaços` })],
+];
+const v221 = (p, N) => { const v = Math.round(N * p) / 100; return Number.isInteger(v) ? String(v) : ''; };
+function quadro7b(q) {
+  const en = String(q.enunciado || '').trim();
+  let m;
+  if ((m = /^(\d+)% em número decimal:?$/.exec(en))) return [{ t: 'pctdec', ps: [+m[1]], pag: 1 }];
+  if ((m = /^"(\d+)% de (\d+)" é o mesmo que:?$/.exec(en))) { const p = +m[1], N = +m[2]; return [p === 50 && /÷ 2/.test(String(q.resposta)) ? { t: 'conta50', N, pag: 3 } : { t: 'qualconta', p, N, pag: 2 }]; }
+  if ((m = /^A conta (\d+) × (\d+(?:,\d+)?) calcula:?$/.exec(en))) return [{ t: 'leconta', N: +m[1], p: Math.round(n221(m[2]) * 100), pag: 5 }];
+  if ((m = /^Um produto de R\$ (\d+) tem (\d+)% de desconto\. Qual conta dá o preço final\?$/.exec(en))) return [{ t: 'contafinal', P: +m[1], p: +m[2], pag: 6 }];
+  if ((m = /^A mesada de R\$ (\d+) teve aumento de (\d+)%\. Qual conta dá a nova mesada\?$/.exec(en))) return [{ t: 'contafinal', P: +m[1], p: +m[2], aumento: true, pag: 7 }];
+  if ((m = /^Uma camiseta de R\$ (\d+) tem (\d+)% de desconto\. Qual conta dá direto o preço final\?$/.exec(en))) return [{ t: 'contadireta', P: +m[1], p: +m[2], pag: 8 }];
+  for (const [re, f] of CTX221) {
+    if (!(m = re.exec(en))) continue;
+    const o = f(m, '');
+    const v = v221(o.p, o.N);
+    const c = { t: 'contactx', ...f(m, v), pag: 4 };
+    if (c.detalhe !== undefined && !v) c.detalhe = '';
+    if (c.oQue === undefined) delete c.oQue;
+    if (c.oQue === undefined && !v) c.detalhe = '';   // meninas: "7,5 meninas" não existe
+    return [c];
+  }
+  return null;
+}
+
+// 🧑‍🏫 PROMPT-220: as cenas do quadro do mapa 8 (expressões algébricas), com os números e as letras da questão; pag = a página do resumo
+const MULT8 = { dobro: 2, triplo: 3, 'quádruplo': 4 };
+function quadro8a(q) {
+  const en = String(q.enunciado || '').trim(), perg = en;
+  let m;
+  if ((m = /^Qual expressão representa "(.+)"\?$/.exec(en))) {
+    const f = m[1];
+    if ((m = /^um número mais (\d+)$/.exec(f))) return [{ t: 'algmaismenos', so: 'mais', mais: +m[1], perg, pag: 2 }];
+    if ((m = /^um número menos (\d+)$/.exec(f))) return [{ t: 'algmaismenos', so: 'menos', menos: +m[1], perg, pag: 2 }];
+    if ((m = /^o (dobro|triplo|quádruplo) de um número$/.exec(f))) return [{ t: 'algdobro', ks: [MULT8[m[1]]], perg, pag: 3 }];
+    if (/^a metade de um número$/.test(f)) return [{ t: 'algmetade', perg, pag: 4 }];
+    if (/^um número ao quadrado$/.test(f)) return [{ t: 'algquad', perg, pag: 5 }];
+    if ((m = /^o dobro de um número,? mais (\d+)$/.exec(f))) return [{ t: 'algduas', k: +m[1], perg, pag: 6 }];
+    return null;
+  }
+  if ((m = /^Cada caneta custa x reais\. Quanto custam (\d+) canetas\?$/.exec(en))) return [{ t: 'algcada', k: +m[1], perg, pag: 7 }];
+  if ((m = /^Qual é o valor de (\d+)a \+ (\d+)b quando a = (\d+) e b = (\d+)\?$/.exec(en))) return [{ t: 'alg2l', a: +m[1], b: +m[2], p: +m[3], q: +m[4], perg, pag: 15 }];
+  if ((m = /^Qual é o valor de (.+) quando x = (−?\d+)\?$/.exec(en))) {
+    const e = m[1], n = Number(m[2].replace('−', '-'));
+    if ((m = /^x \+ (\d+)$/.exec(e))) return [{ t: 'algvalor', k: +m[1], n, perg, pag: 8 }];
+    if ((m = /^x − (\d+)$/.exec(e))) return [{ t: 'algmenos', xPrimeiro: true, a: +m[1], n, perg, pag: 9 }];
+    if ((m = /^(\d+) − x$/.exec(e))) return [{ t: 'algmenos', a: +m[1], n, perg, pag: 9 }];
+    if (e === 'x + x') return [{ t: 'algxx', n, perg, pag: 10 }];
+    if ((m = /^(\d+)x$/.exec(e))) return [{ t: 'algkx', a: +m[1], n, perg, pag: 11 }];
+    if ((m = /^(\d+)x ([+−]) (\d+)$/.exec(e))) return n < 0 && m[2] === '−' ? [{ t: 'algneg', a: +m[1], n, c: +m[3], perg, pag: 13 }] : [{ t: 'algkxc', a: +m[1], n, op: m[2], c: +m[3], perg, pag: 12 }];
+    if ((m = /^x² \+ (\d+)$/.exec(e))) return [{ t: 'algquad2', n, c: +m[1], perg, pag: 14 }];
+  }
+  return null;
+}
+// "3x + 2 − x + 5" → [[3, 'x'], [2, ''], [−1, 'x'], [5, '']] (null se tiver expoente ou outra coisa)
+function termos8(e) {
+  const out = [];
+  for (const tk of String(e).trim().replace(/ ([+−]) /g, ' $1').split(' ')) {
+    const sg = tk[0] === '−' ? -1 : 1, m = /^(\d*)([a-z]?)$/.exec(tk.replace(/^[+−]/, ''));
+    if (!m || (!m[1] && !m[2])) return null;
+    out.push([sg * (m[1] ? +m[1] : 1), m[2]]);
+  }
+  return out;
+}
+const ehMono8 = (s) => /^\d*[a-z]$/.test(String(s).trim());
+function quadro8b(q, sua = '') {
+  const en = String(q.enunciado || '').trim(), resp = String(q.resposta || '').trim();
+  let m;
+  if ((m = /^(.+) e (.+) são termos semelhantes\?$/.exec(en))) {
+    const parte = (t) => { const r = /^(−?)(\d*)([a-z])(²?)$/.exec(t.trim()); return r && { l: r[3], e: r[4], so: !r[2] && !r[1] }; };
+    const A = parte(m[1]), B = parte(m[2]);
+    if (!A || !B) return null;
+    const par = `${m[1]} e ${m[2]}`, itens = [['3x e 5x', true, 'a mesma letra x'], ['4a e a', true, 'a = 1a'], ['7m e −2m', true, 'o sinal pode mudar'], ['2x e 2y', false, 'letras diferentes'], ['x e x²', false, 'expoentes diferentes']];
+    if (A.l !== B.l) itens[3] = [par, false, 'letras diferentes'];
+    else if (A.e !== B.e) itens[4] = [par, false, 'expoentes diferentes'];
+    else if (A.so || B.so) itens[1] = [par, true, `${A.l} = 1${A.l}`];
+    else if (/−/.test(par)) itens[2] = [par, true, 'o sinal pode mudar'];
+    else itens[0] = [par, true, `a mesma letra ${A.l}`];
+    return [{ t: 'semlista', itens, pag: 2 }];
+  }
+  if (/^Qual é o perímetro de um quadrado de lado x\?$/.test(en)) return [{ t: 'perimletra', partes: ['q'], perg: en, pag: 11 }];
+  if ((m = /^Qual é o perímetro de um retângulo de lados x e (\d+)\?$/.exec(en))) return [{ t: 'perimletra', partes: ['r'], k: +m[1], perg: en, pag: 11 }];
+  // (o perímetro fica na página dele, a 11) a resposta marcada juntou letra com número (ex.: 5x em vez de 2x + 3): "diferentes não juntam"
+  if (ehMono8(sua) && (m = /^(\d*)([a-z]) \+ (\d+)$/.exec(resp))) return [{ t: 'semdif', l: m[2], a: m[1] ? +m[1] : 1, c: +m[3], perg: `Dá para juntar ${resp} num termo só?`, pag: 7 }];
+  if ((m = /^Simplifique (.+?)\.?$/.exec(en))) {
+    const ts = termos8(m[1]);
+    if (!ts) return null;
+    const letras = [...new Set(ts.map((t) => t[1]).filter(Boolean))];
+    const xkx = ts.length === 3 && ts[0][0] === 1 && ts[2][0] === 1 && ts[0][1] && ts[0][1] === ts[2][1] && !ts[1][1] && ts[1][0] > 0;
+    const tipo = xkx ? 'xkx' : letras.length > 1 ? '2l' : 'menos';
+    return [{ t: 'simpl', tipo, termos: ts, perg: en, pag: { xkx: 8, menos: 9, '2l': 10 }[tipo] }];
+  }
+  // só a expressão (somar / subtrair semelhantes)
+  const ts = termos8(en);
+  if (!ts || ts.some((t) => !t[1]) || new Set(ts.map((t) => t[1])).size !== 1) return null;
+  const l = ts[0][1], cs = ts.map((t) => t[0]), perg = `Quanto é ${en}?`;
+  if (cs.length === 2 && cs[1] < 0) return [{ t: 'semsub', l, a: cs[0], b: -cs[1], perg, pag: 5 }];
+  if (cs.length === 2) return cs.includes(1) ? [{ t: 'semum', partes: [{ termos: cs, l }], perg, pag: 4 }] : [{ t: 'semsoma', l, a: cs[0], b: cs[1], perg, pag: 3 }];
+  if (cs.length === 3 && cs.every((c) => c === 1)) return [{ t: 'semum', partes: [{ termos: cs, l }], perg, pag: 4 }];
+  if (cs.length === 3) return [{ t: 'semtres', l, ts: cs, perg, pag: 6 }];
+  return null;
+}
+// 🧑‍🏫 PROMPT-219: as cenas do quadro do mapa 9 (equações), com os números da questão; pag = a página do resumo
+const nE = (t) => Number(String(t).replace('−', '-'));
+function quadro9a(q) {
+  const en = String(q.enunciado || '').trim().replace(/^Resolva:\s*/, '');
+  let m;
+  if ((m = /^x \+ (\d+) = (\d+)$/.exec(en))) return [{ t: 'eqsoma', a: +m[1], c: +m[2], pag: 2 }];
+  if ((m = /^x − (\d+) = (−?\d+)$/.exec(en))) { const a = +m[1], c = nE(m[2]); return [c < 0 ? { t: 'eqneg', a, c, pag: 8 } : { t: 'eqsub', a, c, pag: 3 }]; }
+  if ((m = /^(\d+)x = (\d+)$/.exec(en))) return [{ t: 'eqmult', k: +m[1], c: +m[2], pag: 4 }];
+  if ((m = /^x ÷ (\d+) = (\d+)$/.exec(en))) return [{ t: 'eqdiv', k: +m[1], c: +m[2], pag: 5 }];
+  if ((m = /^(\d+)x ([+−]) (\d+) = (\d+)$/.exec(en))) return [{ t: 'eq2', op: m[2], k: +m[1], a: +m[3], c: +m[4], pag: m[2] === '+' ? 6 : 7 }];
+  if ((m = /^Pensei num número, somei (\d+) e deu (\d+)\./.exec(en))) return [{ t: 'eqsoma', pensei: true, a: +m[1], c: +m[2], perg: en, pag: 9 }];
+  if ((m = /^O dobro de um número é (\d+)\. Que número é esse\?/.exec(en))) return [{ t: 'eqmult', tipo: 'dobro', k: 2, c: +m[1], perg: en, pag: 10 }];
+  if ((m = /^Comprei (\d+) cadernos iguais e gastei R\$ (\d+)\./.exec(en))) return [{ t: 'eqmult', tipo: 'cada', k: +m[1], c: +m[2], perg: en, pag: 11 }];
+  if ((m = /^(\d+)x − (\d+) = (\d*)x \+ (\d+)$/.exec(en))) return [{ t: 'eqdois', a: +m[1], b: +m[2], cc: m[3] ? +m[3] : 1, d: +m[4], pag: 12 }];
+  if ((m = /^(\d+)\(x \+ (\d+)\) = (\d+)$/.exec(en))) return [{ t: 'eqparen', k: +m[1], b: +m[2], c: +m[3], pag: 13 }];
+  return null;
+}
+const MULT9 = { dobro: 2, triplo: 3, 'quádruplo': 4 };
+const REGRA_FR = 'Lê a frase devagar e troca pedaço por pedaço.';
+// a frase da questão vira equação (9-B); sua = a resposta marcada (a pegadinha da página aparece riscada com os números da questão)
+function quadro9b(q) {
+  const en = String(q.enunciado || '').trim(), perg = en;
+  let m;
+  const fr = (o) => [{ t: 'frase', perg, ...o }];
+  const res = (linhas, x, confere) => ({ linhas, final: `x = ${x}`, confere });
+  // "Qual equação representa "…"?" (FR e eqRev[0])
+  if ((m = /^Qual equação representa "(.+)"\?$/.exec(en))) {
+    const f = m[1];
+    let k;
+    if ((m = /^o dobro de um número mais (\d+) é igual a (\d+)$/.exec(f))) { const [a, t] = [+m[1], +m[2]];
+      return fr({ pares: [['o dobro de um número', '2x'], [`mais ${a}`, `+ ${a}`], ['é igual a', '='], [t, t]], eq: ['2x', `+ ${a}`, '=', t], passo: `Primeiro o dobro, depois soma ${a}.`,
+        peg: { errada: `2(x + ${a}) = ${t}`, porque: `2(x + ${a}) é o dobro de (x + ${a})`, certa: `2x + ${a} = ${t}` }, regras: [`Escreve na ordem da frase: o dobro primeiro (2x), depois o + ${a}.`], pag: 10 }); }
+    if ((m = /^um número mais (\d+) é igual a (\d+)$/.exec(f))) { const [a, t] = [+m[1], +m[2]];
+      return fr({ pares: [['um número', 'x'], [`mais ${a}`, `+ ${a}`], ['é igual a', '='], [t, t]], eq: ['x', `+ ${a}`, '=', t], passo: 'Troca cada pedaço da frase pelo sinal.', detalhe: 'o número que não sei virou x', regras: [REGRA_FR], pag: 2 }); }
+    if ((m = /^um número menos (\d+) é igual a (\d+)$/.exec(f))) { const [a, t] = [+m[1], +m[2]];
+      return fr({ pares: [['um número', 'x'], [`menos ${a}`, `− ${a}`], ['é igual a', '='], [t, t]], eq: ['x', `− ${a}`, '=', t], passo: 'Troca cada pedaço da frase pelo sinal.', detalhe: 'menos: diminui, é −',
+        res: res([['x', '=', `${t} + ${a}`]], t + a, `${t + a} − ${a} = ${t} ✔`), regras: ['Menos, gastei, perdi, tirei: −.'], pag: 6 }); }
+    if ((m = /^o (dobro|triplo|quádruplo) de um número é (\d+)$/.exec(f))) { k = MULT9[m[1]]; const t = +m[2], nome = m[1];
+      return fr({ pares: [[`o ${nome} de um número`, `${k}x`], ['é', '='], [t, t]], eq: [`${k}x`, '=', t], passo: `${nome[0].toUpperCase() + nome.slice(1)} é ${k} vezes: ${k}x.`,
+        peg: { errada: `x + ${k} = ${t}`, porque: `x + ${k} é "um número mais ${k}"`, certa: `${k}x = ${t}` }, regras: ['Dobro = 2x (2 vezes). Triplo = 3x. Quádruplo = 4x. Não é + 2 nem + 3.'], pag: 3 }); }
+    if ((m = /^a metade de um número é (\d+)$/.exec(f))) { const t = +m[1];
+      return fr({ pares: [['a metade de um número', 'x ÷ 2'], ['é', '='], [t, t]], eq: ['x ÷ 2', '=', t], passo: 'Metade é dividir por 2: x ÷ 2.',
+        peg: { errada: `2x = ${t}`, porque: '2x é o dobro, não a metade', certa: `x ÷ 2 = ${t}` }, regras: ['Metade = x ÷ 2. Terça parte = x ÷ 3.'], pag: 4 }); }
+    return null;
+  }
+  // HIST: as histórias
+  if ((m = /^Tinha x (\S+), ganhei (\d+) e fiquei com (\d+)\./.exec(en))) { const [o, a, t] = [m[1], +m[2], +m[3]];
+    return fr({ pares: [[`tinha x ${o}`, 'x'], [`ganhei ${a}`, `+ ${a}`], ['fiquei com', '='], [t, t]], eq: ['x', `+ ${a}`, '=', t], passo: `${o === 'reais' ? 'O dinheiro' : `As ${o}`} que eu tinha não sei: é o x.`, detalhe: 'ganhei: aumenta, é +',
+      res: res([['x', '=', `${t} − ${a}`]], t - a, `tinha ${t - a}: ${t - a} + ${a} = ${t} ✔`), regras: ['Ganhei, recebi, somei: +.'], pag: 5 }); }
+  if ((m = /^Tinha x reais, gastei a metade e fiquei com (\d+)\./.exec(en))) { const t = +m[1];
+    return fr({ pares: [['tinha x reais', 'x'], ['gastei a metade', '÷ 2'], ['fiquei com', '='], [t, t]], eq: ['x ÷ 2', '=', t], passo: 'Gastei a metade: fiquei com a metade, x ÷ 2.',
+      peg: { errada: `2x = ${t}`, porque: '2x é o dobro, não a metade', certa: `x ÷ 2 = ${t}` }, regras: ['Metade = x ÷ 2. Terça parte = x ÷ 3.'], pag: 4 }); }
+  if ((m = /^Tinha x reais, gastei (\d+) e sobraram (\d+)\./.exec(en))) { const [a, t] = [+m[1], +m[2]];
+    return fr({ pares: [['tinha x reais', 'x'], [`gastei ${a}`, `− ${a}`], ['sobraram', '='], [t, t]], eq: ['x', `− ${a}`, '=', t], passo: 'O dinheiro que eu tinha não sei: é o x.', detalhe: 'gastei: diminui, é −',
+      res: res([['x', '=', `${t} + ${a}`]], t + a, `tinha R$ ${t + a}: ${t + a} − ${a} = ${t} ✔`), regras: ['Gastei, perdi, tirei, dei: −.'], pag: 6 }); }
+  if ((m = /^Cada (\S+) custa x reais\. (\d+) (\S+) custaram R\$ (\d+)\./.exec(en))) { const [s1, k, pl, T] = [m[1], +m[2], m[3], +m[4]], x = T / k;
+    return fr({ pares: [[`${k} ${pl}`, `${k}x`], ['custaram', '='], [T, T]], eq: [`${k}x`, '=', T], passo: `Cada ${s1} custa x. ${k} ${pl}: ${k} vezes x.`, detalhe: `${k}x = ${Array(k).fill('x').join(' + ')}`,
+      res: res([['x', '=', `${T} ÷ ${k}`]], x, `cada um R$ ${x}: ${k} × ${x} = ${T} ✔`), regras: ['Vários iguais: quantidade × x.'], pag: 7 }); }
+  if ((m = /^Dividi x (\S+) entre (\d+) amigos e cada um ganhou (\d+)\./.exec(en))) { const [o, k, t] = [m[1], +m[2], +m[3]];
+    return fr({ pares: [[`x ${o}`, 'x'], [`dividi entre ${k}`, `÷ ${k}`], ['cada um ganhou', '='], [t, t]], eq: ['x', `÷ ${k}`, '=', t], passo: `Quantas ${o} eram? Não sei: é o x.`, detalhe: `dividi entre ${k}: ÷ ${k}`,
+      res: res([['x', '=', `${t} × ${k}`]], t * k, `eram ${t * k}: ${t * k} ÷ ${k} = ${t} ✔`), regras: ['Dividi entre, reparti, cada um ganhou: ÷.'], pag: 8 }); }
+  if ((m = /^(\S+) tem x anos\. Daqui a (\d+) anos terá (\d+)\./.exec(en))) { const [nm, a, T] = [m[1], +m[2], +m[3]];
+    return fr({ pares: [[`${nm} tem x anos`, 'x'], [`daqui a ${a} anos`, `+ ${a}`], ['terá', '='], [T, T]], eq: ['x', `+ ${a}`, '=', T], passo: 'A idade de hoje não sei: é o x.', detalhe: 'daqui a … anos: aumenta, é +',
+      res: res([['x', '=', `${T} − ${a}`]], T - a, `tem ${T - a}: ${T - a} + ${a} = ${T} ✔`), regras: ['Ganhei, recebi, somei, daqui a … anos: +.'], pag: 5 }); }
+  if ((m = /^(\S+) tem x anos e o pai tem o (dobro|triplo|quádruplo) da idade dela\. Juntos somam (\d+) anos\./.exec(en))) { const [nm, nome, t] = [m[1], m[2], +m[3]], k = MULT9[nome], x = t / (k + 1);
+    return fr({ pares: [[`idade da ${nm}`, 'x'], [`o pai: o ${nome}`, `${k}x`], ['juntos', '+'], [`somam ${t}`, `= ${t}`]], eq: ['x', `+ ${k}x`, '=', t], passo: `A idade da ${nm} não sei: é o x.`, detalhe: 'juntos: soma as duas idades',
+      res: { linhas: [[`${k + 1}x`, '=', t], ['x', '=', `${t} ÷ ${k + 1}`]], final: `x = ${x}`, confere: `${nm} ${x}, pai ${k * x}: ${x} + ${k * x} = ${t} ✔` },
+      regras: ['Duas pessoas: uma é x, a outra é escrita com o x (3x, x + 5…).'], pag: 11 }); }
+  // BAL e eqRev[2]: a balança da questão
+  if (/^Numa balança/.test(en)) {
+    const b = { t: 'baleq', perg, unid: 'kg', pag: 9 };
+    if ((m = /^Numa balança, 1 caixa de peso x equilibra um peso de (\d+) kg e outro de (\d+) kg\./.exec(en))) return [{ ...b, e: { x: 1 }, d: { partes: [+m[1], +m[2]] } }];
+    if ((m = /^Numa balança, (\d+) caixas? de peso x e mais (\d+) kg equilibram (\d+) kg\./.exec(en))) return [{ ...b, e: { x: +m[1], b: +m[2] }, d: { b: +m[3] } }];
+    if ((m = /^Numa balança, (\d+) caixas? de peso x equilibram (\d+) kg\./.exec(en))) return [{ ...b, e: { x: +m[1] }, d: { b: +m[2] } }];
+  }
+  return null;
 }
 // PROMPT-218: as páginas 1, 2 e 4 do 10-A mostram o exemplo da aula (a pergunta da aula, não a da questão)
 const PERG_10A = { direta: 'Cada pão custa R$ 3. Quando os pães aumentam, o preço aumenta ou diminui?', inversa: '1 pedreiro faz um muro em 12 dias. Com mais pedreiros, os dias aumentam ou diminuem?',

@@ -97,7 +97,8 @@ ALT_PET.unicornio_adulto = ALT_BASE_PERSONAGEM * CRESCE_TIGRE_ADULTO;
 ALT_PET.elefante_adulto = ALT_PET.tigre_adulto * 1.2;
 // Telas com tamanho relativo (batalha, duelo do ginásio, Meu Pet): o desenho do adulto em relação ao tigre adulto
 // (o quadro é o mesmo, 1219 × 566; a altura do desenho vem de sentado_altura). PROMPT-213: unicórnio = tigre, elefante = 1,2 × o tigre.
-const TAM_ADULTO_TIGRE = { tigre_adulto: 1, unicornio_adulto: 1, elefante_adulto: 1.2 };
+const TAM_ADULTO_TIGRE = { tigre_adulto: 1, unicornio_adulto: 1.1, elefante_adulto: 1.2 };   // 🦄 PROMPT-224: unicórnio 1 → 1,1
+ALT_PET.unicornio_adulto *= TAM_ADULTO_TIGRE.unicornio_adulto;   // 🦄 PROMPT-224: 10% maior no mapa também (66 → 72,6); a distância (DIST_PET) continua 79,2
 // 🐱 PROMPT-209: gato e axolote adultos = o filhote 50% maior (as mesmas imagens; DIST_PET cresce junto, logo abaixo)
 for (const p of ADULTO_E_FILHOTE) ALT_PET[`${p}_adulto`] = ALT_PET[p] * CRESCE_ADULTO_FILHOTE;
 // 🦄 largura do desenho em pé (das poses do mapa: parado, pastando, comendo), em fração da ALTURA do quadro (566): o unicórnio adulto
@@ -131,7 +132,9 @@ const relDuelo = (forma) => {
   return escalaPet(forma) / escalaMax() * (k ? CRESCE_TIGRE_ADULTO * k * sentadoNoQuadro('tigre_adulto') / sentadoNoQuadro(f) : 1);
 };
 // Meu Pet e foto na parede: fração da altura do palco que o desenho do adulto ocupa (dragões 0,86; o tigre, alto de pé, 0,76)
-const fracaoPalco = (forma) => { const k = TAM_ADULTO_TIGRE[formaDeTamanho(forma)]; return k ? Math.min(0.76 * k, 0.86) : 0.86; };
+const fracaoPalco = (forma, k = TAM_ADULTO_TIGRE[formaDeTamanho(forma)]) => (k ? Math.min(0.76 * k, 0.86) : 0.86);
+// 🐾 PROMPT-224: tamanho só no Meu Pet (por forma ou por pet): o unicórnio adulto 25% maior, o gato (todas as formas) 20% menor
+const MP_CRESCE = { unicornio_adulto: 1.25, gato: 0.8 };
 // caixas pequenas feitas para o filhote (coleção, HUD, chips, cartões): sem a escala, para nada ser cortado
 const fatorFormaCaixa = (pet, forma) => fatorForma(pet, forma) / (ehFormaAdulta(forma) ? escalaPet(forma) : 1);
 // Imagem pequena numa caixa feita para o filhote (coleção, HUD, chips, cartões): o quadro do adulto é mais largo
@@ -1898,14 +1901,17 @@ function medirMeuPet() {
   renderTruques();   // a fileira de truques embaixo do pet: antes de medir o palco (ela ocupa parte da altura)
   const palco = $('mp-palco'), { forma } = mp;
   let h = Math.min(palco.clientHeight * 0.68, MP_ALT_MAX);
+  const cresce = MP_CRESCE[forma] || MP_CRESCE[mp.pet] || 1;   // 🐾 PROMPT-224: só nesta página
   if (ehFormaAdulta(forma)) {
     // (sentado_altura + ~1% de folga embaixo do pé, em fração do quadro)
     // 🐯 o tigre adulto (sem asas, de pé ele é alto) um pouco menor, para as orelhas não baterem no topo (PROMPT-181)
-    h = palco.clientHeight * fracaoPalco(forma) / (sentadoNoQuadro(forma) + 0.01);
+    // 🦄 PROMPT-224: o unicórnio aqui é 25% maior que antes (a fração do palco de antes, com 1 na TAM_ADULTO_TIGRE, × 1,25)
+    h = palco.clientHeight * fracaoPalco(forma, MP_CRESCE[forma] ? 1 : undefined) / (sentadoNoQuadro(forma) + 0.01);
     if (LARGURA_EM_PE[forma]) h = Math.min(h, palco.clientWidth * 0.94 / LARGURA_EM_PE[forma]);   // 🦄 em pé ele é largo: cabe na largura do palco
   } else if (tamVisual(forma) !== 1) {
     h = Math.min(h * tamVisual(forma), palco.clientHeight * 0.94);   // capivara: 20% maior, sem passar do palco
   }
+  h *= cresce;
   $('mp-img').style.height = h + 'px';
   $('mp-palco').classList.toggle('largo', ehFormaAdulta(forma));   // adulto: asas, comida e fogo podem passar da borda do palco
 }
@@ -2161,13 +2167,54 @@ function ligarSono() {
   }, 1500);
 }
 
+// 🦄 PROMPT-224: brilho no chifre do unicórnio adulto no Meu Pet: uma luz que pulsa (CSS) na ponta do chifre e, de vez em
+// quando, 1 ou 2 estrelinhas ✦ que saem dela e somem. Ponta do chifre em % da imagem (x, y), por quadro; medida nas poses que
+// aparecem nesta página (parado, carinho/feliz, empinar, comer, fome). Quadro fora da tabela (pastar, deitar, dormir): sem brilho.
+const PONTA_CHIFRE = {
+  unicornio_adulto: {
+    parado_lado_1: [26.9, 20.5], parado_lado_2: [27, 13.4], parado_lado_3: [27, 11.1], parado_lado_4: [27, 17.8],
+    feliz_1: [27, 26.7], feliz_2: [27.4, 27.9], animado_1: [26.8, 22.8], triste_fome_1: [27, 31.3],
+    comendo_1: [24.8, 56.7], comendo_2: [25.3, 42.6], comendo_3: [27, 28.6], comendo_4: [27, 25.6],
+  },
+};
+function pintarChifre(dt) {
+  const el = $('mp-chifre'), tab = mp && PONTA_CHIFRE[mp.forma];
+  const img = $('mp-img'), q = tab && /([a-z_]+_\d+)\.webp$/.exec(img.getAttribute('src') || '')?.[1];
+  const p = q && tab[q];
+  el.hidden = !p;
+  if (!p) return;
+  const h = img.offsetHeight || 150;
+  const x = /\/direita\//.test(img.getAttribute('src')) ? 100 - p[0] : p[0];   // olhando para a direita: a imagem espelhada
+  el.style.left = x + '%'; el.style.top = (p[1] / 100 * h) + 'px';
+  el.style.setProperty('--chifre', Math.max(14, h * 0.13).toFixed(1) + 'px');
+  if (semMovimento()) return;
+  mp.estrelaEm = (mp.estrelaEm ?? 1500 + Math.random() * 2000) - dt * 1000;
+  if (mp.estrelaEm > 0) return;
+  mp.estrelaEm = 2500 + Math.random() * 3000;   // de vez em quando
+  for (let i = 0, n = Math.random() < 0.4 ? 2 : 1; i < n; i++) {
+    const s = document.createElement('span');
+    s.className = 'mp-chifre-estrela'; s.textContent = '✦';
+    const ang = (-150 + Math.random() * 100) * Math.PI / 180, d = h * (0.1 + Math.random() * 0.08);   // para cima e para os lados
+    Object.assign(s.style, { left: el.style.left, top: el.style.top, animationDelay: (i * 0.25) + 's' });
+    s.style.setProperty('--dx', (Math.cos(ang) * d).toFixed(1) + 'px'); s.style.setProperty('--dy', (Math.sin(ang) * d).toFixed(1) + 'px');
+    s.style.setProperty('--estrela', Math.max(9, h * 0.05).toFixed(1) + 'px');
+    $('mp-corpo').appendChild(s);
+    setTimeout(() => s.remove(), 1600);
+  }
+}
+
 // A cada quadro (dentro do loop do jogo)
 function atualizarMeuPet(dt) {
   if (!mp) return;
   mp.anim.atualizar(dt);
+  pintarChifre(dt);
   if (mp.estado === 'parado' && mp.anim.anim === 'sentado_girando') {
     const aoAcabar = () => { if (mp?.estado === 'parado') voltarAoNormal(); };
-    if (temSequencia(mp.forma, 'descansar')) {   // adulto: sentado de frente; a cada 6 a 10 s vira de lado (sentado_2, ~2 s) e volta;
+    if (mp.forma === 'elefante_adulto' && temSequencia(mp.forma, 'tromba')) {   // 🐘 PROMPT-224: feliz; parado e, a cada ~6 s, brinca com a tromba
+      if (mp.esperaAcao == null) mp.esperaAcao = 5500 + Math.random() * 1000;
+      mp.esperaAcao -= dt * 1000;
+      if (mp.esperaAcao <= 0) { mp.esperaAcao = null; mp.anim.sequencia('tromba', aoAcabar); }
+    } else if (temSequencia(mp.forma, 'descansar')) {   // adulto: sentado de frente; a cada 6 a 10 s vira de lado (sentado_2, ~2 s) e volta;
       if (mp.esperaAcao == null) mp.esperaAcao = 6000 + Math.random() * 4000;   // a cada 3ª vez, em vez de virar, cheira, se lambe, descansa ou ruge
       mp.esperaAcao -= dt * 1000;
       if (mp.esperaAcao <= 0) {
@@ -2263,7 +2310,9 @@ function carinhoPet() {
   if (barrigaDe(pet) < fomeAbaixo()) falarPet('Obrigado… mas tô com fome');
   else if (Math.random() < 0.4) falarPet(fc?.baloes[0]?.texto || 'Gostei!');   // a fala vem de vez em quando
   // o adulto ri de lado (sequência "carinho"); os outros ficam felizes ou dão cambalhota
-  if (temSequencia(mp.forma, 'carinho')) { mp.estado = 'carinho'; mp.ocupado = true; movimentoCorpo(null); mp.anim.sequencia('carinho', voltarAoNormal); }
+  // 🐘 PROMPT-224: o elefante adulto faz o feliz completo (feliz_1 → feliz_4) duas vezes (ritmo em pets.js)
+  if (mp.forma === 'elefante_adulto' && temAnim(mp.forma, 'feliz')) { mp.estado = 'carinho'; mp.ocupado = true; movimentoCorpo(null); mp.anim.tocar('feliz', voltarAoNormal); }
+  else if (temSequencia(mp.forma, 'carinho')) { mp.estado = 'carinho'; mp.ocupado = true; movimentoCorpo(null); mp.anim.sequencia('carinho', voltarAoNormal); }
   else if (c.lealdade >= LEALDADE_CAMBALHOTA && temRasante(pet)) vooRasante();   // 🦅 o gavião faz o voo rasante no lugar da cambalhota
   else comemorar(c.lealdade >= LEALDADE_CAMBALHOTA ? 'pulo_cambalhota' : 'feliz');
 }
@@ -5660,7 +5709,8 @@ function festaAniversario(pet, n) {
   if (mp) renderMeuPet();
 }
 // chapéu de festa: no dia do aniversário, acima da cabeça do pet (mapa e Meu Pet)
-const comChapeu = (pet) => !!pet && mesesDeAniversario(pet) > 0;
+// 🎂 PROMPT-224: sem chapéu (nem no mapa nem no Meu Pet); da festa ficam só os confetes descendo atrás do pet, no cartão
+const comChapeu = () => false;   // (era: o pet faz aniversário hoje)
 function posicionarChapeu() {
   const el = $('pet-chapeu');
   const pet = seguidor?.pet;
@@ -12959,6 +13009,70 @@ const btLater = (fn, ms) => { const t = setTimeout(fn, ms); bt?.timers.push(t); 
 const btEsperar = (ms) => new Promise(ok => btLater(ok, ms));
 const btReduz = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// ⚔️ PROMPT-224: na batalha os dois pets ficam na proporção do mapa: altura da imagem = altImagemPet (o tamanho de cada pet
+// na tabela do mapa × TAM_ADULTO_TIGRE do adulto). O gato filhote continua com 52% da altura da arena, como antes. Se o maior
+// não couber na área dele, os dois diminuem juntos, pelo mesmo fator (a proporção não muda).
+// A largura e o topo do desenho dentro do quadro vêm da própria imagem (a parte não transparente), medidos uma vez por quadro.
+const BT_ALT_GATO = 0.52;
+const caixaDesenho = new Map();   // src → { x0, x1, y0 } em fração do quadro (null: não deu para medir)
+function medirDesenho(src) {
+  if (caixaDesenho.has(src)) return Promise.resolve(caixaDesenho.get(src));
+  return new Promise((ok) => {
+    const im = new Image();
+    const fim = (r) => { caixaDesenho.set(src, r); ok(r); };
+    im.onload = () => {
+      try {
+        const w = 160, h = Math.max(1, Math.round(w * im.naturalHeight / im.naturalWidth));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        const cx = cv.getContext('2d', { willReadFrequently: true });
+        cx.drawImage(im, 0, 0, w, h);
+        const d = cx.getImageData(0, 0, w, h).data;
+        let x0 = w, x1 = -1, y0 = h;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 40) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; }
+        fim(x1 < 0 ? null : { x0: x0 / w, x1: (x1 + 1) / w, y0: y0 / h });
+      } catch { fim(null); }
+    };
+    im.onerror = () => fim(null);
+    im.src = src;
+  });
+}
+function ajustarLutadores() {
+  if (!bt) return;
+  const arena = $('bt-arena'), W = arena.clientWidth, H = arena.clientHeight;
+  if (!W || !H) return;
+  const ref = altImagemPet('gato');
+  const L = [['L', bt.forma], ['R', bt.t.pet]].map(([l, forma]) => {
+    const [qw, qh] = tamanhoQuadro(forma), adulto = ehFormaAdulta(forma);
+    const src = quadrosDe(forma, temAnim(forma, 'voando') ? 'voando' : 'andar_direita')[0];
+    if (src && !caixaDesenho.has(src)) medirDesenho(src).then((r) => { if (r && bt) ajustarLutadores(); });
+    let c = (src && caixaDesenho.get(src)) || (adulto ? { x0: 275 / 1219, x1: 918 / 1219, y0: 0.05 } : { x0: 0.1, x1: 0.9, y0: 0.1 });
+    if (l === 'R') c = { ...c, x0: 1 - c.x1, x1: 1 - c.x0 };   // o lado R é desenhado espelhado
+    return { l, prop: qw / qh, c, h1: BT_ALT_GATO * H * altImagemPet(forma) / ref, chao: (adulto ? 0.03 : 0.09) * H };
+  });
+  const m = 0.03 * W, gap = 0.04 * W;
+  // fator comum: o topo do desenho dentro da arena e os dois corpos lado a lado, com margem e um espaço entre eles
+  // cada corpo cabe na metade dele (área de cada lado), o mesmo k para os dois
+  let k = Math.min(1, ...L.map((p) => (W / 2 - m - gap / 2) / ((p.c.x1 - p.c.x0) * p.h1 * p.prop)));
+  for (const p of L) k = Math.min(k, (0.98 * H - p.chao) / (p.h1 * (1 - p.c.y0)));
+  for (const p of L) { p.h = p.h1 * k; p.w = p.h * p.prop; p.bw = (p.c.x1 - p.c.x0) * p.w; }
+  const [E, D] = L;
+  // corpos centrados em 27% e 73% da arena; se encostarem, afastam (sem passar da margem)
+  let e0 = Math.max(m, 0.27 * W - E.bw / 2), d1 = Math.min(W - m, 0.73 * W + D.bw / 2);
+  let sobra = e0 + E.bw + gap - (d1 - D.bw);
+  if (sobra > 0) {
+    const a = Math.min(sobra / 2, e0 - m); e0 -= a; sobra -= a;
+    const b = Math.min(sobra, W - m - d1); d1 += b; sobra -= b;
+    e0 -= Math.min(sobra, e0 - m);
+  }
+  for (const [p, el, x] of [[E, $('bt-L'), e0 - E.c.x0 * E.w], [D, $('bt-R'), d1 + (1 - D.c.x1) * D.w]]) {
+    el.style.height = p.h.toFixed(1) + 'px';
+    el.style.bottom = p.chao.toFixed(1) + 'px';
+    if (p === E) { el.style.left = x.toFixed(1) + 'px'; el.style.right = 'auto'; }
+    else { el.style.right = (W - x).toFixed(1) + 'px'; el.style.left = 'auto'; }
+  }
+}
+addEventListener('resize', () => { if (bt && !$('batalha').hidden) ajustarLutadores(); });
+
 function iniciarBatalha(id, origem = 'lista') {
   const t = treinador(id);
   if (!t || !podeBatalhar() || petComFomeParaBatalha()) return;
@@ -12987,6 +13101,7 @@ function iniciarBatalha(id, origem = 'lista') {
   fR.style.setProperty('--cresce', ehFormaAdulta(formaR) ? 1 : tamVisual(formaR));   // a capivara do treinador também maior
   fR.classList.toggle('adulto', ehFormaAdulta(formaR));
   $('batalha').hidden = false;
+  ajustarLutadores();   // ⚔️ PROMPT-224: os dois pets na proporção do mapa
   $('bt-nomeL').innerHTML = `${esc(nomeAluno())}<small>· ${esc(nomePet(bt.pet))}</small>`;
   aplicarVisualPet($('bt-imgL'), bt.pet);
   aplicarTinta($('bt-imgR'), t.tinta);   // pet do adversário: só se o treinador tiver tinta no batalhas.json

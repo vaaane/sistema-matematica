@@ -219,8 +219,13 @@ const DEITA = { pastar: 20000, deitar: 45000 };
 export const deitaParado = (forma) => /^unicornio_adulto/.test(forma || '') && temSequencia(forma, 'deitar');
 // 🦄 PROMPT-213: pet que não anda atrás do personagem: espera parado e, quando fica longe (DISPARA × distPet), corre a
 // CORRE_DISPARO × a velocidade do personagem até a distância normal. Por enquanto só o unicórnio adulto.
-const DISPARA = 2.5, CORRE_DISPARO = 2;
+const DISPARA = 2.5, CORRE_DISPARO = 2 * 0.7;   // 🦄 PROMPT-224: 30% mais devagar (era 2 × a velocidade do personagem)
 const correParaAlcancar = (forma) => /^unicornio_adulto/.test(forma || '');
+// 🐘 PROMPT-224: andar de frente/de costas com uma imagem só (o sprites.json repete o quadro): os quadros ímpares saem espelhados
+const ALTERNA_ESPELHO = { elefante_adulto: new Set(['andar_frente', 'andar_costas']) };
+const alternaEspelho = (forma, anim) => !!ALTERNA_ESPELHO[forma]?.has(anim);
+// 🐘 PROMPT-224: parou depois de andar para cima: fica parado de costas (costas_parado) até a próxima ação ou andar de novo
+const paraDeCostas = (forma) => forma === 'elefante_adulto' && temAnim(forma, 'costas_parado');
 const NUNCA_SOZINHO = new Set(['cuspir_fogo', 'voar', 'voo_campeao', 'ataque_batalha', 'pendurada', 'comer', 'comendo']);
 function acoesParado(forma) {
   const j = SPR?.acoes_parado;
@@ -261,11 +266,12 @@ function ritmo(anim, n, forma = '') {
   // 🦄 unicórnio adulto (PROMPT-211): o triste vai deitando (4 quadros) e fica deitado; dormindo = deita e se enrola, fica enrolado
   if (/^unicornio_adulto/.test(forma) && anim === 'triste_fome') return { ms: 450, loop: true, ultimo: 6000 };
   if (/^unicornio_adulto/.test(forma) && anim === 'dormindo') return { ms: 1200, loop: true, ultimo: 8000 };
-  if (/^unicornio_adulto/.test(forma) && anim.startsWith('andar_')) return { ms: 120, loop: true };   // 🦄 PROMPT-213: corre de frente/de costas
+  if (/^unicornio_adulto/.test(forma) && anim.startsWith('andar_')) return { ms: 170, loop: true };   // 🦄 PROMPT-213: corre de frente/de costas; PROMPT-224: 120 → 170 ms
   // 🐘 elefante adulto (PROMPT-213): a tromba balança devagar parado; dorme alternando 1↔2; sentado triste fica 2 s
   if (/^elefante_adulto/.test(forma) && anim === 'sentado_girando') return { ms: 350, loop: true };
   if (/^elefante_adulto/.test(forma) && anim === 'dormindo') return { ms: 1200, loop: true };
   if (/^elefante_adulto/.test(forma) && anim === 'triste_fome') return { ms: 2000, loop: true };
+  if (/^elefante_adulto/.test(forma) && anim === 'feliz') return { ms: 300, loop: false, vezes: 2 };   // 🐘 PROMPT-224: o feliz completo duas vezes (tocar no Meu Pet)
   switch (anim) {
     case 'correndo': return { ms: /^morcego/.test(forma) ? 120 : 90, loop: true };   // 🦇 o morcego corre voando (8 quadros, PROMPT-176)
     case 'voando': return { ms: 120, loop: true };   // 🦇 o morcego batendo as asas, de lado (8 quadros em loop)
@@ -324,6 +330,7 @@ export class PetSeguidor {
     this.deitado = null;            // 🦄 'deitando' | 'deitado' | 'levantando': nada mexe nele até o personagem andar (PROMPT-212)
     this.pastou = false;            // 🦄 já pastou nesta parada (aos ~20 s)
     this.disparou = false;          // 🦄 correndo para alcançar o personagem (PROMPT-213): só para ao chegar na distância
+    this.deCostas = false;          // 🐘 o último passo foi para cima: parado, fica de costas (PROMPT-224)
     SEGUIDORES.add(this);
   }
 
@@ -364,7 +371,7 @@ export class PetSeguidor {
       nome = this.ultimaAcao = l[Math.floor(Math.random() * l.length)];
       if (this.antesDaAcao?.(nome)) { this.esperaAcao = MS_ANTES_ACAO; return; }
     }
-    this.acao = nome;
+    this.acao = nome; this.deCostas = false;   // 🐘 a ação começa de frente
     tocarSequencia(this.img, this.forma, nome).then(fim => {
       if (!fim || this.acao !== nome) return;
       this.acao = null; this.esperaAcao = this.fome ? MS_FOME : MS_ANTES_ACAO;
@@ -541,6 +548,7 @@ export class PetSeguidor {
         else if (longe || dispara) { this.trocar(temAnim(this.forma, 'voando') ? 'voando' : 'correndo'); this.espelhar = dx < 0; }   // correndo (e o voando do morcego) é virado para a direita
         else if (Math.abs(dx) >= Math.abs(dy)) this.trocar(dx > 0 ? 'andar_direita' : 'andar_esquerda');
         else this.trocar(this.andarVertical(dy > 0 ? 'andar_frente' : 'andar_costas'));
+        this.deCostas = this.anim === 'andar_costas';   // 🐘 PROMPT-224: qualquer outra direção tira o de costas
         this.proxOcioso = 6000 + Math.random() * 1000;   // parado há mais de ~6 s: a 1ª variação
         this.ocioso = false;
         this.esperaAcao = MS_ANTES_ACAO;
@@ -555,7 +563,7 @@ export class PetSeguidor {
         this.trocar('triste_fome');
       } else if (temAcoesMapa(this.forma)) {   // pet com sequências: 4 s sentado, depois uma ação; 4 s entre uma e outra
         this.ocioso = false;
-        this.trocar('sentado_girando');
+        this.trocar(this.deCostas && paraDeCostas(this.forma) ? 'costas_parado' : 'sentado_girando');
         if (!this.pausado) {
           this.esperaAcao -= ms;
           if (this.esperaAcao <= 0) { this.comecarAcao(); if (this.acao) { this.espelhar = this.esquerda; this.desenhar(); return; } this.esperaAcao = MS_ANTES_ACAO; }
@@ -589,7 +597,7 @@ export class PetSeguidor {
     this.img.style.top = this.y + 'px';
     this.img.style.height = this.altura + 'px';
     this.img.style.zIndex = this.zCasa ?? this.zFixo ?? Math.round(this.y) - 1;   // empate com o personagem: o pet fica atrás
-    this.img.classList.toggle('espelhado', this.espelhar);
+    this.img.classList.toggle('espelhado', this.espelhar !== (!this.acao && alternaEspelho(this.forma, this.anim) && this.q % 2 === 1));   // 🐘 PROMPT-224
     const s = this.sombra.style;
     s.left = this.x + 'px'; s.top = this.y + 'px';
     s.width = this.altura * 0.8 + 'px'; s.height = this.altura * 0.16 + 'px';

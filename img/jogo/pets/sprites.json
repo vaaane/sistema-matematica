@@ -101,43 +101,30 @@
     "pets/elefante_adulto/parado_frente_4.webp"
    ],
    "sentado_girando": [
-    "pets/elefante_adulto/parado_frente_1.webp",
-    "pets/elefante_adulto/parado_frente_2.webp",
-    "pets/elefante_adulto/parado_frente_3.webp",
-    "pets/elefante_adulto/parado_frente_4.webp",
-    "pets/elefante_adulto/parado_frente_3.webp",
-    "pets/elefante_adulto/parado_frente_2.webp"
+    "pets/elefante_adulto/parado_frente_5.webp"
    ],
    "andar_esquerda": [
-    "pets/elefante_adulto/andar_esquerda_1.webp",
     "pets/elefante_adulto/andar_esquerda_2.webp",
-    "pets/elefante_adulto/andar_esquerda_3.webp",
     "pets/elefante_adulto/andar_esquerda_4.webp"
    ],
    "andar_direita": [
-    "pets/elefante_adulto/direita/andar_direita_1.webp",
     "pets/elefante_adulto/direita/andar_direita_2.webp",
-    "pets/elefante_adulto/direita/andar_direita_3.webp",
     "pets/elefante_adulto/direita/andar_direita_4.webp"
    ],
    "correndo": [
-    "pets/elefante_adulto/direita/andar_direita_1.webp",
     "pets/elefante_adulto/direita/andar_direita_2.webp",
-    "pets/elefante_adulto/direita/andar_direita_3.webp",
     "pets/elefante_adulto/direita/andar_direita_4.webp"
    ],
    "andar_frente": [
     "pets/elefante_adulto/andar_frente_1.webp",
-    "pets/elefante_adulto/andar_frente_2.webp",
-    "pets/elefante_adulto/andar_frente_3.webp",
-    "pets/elefante_adulto/andar_frente_4.webp"
+    "pets/elefante_adulto/andar_frente_1.webp"
    ],
    "andar_costas": [
     "pets/elefante_adulto/andar_costas_1.webp",
-    "pets/elefante_adulto/andar_costas_2.webp"
+    "pets/elefante_adulto/andar_costas_1.webp"
    ],
    "costas_parado": [
-    "pets/elefante_adulto/andar_costas_1.webp"
+    "pets/elefante_adulto/costas_parado_1.webp"
    ],
    "costas_sentado": [
     "pets/elefante_adulto/andar_costas_1.webp"
@@ -201,9 +188,9 @@
     "pets/elefante_adulto/direita/bravo_4.webp"
    ],
    "comendo": [
-    "pets/elefante_adulto/comendo_1.webp",
+    "pets/elefante_adulto/direita/comendo_1.webp",
     "pets/elefante_adulto/direita/comendo_2.webp",
-    "pets/elefante_adulto/comendo_3.webp",
+    "pets/elefante_adulto/direita/comendo_3.webp",
     "pets/elefante_adulto/direita/comendo_4.webp"
    ]
   },

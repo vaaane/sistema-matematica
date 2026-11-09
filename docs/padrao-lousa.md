@@ -65,6 +65,22 @@ Os tamanhos estão em **% da largura da lousa** (`cqw`). Assim ficam iguais no P
 - **Expressão:** cada "=" começa uma linha nova.
 - **Regra de três:** sempre os mesmos 3 passos, com o mesmo texto: **1º monta a tabela** (cada grandeza numa coluna, o x em amarelo) → **2º setas** (a da coluna do x para baixo; a outra no mesmo sentido se for direta, oposta em vermelho se for inversa, e aí **inverte a coluna**: os dois números trocam de lugar) → **3º multiplica cruzado** (linhas laranja e lilás) e resolve, um "=" por linha. A tabela fica no quadro até o fim (não vai para o histórico), com a resposta embaixo.
 - **Direta ou inversa vem antes da regra de três**, em páginas só sobre isso, sem conta: tabela com 3 linhas, as setas uma por vez, "dobrou → dobrou" ou "dobrou → caiu pela metade". **A seta aponta para o número maior.** Pergunta sempre igual: "aumenta ou diminui?" → mesma direção (direta) ou contrária (inversa). As duas diminuindo **também é direta**.
+- **Equação:**
+  - **balança** na lateral: caixa laranja = x, quadradinho azul = 1, "menos" = quadradinho tracejado vermelho (o que falta), x ÷ 2 = meia caixa;
+  - cada passo aparece na balança: o que sai dos dois lados fica apagado com borda vermelha, o que entra fica amarelo, e na divisão cada caixa ganha um grupo de quadradinhos de uma cor;
+  - primeiro "na mão" (tira dos dois lados), depois o atalho: o termo que passa fica destacado e uma **seta curva** leva ele para depois do "=", com o rótulo ("passa e vira − 7");
+  - duas etapas: **primeiro o + ou −, depois o × ou ÷**, cada etapa num cartão;
+  - toda página termina com a linha "confere: … ✔" antes da resposta verde.
+- **Frase → equação:** a frase é dividida em pedaços e cada pedaço acende com o sinal embaixo; depois a equação aparece inteira. Esses pedaços saem antes de a conta ir para o histórico (ficariam menores que o mínimo).
+- **Expressão com letra:** a letra é uma **caixa** (laranja; a 2ª letra, lilás). `2x` = duas caixas, `x ÷ 2` = meia caixa, `x²` = quadrado de lado x. Cada coisa da lateral tem o rótulo em cima.
+- **Valor numérico:** a caixa abre e mostra o número (amarelo); na conta, o número que entrou no lugar da letra também fica amarelo. Negativo entra sempre entre parênteses.
+- **Simplificar:** desde a primeira linha, os termos de cada grupo têm a mesma cor (x laranja, números ou 2ª letra lilás); o sinal vai pintado junto com o termo.
+- **Múltiplo e divisor:** sempre mostra a divisão e o resto ("sobra 0 ✔" / "sobra 2 ✖"). Na lateral, os quadradinhos em fileiras (cada fileira de uma cor, contadas 1, 2, 3…); o que sobra fica com borda vermelha. Múltiplos também como pulos na reta.
+- **Porcentagem:** a grade de 100 na lateral, pintando a parte. Cada atalho (÷ 2, ÷ 10, ÷ 4, ÷ 5, ÷ 100) vem com o "1 parte de quantas".
+- **Testar opções:** quando a pergunta tem opções, testa uma por linha; as que não servem ficam apagadinhas.
+- **× e ÷ por 10, 100, 1000:** o quadro das casas (M C D U , d c) na lateral; cada resultado entra numa linha nova com os algarismos já na casa certa (amarelos) e o rótulo "← 2 casas" / "vírgula →".
+- **Negativos:** toda soma e subtração é feita na reta: ponto de partida, pulos contados, ponto de chegada. Reta longa: números de 2 em 2 (ou de 5 em 5) e contagem de 5 em 5. × e ÷: sempre "1º a conta sem sinal, 2º os sinais".
+- **Expressões:** a lista "A ordem" fica na lateral e acende o passo da vez. Na conta, a parte que vai ser feita fica sublinhada em amarelo na própria linha (não escreve a linha de novo); o resultado entra na linha seguinte, em amarelo.
 - **Perímetro:** uma linha amarela **percorre o contorno** (com uma bolinha na ponta) e cada lado entra na soma quando ela passa.
 - **Plano cartesiano:** o ponto anda casa por casa (primeiro o x, depois o y) e as casas são contadas. Com negativos, os eixos mostram só os números pares para a letra não ficar abaixo do mínimo.
 - **Celular deitado:** o jogo gira a tela. Toda posição (setas, número voando, ida para o histórico) é medida **nas coordenadas da lousa** (função `mapa()` do protótipo), nunca direto com `getBoundingClientRect`.

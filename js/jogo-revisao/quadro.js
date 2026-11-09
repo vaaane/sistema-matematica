@@ -121,7 +121,7 @@ export function criarQuadro(raiz) {
   }
   // PROMPT-216: as medidas da pergunta sublinhadas em amarelo (3 cm, 12 m², 50°); {A:…} e {B:…}: o que se compara (laranja e lilás)
   const pergHtml = (fr) => esc(fr)
-    .replace(/(\d+(?:,\d+)?) ?(cm²|m²|cm|mm|km|m|°)(?![a-zà-ú²])/g, (m, n, u) => `<u class="qd-med">${n}${u === '°' ? '' : ' '}${u}</u>`)
+    .replace(/(\d+(?:,\d+)?)(?: (cm²|m²|cm|mm|km|m)|(°))(?![a-zà-ú²])/g, (m, n, u, g) => `<u class="qd-med">${n}${g ? '' : ' '}${u || g}</u>`)   // PROMPT-220: unidade com espaço (9m é termo, não metro)
     .replace(/\{([AB]):([^{}]+)\}/g, (m, k, t) => `<span class="qd-cmp${k}">${t}</span>`)
     .replace(/(\d),(\d)/g, '$1<span class="qd-v">,</span>$2');
   const ler = (txt) => wait(1800 + 160 * String(txt).replace(/<[^>]+>/g, ' ').trim().split(/\s+/).length);
@@ -130,7 +130,8 @@ export function criarQuadro(raiz) {
     if (!txt || PERG.dataset.txt === txt) { ajustaTopo(); return; }
     if (PERG.textContent.trim()) { PERG.style.opacity = 0; await wait(300); }
     PERG.dataset.txt = txt;
-    PERG.innerHTML = txt.split(/(?<=[.?!])\s+|\s*\|\s*/).filter(Boolean).map(fr => `<div>${pergHtml(fr)}</div>`).join('');
+    const semQuebra = txt.replace(/ (?=[=+−×÷]|\d)|(?<=[=+−×÷]) /g, '\u00a0');   // PROMPT-219: a equação da pergunta não quebra no meio
+    PERG.innerHTML = semQuebra.split(/(?<=[.?!])\s+|\s*\|\s*/).filter(Boolean).map(fr => `<div>${pergHtml(fr)}</div>`).join('');
     ajustaTopo(); PERG.style.opacity = 1;
     if (espera) await ler(txt);
   }
@@ -249,15 +250,20 @@ export function criarQuadro(raiz) {
     const txtN = notas ? [...notas.querySelectorAll('.qd-nota')].filter(n => !n.classList.contains('qd-apaga')).map(n => n.textContent.trim()).filter(Boolean) : [];
     if (notas) { notas.classList.add('qd-apaga'); await wait(250); notas.remove(); }
     let M = mapa(), f = fluxo(card, M), h = card.offsetHeight;
-    let w = Math.max(card.offsetWidth, ...[...card.querySelectorAll(":scope > .qd-conta > *")].map(e => e.offsetWidth));
+    let w = Math.max(card.offsetWidth, ...[...card.querySelectorAll(":scope > .qd-conta > *")].map(e => e.offsetWidth),
+      ...[...card.querySelectorAll(".qd-eqv > .ln")].map(e => e.offsetWidth));   // PROMPT-220: a linha da conta pode passar da caixa (não quebra)
     const gap = parseFloat(getComputedStyle(HIST).rowGap) || 0;
     const min = L.clientWidth * LETRA_MIN / 100;
     const fonte = parseFloat(getComputedStyle(card).fontSize) * .75;   // a menor letra da conta (listas, frações e o certo embaixo ficam ~75%)
     const K = Math.min(1, Math.max(min / fonte, Math.min(.5, (HIST.clientWidth - 4) / Math.max(w, 1))));
     // PROMPT-216: a conta não cabe na largura do histórico com a letra mínima? quebra em linhas (nunca fica cortada)
+    let s0 = 1;   // PROMPT-221: a escala do 1º quadro do voo
     if (w * K > HIST.clientWidth - 4) {
+      const h0 = h;
       card.style.width = (HIST.clientWidth - 4) / K + 'px'; card.classList.add('quebra-h');
-      w = card.offsetWidth; h = card.offsetHeight; M = mapa(); f = fluxo(card, M);
+      w = card.offsetWidth; h = card.offsetHeight; M = mapa();
+      // quebrada, a conta fica mais alta: o voo sai do lugar e da altura de antes (senão, no 1º quadro, passa da linha tracejada)
+      s0 = Math.min(1, Math.max(K, h0 / Math.max(h, 1)));   // nunca menor que a escala do histórico (a letra fica no mínimo)
     }
     const slot = el('div', 'qd-hslot', '', HIST);
     slot.style.width = Math.max(w * K, 1) + 'px';
@@ -271,6 +277,7 @@ export function criarQuadro(raiz) {
       const velho = HIST.firstElementChild; velho.style.transition = `opacity ${T(.3)}`; velho.style.opacity = 0; await wait(300); velho.remove();
     }
     card.style.width = w + 'px';
+    card.querySelectorAll('.qd-pop').forEach((e) => e.classList.remove('qd-pop'));   // mudar de lugar no DOM recomeça a animação: o pulo não repete no histórico
     slot.insertBefore(card, slot.firstChild);
     card.style.setProperty("--hk", K);   // as letras miúdas (expoente, empréstimo…) crescem para ficar no mínimo depois da escala
     card.classList.add('mini');
@@ -278,7 +285,7 @@ export function criarQuadro(raiz) {
     card.style.transform = `scale(${K})`;
     if (hn) hn.style.opacity = 0;
     const l = fluxo(card, M);
-    card.style.transform = `translate(${f.left - l.left}px, ${f.top - l.top}px) scale(1)`;
+    card.style.transform = `translate(${f.left - l.left}px, ${f.top - l.top}px) scale(${s0})`;
     card.offsetWidth;
     card.style.transition = `transform ${T(.85)} cubic-bezier(.3, .8, .3, 1)`;
     card.style.transform = `scale(${K})`;
@@ -2436,6 +2443,2639 @@ export function criarQuadro(raiz) {
     for (const r of s.regras || ['Cada número é o cruzamento de uma linha com uma coluna.']) await regra(r);
   }
 
+  // ══════════════════ 9: equações (PROMPT-219; protótipos referencia/lousa-9a.html e lousa-9b.html) ══════════════════
+  // As cenas recebem os números (a aula usa os do protótipo; o cartão do erro, os da questão). A balança fica na lateral larga.
+  const virgH = (h) => String(h).replace(/(\d),(\d)/g, '$1<span class="qd-v">,</span>$2');   // como virgulas(), mas o html já vem montado (os <span> da conta)
+  const sN = (v) => (v < 0 ? '−' + -v : String(v));
+  const TQ = (s) => `<span class="t">${s}</span>`;
+  const cxo = (k) => (k === 1 ? '' : String(k));   // 1x vira x
+  const nota2 = async (c, txt, ms = 1600) => { const p = await nota(c.notas, txt, 'passo'); await wait(ms); return p; };
+  const ladoSvg = () => figura();
+  // ── a balança: lado esquerdo = lado direito ──
+  // estado de cada lado: { x: caixas, b: pesos de 1, h: pesos que faltam (o "menos"), meio: k (x ÷ k, um pedaço da caixa), partes: [t, k] (pesos separados) }
+  // marcas: { sai: { e: {b, x, h, meio}, d: {...} }, entra: {...}, grupos: n (os pesos da direita em n grupos, um por caixa) }
+  // Mais de 24 quadradinhos num prato: um peso só, com o número escrito (nos grupos, um peso por caixa e o valor dentro da caixa).
+  function balanca(legenda = 'cada quadradinho = 1') {
+    const F = ladoSvg(), S = F.S;
+    const yT = .3 * S, yP = .7 * S, cxs = { e: .27 * S, d: .73 * S };
+    const fixo = F.mk('g', {});
+    F.mk('path', { d: `M${.5 * S} ${yT} L${.43 * S} ${.9 * S} L${.57 * S} ${.9 * S} Z`, class: 'bl-pe' }, fixo);
+    F.mk('line', { x1: .08 * S, y1: yT, x2: .92 * S, y2: yT, class: 'bl-trave' }, fixo);
+    for (const c of Object.values(cxs)) { F.mk('line', { x1: c, y1: yT, x2: c - .17 * S, y2: yP, class: 'bl-fio' }, fixo); F.mk('line', { x1: c, y1: yT, x2: c + .17 * S, y2: yP, class: 'bl-fio' }, fixo); F.mk('line', { x1: c - .2 * S, y1: yP, x2: c + .2 * S, y2: yP, class: 'bl-prato' }, fixo); }
+    F.txt(.5 * S, yT - F.fs * 1.4, '=', 'bl-igual', fixo);
+    F.txt(.5 * S, .96 * S, legenda, 'bl-leg', fixo);
+    const itens = F.mk('g', {});
+    // um peso grande com o número (prato com muitos quadradinhos)
+    const peso = (x, y, w, h, v, cls) => { const g = F.mk('g', { class: 'bl-it bl-peso ' + cls }, itens); F.mk('rect', { x, y: y - h, width: w, height: h, rx: 5 }, g); F.txt(x + w / 2, y - h / 2, String(v), 'bl-pn', g); return g; };
+    return {
+      F,
+      desenha(st, m = {}) {
+        itens.innerHTML = '';
+        for (const lado of ['e', 'd']) {
+          const s = st[lado] || {}, cx = cxs[lado];
+          const sai = (m.sai && m.sai[lado]) || {}, entra = (m.entra && m.entra[lado]) || {};
+          const nb = s.partes ? s.partes.reduce((a, b) => a + b, 0) : s.b || 0, nh = s.h || 0, tot = nb + nh, grande = tot > 24 || !!s.partes;   // partes: os pesos separados, cada um com o número
+          const grp = m.grupos && lado === 'd' ? m.grupos : 0;
+          let y = yP - 2;
+          // caixas x (e o pedaço de caixa); mais de 4: em fileiras de 4
+          const nx = s.x || 0, porX = nx > 4 ? 4 : Math.max(nx, 1), bx = Math.max((nx > 3 ? .075 : .09) * S, F.fs * 1.5), filX = Math.ceil(nx / porX);
+          const valX = m.grupos && st.d && !st.d.partes && (st.d.b || 0) + (st.d.h || 0) > 24 ? (st.d.b || 0) / m.grupos : null;   // número grande: o valor de cada caixa dentro dela
+          for (let i = 0; i < nx; i++) {
+            const col = i % porX, lin = Math.floor(i / porX), nl = Math.min(porX, nx - lin * porX);
+            const larg = nl * bx * 1.12 + (s.meio && lin === filX - 1 ? bx * .62 : 0);
+            const x = cx - larg / 2 + col * bx * 1.12, yy = y - lin * bx * 1.15;
+            const g = F.mk('g', { class: 'bl-it bl-x' + (i >= nx - (sai.x || 0) ? ' sai' : '') + (i >= nx - (entra.x || 0) ? ' entra' : '') + (m.grupos ? ' bl-g' + (i % 5) : '') }, itens);
+            F.mk('rect', { x, y: yy - bx, width: bx, height: bx, rx: 4 }, g);
+            F.txt(x + bx / 2, yy - bx / 2, valX != null && lado === 'e' ? sN(valX) : 'x', '', g).style.fontSize = Math.max(bx * .6, F.fs) + 'px';
+          }
+          if (s.meio) {
+            const nl = nx ? Math.min(porX, nx - (filX - 1) * porX) : 0, larg = nl * bx * 1.12 + bx * .62, x = cx - larg / 2 + nl * bx * 1.12, yy = y - Math.max(filX - 1, 0) * bx * 1.15;
+            const g = F.mk('g', { class: 'bl-it bl-meio' + (sai.meio ? ' sai' : '') }, itens);
+            const w = bx / Math.max(2, s.meio) * 1.0;
+            F.mk('rect', { x, y: yy - bx, width: w, height: bx, rx: 3 }, g); F.txt(x + w / 2, yy - bx * 1.35, `x ÷ ${s.meio}`, 'bl-leg', g);
+          }
+          if (nx || s.meio) y -= filX * bx * 1.15;
+          if (grande) {   // um peso por número (o que sai e o que entra ficam separados; nos grupos, um por caixa)
+            const blocos = [];
+            if (grp) for (let k = 0; k < grp; k++) blocos.push([nb / grp, ' bl-g' + (k % 5)]);
+            else if (s.partes) s.partes.forEach((v, k) => blocos.push([v, ' bl-g' + k]));
+            else {
+              const fica = nb - (sai.b || 0) - (entra.b || 0);
+              if (fica > 0) blocos.push([fica, '']);
+              if (sai.b) blocos.push([sai.b, ' sai']);
+              if (entra.b) blocos.push([entra.b, ' entra']);
+            }
+            if (nh) blocos.push([nh, ' bl-hp' + (sai.h ? ' sai' : '')]);
+            // cada peso com a largura que o número precisa; não cabem lado a lado no prato: em fileiras
+            const gap = .01 * S, larg = .4 * S, h = Math.max(.1 * S, F.fs * 1.6);
+            const wN = Math.max(...blocos.map(([v]) => F.fs * (.62 * String(v).length + .9)));
+            const por = Math.max(1, Math.min(blocos.length, Math.floor((larg + gap) / (wN + gap)))), w = Math.max(wN, Math.min(.17 * S, larg / por - gap));
+            blocos.forEach(([v, cls], k) => { const lin = Math.floor(k / por), col = k % por, nl = Math.min(por, blocos.length - lin * por), x0 = cx - (nl * w + (nl - 1) * gap) / 2;
+              peso(x0 + col * (w + gap), y - lin * (h + gap), w, h, v, cls); });
+            continue;
+          }
+          // pesos de 1 (e os que faltam), 5 por fileira (6 se passar de 15)
+          const por = tot > 15 ? 6 : 5, bb = (tot > 15 ? .048 : .055) * S;
+          const corParte = (i) => { if (!s.partes) return ''; let a = 0; for (let k = 0; k < s.partes.length; k++) { a += s.partes[k]; if (i < a) return ' bl-g' + k; } return ''; };
+          for (let i = 0; i < tot; i++) {
+            const col = i % por, lin = Math.floor(i / por), px = cx - (por * bb * 1.15) / 2 + col * bb * 1.15, py = y - (lin + 1) * bb * 1.15;
+            const ehH = i >= nb;
+            let cls = 'bl-it ' + (ehH ? 'bl-h' : 'bl-b');
+            if (!ehH && i >= nb - (sai.b || 0)) cls += ' sai';
+            if (ehH && i - nb >= nh - (sai.h || 0)) cls += ' sai';
+            if (!ehH && i >= nb - (entra.b || 0)) cls += ' entra';
+            if (grp && !ehH) cls += ' bl-g' + Math.floor(i / (nb / grp));
+            if (!ehH) cls += corParte(i);
+            F.mk('rect', { x: px, y: py, width: bb, height: bb, rx: 2, class: cls }, itens);
+          }
+        }
+      },
+    };
+  }
+  // ── a conta: linhas; o termo que atravessa o "=" ganha uma seta curva ──
+  function contaEq(pai) {
+    const box = el('div', 'qd-eqv', '', pai);
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'seta-eq'); box.appendChild(svg);
+    return {
+      box,
+      async linha(html, ms = 900) {
+        const l = el('div', 'ln qd-pop', virgH(html), box); const tt = l.querySelector('.t');
+        if (tt && box.querySelectorAll('.ln').length > 1 && [...l.children].slice([...l.children].indexOf(tt)).some((s) => s.textContent.trim() === '=')) l.classList.add('com-seta');   // espaço em cima para a seta não encostar na linha de cima
+        await wait(ms); return l;
+      },
+      // seta do termo (antes do "=") até depois do último número da linha, com o rótulo (ex.: "vira − 7"); rel(): certo também girado
+      async atravessa(ln, rotulo) {
+        const t = ln.querySelector('.t'), fim = ln.lastElementChild;
+        t.classList.add('vai');
+        svg.setAttribute('width', box.offsetWidth); svg.setAttribute('height', box.offsetHeight);
+        const a = rel(box, t), b = rel(box, fim);
+        const x1 = a.x + a.w / 2, y1 = a.y + a.h * .05, x2 = b.x + b.w + a.w * .45, y2 = b.y + b.h * .05, cy = Math.min(y1, y2) - a.h * .75;
+        curva(svg, x1, y1, (x1 + x2) / 2, cy, x2, y2, 'var(--qd-amarelo)', Math.max(2, a.h * .06));
+        const r = el('div', 'seta-rot', esc(rotulo), box); r.style.left = (x1 + x2) / 2 + 'px'; r.style.top = (cy + Math.min(y1, y2)) / 2 + 'px';
+        await wait(1300);
+      },
+      limpaSetas() { svg.innerHTML = ''; box.querySelectorAll('.seta-rot').forEach((e) => e.remove()); box.querySelectorAll('.t.vai').forEach((e) => e.classList.remove('vai')); },
+      async final(html) { this.limpaSetas(); const l = el('div', 'ln qd-pop', `<span class="ok">${virgH(html)}</span>`, box); await wait(700); return l; },
+      async confere(html) { const l = el('div', 'ln conf qd-pop', virgulas(html), box); await wait(900); return l; },
+    };
+  }
+  // ── traduzir: a frase em pedaços; cada pedaço acende e vira símbolo embaixo ──
+  async function traduz(pai, pares, ms = 1100) {
+    const g = el('div', 'qd-trad', '', pai);
+    g.style.gridTemplateRows = 'auto auto auto';
+    const cols = pares.map(([w, s]) => { const a = el('div', 'w', esc(String(w)), g), b = el('div', 'seta', '↓', g), c = el('div', 's', virgulas(String(s)), g); [b, c].forEach((e) => { e.style.visibility = 'hidden'; }); return [a, b, c]; });
+    for (const [a, b, c] of cols) { a.classList.add('on'); await wait(ms * .4); b.style.visibility = ''; c.style.visibility = ''; c.classList.add('qd-pop'); await wait(ms * .6); a.classList.remove('on'); }
+    return g;
+  }
+  // ── reta numérica (para o negativo); muitas casas: só alguns números escritos (a letra não fica abaixo do mínimo) ──
+  function retaNum(de, ate, dado) {   // PROMPT-221: dado = rótulos só de dado em dado
+    const F = ladoSvg(), S = F.S, y = .55 * S, x0 = .08 * S, x1 = .92 * S, n = ate - de, u = (x1 - x0) / n, X = (v) => x0 + (v - de) * u;
+    const larg = Math.max(String(sN(de)).length, String(sN(ate)).length);   // PROMPT-220: −21 é mais largo que 2: o espaço de cada número conta
+    const auto = Math.max(1, Math.ceil(n * F.fs * Math.max(1.6, .55 * larg + .6) / (x1 - x0))), passo = dado ? dado * Math.ceil(auto / dado) : auto;
+    F.mk('line', { x1: x0 - .03 * S, y1: y, x2: x1 + .03 * S, y2: y, class: 'bl-trave' });
+    for (let v = de; v <= ate; v++) { F.mk('line', { x1: X(v), y1: y - 6, x2: X(v), y2: y + 6, class: 'bl-fio' }); if (v % passo === 0 || passo === 1) F.txt(X(v), y + F.fs * 1.2, sN(v), 'bl-leg'); }
+    return { F, X, y,
+      ponto(v) { return F.mk('circle', { cx: X(v), cy: y, r: F.fs * .45, class: 'rn-pt' }); },
+      async salto(a, b) {
+        const d = b > a ? 1 : -1, n = Math.abs(b - a), pj = n > 10 ? 5 * Math.ceil(passo / 5) : passo, ult = n - (n % pj || pj);   // PROMPT-222: mais de 10 pulos, de 5 em 5   // PROMPT-220: anda para os dois lados (b < a: para a esquerda)
+        for (let v = a; v !== b; v += d) {
+          F.mk('path', { d: `M${X(v)} ${y - 4} Q${(X(v) + X(v + d)) / 2} ${y - u * .9} ${X(v + d)} ${y - 4}`, class: 'rn-salto' });
+          const k = Math.abs(v - a) + 1;   // o múltiplo logo antes do fim sai se ficar colado no último
+          if (pj === 1 || k === n || (k % pj === 0 && !(k === ult && n - ult < pj))) F.txt((X(v) + X(v + d)) / 2, y - u * .75 - F.fs * .4, String(k), 'bl-leg');
+          await wait(Math.max(120, 260 * 8 / Math.max(8, n)));
+        }
+      },
+    };
+  }
+
+  // ── 9-A: resolver ──
+  // 1) a equação é uma balança: x + a = c
+  async function cenaEqBal(s) {
+    const a = s.a ?? 3, c0 = s.c ?? 8, x = c0 - a;
+    const B = balanca();
+    await etiqueta('EQUAÇÃO', 'uma balança equilibrada'); ajustaTopo();
+    const perg = s.perg || `Quanto vale x em x + ${a} = ${c0}?`;
+    await poePergunta(perg, false);
+    B.desenha({ e: { x: 1, b: a }, d: { b: c0 } });
+    const c = cartao(), E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota2(c, 'O "=" é uma balança equilibrada: os dois lados pesam igual.');
+    await E.linha(`<span>x</span><span>+ ${a}</span><span>=</span><span>${c0}</span>`);
+    await apagar(p);
+    p = await nota2(c, 'A caixa x tem um peso escondido. Para descobrir, deixa o x sozinho.');
+    await apagar(p);
+    p = await nota(c.notas, `Tira ${a} dos DOIS lados: a balança continua equilibrada.`, 'passo');
+    B.desenha({ e: { x: 1, b: a }, d: { b: c0 } }, { sai: { e: { b: a }, d: { b: a } } });
+    await wait(1600);
+    B.desenha({ e: { x: 1 }, d: { b: x } });
+    await E.linha(`<span>x + ${a} − ${a}</span><span>=</span><span>${c0} − ${a}</span>`);
+    await apagar(p);
+    await E.final(`x = ${x}`);
+    await E.confere(`confere: ${x} + ${a} = ${c0} ✔`);
+    await respostaFinal(`<span>x = ${x}</span>`, { perg });
+    for (const r of s.regras || ['Equação é uma balança: o que faz de um lado, faz do outro.']) await regra(r);
+  }
+  // 2) somando passa subtraindo: x + a = c (também "pensei num número": s.pensei)
+  async function cenaEqSoma(s) {
+    const a = s.a ?? 7, c0 = s.c ?? 12, x = c0 - a;
+    const B = balanca();
+    const perg = s.perg || `Resolva: x + ${a} = ${c0}`;
+    await poePergunta(perg, false);
+    B.desenha({ e: { x: 1, b: a }, d: { b: c0 } });
+    const c = cartao(), E = contaEq(c.conta);
+    await ler(perg);
+    if (s.pensei) {   // 9) pensei num número
+      let p = await nota2(c, `O número que pensei é o x. "Somei ${a}" é + ${a}. "Deu ${c0}" é = ${c0}.`);
+      const l1 = await E.linha(`<span>x</span>${TQ('+ ' + a)}<span>=</span><span>${c0}</span>`);
+      await apagar(p);
+      p = await nota(c.notas, `Resolve: o + ${a} passa subtraindo.`, 'passo');
+      await E.atravessa(l1, `vira − ${a}`);
+      B.desenha({ e: { x: 1, b: a }, d: { b: c0 } }, { sai: { e: { b: a }, d: { b: a } } });
+      await E.linha(`<span>x</span><span>=</span><span>${c0}</span>${TQ('− ' + a)}`);
+      B.desenha({ e: { x: 1 }, d: { b: x } });
+      await apagar(p);
+      await E.final(`x = ${x}`);
+      await E.confere(`confere: ${x} + ${a} = ${c0} ✔`);
+      await respostaFinal(`<span>pensei no ${sN(x)}</span>`, { perg });
+      for (const r of s.regras || ['Problema: escreve a equação primeiro, depois resolve.']) await regra(r);
+      return;
+    }
+    const l1 = await E.linha(`<span>x</span>${TQ('+ ' + a)}<span>=</span><span>${c0}</span>`);
+    let p = await nota2(c, `O ${a} está somando com o x. Para tirar, subtrai ${a} dos dois lados.`);
+    B.desenha({ e: { x: 1, b: a }, d: { b: c0 } }, { sai: { e: { b: a }, d: { b: a } } });
+    await apagar(p);
+    p = await nota(c.notas, `Atalho: o + ${a} passa para o outro lado do "=" e vira − ${a}.`, 'passo');
+    await E.atravessa(l1, `passa e vira − ${a}`);
+    B.desenha({ e: { x: 1 }, d: { b: x } });
+    await E.linha(`<span>x</span><span>=</span><span>${c0}</span>${TQ('− ' + a)}`);
+    await apagar(p);
+    await E.final(`x = ${x}`);
+    await E.confere(`confere: ${x} + ${a} = ${c0} ✔`);
+    await respostaFinal(`<span>x = ${x}</span>`, { perg });
+    for (const r of s.regras || ['Somando de um lado, passa subtraindo para o outro.']) await regra(r);
+  }
+  // 3) subtraindo passa somando: x − a = c (c ≥ 0)
+  async function cenaEqSub(s) {
+    const a = s.a ?? 4, c0 = s.c ?? 9, x = c0 + a;
+    const B = balanca(`o tracejado: ${a} que faltam`);
+    const perg = s.perg || `Resolva: x − ${a} = ${c0}`;
+    await poePergunta(perg, false);
+    B.desenha({ e: { x: 1, h: a }, d: { b: c0 } });
+    const c = cartao(), E = contaEq(c.conta);
+    await ler(perg);
+    const l1 = await E.linha(`<span>x</span>${TQ('− ' + a)}<span>=</span><span>${c0}</span>`);
+    let p = await nota2(c, `O x está "menos ${a}". Para desfazer, soma ${a} dos dois lados.`);
+    B.desenha({ e: { x: 1, h: a }, d: { b: x } }, { sai: { e: { h: a } }, entra: { d: { b: a } } });
+    await wait(800);
+    await apagar(p);
+    p = await nota(c.notas, `Atalho: o − ${a} passa para o outro lado e vira + ${a}.`, 'passo');
+    await E.atravessa(l1, `passa e vira + ${a}`);
+    B.desenha({ e: { x: 1 }, d: { b: x } });
+    await E.linha(`<span>x</span><span>=</span><span>${c0}</span>${TQ('+ ' + a)}`);
+    await apagar(p);
+    await E.final(`x = ${x}`);
+    await E.confere(`confere: ${x} − ${a} = ${c0} ✔`);
+    await respostaFinal(`<span>x = ${x}</span>`, { perg });
+    for (const r of s.regras || ['Subtraindo de um lado, passa somando para o outro.']) await regra(r);
+  }
+  // 4) multiplicando passa dividindo: kx = c (também o dobro e "quanto custou cada um": s.tipo 'dobro' | 'cada')
+  async function cenaEqMult(s) {
+    const k = s.k ?? 3, c0 = s.c ?? 15, x = c0 / k, tipo = s.tipo || '';
+    const B = balanca(tipo === 'cada' ? 'cada quadradinho = R$ 1' : 'cada quadradinho = 1');
+    const perg = s.perg || (tipo === 'dobro' ? `O dobro de um número é ${c0}. Que número é esse?` : tipo === 'cada' ? `Comprei ${k} cadernos iguais e gastei R$ ${c0}. Quanto custou cada um?` : `Resolva: ${k}x = ${c0}`);
+    await poePergunta(perg, false);
+    B.desenha({ e: { x: k }, d: { b: c0 } });
+    const c = cartao(), E = contaEq(c.conta);
+    await ler(perg);
+    const linha1 = () => E.linha(`${TQ(String(k))}<span class="gx">x</span><span>=</span><span>${c0}</span>`);
+    let p, l1;
+    if (tipo === 'dobro') {
+      p = await nota2(c, `O dobro é 2 vezes: 2x. "É ${c0}" é = ${c0}.`);
+      l1 = await linha1(); await apagar(p);
+      p = await nota(c.notas, 'O 2 multiplica: passa dividindo. Cada caixa fica com a metade.', 'passo');
+      await E.atravessa(l1, 'vira ÷ 2');
+      B.desenha({ e: { x: k }, d: { b: c0 } }, { grupos: k });
+    } else if (tipo === 'cada') {
+      p = await nota2(c, `Cada caderno custa x. ${k} cadernos: ${k}x. Gastei ${c0}: = ${c0}.`);
+      l1 = await linha1(); await apagar(p);
+      p = await nota(c.notas, `O ${k} multiplica: passa dividindo. Reparte os ${c0} reais em ${k}.`, 'passo');
+      await E.atravessa(l1, `vira ÷ ${k}`);
+      B.desenha({ e: { x: k }, d: { b: c0 } }, { grupos: k });
+    } else {
+      p = await nota2(c, `${k}x quer dizer ${k} vezes x: são ${k} caixas iguais.`);
+      l1 = await linha1(); await apagar(p);
+      p = await nota2(c, `Reparte os ${c0} entre as ${k} caixas: cada caixa fica com ${x}.`);
+      B.desenha({ e: { x: k }, d: { b: c0 } }, { grupos: k });
+      await apagar(p);
+      p = await nota(c.notas, `Atalho: o ${k} está multiplicando, passa dividindo.`, 'passo');
+      await E.atravessa(l1, `passa e vira ÷ ${k}`);
+    }
+    await E.linha(`<span>x</span><span>=</span><span>${c0}</span>${TQ('÷ ' + k)}`);
+    await apagar(p);
+    await E.final(`x = ${x}`);
+    await E.confere(tipo === 'dobro' ? `confere: o dobro de ${x} é ${c0} ✔` : `confere: ${k} × ${x} = ${c0} ✔`);
+    await respostaFinal(tipo === 'dobro' ? `<span>o número é ${x}</span>` : tipo === 'cada' ? `<span>cada um: R$ ${x}</span>` : `<span>x = ${x}</span>`, { perg });
+    for (const r of s.regras || [tipo === 'dobro' ? 'Dobro: 2x. Triplo: 3x. Quádruplo: 4x.' : tipo === 'cada' ? '"Cada um custa x": vários iguais = número × x.' : 'Multiplicando o x, passa dividindo.']) await regra(r);
+  }
+  // 5) dividindo passa multiplicando: x ÷ k = c
+  async function cenaEqDiv(s) {
+    const k = s.k ?? 2, c0 = s.c ?? 6, x = c0 * k, dois = k === 2;
+    const B = balanca(dois ? 'meia caixa = metade de x' : `o pedaço = x ÷ ${k}`);
+    const perg = s.perg || `Resolva: x ÷ ${k} = ${c0}`;
+    await poePergunta(perg, false);
+    B.desenha({ e: { meio: k }, d: { b: c0 } });
+    const c = cartao(), E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota2(c, dois ? `x ÷ 2 é a metade da caixa. A metade pesa ${c0}.` : `x ÷ ${k} é um pedaço da caixa (ela tem ${k} pedaços iguais). O pedaço pesa ${c0}.`);
+    const l1 = await E.linha(`<span>x</span>${TQ('÷ ' + k)}<span>=</span><span>${c0}</span>`);
+    await apagar(p);
+    p = await nota2(c, dois ? 'A caixa inteira é o dobro: dobra os dois lados.' : `A caixa inteira são ${k} pedaços: multiplica os dois lados por ${k}.`);
+    B.desenha({ e: { x: 1 }, d: { b: x } }, { entra: { e: { x: 1 }, d: { b: x - c0 } } });
+    await apagar(p);
+    p = await nota(c.notas, `Atalho: o ${k} está dividindo, passa multiplicando.`, 'passo');
+    await E.atravessa(l1, `passa e vira × ${k}`);
+    await E.linha(`<span>x</span><span>=</span><span>${c0}</span>${TQ('× ' + k)}`);
+    await apagar(p);
+    await E.final(`x = ${x}`);
+    await E.confere(`confere: ${x} ÷ ${k} = ${c0} ✔`);
+    await respostaFinal(`<span>x = ${x}</span>`, { perg });
+    for (const r of s.regras || ['Dividindo o x, passa multiplicando.']) await regra(r);
+  }
+  // 6 e 7) duas etapas: kx + a = c ou kx − a = c (primeiro o + ou −, depois o × ou ÷; cada etapa num cartão)
+  async function cenaEq2(s) {
+    const menos = s.op === '−', k = s.k ?? (menos ? 3 : 2), a = s.a ?? (menos ? 2 : 3), c0 = s.c ?? (menos ? 10 : 11), m = menos ? c0 + a : c0 - a, x = m / k;
+    const B = balanca(menos ? `o tracejado: ${a} que faltam` : 'cada quadradinho = 1');
+    const perg = s.perg || `Resolva: ${k}x ${menos ? '−' : '+'} ${a} = ${c0}`;
+    await poePergunta(perg, false);
+    B.desenha({ e: { x: k, [menos ? 'h' : 'b']: a }, d: { b: c0 } });
+    let c = cartao(), E = contaEq(c.conta);
+    await ler(perg);
+    let p;
+    if (menos) {
+      p = await nota2(c, `Primeiro o − ${a}: passa para o outro lado somando.`);
+      const l1 = await E.linha(`<span>${k}x</span>${TQ('− ' + a)}<span>=</span><span>${c0}</span>`);
+      await E.atravessa(l1, `vira + ${a}`);
+      B.desenha({ e: { x: k, h: a }, d: { b: m } }, { sai: { e: { h: a } }, entra: { d: { b: a } } });
+      await wait(900);
+      B.desenha({ e: { x: k }, d: { b: m } });
+      await E.linha(`<span>${k}x</span><span>=</span><span>${c0} + ${a}</span>`);
+    } else {
+      p = await nota2(c, `Duas coisas grudadas no x: o ${k} (vezes) e o ${a} (mais). Primeiro tira o que está somando.`);
+      const l1 = await E.linha(`<span>${k}x</span>${TQ('+ ' + a)}<span>=</span><span>${c0}</span>`);
+      await E.atravessa(l1, `vira − ${a}`);
+      B.desenha({ e: { x: k, b: a }, d: { b: c0 } }, { sai: { e: { b: a }, d: { b: a } } });
+      await wait(900);
+      B.desenha({ e: { x: k }, d: { b: m } });
+      await E.linha(`<span>${k}x</span><span>=</span><span>${c0} − ${a}</span>`);
+    }
+    E.limpaSetas(); await apagar(p); p = null; await paraHist(c); c = cartao(); E = contaEq(c.conta);
+    const l3 = await E.linha(`${TQ(String(k))}<span class="gx">x</span><span>=</span><span>${m}</span>`);
+    p = await nota(c.notas, menos ? `Depois o ${k} que multiplica passa dividindo.` : `Agora o ${k} que está multiplicando passa dividindo.`, 'passo');
+    await E.atravessa(l3, `vira ÷ ${k}`);
+    B.desenha({ e: { x: k }, d: { b: m } }, { grupos: k });
+    await E.linha(`<span>x</span><span>=</span><span>${m}</span>${TQ('÷ ' + k)}`);
+    await apagar(p);
+    await E.final(`x = ${x}`);
+    await E.confere(`confere: ${k} × ${x} ${menos ? '−' : '+'} ${a} = ${c0} ✔`);
+    await respostaFinal(`<span>x = ${x}</span>`, { perg });
+    for (const r of s.regras || [menos ? 'Primeiro o + ou −, depois o × ou ÷.' : 'Duas etapas: primeiro o + ou −, depois o × ou ÷.']) await regra(r);
+  }
+  // 8) com negativo: x − a = c (c < 0), na reta numérica
+  async function cenaEqNeg(s) {
+    const a = s.a ?? 8, c0 = s.c ?? -3, x = c0 + a;
+    const R = retaNum(Math.min(c0, 0) - 1, Math.max(x, 0) + 1);
+    const perg = s.perg || `Resolva: x − ${a} = ${sN(c0)}`;
+    await poePergunta(perg, false);
+    const c = cartao(), E = contaEq(c.conta);
+    await ler(perg);
+    const l1 = await E.linha(`<span>x</span>${TQ('− ' + a)}<span>=</span><span>${sN(c0)}</span>`);
+    let p = await nota(c.notas, `O − ${a} passa para o outro lado e vira + ${a}.`, 'passo');
+    await E.atravessa(l1, `vira + ${a}`);
+    await E.linha(`<span>x</span><span>=</span><span>${sN(c0)}</span>${TQ('+ ' + a)}`);
+    await apagar(p);
+    p = await nota(c.notas, `Na reta: começa no ${sN(c0)} e anda ${a} casas para a direita.`, 'passo');
+    R.ponto(c0); await wait(500);
+    await R.salto(c0, x);
+    R.ponto(x);
+    await apagar(p);
+    await E.final(`x = ${sN(x)}`);
+    await E.confere(`confere: ${sN(x)} − ${a} = ${sN(c0)} ✔`);
+    await respostaFinal(`<span>x = ${sN(x)}</span>`, { perg });
+    for (const r of s.regras || ['Negativo mais positivo: anda para a direita na reta.']) await regra(r);
+  }
+  // 12) x dos dois lados: ax − b = cx + d
+  async function cenaEqDois(s) {
+    const a = s.a ?? 5, b = s.b ?? 3, cc = s.cc ?? 2, d = s.d ?? 9, k = a - cc, m = d + b, x = m / k;
+    const B = balanca(`o tracejado: ${b} que faltam`);
+    const perg = s.perg || `Resolva: ${a}x − ${b} = ${cxo(cc)}x + ${d}`;
+    await poePergunta(perg, false);
+    B.desenha({ e: { x: a, h: b }, d: { x: cc, b: d } });
+    let c = cartao(), E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota2(c, 'Tem x dos dois lados. Junta os x de um lado e os números do outro.');
+    await E.linha(`<span>${a}x − ${b}</span><span>=</span>${TQ(cxo(cc) + 'x')}<span>+ ${d}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `O ${cxo(cc)}x passa para a esquerda subtraindo (tira ${cc === 1 ? '1 caixa' : cc + ' caixas'} dos dois lados).`, 'passo');
+    B.desenha({ e: { x: a, h: b }, d: { x: cc, b: d } }, { sai: { e: { x: cc }, d: { x: cc } } });
+    await wait(1200);
+    B.desenha({ e: { x: k, h: b }, d: { b: d } });
+    await E.linha(`<span>${a}x − ${cxo(cc)}x − ${b}</span><span>=</span><span>${d}</span>`);
+    await apagar(p); p = null; await paraHist(c); c = cartao(); E = contaEq(c.conta);
+    const l3 = await E.linha(`<span>${cxo(k)}x</span>${TQ('− ' + b)}<span>=</span><span>${d}</span>`);
+    p = await nota(c.notas, k === 1 ? `Agora como antes: o − ${b} passa somando.` : `Agora como antes: o − ${b} passa somando, depois o ${k} passa dividindo.`, 'passo');
+    await E.atravessa(l3, `vira + ${b}`);
+    B.desenha({ e: { x: k }, d: { b: m } }, { entra: { d: { b } } });
+    await E.linha(`<span>${cxo(k)}x</span><span>=</span><span>${m}</span>`);
+    E.limpaSetas();
+    if (k > 1) {
+      B.desenha({ e: { x: k }, d: { b: m } }, { grupos: k });
+      await E.linha(`<span>x</span><span>=</span><span>${m} ÷ ${k}</span>`);
+    }
+    await apagar(p);
+    await E.final(`x = ${x}`);
+    const L1 = a * x - b;
+    await E.confere(`confere: ${a} × ${x} − ${b} = ${L1}`); await E.confere(`e ${cc === 1 ? x : `${cc} × ${x}`} + ${d} = ${L1} ✔`);
+    await respostaFinal(`<span>x = ${x}</span>`, { perg });
+    for (const r of s.regras || ['x de um lado, números do outro. Quem troca de lado, troca o sinal.']) await regra(r);
+  }
+  // 13) parênteses: k(x + b) = c
+  async function cenaEqParen(s) {
+    const k = s.k ?? 2, b = s.b ?? 3, c0 = s.c ?? 14, m = c0 / k, x = m - b;
+    const B = balanca();
+    const perg = s.perg || `Resolva: ${k}(x + ${b}) = ${c0}`;
+    await poePergunta(perg, false);
+    B.desenha({ e: { x: k, b: k * b }, d: { b: c0 } });
+    const c = cartao(), E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota2(c, `${k}(x + ${b}) são ${k} vezes o "x + ${b}": ${k} caixas e ${k} grupos de ${b}.`);
+    const l1 = await E.linha(`${TQ(String(k))}<span class="gx">(x + ${b})</span><span>=</span><span>${c0}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `Divide os dois lados por ${k}: fica um x + ${b} só, e ${k === 2 ? `metade do ${c0}` : `${c0} ÷ ${k}`}.`, 'passo');
+    await E.atravessa(l1, `vira ÷ ${k}`);
+    B.desenha({ e: { x: k, b: k * b }, d: { b: c0 } }, { sai: { e: { x: k - 1, b: (k - 1) * b }, d: { b: c0 - m } } });
+    await wait(1200);
+    B.desenha({ e: { x: 1, b }, d: { b: m } });
+    const l2 = await E.linha(`<span>x</span>${TQ('+ ' + b)}<span>=</span><span>${c0} ÷ ${k} = ${m}</span>`);
+    E.limpaSetas();
+    await apagar(p);
+    p = await nota(c.notas, `Agora o + ${b} passa subtraindo.`, 'passo');
+    await E.atravessa(l2, `vira − ${b}`);
+    B.desenha({ e: { x: 1, b }, d: { b: m } }, { sai: { e: { b }, d: { b } } });
+    await E.linha(`<span>x</span><span>=</span><span>${m} − ${b}</span>`);
+    B.desenha({ e: { x: 1 }, d: { b: x } });
+    await apagar(p);
+    await E.final(`x = ${x}`);
+    await E.confere(`confere: ${k} × (${x} + ${b}) = ${c0} ✔`);
+    await respostaFinal(`<span>x = ${x}</span>`, { perg });
+    for (const r of s.regras || ['Número na frente do parêntese: divide os dois lados por ele primeiro.']) await regra(r);
+  }
+
+  // ── 9-B: qual é a equação? (a resposta verde é sempre a equação) ──
+  const REGRA_B = 'O que não sei é o x. Cada palavra vira um sinal. "É", "deu", "ficou" viram =.';
+  async function tiraTrad() { const t = FOCO.querySelector('.qd-card:not(.mini) .qd-trad'); if (t) { t.classList.add('qd-apaga'); await wait(450); t.remove(); } }
+  const eqHtml = (eq) => eq.map((p) => `<span>${esc(String(p))}</span>`).join('');
+  // 1) tabela: palavras → sinais
+  async function cenaSinais(s) {
+    L.classList.add('sem-hist');
+    await etiqueta('EQUAÇÃO', 'a frase vira conta'); ajustaTopo();
+    const perg = s.perg || 'Como transformar uma frase em equação?';
+    await poePergunta(perg, false);
+    const c = cartao();
+    await ler(perg);
+    const p = await nota(c.notas, 'Cada palavra da frase tem um sinal.', 'passo');
+    const tb = el('div', 'qd-tab-sinal', '', c.conta);
+    const lin = [
+      ['um número, o que não sei', 'x'], ['mais, somei, ganhei, a mais', '+'], ['menos, tirei, gastei, perdi', '−'], ['vezes, cada um custa', '×'],
+      ['dobro · triplo', '2x · 3x'], ['metade · dividi entre 4', 'x ÷ 2 · x ÷ 4'], ['é, deu, ficou, sobrou, igual a', '='],
+    ];
+    for (const [w, sg] of lin) { el('div', 'w qd-pop', esc(w), tb); el('div', 's qd-pop', esc(sg), tb); await wait(1100); }
+    await apagar(p);
+    await nota(c.notas, 'o "=" separa o que aconteceu do resultado', 'detalhe');
+    await wait(800);
+    for (const r of s.regras || [REGRA_B]) await regra(r);
+  }
+  // a frase vira equação: { perg, pares, eq: [partes], passo, detalhe, peg: { errada, porque, certa }, res: { linhas: [[partes]], final, confere }, resp, regras }
+  async function cenaFrase(s) {
+    const perg = s.perg;
+    await poePergunta(perg, false);
+    const c = cartao();
+    await ler(perg);
+    const p = s.passo ? await nota(c.notas, s.passo, 'passo') : null;
+    await traduz(c.conta, s.pares);
+    await wait(300);
+    const E = contaEq(c.conta);
+    const l = await E.linha(eqHtml(s.eq));
+    l.classList.add('eq-escrita');
+    if (p) await apagar(p);
+    if (s.detalhe) { await nota(c.notas, s.detalhe, 'detalhe'); await wait(s.res ? 500 : 600); } else await wait(500);
+    if (s.peg) {   // pegadinha: a equação errada riscada, o motivo, e a certa embaixo
+      await tiraTrad();
+      el('div', 'ln qd-pop eq-errada', `<span class="qd-risco-todo">${virgulas(s.peg.errada)}</span><span class="x-ic">✖</span>`, E.box);
+      await wait(900);
+      await nota(c.notas, s.peg.porque, 'detalhe');
+      await certoEmbaixo(c, `<span>${virgulas(s.peg.certa)}</span>`);
+      await wait(600);
+    }
+    if (s.res) {   // resolve rapidinho, para conferir que a equação faz sentido
+      await tiraTrad(); await paraHist(c);
+      const c2 = cartao(); const E2 = contaEq(c2.conta);
+      const p2 = await nota(c2.notas, 'Resolve para conferir:', 'passo');
+      for (const ln of s.res.linhas) await E2.linha(eqHtml(ln), 700);
+      await E2.final(s.res.final);
+      await E2.confere(s.res.confere);
+      await apagar(p2);
+    }
+    await tiraTrad(); await respostaFinal(`<span>${esc(s.resp || s.eq.join(' '))}</span>`, { perg });
+    for (const r of s.regras || [REGRA_B]) await regra(r);
+  }
+  // 9) da balança para a equação: { e: { x, b }, d: { b } | { partes: [t, k] }, unid }
+  async function cenaBalEq(s) {
+    const e = s.e || { x: 2, b: 3 }, d = s.d || { b: 11 }, u = s.unid ? ' ' + s.unid : '';
+    const B = balanca(d.partes ? `os pesos em ${s.unid || 'kg'}` : `cada quadradinho = 1${u}`);
+    const perg = s.perg || 'A balança está equilibrada. Qual é a equação?';
+    await poePergunta(perg, false);
+    B.desenha({ e, d });
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const esq = `${cxo(e.x)}x${e.b ? ` + ${e.b}` : ''}`, dir = d.partes ? d.partes.join(' + ') : String(d.b);
+    let p = await nota(c.notas, `Lado esquerdo: ${e.x === 1 ? '1 caixa x' : `${e.x} caixas x`}${e.b ? ` e ${e.b} quadradinho${e.b > 1 ? 's' : ''}` : ''}.`, 'passo');
+    B.desenha({ e, d }, { grupos: 0 });
+    await wait(1200);
+    await E.linha(`<span>${esq}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, 'Equilibrada: os dois lados pesam igual, é o =.', 'passo');
+    await E.linha(`<span>${esq}</span><span>=</span>`);
+    await apagar(p);
+    p = await nota(c.notas, d.partes ? `Lado direito: um peso de ${d.partes[0]} e outro de ${d.partes[1]}.` : `Lado direito: ${d.b} quadradinhos.`, 'passo');
+    await E.linha(`<span>${esq}</span><span>=</span><span>${dir}</span>`);
+    await apagar(p);
+    await nota(c.notas, `cada caixa é um x; cada quadradinho vale 1${u}`, 'detalhe');
+    await wait(600);
+    await tiraTrad(); await respostaFinal(`<span>${esq} = ${dir}</span>`, { perg });
+    for (const r of s.regras || ['Balança: o que está de um lado = o que está do outro.']) await regra(r);
+  }
+
+  // ══════════════════ 8: expressões algébricas (PROMPT-220; protótipos referencia/lousa-8a.html e lousa-8b.html) ══════════════════
+  // As cenas recebem os números e as letras (a aula usa os do protótipo; o cartão do erro, os da questão).
+  const mono8 = (k, l) => (k === 1 ? l : `${k}${l}`);
+  const X8 = (n = 1, extra = {}) => ({ t: 'x', n, ...extra });
+  const B8 = (n, extra = {}) => ({ t: 'b', n, ...extra });
+  const OP8 = (s) => ({ t: 'op', s });
+  const V8 = (v, n = 1, extra = {}) => ({ t: 'v', v, n, ...extra });
+  const SB = (v, cor = '') => `<b class="sb${cor ? ' ' + cor : ''}">${v}</b>`;   // o número que entrou no lugar da letra
+  const gA = (s) => `<b class="gA">${s}</b>`, gB = (s) => `<b class="gB">${s}</b>`;   // os grupos da simplificação
+  const NOME8 = { 2: 'dobro', 3: 'triplo', 4: 'quádruplo' }, QTD8 = { 1: 'uma', 2: 'duas', 3: 'três', 4: 'quatro' };
+  // ── a lateral com linhas de "coisas", cada uma com o rótulo em cima ──
+  // linhas: [{ rot, itens: [{ t, n, l, cor, v, s, sai, entra }], entra }]
+  // t: 'x' caixa com letra · 'v' caixa aberta com o número · 'b' quadradinhos de 1 · 'h' tracejados · 'meio' · 'q' quadrado x² · 'grade' n × n · 'op' sinal
+  // Mais de 12 caixas: uma caixa só, com "12 × x" escrito.
+  function caixas(legenda) {
+    const F = ladoSvg(), S = F.S, g = F.mk('g', {});
+    if (legenda) F.txt(.5 * S, .96 * S, legenda, 'bl-leg');
+    const larga = (it) => F.fs * (.62 * `${it.n} × ${it.t === 'v' ? it.v : it.l || 'x'}`.length + 1);
+    const W = (it, bx) => {
+      const bb = bx * .42;
+      switch (it.t) {
+        case 'x': case 'v': return (it.n || 1) > 12 ? larga(it) + bx * .12 : (it.n ?? 1) * bx * 1.12;
+        case 'b': case 'h': return Math.ceil(it.n / 2) * bb * 1.15 + bx * .1;
+        case 'meio': return bx * .62;
+        case 'q': return bx * 1.9;
+        case 'grade': return it.n * bx * .42 * 1.08 + bx * .1;
+        case 'op': return bx * .55;
+      }
+      return 0;
+    };
+    return { F,
+      desenha(linhas) {
+        g.innerHTML = '';
+        const n = linhas.length, top = .04 * S, bot = .9 * S, h = Math.min(.36 * S, (bot - top) / n), y0 = top + ((bot - top) - h * n) / 2;
+        const x0 = .04 * S, disp = .92 * S, rotH = F.fs * 1.7;
+        linhas.forEach((ln, i) => {
+          const yT = y0 + h * i, yc = yT + rotH + (h - rotH) / 2;
+          const gr = F.mk('g', { class: 'cx-lin' + (ln.entra ? ' entra' : '') }, g);
+          let bx = Math.min((h - rotH) * .8, .2 * S);
+          const tot = ln.itens.reduce((s2, it) => s2 + W(it, bx), 0);
+          if (tot > disp) bx *= disp / tot;
+          const gmax = Math.max(0, ...ln.itens.filter((it) => it.t === 'grade').map((it) => it.n));
+          if (gmax) bx = Math.min(bx, (h - rotH) * .95 / (gmax * .42 * 1.08));   // PROMPT-221: a grade cabe na altura da linha
+          if (ln.rot) { const t = F.txt(x0, yT + rotH * .5, ln.rot, 'cx-rot', gr, 'start'); t.style.fontSize = F.fs * 1.25 + 'px'; }
+          let x = x0;
+          for (const it of ln.itens) {
+            const k = it.n ?? 1, cls = (j, tot2) => (it.sai && j >= tot2 - it.sai ? ' sai' : '') + (it.entra ? ' entra' : '') + (it.cor ? ' cor-' + it.cor : '');
+            if ((it.t === 'x' || it.t === 'v') && k > 12) {   // muitas caixas: uma só, com a quantidade escrita
+              const w = larga(it), gg = F.mk('g', { class: 'bl-it ' + (it.t === 'x' ? 'bl-x' : 'cx-v') + cls(0, 1) }, gr);
+              F.mk('rect', { x, y: yc - bx / 2, width: w, height: bx, rx: 4 }, gg);
+              F.txt(x + w / 2, yc, `${k} × ${it.t === 'v' ? it.v : it.l || 'x'}`, '', gg).style.fontSize = F.fs + 'px';
+              x += w + bx * .12;
+            }
+            else if (it.t === 'x') for (let j = 0; j < k; j++) { const gg = F.mk('g', { class: 'bl-it bl-x' + cls(j, k) }, gr); F.mk('rect', { x, y: yc - bx / 2, width: bx, height: bx, rx: 4 }, gg); F.txt(x + bx / 2, yc, it.l || 'x', '', gg).style.fontSize = Math.max(bx * .6, F.fs) + 'px'; x += bx * 1.12; }
+            else if (it.t === 'v') for (let j = 0; j < k; j++) { const gg = F.mk('g', { class: 'bl-it cx-v' + cls(j, k) }, gr); F.mk('rect', { x, y: yc - bx / 2, width: bx, height: bx, rx: 4 }, gg); F.txt(x + bx / 2, yc, it.v, '', gg).style.fontSize = Math.max(bx * (String(it.v).length > 2 ? .42 : .55), F.fs) + 'px'; x += bx * 1.12; }
+            else if (it.t === 'b' || it.t === 'h') {
+              const bb = bx * .42, cols = Math.ceil(it.n / 2);
+              for (let j = 0; j < it.n; j++) { const c = Math.floor(j / 2), r = j % 2; F.mk('rect', { x: x + c * bb * 1.15, y: yc - bb * 1.1 + r * bb * 1.15, width: bb, height: bb, rx: 2, class: 'bl-it ' + (it.t === 'b' ? 'bl-b' : 'bl-h') + cls(j, it.n) }, gr); }
+              x += cols * bb * 1.15 + bx * .1;
+            }
+            else if (it.t === 'meio') { const gg = F.mk('g', { class: 'bl-it bl-meio' + cls(0, 1) }, gr); F.mk('rect', { x, y: yc - bx / 2, width: bx * .5, height: bx, rx: 3 }, gg); x += bx * .62; }
+            else if (it.t === 'q') { const s = bx * 1.35, gg = F.mk('g', { class: 'bl-it cx-q' + cls(0, 1) }, gr); F.mk('rect', { x: x + bx * .25, y: yc - s / 2, width: s, height: s, rx: 3 }, gg); F.txt(x + bx * .25 + s / 2, yc, 'x²', '', gg).style.fontSize = Math.max(bx * .5, F.fs) + 'px'; F.txt(x + bx * .25 + s / 2, yc - s / 2 - F.fs * .6, 'x', 'cx-lado', gg); F.txt(x + bx * .1, yc, 'x', 'cx-lado', gg); x += bx * 1.7; }
+            else if (it.t === 'grade') { const c = bx * .42; for (let a = 0; a < it.n; a++) for (let b = 0; b < it.n; b++) F.mk('rect', { x: x + a * c * 1.08, y: yc - it.n * c * 1.08 / 2 + b * c * 1.08, width: c, height: c, rx: 1.5, class: 'bl-it bl-b' + (it.entra ? ' entra' : '') }, gr); x += it.n * c * 1.08 + bx * .1; }
+            else if (it.t === 'op') { const t = F.txt(x + bx * .27, yc, it.s, 'cx-op', gr); t.style.fontSize = Math.max(bx * .6, F.fs) + 'px'; x += bx * .55; }
+          }
+        });
+      },
+    };
+  }
+  // a frase vira expressão: pedaço por pedaço, depois a expressão escrita inteira
+  async function fraseExpr(c, pares, expr, passo) {
+    const p = passo ? await nota(c.notas, passo, 'passo') : null;
+    await traduz(c.conta, pares);
+    await wait(300);
+    const E = contaEq(c.conta);
+    const l = await E.linha(expr);
+    if (p) await apagar(p);
+    return { E, l };
+  }
+  // pegadinha: a errada riscada, o motivo, e a certa embaixo
+  async function pegadinha(c, errada, porque, certa) {
+    await tiraTrad();
+    el('div', 'ln qd-pop eq-errada', `<span class="qd-risco-todo">${virgulas(errada)}</span><span class="x-ic">✖</span>`, c.conta.querySelector('.qd-eqv') || c.conta);
+    await wait(900);
+    await nota(c.notas, porque, 'detalhe');
+    await certoEmbaixo(c, `<span>${virgulas(certa)}</span>`);
+    await wait(600);
+  }
+  const regras8 = async (s, padrao) => { for (const r of s.regras || [padrao]) await regra(r); };
+
+  // ── 8-A: linguagem algébrica e valor numérico ──
+  // 1) a letra guarda um número
+  async function cenaAlgLetra(s) {
+    const K = caixas('a caixa: um número escondido');
+    await etiqueta('EXPRESSÃO ALGÉBRICA', 'a letra guarda um número'); ajustaTopo();
+    const perg = s.perg || 'O que quer dizer a letra x numa conta?';
+    await poePergunta(perg, false);
+    K.desenha([{ itens: [X8()] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, 'A letra é como uma caixa fechada: dentro tem um número que a gente ainda não sabe.', 'passo');
+    await wait(1800); await apagar(p);
+    p = await nota(c.notas, 'Quando a frase fala "um número", a gente escreve x.', 'passo');
+    await E.linha('<span>um número: x</span>', 1300);
+    await apagar(p);
+    p = await nota(c.notas, 'Pode ser outra letra também.', 'passo');
+    K.desenha([{ itens: [X8()] }, { itens: [X8(1, { l: 'a', entra: true }), X8(1, { l: 'y', entra: true }), X8(1, { l: 'm', entra: true })] }]);
+    await E.linha('<span>a, y, m…</span>', 1200);
+    await apagar(p);
+    await nota(c.notas, 'conta com letra = expressão algébrica', 'detalhe');
+    await wait(800);
+    await respostaFinal('<span>a letra guarda um número</span>', { perg });
+    await regras8(s, 'A letra fica no lugar de um número que a gente não sabe (ou que pode mudar).');
+  }
+  // 2) mais e menos: { mais, menos, so: 'mais' | 'menos' (o cartão mostra só a parte da questão) }
+  async function cenaAlgMaisMenos(s) {
+    const m = s.mais ?? 5, n = s.menos ?? 4, so = s.so || '';
+    const K = caixas(so === 'mais' ? undefined : 'tracejado = o que falta');
+    const perg = s.perg || `Como escrever "um número mais ${m}"? E "um número menos ${n}"?`;
+    await poePergunta(perg, false);
+    let c = cartao();
+    await ler(perg);
+    const rM = { rot: `x + ${m}`, itens: [X8(), OP8('+'), B8(m)] }, rN = { rot: `x − ${n}`, itens: [X8(), OP8('−'), { t: 'h', n }] };
+    if (so !== 'menos') {
+      K.desenha([rM]);
+      await fraseExpr(c, [['um número', 'x'], [`mais ${m}`, `+ ${m}`]], `<span>x + ${m}</span>`, '"Mais" é +.');
+      await nota(c.notas, 'mais: soma', 'detalhe');
+      await wait(600);
+    }
+    if (!so) { await tiraTrad(); await paraHist(c); c = cartao(); }
+    if (so !== 'mais') {
+      K.desenha(so ? [rN] : [rM, { ...rN, entra: true }]);
+      await fraseExpr(c, [['um número', 'x'], [`menos ${n}`, `− ${n}`]], `<span>x − ${n}</span>`, '"Menos" é −. O número vem primeiro.');
+      await wait(500);
+      await pegadinha(c, `${n} − x`, `${n} − x é "${n} menos um número": a ordem muda tudo`, `x − ${n}`);
+    }
+    await tiraTrad();
+    await respostaFinal(`<span>${so === 'mais' ? `x + ${m}` : so === 'menos' ? `x − ${n}` : `x + ${m} · x − ${n}`}</span>`, { perg });
+    await regras8(s, 'Mais: +. Menos: −. Escreve na ordem da frase.');
+  }
+  // 3) dobro e triplo: { ks: [2, 3] } (o cartão: [k] da questão)
+  async function cenaAlgDobro(s) {
+    const ks = s.ks || [2, 3], k0 = ks[0], nome0 = NOME8[k0];
+    const K = caixas();
+    const perg = s.perg || 'Como escrever "o dobro de um número"? E "o triplo"?';
+    await poePergunta(perg, false);
+    let c = cartao();
+    await ler(perg);
+    const linhas = [{ rot: `${k0}x`, itens: [X8(k0)] }];
+    K.desenha(linhas);
+    const { E } = await fraseExpr(c, [[`o ${nome0} de`, `${k0} ×`], ['um número', 'x']], `<span>${k0} × x</span>`, `${nome0[0].toUpperCase() + nome0.slice(1)} é ${k0} vezes.`);
+    let p = await nota(c.notas, `O × entre o número e a letra fica escondido: ${k0} × x se escreve ${k0}x.`, 'passo');
+    await E.linha(`<span>= ${k0}x</span>`);
+    await E.linha(`<span>= ${Array(k0).fill('x').join(' + ')}</span>`);
+    await apagar(p);
+    await nota(c.notas, `${k0}x: ${QTD8[k0]} caixas x`, 'detalhe');
+    await wait(500);
+    for (const k of ks.slice(1)) {
+      await tiraTrad(); await paraHist(c);
+      c = cartao(); const E2 = contaEq(c.conta);
+      linhas.push({ rot: `${k}x`, itens: [X8(k)], entra: true });
+      K.desenha(linhas);
+      const nm = NOME8[k];
+      p = await nota(c.notas, `${nm[0].toUpperCase() + nm.slice(1)}: ${k} vezes.`, 'passo');
+      await E2.linha(`<span>${k}x = ${Array(k).fill('x').join(' + ')}</span>`);
+      await apagar(p);
+    }
+    await pegadinha(c, `x + ${k0}`, `x + ${k0} é "um número mais ${k0}", não o ${nome0}`, `${k0}x`);
+    await respostaFinal(`<span>${ks.map((k) => `${k}x`).join(' · ')}</span>`, { perg });
+    await regras8(s, 'Dobro: 2x. Triplo: 3x. Quádruplo: 4x. O número vem colado na frente da letra.');
+  }
+  // 4) metade
+  async function cenaAlgMetade(s) {
+    const K = caixas('meia caixa = metade de x');
+    const perg = s.perg || 'Como escrever "a metade de um número"?';
+    await poePergunta(perg, false);
+    const c = cartao();
+    await ler(perg);
+    K.desenha([{ rot: 'x', itens: [X8()] }, { rot: 'x ÷ 2', itens: [{ t: 'meio' }], entra: true }]);
+    await fraseExpr(c, [['a metade de', '÷ 2'], ['um número', 'x']], '<span>x ÷ 2</span>', 'Metade é dividir por 2. O x vem primeiro.');
+    await nota(c.notas, 'divide o número em 2 partes iguais', 'detalhe');
+    await wait(500);
+    await pegadinha(c, '2x', '2x é o dobro, não a metade', 'x ÷ 2');
+    await respostaFinal('<span>x ÷ 2</span>', { perg });
+    await regras8(s, 'Metade: x ÷ 2. Terça parte: x ÷ 3.');
+  }
+  // 5) ao quadrado
+  async function cenaAlgQuad(s) {
+    const K = caixas();
+    const perg = s.perg || 'Como escrever "um número ao quadrado"?';
+    await poePergunta(perg, false);
+    const c = cartao();
+    await ler(perg);
+    K.desenha([{ rot: 'x²', itens: [{ t: 'q' }] }]);
+    const { E } = await fraseExpr(c, [['um número', 'x'], ['ao quadrado', '²']], '<span>x²</span>', 'Ao quadrado: o 2 fica pequeno, lá em cima.');
+    const p = await nota(c.notas, 'x² é o número vezes ele mesmo (o quadrado de lado x).', 'passo');
+    await E.linha('<span>= x · x</span>');
+    await apagar(p);
+    await pegadinha(c, '2x', '2x é x + x (o dobro), não x · x', 'x²');
+    await respostaFinal('<span>x²</span>', { perg });
+    await regras8(s, 'Ao quadrado: x² = x · x. Não é 2x.');
+  }
+  // 6) duas operações: o dobro de um número, mais k
+  async function cenaAlgDuas(s) {
+    const k = s.k ?? 1;
+    const K = caixas();
+    const perg = s.perg || `Como escrever "o dobro de um número, mais ${k}"?`;
+    await poePergunta(perg, false);
+    const c = cartao();
+    await ler(perg);
+    K.desenha([{ rot: `2x + ${k}`, itens: [X8(2), OP8('+'), B8(k)] }]);
+    await fraseExpr(c, [['o dobro de um número', '2x'], [`mais ${k}`, `+ ${k}`]], `<span>2x + ${k}</span>`, `Na ordem da frase: primeiro o dobro, depois o mais ${k}.`);
+    await wait(500);
+    await pegadinha(c, `2(x + ${k})`, `2(x + ${k}) é o dobro de "x + ${k}": duas caixas e ${k === 1 ? 'dois quadradinhos' : `${2 * k} quadradinhos`}`, `2x + ${k}`);
+    await respostaFinal(`<span>2x + ${k}</span>`, { perg });
+    await regras8(s, 'Duas operações: escreve na ordem da frase.');
+  }
+  // 7) cada um custa x: k canetas
+  async function cenaAlgCada(s) {
+    const k = s.k ?? 4;
+    const K = caixas('cada caixa: o preço de 1 caneta');
+    const perg = s.perg || `Cada caneta custa x reais. Quanto custam ${k} canetas?`;
+    await poePergunta(perg, false);
+    K.desenha([{ rot: `${k} canetas`, itens: [X8(k)] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, 'Não sei o preço, então cada caneta é uma caixa x.', 'passo');
+    await E.linha(`<span>${k > 5 ? `x + x + … + x (${k} vezes)` : Array(k).fill('x').join(' + ')}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `${k} vezes o x:`, 'passo');
+    await E.linha(`<span>= ${k} · x</span>`);
+    await E.final(`= ${k}x`);
+    await apagar(p);
+    await respostaFinal(`<span>${k}x reais</span>`, { perg });
+    await regras8(s, `Quantidade × letra: ${k} canetas de x reais custam ${k}x.`);
+  }
+  // 8) valor numérico: x + k quando x = n
+  async function cenaAlgValor(s) {
+    const k = s.k ?? 3, n = s.n ?? 4;
+    const K = caixas();
+    await etiqueta('VALOR NUMÉRICO', 'troca a letra pelo número'); ajustaTopo();
+    const perg = s.perg || `Qual é o valor de x + ${k} quando x = ${n}?`;
+    await poePergunta(perg, false);
+    K.desenha([{ rot: `x + ${k}`, itens: [X8(), OP8('+'), B8(k)] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>x + ${k}</span>`);
+    let p = await nota(c.notas, `Agora a gente sabe o que tem na caixa: x = ${n}. A caixa abre.`, 'passo');
+    await wait(800);
+    K.desenha([{ rot: `x + ${k}`, itens: [V8(n, 1, { entra: true }), OP8('+'), B8(k)] }]);
+    await wait(900); await apagar(p);
+    p = await nota(c.notas, `Troca o x pelo ${n} e faz a conta.`, 'passo');
+    await E.linha(`<span>= ${SB(n)} + ${k}</span>`);
+    await E.final(`= ${n + k}`);
+    await apagar(p);
+    await nota(c.notas, `o ${n} entrou no lugar do x`, 'detalhe');
+    await wait(600);
+    await respostaFinal(`<span>${n + k}</span>`, { perg });
+    await regras8(s, 'Valor numérico: troca a letra pelo número e faz a conta.');
+  }
+  // 9) com menos: a − x (ou x − a, com { xPrimeiro: true }) quando x = n
+  async function cenaAlgMenos(s) {
+    const a = s.a ?? 10, n = s.n ?? 3, xp = !!s.xPrimeiro;
+    const [ini, fim] = xp ? [n, a] : [a, n], v = ini - fim, expr = xp ? `x − ${a}` : `${a} − x`;
+    const K = caixas();
+    const perg = s.perg || `Qual é o valor de ${expr} quando x = ${n}?`;
+    await poePergunta(perg, false);
+    K.desenha([xp ? { rot: 'x', itens: [X8()] } : { rot: `${a}`, itens: [B8(a)] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${expr}</span>`);
+    let p = await nota(c.notas, `Troca o x pelo ${n}. O resto fica no mesmo lugar.`, 'passo');
+    await E.linha(`<span>= ${xp ? `${SB(n)} − ${a}` : `${a} − ${SB(n)}`}</span>`);
+    K.desenha([{ rot: `${ini} − ${fim}`, itens: [B8(ini, { sai: fim })] }]);
+    await wait(900);
+    await E.final(`= ${v}`);
+    await apagar(p);
+    await nota(c.notas, xp ? `a ordem não muda: o ${n} fica na frente, no lugar do x` : `a ordem não muda: o ${a} continua na frente`, 'detalhe');
+    await wait(600);
+    await respostaFinal(`<span>${v}</span>`, { perg });
+    await regras8(s, xp ? `Troca a letra, mas não muda a ordem: x − ${a} vira ${n} − ${a}.` : `Troca a letra, mas não muda a ordem: ${a} − x vira ${a} − ${n}.`);
+  }
+  // 10) x + x: todo x vale o mesmo
+  async function cenaAlgXX(s) {
+    const n = s.n ?? 5;
+    const K = caixas();
+    const perg = s.perg || `Qual é o valor de x + x quando x = ${n}?`;
+    await poePergunta(perg, false);
+    K.desenha([{ rot: 'x + x', itens: [X8(), OP8('+'), X8()] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha('<span>x + x</span>');
+    const p = await nota(c.notas, `Todo x da conta vale ${n}: as duas caixas abrem com ${n}.`, 'passo');
+    K.desenha([{ rot: 'x + x', itens: [V8(n, 1, { entra: true }), OP8('+'), V8(n, 1, { entra: true })] }]);
+    await E.linha(`<span>= ${SB(n)} + ${SB(n)}</span>`);
+    await E.final(`= ${2 * n}`);
+    await apagar(p);
+    await pegadinha(c, `${n} × ${n} = ${n * n}`, 'x + x é somar, não multiplicar', `${n} + ${n} = ${2 * n}`);
+    await respostaFinal(`<span>${2 * n}</span>`, { perg });
+    await regras8(s, 'A mesma letra vale o mesmo número em toda a conta.');
+  }
+  // 11) ax quando x = n
+  async function cenaAlgKx(s) {
+    const a = s.a ?? 2, n = s.n ?? 6;
+    const K = caixas();
+    const perg = s.perg || `Qual é o valor de ${a}x quando x = ${n}?`;
+    await poePergunta(perg, false);
+    K.desenha([{ rot: `${a}x`, itens: [X8(a)] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${a}x</span>`);
+    const p = await nota(c.notas, `Lembra: ${a}x é ${a} × x. Quando troca, o × aparece.`, 'passo');
+    K.desenha([{ rot: `${a}x`, itens: [V8(n, a, { entra: true })] }]);
+    await E.linha(`<span>= ${a} × ${SB(n)}</span>`);
+    await E.final(`= ${a * n}`);
+    await apagar(p);
+    await pegadinha(c, `${a}${n}`, `não cola o ${a} no ${n}: entre eles tem um ×`, `${a} × ${n} = ${a * n}`);
+    await respostaFinal(`<span>${a * n}</span>`, { perg });
+    await regras8(s, `Número colado na letra é vezes: ${a}x com x = ${n} é ${a} × ${n}.`);
+  }
+  // 12) vezes e mais (ou menos): ax ± c quando x = n
+  async function cenaAlgKxc(s) {
+    const a = s.a ?? 2, n = s.n ?? 3, c0 = s.c ?? 1, op = s.op || '+', v = op === '+' ? a * n + c0 : a * n - c0;
+    const K = caixas();
+    const expr = `${a}x ${op} ${c0}`, resto = op === '+' ? B8(c0) : { t: 'h', n: c0 };
+    const perg = s.perg || `Qual é o valor de ${expr} quando x = ${n}?`;
+    await poePergunta(perg, false);
+    K.desenha([{ rot: expr, itens: [X8(a), OP8(op), resto] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${expr}</span>`);
+    let p = await nota(c.notas, `Troca o x pelo ${n}.`, 'passo');
+    K.desenha([{ rot: expr, itens: [V8(n, a, { entra: true }), OP8(op), resto] }]);
+    await E.linha(`<span>= ${a} × ${SB(n)} ${op} ${c0}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `Primeiro o ×, depois o ${op}.`, 'passo');
+    await E.linha(`<span>= ${a * n} ${op} ${c0}</span>`);
+    await E.final(`= ${sN(v)}`);
+    await apagar(p);
+    await respostaFinal(`<span>${sN(v)}</span>`, { perg });
+    await regras8(s, 'Depois de trocar: primeiro × e ÷, depois + e −.');
+  }
+  // 13) com negativo: ax − c quando x = n (n < 0), com a reta andando para a esquerda
+  async function cenaAlgNeg(s) {
+    const a = s.a ?? 2, n = s.n ?? -1, c0 = s.c ?? 3, p1 = a * n, v = p1 - c0;
+    const R = p1 >= -6 ? retaNum(Math.min(v - 1, -6), Math.max(2, p1 + 1)) : retaNum(v - 2, p1 + 3);   // longe do zero: só o pedaço do salto
+    const perg = s.perg || `Qual é o valor de ${a}x − ${c0} quando x = ${sN(n)}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${a}x − ${c0}</span>`);
+    let p = await nota(c.notas, `Número negativo entra com parênteses: ${a} × (${sN(n)}).`, 'passo');
+    await E.linha(`<span>= ${a} × (${SB(sN(n))}) − ${c0}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `Positivo vezes negativo dá negativo: ${a} × (${sN(n)}) = ${sN(p1)}.`, 'passo');
+    await E.linha(`<span>= ${sN(p1)} − ${c0}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `Na reta: começa no ${sN(p1)} e anda ${c0} ${c0 === 1 ? 'casa' : 'casas'} para a esquerda.`, 'passo');
+    R.ponto(p1); await wait(500);
+    await R.salto(p1, v);
+    R.ponto(v);
+    await E.final(`= ${sN(v)}`);
+    await apagar(p);
+    await respostaFinal(`<span>${sN(v)}</span>`, { perg });
+    await regras8(s, 'Negativo no lugar da letra: sempre entre parênteses.');
+  }
+  // 14) com ao quadrado: x² + c quando x = n
+  async function cenaAlgQuad2(s) {
+    const n = s.n ?? 3, c0 = s.c ?? 1, v = n * n + c0;
+    const K = caixas();
+    const perg = s.perg || `Qual é o valor de x² + ${c0} quando x = ${n}?`;
+    await poePergunta(perg, false);
+    K.desenha([{ rot: `x² + ${c0}`, itens: [{ t: 'q' }, OP8('+'), B8(c0)] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>x² + ${c0}</span>`);
+    let p = await nota(c.notas, `x² é x · x. Troca os dois pelo ${n}.`, 'passo');
+    await E.linha(`<span>= ${SB(n)} × ${SB(n)} + ${c0}</span>`);
+    K.desenha([{ rot: `${n} × ${n} + ${c0}`, itens: [{ t: 'grade', n, entra: true }, OP8('+'), B8(c0)] }]);
+    await apagar(p);
+    p = await nota(c.notas, `O quadrado de lado ${n} tem ${n * n} quadradinhos.`, 'passo');
+    await E.linha(`<span>= ${n * n} + ${c0}</span>`);
+    await E.final(`= ${v}`);
+    await apagar(p);
+    await pegadinha(c, `${n} × 2 + ${c0} = ${2 * n + c0}`, 'x² não é x vezes 2', `${n} × ${n} + ${c0} = ${v}`);
+    await respostaFinal(`<span>${v}</span>`, { perg });
+    await regras8(s, `x² com x = ${n}: ${n} × ${n} = ${n * n} (não ${n} × 2).`);
+  }
+  // 15) duas letras: a·a + b·b quando a = p e b = q
+  async function cenaAlg2L(s) {
+    const a = s.a ?? 3, b = s.b ?? 2, p0 = s.p ?? 2, q0 = s.q ?? 5;
+    const K = caixas();
+    const perg = s.perg || `Qual é o valor de ${a}a + ${b}b quando a = ${p0} e b = ${q0}?`;
+    await poePergunta(perg, false);
+    K.desenha([{ rot: `${a}a`, itens: [X8(a, { l: 'a' })] }, { rot: `${b}b`, itens: [X8(b, { l: 'b', cor: 'b' })] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${a}a + ${b}b</span>`);
+    let p = await nota(c.notas, `Cada letra tem o seu número: o a vira ${p0} e o b vira ${q0}.`, 'passo');
+    K.desenha([{ rot: `${a}a`, itens: [V8(p0, a, { entra: true, cor: 'a' })] }, { rot: `${b}b`, itens: [V8(q0, b, { entra: true, cor: 'b' })] }]);
+    await E.linha(`<span>= ${a} × ${SB(p0, 'ca')} + ${b} × ${SB(q0, 'cb')}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, 'Primeiro os ×, depois o +.', 'passo');
+    await E.linha(`<span>= ${a * p0} + ${b * q0}</span>`);
+    await E.final(`= ${a * p0 + b * q0}`);
+    await apagar(p);
+    await respostaFinal(`<span>${a * p0 + b * q0}</span>`, { perg });
+    await regras8(s, 'Duas letras: cada uma troca pelo seu número.');
+  }
+
+  // ── 8-B: termos semelhantes ──
+  // 1) o que é um termo
+  async function cenaTermo(s) {
+    const K = caixas();
+    await etiqueta('TERMO', 'número e letra juntos'); ajustaTopo();
+    const perg = s.perg || 'O que quer dizer 3x?';
+    await poePergunta(perg, false);
+    K.desenha([{ rot: '3x', itens: [X8(3)] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha('<span class="parte"><span class="q">3</span><span class="o">x</span></span>');
+    let p = await nota(c.notas, 'O 3 diz QUANTOS. O x diz O QUÊ: 3 caixas x.', 'passo');
+    await wait(1600); await apagar(p);
+    await nota(c.notas, 'como 3 maçãs: 3 diz quantas, maçã diz o quê', 'detalhe');
+    await wait(900);
+    p = await nota(c.notas, 'E o x sozinho? É 1 caixa: vale 1x.', 'passo');
+    K.desenha([{ rot: '3x', itens: [X8(3)] }, { rot: 'x = 1x', itens: [X8(1)], entra: true }]);
+    await E.linha('<span>x = 1x</span>');
+    await apagar(p);
+    await respostaFinal('<span>3x = 3 caixas x</span>', { perg });
+    await regras8(s, 'Termo: o número diz quantos, a letra diz o quê. x sozinho é 1x.');
+  }
+  // 2) termos semelhantes: a vitrine dos pares { itens: [[par, sim, motivo]] }
+  const PARES8 = [['3x e 5x', true, 'a mesma letra x'], ['4a e a', true, 'a = 1a'], ['7m e −2m', true, 'o sinal pode mudar'], ['2x e 2y', false, 'letras diferentes'], ['x e x²', false, 'expoentes diferentes']];
+  async function cenaSemLista(s) {
+    L.classList.add('sem-hist', 'r3p');
+    await etiqueta('TERMOS SEMELHANTES', 'mesma letra e mesmo expoente'); ajustaTopo();
+    const perg = s.perg || 'Quais pares de termos são semelhantes?';
+    await poePergunta(perg, false);
+    const c = cartao(); const g = el('div', 'qd-lista3', '', c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, 'Semelhantes: a mesma letra, com o mesmo expoente. O número da frente pode ser qualquer um.', 'passo');
+    for (const [par, sim, pq] of s.itens || PARES8) {
+      const r = el('div', 'l3 qd-pop', `<span class="par">${esc(par)}</span><span class="vd ${sim ? 'sim' : 'nao'}" style="visibility: hidden">${sim ? '✔ sim' : '✖ não'}</span><span class="pq" style="visibility: hidden">${esc(pq)}</span>`, g);
+      await wait(1800);
+      r.querySelectorAll('.vd, .pq').forEach((e) => { e.style.visibility = ''; e.classList.add('qd-pop'); });
+      await wait(1000);
+    }
+    await apagar(p);
+    await respostaFinal('<span>mesma letra e mesmo expoente</span>', { perg, manter: true });
+    await regras8(s, 'Só termos semelhantes se juntam numa conta.');
+  }
+  // 3) somar: a·l + b·l
+  async function cenaSemSoma(s) {
+    const l = s.l || 'x', a = s.a ?? 3, b = s.b ?? 2, r = a + b;
+    const K = caixas();
+    const perg = s.perg || `Quanto é ${a}${l} + ${b}${l}?`;
+    await poePergunta(perg, false);
+    const ln = [{ rot: `${a}${l}`, itens: [X8(a, { l })] }, { rot: `+ ${b}${l}`, itens: [X8(b, { l })] }];
+    K.desenha(ln);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${a}${l} + ${b}${l}</span>`);
+    const p = await nota(c.notas, `${a} caixas mais ${b} caixas: ${r} caixas. Soma os números e repete a letra.`, 'passo');
+    await E.linha(`<span>= (${a} + ${b})${l}</span>`);
+    K.desenha([...ln, { rot: `= ${r}${l}`, itens: [X8(r, { l })], entra: true }]);
+    await E.final(`= ${r}${l}`);
+    await apagar(p);
+    await pegadinha(c, `${r}${l}²`, `a letra não muda: continua ${l}`, `${r}${l}`);
+    await respostaFinal(`<span>${r}${l}</span>`, { perg });
+    await regras8(s, 'Somar semelhantes: soma os números e repete a letra.');
+  }
+  // 4) a letra sozinha vale 1: { partes: [{ termos: [1, 1, 1], l, perg }] }
+  async function cenaSemUm(s) {
+    const partes = s.partes || [{ termos: [1, 1, 1], l: 'x', perg: 'Quanto é x + x + x?' }, { termos: [4, 1], l: 'a', perg: 'E quanto é 4a + a?' }];
+    const K = caixas();
+    let c = null, perg = '';
+    for (const [i, pt] of partes.entries()) {
+      const l = pt.l, ts = pt.termos, r = ts.reduce((x, y) => x + y, 0), expr = ts.map((t) => mono8(t, l)).join(' + ');
+      perg = (i === 0 && s.perg) || pt.perg || `Quanto é ${expr}?`;
+      if (c) await paraHist(c);
+      await poePergunta(perg, false);
+      const uns = ts.every((t) => t === 1);
+      const ln = uns ? [{ rot: expr, itens: ts.flatMap((t, j) => (j ? [OP8('+'), X8(1, { l })] : [X8(1, { l })])) }]
+        : ts.map((t, j) => ({ rot: (j ? '+ ' : '') + mono8(t, l), itens: [X8(t, { l })] }));
+      K.desenha(ln);
+      c = cartao(); const E = contaEq(c.conta);
+      await ler(perg);
+      await E.linha(`<span>${expr}</span>`);
+      const p = await nota(c.notas, uns ? `Cada ${l} sozinho é 1${l}.` : `O ${l} sozinho é 1${l}.`, 'passo');
+      await E.linha(`<span>= ${ts.map((t) => `${t}${l}`).join(' + ')}</span>`);
+      K.desenha([...ln, { rot: `= ${r}${l}`, itens: [X8(r, { l })], entra: true }]);
+      await E.final(`= ${r}${l}`);
+      await apagar(p);
+      if (i === partes.length - 1) { await respostaFinal(`<span>${r}${l}</span>`, { perg }); }
+    }
+    await regras8(s, 'Letra sozinha vale 1: x = 1x, a = 1a.');
+  }
+  // 5) subtrair: a·l − b·l
+  async function cenaSemSub(s) {
+    const l = s.l || 'a', a = s.a ?? 7, b = s.b ?? 3, r = a - b, res = r === 0 ? '0' : mono8(r, l);
+    const K = caixas();
+    const expr = `${mono8(a, l)} − ${mono8(b, l)}`;
+    const perg = s.perg || `Quanto é ${expr}?`;
+    await poePergunta(perg, false);
+    K.desenha([{ rot: mono8(a, l), itens: [X8(a, { l })] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${expr}</span>`);
+    const p = await nota(c.notas, `Tinha ${a} caixas ${l}, tira ${b}: sobra${r === 1 ? '' : 'm'} ${r}.`, 'passo');
+    const tira = { rot: expr, itens: [X8(a, { l, sai: b })] };
+    K.desenha([tira]);
+    await wait(1000);
+    await E.linha(`<span>= (${a} − ${b})${l}</span>`);
+    K.desenha([tira, { rot: `= ${res}`, itens: r ? [X8(r, { l })] : [], entra: true }]);
+    await E.final(`= ${res}`);
+    await apagar(p);
+    const det = s.detalhe !== undefined ? s.detalhe : r === 0 ? 'tirou todas as caixas: sobra 0' : 'e 8m − 8m = 0: tirou todas as caixas';
+    if (det) { await nota(c.notas, det, 'detalhe'); await wait(900); }
+    await respostaFinal(`<span>${res}</span>`, { perg });
+    await regras8(s, 'Subtrair semelhantes: subtrai os números e repete a letra.');
+  }
+  // 6) três termos: { l, ts: [10, −4, 1] } (da esquerda para a direita)
+  async function cenaSemTres(s) {
+    const l = s.l || 'a', ts = s.ts || [10, -4, 1], [t0, t1, t2] = ts, r1 = t0 + t1, r = r1 + t2;
+    const sg = (t) => (t < 0 ? '−' : '+'), parte = (t) => `${sg(t)} ${mono8(Math.abs(t), l)}`;
+    const expr = `${mono8(t0, l)} ${parte(t1)} ${parte(t2)}`, dois = `${mono8(t0, l)} ${parte(t1)}`, meio = `${mono8(r1, l)} ${parte(t2)}`;
+    const K = caixas();
+    const perg = s.perg || `Quanto é ${expr}?`;
+    await poePergunta(perg, false);
+    K.desenha([{ rot: mono8(t0, l), itens: [X8(t0, { l })] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${expr}</span>`);
+    let p = await nota(c.notas, `Da esquerda para a direita. Primeiro ${dois}.`, 'passo');
+    const l1 = { rot: dois, itens: t1 < 0 ? [X8(t0, { l, sai: -t1 })] : [X8(t0, { l }), OP8('+'), X8(t1, { l, entra: true })] };
+    K.desenha([l1]);
+    await E.linha(`<span>= ${meio}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, Math.abs(t2) === 1 ? `Depois ${sg(t2)} ${l} (que é 1${l}).` : `Depois ${parte(t2)}.`, 'passo');
+    K.desenha([l1, { rot: meio, itens: t2 < 0 ? [X8(r1, { l, sai: -t2 })] : [X8(r1, { l }), OP8('+'), X8(t2, { l, entra: true })], entra: true }]);
+    await E.final(`= ${mono8(r, l)}`);
+    await apagar(p);
+    await respostaFinal(`<span>${mono8(r, l)}</span>`, { perg });
+    await regras8(s, 'Vários termos: vai da esquerda para a direita, um de cada vez.');
+  }
+  // 7) diferentes não juntam: a·l + c
+  async function cenaSemDif(s) {
+    const l = s.l || 'x', a = s.a ?? 2, c0 = s.c ?? 3, expr = `${mono8(a, l)} + ${c0}`;
+    const K = caixas(`caixa ${l} e quadradinho: coisas diferentes`);
+    const perg = s.perg || `Dá para juntar ${expr} num termo só?`;
+    await poePergunta(perg, false);
+    K.desenha([{ rot: expr, itens: [X8(a, { l }), OP8('+'), B8(c0)] }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${expr}</span>`);
+    const p = await nota(c.notas, `${mono8(a, l)} tem letra, o ${c0} não tem: não são semelhantes. Não juntam.`, 'passo');
+    await wait(1500); await apagar(p);
+    await pegadinha(c, `${a + c0}${l}`, `${a + c0}${l} seriam ${a + c0} caixas, mas só tem ${a}`, expr);
+    await respostaFinal(`<span>${expr} (já está pronto)</span>`, { perg });
+    await regras8(s, `Letra com número sem letra não juntam: ${expr} fica ${expr}.`);
+  }
+  // 8–10) simplificar: { tipo: 'xkx' | 'menos' | '2l', termos: [[coef com sinal, letra ou '']] }
+  // o 1º grupo (gA) é a 1ª letra; o 2º (gB), os números ou a 2ª letra; o sinal vai pintado junto com o termo
+  async function cenaSimpl(s) {
+    const tipo = s.tipo || 'xkx';
+    const termos = s.termos || { xkx: [[1, 'x'], [2, ''], [1, 'x']], menos: [[3, 'x'], [2, ''], [-1, 'x'], [5, '']], '2l': [[2, 'a'], [3, 'b'], [4, 'a'], [-1, 'b']] }[tipo];
+    const lA = termos.find(([, l]) => l)[1], lB = (termos.find(([, l]) => l && l !== lA) || [0, ''])[1];
+    const naA = (t) => t[1] === lA, txt = ([c, l]) => (l ? mono8(Math.abs(c), l) : String(Math.abs(c)));
+    const cor = (t, h) => (naA(t) ? gA(h) : gB(h));
+    const expr = termos.map((t, i) => `${i ? (t[0] < 0 ? '− ' : '+ ') : t[0] < 0 ? '−' : ''}${txt(t)}`).join(' ');
+    const l1 = termos.map((t, i) => (t[0] < 0 ? cor(t, `− ${txt(t)}`) : `${i ? '+ ' : ''}${cor(t, txt(t))}`)).join(' ');
+    const grupo = (ts) => ts.map((t, i) => `${i ? (t[0] < 0 ? '− ' : '+ ') : t[0] < 0 ? '− ' : ''}${txt(t)}`).join(' ');
+    const TA = termos.filter(naA), TB = termos.filter((t) => !naA(t));
+    const soma = (ts) => ts.reduce((x, t) => x + t[0], 0), pos = (ts) => ts.filter((t) => t[0] > 0), neg = (ts) => ts.filter((t) => t[0] < 0);
+    const rA = soma(TA), rB = soma(TB), gAx = grupo(TA), gBx = grupo(TB);
+    const l2 = `= ${gA(gAx)} ${TB[0][0] < 0 ? gB(gBx) : `+ ${gB(gBx)}`}`;
+    const resB = lB ? mono8(Math.abs(rB), lB) : String(Math.abs(rB));
+    const final = rB === 0 ? mono8(rA, lA) : `${mono8(rA, lA)} ${rB < 0 ? '−' : '+'} ${resB}`;
+    const itemB = (n, ex = {}) => (lB ? X8(n, { l: lB, cor: 'b', ...ex }) : B8(n, ex));
+    const itemT = (t, ex = {}) => (t[1] ? (naA(t) ? X8(Math.abs(t[0]), { l: t[1], ...ex }) : itemB(Math.abs(t[0]), ex)) : B8(Math.abs(t[0]), ex));
+    const juntaPos = (ts) => pos(ts).flatMap((t, i) => (i ? [OP8('+'), itemT(t)] : [itemT(t)]));
+    const K = caixas();
+    if (tipo === 'xkx') { await etiqueta('SIMPLIFICAR', 'junta os semelhantes'); ajustaTopo(); }
+    const perg = s.perg || `Simplifique ${expr}.`;
+    await poePergunta(perg, false);
+    if (tipo === 'xkx') K.desenha([{ rot: expr, itens: termos.flatMap((t, i) => (i ? [OP8(t[0] < 0 ? '−' : '+'), itemT(t)] : [itemT(t)])) }]);
+    else K.desenha([{ rot: tipo === '2l' ? gAx : grupo(pos(TA)), itens: juntaPos(TA) }, { rot: tipo === '2l' ? gBx : grupo(pos(TB)), itens: juntaPos(TB) }]);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${l1}</span>`);
+    let p;
+    const nomeB = lB ? `os ${lB}` : 'os números';
+    if (tipo === 'xkx') {
+      p = await nota(c.notas, `Pinta os iguais: os ${lA} de uma cor, ${nomeB} de outra.`, 'passo');
+      await wait(1200); await apagar(p);
+      p = await nota(c.notas, `Junta os ${lA} com os ${lA} e ${nomeB} com ${nomeB}.`, 'passo');
+    } else if (tipo === 'menos') {
+      const tn = termos.find((t) => t[0] < 0);
+      p = await nota(c.notas, `O sinal vai junto do termo: o "−" fica grudado no ${txt(tn)}.`, 'passo');
+      await wait(1400); await apagar(p);
+      p = await nota(c.notas, `Junta os ${lA}: ${gAx}. Junta ${nomeB}: ${gBx}.`, 'passo');
+    } else p = await nota(c.notas, `Os ${lA} com os ${lA}. ${nomeB[0].toUpperCase() + nomeB.slice(1)} com ${nomeB}.`, 'passo');
+    await E.linha(`<span>${l2}</span>`);
+    const sp = (ts) => pos(ts).reduce((x, t) => x + t[0], 0), sn = (ts) => -neg(ts).reduce((x, t) => x + t[0], 0);
+    const depois = (ts, mk, rot) => ({ rot, itens: sp(ts) ? [mk(sp(ts), sn(ts) ? { sai: sn(ts) } : {})] : [] });
+    if (tipo === 'xkx') K.desenha([depois(TA, (n, ex) => X8(n, { l: lA, ...ex }), gAx), depois(TB, itemB, `+ ${gBx}`)]);
+    else K.desenha([depois(TA, (n, ex) => X8(n, { l: lA, ...ex }), gAx), depois(TB, itemB, gBx)]);
+    await wait(tipo === 'xkx' ? 0 : tipo === 'menos' ? 800 : 900);
+    await E.final(`= ${final}`);
+    await apagar(p);
+    if (tipo === 'menos') {
+      const nA = neg(TA)[0];
+      if (nA) await pegadinha(c, `${mono8(sp(TA) + sn(TA), lA)} ${rB < 0 ? '−' : '+'} ${resB}`, `o − ${txt(nA)} tira ${Math.abs(nA[0]) === 1 ? 'uma caixa' : `${-nA[0]} caixas`}, não soma`, final);
+      else { const nB = neg(TB)[0]; await pegadinha(c, `${mono8(rA, lA)} + ${sp(TB) + sn(TB)}`, `o − ${txt(nB)} tira ${-nB[0]}, não soma`, final); }
+    } else if (tipo === '2l') await pegadinha(c, `${rA + rB}${lA}${lB}`, `${lA} e ${lB} são letras diferentes: não juntam`, final);
+    await respostaFinal(`<span>${final}</span>`, { perg });
+    await regras8(s, { xkx: `Simplificar: junta ${lA} com ${lA} e número com número.`, menos: 'O sinal da frente vai junto com o termo quando ele muda de lugar.', '2l': `Cada letra no seu grupo: ${lA} com ${lA}, ${lB} com ${lB}.` }[tipo]);
+  }
+  // 11) perímetro com letra: { partes: ['q', 'r'], k } (quadrado de lado x; retângulo de lados x e k)
+  function quadroLado(F, l1, l2, quad) {
+    const S = F.S, x0 = .2 * S, y0 = .18 * S, w = quad ? .55 * S : .62 * S, h = quad ? .55 * S : .36 * S;
+    F.mk('rect', { x: x0, y: y0, width: w, height: h, class: 'pm-fig' });
+    const lados = [[x0 + w / 2, y0 - F.fs * 1.1, l1], [x0 + w + F.fs * 1.2, y0 + h / 2, l2], [x0 + w / 2, y0 + h + F.fs * 1.1, l1], [x0 - F.fs * 1.2, y0 + h / 2, l2]];
+    return lados.map(([x, y, t]) => { const e = F.txt(x, y, t, 'pm-lado ' + (t === 'x' ? 'lx' : 'ln')); e.style.visibility = 'hidden'; e.style.fontSize = F.fs * 1.5 + 'px'; return e; });
+  }
+  async function cenaPerimL(s) {
+    const partes = s.partes || ['q', 'r'], k = s.k ?? 3;
+    let c = null, perg = '';
+    for (const [i, pt] of partes.entries()) {
+      const F = ladoSvg(), quad = pt === 'q', lados = quadroLado(F, 'x', quad ? 'x' : String(k), quad);
+      perg = (i === 0 && s.perg) || (quad ? 'Qual é o perímetro de um quadrado de lado x?' : i ? `E de um retângulo de lados x e ${k}?` : `Qual é o perímetro de um retângulo de lados x e ${k}?`);
+      if (c) await paraHist(c);
+      await poePergunta(perg, false);
+      c = cartao(); const E = contaEq(c.conta);
+      await ler(perg);
+      let p = await nota(c.notas, quad ? 'Perímetro: soma os 4 lados. Cada lado mede x.' : `Dois lados medem x e dois medem ${k}.`, 'passo');
+      for (const e of lados) { e.style.visibility = ''; e.classList.add('qd-pop'); await wait(500); }
+      if (quad) { await E.linha('<span>x + x + x + x</span>'); await E.final('= 4x'); await apagar(p); }
+      else {
+        await E.linha(`<span>${gA('x')} + ${gB(k)} + ${gA('x')} + ${gB(k)}</span>`);
+        await apagar(p);
+        p = await nota(c.notas, 'Junta os x e os números.', 'passo');
+        await E.linha(`<span>= ${gA('x + x')} + ${gB(`${k} + ${k}`)}</span>`);
+        await E.final(`= 2x + ${2 * k}`);
+        await apagar(p);
+      }
+    }
+    const ult = partes[partes.length - 1];
+    await respostaFinal(`<span>${ult === 'q' ? '4x' : `2x + ${2 * k}`}</span>`, { perg });
+    await regras8(s, 'Perímetro com letra: soma os lados e junta os semelhantes.');
+  }
+
+  // ══════════════════ 5-B, 6 e 7: raízes, múltiplos, divisores e porcentagem (PROMPT-221; protótipos referencia/lousa-5b/6a/6b/7a/7b.html) ══════════════════
+  // As cenas recebem os números (a aula usa os do protótipo; o cartão do erro, os da questão).
+  const nf = (v) => (Number.isInteger(v) ? (Math.abs(v) >= 10000 ? v.toLocaleString('pt-BR') : String(v)) : String(+v.toFixed(4)).replace('.', ','));
+  const SUP5 = '⁰¹²³⁴⁵⁶⁷⁸⁹', supN = (n) => String(n).split('').map((d) => SUP5[d]).join('');
+  const negS = (v) => (v < 0 ? '−' + nf(-v) : nf(v));
+  const dec2 = (p) => nf(p / 100);   // 25 → 0,25
+  const rs = (v) => (Number.isInteger(v) ? nf(v) : v.toFixed(2).replace('.', ','));   // dinheiro: 22,50
+  const CORES5 = ['#8fd3ff', '#ffd23f', '#c99bff', '#7dffb0', '#ff9fb5'];
+  // n quadradinhos em fileiras de "por": cada fileira completa numa cor; o que sobra fica com borda vermelha
+  function fileiras(legenda) {
+    const F = ladoSvg(), S = F.S, g = F.mk('g', {});
+    if (legenda) F.txt(.5 * S, .96 * S, legenda, 'bl-leg');
+    return { F,
+      desenha({ n, por, rot, cor = true, conta = false, sobraRot }) {
+        g.innerHTML = '';
+        const lin = Math.ceil(n / por), topo = .1 * S, alt = .74 * S;
+        const q = Math.min(alt / lin / 1.15, .7 * S / por / 1.15, .13 * S), x0 = .5 * S - por * q * 1.15 / 2, y0 = topo + (alt - lin * q * 1.15) / 2;
+        if (rot) { const t = F.txt(.5 * S, topo - F.fs * .6, rot, 'cx-rot', g); t.style.fontSize = F.fs * 1.25 + 'px'; }
+        for (let i = 0; i < n; i++) {
+          const r = Math.floor(i / por), c = i % por, sobra = r === lin - 1 && n % por !== 0;
+          const e = F.mk('rect', { x: x0 + c * q * 1.15, y: y0 + r * q * 1.15, width: q, height: q, rx: 2, class: 'bl-it gr-q' + (sobra ? ' sobra' : '') }, g);
+          if (cor && !sobra) e.style.fill = CORES5[r % 5];
+        }
+        if (conta) for (let r = 0; r < lin; r++) { const sobra = r === lin - 1 && n % por !== 0; F.txt(x0 - F.fs * 1.1, y0 + r * q * 1.15 + q / 2, sobra ? '' : String(r + 1), 'gr-conta', g); }
+        if (n % por && sobraRot) F.txt(x0 + (n % por) * q * 1.15 + F.fs * .4, y0 + (lin - 1) * q * 1.15 + q / 2, sobraRot, 'gr-sobra', g, 'start');
+      },
+      // vários retângulos lado a lado: [[fileiras, por], …] (os pares de divisores)
+      retangulos(lista) {
+        g.innerHTML = '';
+        const tot = lista.length, larg = .9 * S / tot;
+        lista.forEach(([a, b], k) => {
+          const q = Math.min(larg * .8 / b / 1.12, .6 * S / a / 1.12, .07 * S), cx = .05 * S + larg * (k + .5), x0 = cx - b * q * 1.12 / 2, y0 = .18 * S;
+          for (let r = 0; r < a; r++) for (let c = 0; c < b; c++) { const e = F.mk('rect', { x: x0 + c * q * 1.12, y: y0 + r * q * 1.12, width: q, height: q, rx: 1.5, class: 'bl-it gr-q entra' }, g); e.style.fill = CORES5[k % 5]; }
+          const t = F.txt(cx, y0 - F.fs * .9, `${a} × ${b}`, 'cx-rot', g); t.style.fontSize = F.fs * 1.1 + 'px';
+        });
+      },
+    };
+  }
+  // pulos de k em k na reta (múltiplos): "+k" em cima, o múltiplo embaixo
+  function pulosK(ate, k, passo) {
+    const R = retaNum(0, ate, passo || k);
+    return { R,
+      async vai(vezes, ms = 600) {
+        R.ponto(0);
+        for (let i = 0; i < vezes; i++) {
+          const a = i * k, b = a + k, X = R.X, y = R.y, u = X(1) - X(0), m = (X(a) + X(b)) / 2;
+          R.F.mk('path', { d: `M${X(a)} ${y - 4} Q${m} ${y - u * k * .55} ${X(b)} ${y - 4}`, class: 'rn-salto' });
+          R.F.txt(m, y - u * k * .42 - R.F.fs * .5, '+' + k, 'bl-leg');
+          R.ponto(b); R.F.txt(X(b), y + R.F.fs * 2.4, String(b), 'pl-mult');
+          await wait(ms);
+        }
+      },
+    };
+  }
+  // a grade de 100 (porcentagem), pintando de fileira em fileira
+  function cem() {
+    const F = ladoSvg(), S = F.S, q = .068 * S, x0 = .5 * S - 5 * q * 1.08, y0 = .06 * S;
+    const cels = [];
+    for (let r = 0; r < 10; r++) for (let c = 0; c < 10; c++) cels.push(F.mk('rect', { x: x0 + c * q * 1.08, y: y0 + r * q * 1.08, width: q, height: q, rx: 1.5, class: 'cem-c' }));
+    const rot = F.txt(.5 * S, y0 + 10 * q * 1.08 + F.fs * 1.4, '', 'cx-rot'); rot.style.fontSize = F.fs * 1.25 + 'px';
+    return { F,
+      async pinta(n, cls = 'on', ms = 0, txt) {
+        cels.forEach((e) => e.classList.remove('on', 'on2'));
+        for (let i = 0; i < n; i++) { cels[i].classList.add(cls); if (ms && i % 10 === 9) await wait(ms); }
+        rot.textContent = txt === undefined ? `${n} de 100` : txt;
+      },
+    };
+  }
+  const regras5 = async (s, padrao) => { for (const r of s.regras || [padrao]) await regra(r); };
+
+  // ── 5-B: raízes e casos especiais ──
+  // 1) raiz quadrada: √(r²) com o quadrado de lado r
+  async function cenaRaiz1(s) {
+    const r = s.r ?? 4, n = r * r;
+    const K = caixas('cada quadradinho = 1');
+    await etiqueta('RAIZ QUADRADA', 'o número que vezes ele mesmo dá'); ajustaTopo();
+    const perg = s.perg || `Quanto é √${n}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `√${n} pergunta: qual número vezes ele mesmo dá ${n}?`, 'passo');
+    await E.linha(`<span>? × ? = ${n}</span>`, 1300);
+    await apagar(p);
+    p = await nota(c.notas, `Monta um quadrado com ${n} ${n === 1 ? 'quadradinho' : 'quadradinhos'}: o lado tem ${r}.`, 'passo');
+    K.desenha([{ rot: `${n} ${n === 1 ? 'quadradinho' : 'quadradinhos'}`, itens: [{ t: 'grade', n: r, entra: true }] }]);
+    await wait(1200);
+    await E.linha(`<span>${SB(r)} × ${SB(r)} = ${n}</span>`);
+    await apagar(p);
+    await E.final(`√${n} = ${r}`);
+    const h = n / 2;
+    if (h !== r) await pegadinha(c, `${n} ÷ 2 = ${nf(h)}`, `raiz não é a metade: ${nf(h)} × ${nf(h)} = ${nf(h * h)}`, `${r} × ${r} = ${n}`);
+    await respostaFinal(`<span>√${n} = ${r}</span>`, { perg });
+    await regras5(s, 'Raiz quadrada: o número que, vezes ele mesmo, dá o de dentro. É o lado do quadrado.');
+  }
+  // 2) testando: r − 2, r − 1, r
+  async function cenaRaiz2(s) {
+    const r = s.r ?? 7, n = r * r;
+    const K = caixas();
+    const perg = s.perg || `Quanto é √${n}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, `Não sabe de cabeça? Testa: um número vezes ele mesmo, até chegar no ${n}.`, 'passo');
+    for (const k of [r - 2, r - 1, r].filter((x) => x > 0)) {
+      const ok = k === r;
+      K.desenha([{ rot: `${k} × ${k} = ${k * k}`, itens: [{ t: 'grade', n: k, entra: true }] }]);
+      const l = await E.linha(`<span>${k} × ${k} = ${k * k}</span><span class="${ok ? 'vok' : 'pz'}">${ok ? '✔' : 'pouco'}</span>`, 1300);
+      if (!ok) l.classList.add('apaga-l');
+    }
+    await apagar(p);
+    await E.final(`√${n} = ${r}`);
+    await respostaFinal(`<span>√${n} = ${r}</span>`, { perg });
+    await regras5(s, `Raiz: testa 1 × 1, 2 × 2, 3 × 3… até achar o número de dentro.`);
+  }
+  // 3) quadrados perfeitos: a tabela de 1 a 10
+  async function cenaQuadTab(s) {
+    L.classList.add('sem-hist', 'r3p');
+    const perg = s.perg || 'Quais raízes vale a pena saber de cor?';
+    await poePergunta(perg, false);
+    const c = cartao();
+    const t = el('div', 'qd-tab2', '', c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, 'Os quadrados de 1 a 10. A raiz faz o caminho de volta.', 'passo');
+    el('div', 'h', 'n', t); el('div', 'h', 'n²', t);
+    for (let n = 1; n <= 10; n++) { el('div', 'qd-pop', String(n), t); el('div', 'v qd-pop', String(n * n), t); await wait(500); }
+    await apagar(p);
+    await nota(c.notas, 'olhando de baixo para cima: √100 = 10, √81 = 9, √1 = 1', 'detalhe');
+    await wait(1200);
+    await respostaFinal(`<span>${s.resp || '√1 = 1 · √100 = 10'}</span>`, { perg, manter: true });
+    await regras5(s, 'Saber os quadrados de 1 a 10 é saber as raízes de 1 a 100.');
+  }
+  // 4) elevado a 1
+  async function cenaExp1(s) {
+    const b = s.b ?? 5;
+    const K = caixas();
+    await etiqueta('CASOS ESPECIAIS', 'elevado a 1 e a 0'); ajustaTopo();
+    const perg = s.perg || `Quanto é ${b}¹?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `O expoente diz quantas vezes o ${b} aparece na multiplicação.`, 'passo');
+    await E.linha(`<span>${b}³ = ${b} × ${b} × ${b}</span>`, 1100);
+    await E.linha(`<span>${b}² = ${b} × ${b}</span>`, 1100);
+    await apagar(p);
+    p = await nota(c.notas, `Expoente 1: o ${b} aparece uma vez só. Não tem nada para multiplicar.`, 'passo');
+    K.desenha([{ rot: `${b}¹`, itens: [b <= 20 ? { t: 'b', n: b, entra: true } : { t: 'v', v: b, n: 1, entra: true }] }]);
+    await E.final(`${b}¹ = ${b}`);
+    await apagar(p);
+    await pegadinha(c, `${b}¹ = 1`, 'elevado a 1 dá o próprio número', `${b}¹ = ${b}`);
+    await respostaFinal(`<span>${b}¹ = ${b}</span>`, { perg });
+    await regras5(s, 'Elevado a 1: dá o próprio número. 100¹ = 100.');
+  }
+  // 5) elevado a 0: o padrão ÷ b
+  async function cenaExp0(s) {
+    const b = s.b ?? 7;
+    const perg = s.perg || `Quanto é ${b}⁰?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `Olha o padrão: cada vez que o expoente diminui 1, divide por ${b}.`, 'passo');
+    await E.linha(`<span>${b}³ = ${nf(b ** 3)}</span>`, 900);
+    await E.linha(`<span>${b}² = ${nf(b ** 2)}</span><span class="pz">${nf(b ** 3)} ÷ ${b}</span>`, 1200);
+    await E.linha(`<span>${b}¹ = ${b}</span><span class="pz">${nf(b ** 2)} ÷ ${b}</span>`, 1200);
+    await apagar(p);
+    p = await nota(c.notas, `O próximo: ${b} ÷ ${b} = 1.`, 'passo');
+    await E.linha(`<span>${b}⁰ = 1</span><span class="pz">${b} ÷ ${b}</span>`, 1200);
+    await apagar(p);
+    await pegadinha(c, `${b}⁰ = 0`, 'elevado a 0 não dá 0: dá 1', `${b}⁰ = 1`);
+    await respostaFinal(`<span>${b}⁰ = 1</span>`, { perg });
+    await regras5(s, 'Todo número (menos o zero) elevado a 0 dá 1.');
+  }
+  // 6) negativo com expoente par: (b)ⁿ, b < 0
+  async function cenaNegPar(s) {
+    const b = s.b ?? -3, n = s.n ?? 2, v = b ** n, B = `(${negS(b)})`, P = `${B}${supN(n)}`;
+    await etiqueta('BASE NEGATIVA', 'o sinal também multiplica'); ajustaTopo();
+    const perg = s.perg || `Quanto é ${P}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `O parêntese diz: o ${negS(b)} inteiro é a base. Ele aparece ${n} vezes.`, 'passo');
+    await E.linha(`<span>${P} = ${Array(n).fill(B).join(' × ')}</span>`, 1300);
+    await apagar(p);
+    if (n > 2) {
+      p = await nota(c.notas, 'Os sinais de menos formam pares: menos vezes menos dá mais.', 'passo');
+      await E.linha(`<span>= ${Array(n / 2).fill(nf(b * b)).join(' × ')}</span>`, 1100);
+    } else p = await nota(c.notas, 'Menos vezes menos dá mais.', 'passo');
+    await E.linha(`<span>= +${nf(v)}</span>`, 1100);
+    await apagar(p);
+    await nota(c.notas, '− × − = +', 'detalhe');
+    await pegadinha(c, `${P} = −${nf(v)}`, 'dois sinais de menos se cancelam', `${P} = ${nf(v)}`);
+    await respostaFinal(`<span>${P} = ${nf(v)}</span>`, { perg });
+    await regras5(s, 'Negativo com expoente par dá positivo.');
+  }
+  // 7) negativo com expoente ímpar
+  async function cenaNegImpar(s) {
+    const b = s.b ?? -2, n = s.n ?? 3, v = b ** n, B = `(${negS(b)})`, P = `${B}${supN(n)}`, b2 = b * b;
+    const perg = s.perg || `Quanto é ${P}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `O ${negS(b)} aparece ${n} vezes. Multiplica de dois em dois.`, 'passo');
+    await E.linha(`<span>${Array(n).fill(B).join(' × ')}</span>`, 1200);
+    await apagar(p);
+    p = await nota(c.notas, n === 3 ? `Os dois primeiros: menos com menos dá mais, ${nf(b2)}.` : `Cada par: menos com menos dá mais, ${nf(b2)}.`, 'passo');
+    await E.linha(`<span>= ${Array((n - 1) / 2).fill(nf(b2)).join(' × ')} × ${B}</span>`, 1200);
+    if (n > 3) await E.linha(`<span>= ${nf(b2 ** ((n - 1) / 2))} × ${B}</span>`, 1100);
+    await apagar(p);
+    p = await nota(c.notas, 'Mais com menos dá menos.', 'passo');
+    await E.final(`= ${negS(v)}`);
+    await apagar(p);
+    await nota(c.notas, 'sobrou um sinal de menos sem par', 'detalhe');
+    await wait(900);
+    await respostaFinal(`<span>${P} = ${negS(v)}</span>`, { perg });
+    await regras5(s, 'Negativo com expoente ímpar dá negativo. Par: positivo.');
+  }
+  // 8) raiz e potência juntas: √(r²) ± bⁿ
+  async function cenaRaizPot(s) {
+    const r = s.r ?? 7, b = s.b ?? 3, n = s.n ?? 2, op = s.op || '+', pv = b ** n, v = op === '+' ? r + pv : r - pv, Pw = `${b}${supN(n)}`;
+    const perg = s.perg || `Quanto é √${r * r} ${op} ${Pw}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `Primeiro resolve a raiz e a potência. Depois ${op === '+' ? 'a soma' : 'a subtração'}.`, 'passo');
+    await E.linha(`<span>√${r * r} ${op} ${Pw}</span>`, 900);
+    await apagar(p);
+    p = await nota(c.notas, `√${r * r} = ${r} (${r} × ${r} = ${r * r}) e ${Pw} = ${Array(n).fill(b).join(' × ')} = ${pv}.`, 'passo');
+    await E.linha(`<span>= ${SB(r)} ${op} ${SB(pv)}</span>`, 1300);
+    await apagar(p);
+    await E.final(`= ${negS(v)}`);
+    if (b * n !== pv) await pegadinha(c, `${Pw} = ${b * n}`, `${Pw} é ${Array(n).fill(b).join(' × ')}, não ${b} × ${n}`, `${Pw} = ${pv}`);
+    await respostaFinal(`<span>${negS(v)}</span>`, { perg });
+    await regras5(s, 'Raiz e potência primeiro; depois + e −.');
+  }
+
+  // ── 6-A: múltiplos ──
+  // 1) o que é múltiplo: a tabuada e os pulos
+  async function cenaMultiplos(s) {
+    const k = s.k ?? 3, P = pulosK(5 * k, k);
+    await etiqueta('MÚLTIPLOS', 'a tabuada do número'); ajustaTopo();
+    const perg = s.perg || `Quais são os múltiplos de ${k}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `Múltiplo de ${k} é o resultado da tabuada do ${k}.`, 'passo');
+    for (let i = 1; i <= 5; i++) await E.linha(`<span>${k} × ${i} = ${SB(k * i)}</span>`, 500);
+    await apagar(p);
+    p = await nota(c.notas, `Na reta: pula de ${k} em ${k}, começando no 0.`, 'passo');
+    await P.vai(5);
+    await apagar(p);
+    await nota(c.notas, `o 0 também é múltiplo (${k} × 0); a lista não acaba`, 'detalhe');
+    await wait(900);
+    await respostaFinal(`<span>0, ${[1, 2, 3, 4, 5].map((i) => k * i).join(', ')}…</span>`, { perg });
+    await regras5(s, 'Múltiplos de um número: a tabuada dele (de k em k, a partir do 0).');
+  }
+  // 2 e 3) n é múltiplo de k? (fileiras de k; o que sobra fica vermelho)
+  async function cenaEhMult(s) {
+    const n = s.n ?? 18, k = s.k ?? 3, q = Math.floor(n / k), r = n % k, sim = r === 0;
+    const G = fileiras();
+    const perg = s.perg || `${n} é múltiplo de ${k}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, sim ? `Para saber, divide: ${n} ÷ ${k}. Se não sobrar nada, é múltiplo.` : `Divide ${n} por ${k}.`, 'passo');
+    G.desenha({ n, por: k, rot: `${n} em fileiras de ${k}`, conta: true, sobraRot: sim ? undefined : r === 1 ? 'sobra 1' : `sobram ${r}` });
+    await wait(1500);
+    await E.linha(`<span>${n} ÷ ${k} = ${q}</span>`);
+    await E.linha(`<span>sobra ${r}</span><span class="${sim ? 'vok' : 'vno'}">${sim ? '✔' : '✖'}</span>`);
+    await apagar(p);
+    await nota(c.notas, sim ? `deu ${q} fileiras certinhas: ${k} × ${q} = ${n}` : `a tabuada do ${k} pula o ${n}: ${k * q}, ${k * (q + 1)}`, 'detalhe');
+    await wait(800);
+    await respostaFinal(`<span>${sim ? `sim: ${n} é múltiplo de ${k}` : `não: ${n} não é múltiplo de ${k}`}</span>`, { perg });
+    await regras5(s, sim ? 'É múltiplo quando a divisão não sobra nada.' : 'Sobrou alguma coisa na divisão: não é múltiplo.');
+  }
+  // 4) múltiplos de 2: os pares
+  async function cenaMult2(s) {
+    const n = s.n ?? 13, d = n % 10, par = n % 2 === 0;
+    const perg = s.perg || `${n} é múltiplo de 2?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, 'Múltiplos de 2 são os números pares.', 'passo');
+    await E.linha('<span>0, 2, 4, 6, 8, 10, 12, 14…</span>', 1300);
+    await apagar(p);
+    p = await nota(c.notas, 'Atalho: par termina em 0, 2, 4, 6 ou 8.', 'passo');
+    await E.linha(`<span>${n} termina em ${d}: ${par ? 'par' : 'ímpar'}</span><span class="${par ? 'vok' : 'vno'}">${par ? '✔' : '✖'}</span>`, 1300);
+    await apagar(p);
+    await nota(c.notas, `confere: ${n} ÷ 2 = ${Math.floor(n / 2)} e sobra ${n % 2}`, 'detalhe');
+    await wait(900);
+    await respostaFinal(`<span>${par ? `sim: ${n} é par` : `não: ${n} é ímpar`}</span>`, { perg });
+    await regras5(s, 'Múltiplo de 2: termina em 0, 2, 4, 6 ou 8 (é par).');
+  }
+  // 5) múltiplos de 5 e de 10 (so: 5 | 10 → só a parte da questão)
+  async function cenaMult510(s) {
+    const n = s.n ?? 25, so = s.so || 0, d = n % 10, m5 = d === 0 || d === 5, m10 = d === 0;
+    const perg = s.perg || `${n} é múltiplo de 5? E de 10?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p;
+    if (so !== 10) {
+      p = await nota(c.notas, 'Múltiplos de 5 terminam em 0 ou 5.', 'passo');
+      await E.linha('<span>5, 10, 15, 20, 25, 30…</span>', 1200);
+      await E.linha(`<span>${n} ${m5 ? '' : 'não '}termina em ${m5 ? d : '0 nem 5'}</span><span class="${m5 ? 'vok' : 'vno'}">${m5 ? '✔' : '✖'} de 5</span>`, 1200);
+      await apagar(p);
+    }
+    if (so !== 5) {
+      p = await nota(c.notas, 'Múltiplos de 10 terminam em 0.', 'passo');
+      await E.linha('<span>10, 20, 30, 40…</span>', 1200);
+      await E.linha(`<span>${n} ${m10 ? '' : 'não '}termina em 0</span><span class="${m10 ? 'vok' : 'vno'}">${m10 ? '✔' : '✖'} de 10</span>`, 1200);
+      await apagar(p);
+    }
+    const r5 = `de 5 ${m5 ? 'sim' : 'não'}`, r10 = `de 10 ${m10 ? 'sim' : 'não'}`;
+    await respostaFinal(`<span>${so === 5 ? r5 : so === 10 ? r10 : `${r5} · ${r10}`}</span>`, { perg });
+    await regras5(s, 'Múltiplo de 5: termina em 0 ou 5. Múltiplo de 10: termina em 0.');
+  }
+  // 6) qual é múltiplo de k? (testa as opções)
+  async function cenaQualMult(s) {
+    const k = s.k ?? 4, ops = s.ops || [18, 20, 22, 26], certo = ops.find((n) => n % k === 0);
+    const perg = s.perg || `Qual é múltiplo de ${k}: ${ops.slice(0, -1).join(', ')} ou ${ops[ops.length - 1]}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, `Testa um por um: divide por ${k} e vê se sobra.`, 'passo');
+    for (const n of ops) {
+      const ok = n % k === 0;
+      const l = await E.linha(`<span>${n} ÷ ${k} = ${Math.floor(n / k)}</span><span class="${ok ? 'vok' : 'vno'}">${ok ? 'sobra 0 ✔' : 'sobra ' + n % k + ' ✖'}</span>`, 1100);
+      if (!ok) l.classList.add('apaga-l');
+    }
+    await apagar(p);
+    await nota(c.notas, `na tabuada do ${k}: ${k} × ${certo / k} = ${certo}`, 'detalhe');
+    await wait(800);
+    await respostaFinal(`<span>${certo}</span>`, { perg });
+    await regras5(s, 'Para achar o múltiplo: divide cada opção; o que não sobra nada é o certo.');
+  }
+  // 7) múltiplo de a e de b: as duas listas, os comuns circulados
+  async function cenaMultDois(s) {
+    const a = s.a ?? 3, b = s.b ?? 4, ab = a * b, ate = 2 * ab;
+    L.classList.add('sem-hist', 'r3p');
+    const perg = s.perg || `Qual número é múltiplo de ${a} e de ${b} ao mesmo tempo?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const ls = el('div', 'qd-mlist', '', c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, 'Escreve os múltiplos dos dois e procura o que aparece nas duas listas.', 'passo');
+    const lista = (k, cls) => el('div', 'ml qd-pop', `<span class="${cls}">de ${k}:</span> ` + Array.from({ length: Math.floor(ate / k) }, (_, i) => `<span data-v="${k * (i + 1)}">${k * (i + 1)}</span>`).join(', '), ls);
+    lista(a, 'qd-cmpA'); await wait(1400);
+    lista(b, 'qd-cmpB'); await wait(1400);
+    await apagar(p);
+    p = await nota(c.notas, `O ${ab} está nas duas. O ${ate} também.`, 'passo');
+    ls.querySelectorAll(`[data-v="${ab}"], [data-v="${ate}"]`).forEach((e) => e.classList.add('c'));
+    await wait(1500);
+    await apagar(p);
+    await nota(c.notas, `confere: ${ab} ÷ ${a} = ${b} e ${ab} ÷ ${b} = ${a}, sem sobrar`, 'detalhe');
+    await wait(900);
+    await respostaFinal(`<span>${ab} (e ${ate}, ${3 * ab}…)</span>`, { perg, manter: true });
+    await regras5(s, 'Múltiplo dos dois: aparece nas duas tabuadas.');
+  }
+  // 8) os 4 primeiros múltiplos de k (sem o zero)
+  async function cenaPrimMult(s) {
+    const k = s.k ?? 6, P = pulosK(4 * k, k, k);
+    const perg = s.perg || `Quais são os 4 primeiros múltiplos de ${k} (sem o zero)?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `Tabuada do ${k}, começando no ${k} × 1.`, 'passo');
+    for (let i = 1; i <= 4; i++) await E.linha(`<span>${k} × ${i} = ${SB(k * i)}</span>`, 500);
+    await apagar(p);
+    p = await nota(c.notas, `Na reta: de ${k} em ${k}.`, 'passo');
+    await P.vai(4, 500);
+    await apagar(p);
+    await respostaFinal(`<span>${[1, 2, 3, 4].map((i) => k * i).join(', ')}</span>`, { perg });
+    await regras5(s, 'Os primeiros múltiplos: número × 1, × 2, × 3, × 4.');
+  }
+
+  // ── 6-B: divisores ──
+  // 1 e 2) d é divisor de n? (grupos de d)
+  async function cenaEhDiv(s) {
+    const d = s.d ?? 3, n = s.n ?? 12, q = Math.floor(n / d), r = n % d, sim = r === 0;
+    const G = fileiras();
+    if (sim) { await etiqueta('DIVISORES', 'divide sem sobrar'); ajustaTopo(); }
+    const perg = s.perg || `${d} é divisor de ${n}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, sim ? `Divisor de ${n}: divide o ${n} em partes iguais, sem sobrar.` : `Tenta fazer grupos de ${d} com os ${n}.`, 'passo');
+    G.desenha({ n, por: d, rot: `${n} em grupos de ${d}`, conta: true, sobraRot: sim ? undefined : r === 1 ? 'sobra 1' : `sobram ${r}` });
+    await wait(1500);
+    await E.linha(`<span>${n} ÷ ${d} = ${q}</span>`);
+    await E.linha(`<span>sobra ${r}</span><span class="${sim ? 'vok' : 'vno'}">${sim ? '✔' : '✖'}</span>`);
+    await apagar(p);
+    await respostaFinal(`<span>${sim ? `sim: ${d} é divisor de ${n}` : `não: ${d} não é divisor de ${n}`}</span>`, { perg });
+    await regras5(s, sim ? 'Divisor: divide o número sem sobrar nada.' : 'Sobrou na divisão: não é divisor.');
+  }
+  // 3) divisor e múltiplo: a mesma conta
+  async function cenaDivMult(s) {
+    const perg = s.perg || '"3 é divisor de 12" e "12 é múltiplo de 3": é a mesma coisa?';
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, 'As duas frases vêm da mesma conta.', 'passo');
+    await E.linha('<span>3 × 4 = 12</span>', 1100);
+    await E.linha('<span>12 ÷ 3 = 4, sobra 0</span>', 1100);
+    await apagar(p);
+    await E.linha('<span><b class="qd-cmpA">3</b> é divisor de <b class="qd-cmpB">12</b></span>', 1100);
+    await E.linha('<span><b class="qd-cmpB">12</b> é múltiplo de <b class="qd-cmpA">3</b></span>', 1100);
+    await nota(c.notas, 'o menor divide; o maior é múltiplo', 'detalhe');
+    await wait(900);
+    await respostaFinal('<span>sim: é a mesma conta</span>', { perg });
+    await regras5(s, 'Se a é divisor de b, então b é múltiplo de a.');
+  }
+  // 4) todos os divisores: os pares que multiplicam e dão n
+  async function cenaTodosDiv(s) {
+    const n = s.n ?? 12, G = fileiras();
+    const pares = []; for (let d = 1; d * d <= n; d++) if (n % d === 0) pares.push([d, n / d]);
+    const ds = [...new Set(pares.flat())].sort((x, y) => x - y);
+    await etiqueta('TODOS OS DIVISORES', 'em pares que multiplicam'); ajustaTopo();
+    const perg = s.perg || `Quais são todos os divisores de ${n}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `Procura pares que multiplicados dão ${n}. Começa pelo 1.`, 'passo');
+    for (let i = 0; i < pares.length; i++) {
+      G.retangulos(pares.slice(0, i + 1));
+      await E.linha(`<span>${pares[i][0]} × ${pares[i][1]} = ${n}</span>`, 1200);
+    }
+    await apagar(p);
+    const [a, b] = pares[pares.length - 1];
+    p = await nota(c.notas, s.parou || (a === b ? `${a} × ${a}: chegou no meio, parou.` : `O ${b} já apareceu: parou.${n % (b + 1) ? ` O ${b + 1} não divide ${n}.` : ''}`), 'passo');
+    await E.linha(`<span>${ds.join(', ')}</span>`, 1300);
+    await apagar(p);
+    await respostaFinal(`<span>${ds.slice(0, -1).join(', ')} e ${ds[ds.length - 1]}</span>`, { perg });
+    await regras5(s, 'Todos os divisores: os pares que multiplicam e dão o número.');
+  }
+  // 5) o 1 e o próprio número: qual é divisor de p?
+  async function cenaDivPrimo(s) {
+    const n = s.n ?? 7, ops = s.ops || [2, 3, 4];
+    const perg = s.perg || `Qual é divisor de ${n}: ${ops.join(', ')} ou ${n}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, 'Dois divisores que todo número tem:', 'passo');
+    await E.linha(`<span>${n} ÷ 1 = ${n}</span><span class="pz">o 1 divide todos</span>`, 1300);
+    await E.linha(`<span>${n} ÷ ${n} = 1</span><span class="pz">o número divide ele mesmo</span>`, 1300);
+    await apagar(p);
+    if (ops.length) {
+      p = await nota(c.notas, 'Os outros sobram:', 'passo');
+      for (const k of ops) { const l = await E.linha(`<span>${n} ÷ ${k} = ${Math.floor(n / k)}</span><span class="vno">sobra ${n % k} ✖</span>`, 800); l.classList.add('apaga-l'); }
+      await apagar(p);
+    }
+    await respostaFinal(`<span>${s.resp || n}</span>`, { perg });
+    await regras5(s, 'Todo número tem o 1 e ele mesmo como divisores.');
+  }
+  // 6) número primo: só 1 × p
+  async function cenaPrimo(s) {
+    const n = s.n ?? 7, G = fileiras();
+    await etiqueta('NÚMERO PRIMO', 'só 2 divisores'); ajustaTopo();
+    const perg = s.perg || `Quantos divisores tem o número ${n}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, `Com ${n} quadradinhos, só dá para fazer uma fileira: 1 × ${n}.`, 'passo');
+    G.retangulos([[1, n]]);
+    await E.linha(`<span>1 × ${n} = ${n}</span>`, 1300);
+    await apagar(p);
+    await E.linha(`<span>divisores: 1 e ${n}</span>`, 1100);
+    await nota(c.notas, 'número com só 2 divisores é primo: 2, 3, 5, 7, 11, 13…', 'detalhe');
+    await wait(1000);
+    await respostaFinal('<span>2 divisores (é primo)</span>', { perg });
+    await regras5(s, 'Primo: só tem 2 divisores, o 1 e ele mesmo.');
+  }
+  // 7) qual NÃO é divisor de n?
+  async function cenaNaoDiv(s) {
+    const n = s.n ?? 12, ops = s.ops || [2, 3, 4, 5], certo = ops.find((k) => n % k);
+    const perg = s.perg || `Qual NÃO é divisor de ${n}: ${ops.slice(0, -1).join(', ')} ou ${ops[ops.length - 1]}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, 'Testa cada um. Cuidado: agora quer o que SOBRA.', 'passo');
+    for (const k of ops) {
+      const ok = n % k === 0;
+      const l = await E.linha(`<span>${n} ÷ ${k} = ${Math.floor(n / k)}</span><span class="${ok ? 'pz' : 'vno'}">${ok ? 'sobra 0' : 'sobra ' + n % k + ' ←'}</span>`, 1000);
+      if (ok) l.classList.add('apaga-l');
+    }
+    await apagar(p);
+    const ds = []; for (let d = 1; d <= n; d++) if (n % d === 0) ds.push(d);
+    await nota(c.notas, `divisores de ${n}: ${ds.join(', ')}`, 'detalhe');
+    await wait(900);
+    await respostaFinal(`<span>${certo}</span>`, { perg });
+    await regras5(s, 'Leia o NÃO: a resposta é o único que sobra na divisão.');
+  }
+
+  // ── 7-A: porcentagem, calcular ──
+  // 1) o que é porcentagem: a grade de 100
+  async function cenaPctCem(s) {
+    const Cm = cem();
+    await etiqueta('PORCENTAGEM', 'quantos de cada 100'); ajustaTopo();
+    const perg = s.perg || 'O que quer dizer 25%?';
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, 'Divide o todo em 100 partes iguais.', 'passo');
+    await Cm.pinta(0, 'on', 0, '100 partes');
+    await wait(1200); await apagar(p);
+    p = await nota(c.notas, '25% são 25 dessas 100 partes.', 'passo');
+    await Cm.pinta(25, 'on', 250);
+    await E.linha('<span>25% = 25 de 100</span>');
+    await E.linha('<span>= 25/100</span>');
+    await apagar(p);
+    await nota(c.notas, '% quer dizer "por cem"', 'detalhe');
+    await wait(800);
+    await respostaFinal('<span>25 de cada 100</span>', { perg });
+    await regras5(s, 'Porcentagem: quantos de cada 100. 25% = 25/100.');
+  }
+  // 2) 100% e 50%: { N, p: 50 | 100, resp }
+  async function cenaPct50(s) {
+    const N = s.N ?? 40, p0 = s.p ?? 50, Cm = cem();
+    const perg = s.perg || `Quanto é ${p0}% de ${N}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, '100% é o todo. 50% é metade de 100%.', 'passo');
+    await Cm.pinta(100, 'on', 0, '100% = tudo'); await wait(1300);
+    if (p0 === 50) { await Cm.pinta(50, 'on2', 0, '50% = metade'); await wait(1300); }
+    await apagar(p);
+    if (p0 === 50) {
+      p = await nota(c.notas, `50% de ${N} é a metade de ${N}.`, 'passo');
+      await E.linha(`<span>${N} ÷ 2</span>`);
+      await E.final(`= ${nf(N / 2)}`);
+      await apagar(p);
+      await nota(c.notas, `100% de ${N} = ${N} (tudo)`, 'detalhe');
+    } else {
+      p = await nota(c.notas, `100% de ${N} é o ${N} inteiro.`, 'passo');
+      await E.linha(`<span>100% de ${N}</span>`);
+      await E.final(`= ${N}`);
+      await apagar(p);
+      await nota(c.notas, `50% de ${N} = ${nf(N / 2)} (a metade)`, 'detalhe');
+    }
+    await wait(800);
+    await respostaFinal(`<span>${s.resp || nf(N * p0 / 100)}</span>`, { perg });
+    await regras5(s, '100% é o todo. 50% é a metade: divide por 2.');
+  }
+  // 3 a 6) os atalhos: 10% (÷ 10), 25% (÷ 4), 20% (÷ 5), 1% (÷ 100); 75% = 3 × 25%
+  const ATALHO7 = { 10: [10, '10% é 1 parte de 10: 10 partes de 10% fazem 100%.', '10 de 100 = 1 de 10', '10%: divide por 10.'],
+    25: [4, '25% é 1 parte de 4: 4 × 25% = 100%.', '25 de 100 = 1 de 4', '25%: divide por 4 (a quarta parte).'],
+    75: [4, '75% são 3 partes de 4: 3 × 25%.', '75 de 100 = 3 de 4', '75%: divide por 4 e multiplica por 3.'],
+    20: [5, '20% é 1 parte de 5: 5 × 20% = 100%.', '20 de 100 = 1 de 5', '20%: divide por 5.'],
+    1: [100, '1% é 1 parte de 100.', '1 de 100', '1%: divide por 100.'] };
+  async function cenaPctAtalho(s) {
+    const pc = s.p ?? 10, N = s.N ?? 80, [k, frase, pintaTxt, rg] = ATALHO7[pc], v = N * pc / 100;
+    const Cm = cem();
+    const perg = s.perg || `Quanto é ${pc}% de ${N}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, frase, 'passo');
+    await Cm.pinta(pc, 'on2', 200, pintaTxt);
+    await wait(800); await apagar(p);
+    if (pc === 75) {
+      p = await nota(c.notas, `Então 75% de ${N} é 3 × (${N} ÷ 4).`, 'passo');
+      await E.linha(`<span>${N} ÷ 4 = ${nf(N / 4)}</span>`);
+      await E.linha(`<span>${nf(N / 4)} × 3</span>`);
+    } else {
+      p = await nota(c.notas, `Então ${pc}% de ${N} é ${N} ÷ ${k}.`, 'passo');
+      await E.linha(`<span>${N} ÷ ${k}</span>`);
+    }
+    await E.final(`= ${nf(v)}`);
+    await apagar(p);
+    if (pc === 10) await pegadinha(c, `${N} − 10 = ${N - 10}`, 'porcentagem não é tirar o número', `${N} ÷ 10 = ${nf(v)}`);
+    await respostaFinal(`<span>${nf(v)}</span>`, { perg });
+    await regras5(s, rg);
+  }
+  // 7) porcentagem e fração: { itens: [[pc, f1, f2, motivo]] }
+  const PF7 = { 50: ['50%', '50/100', '1/2', 'a metade'], 25: ['25%', '25/100', '1/4', 'a quarta parte'], 75: ['75%', '75/100', '3/4', '3 partes de 4'], 10: ['10%', '10/100', '1/10', 'a décima parte'],
+    20: ['20%', '20/100', '1/5', '1 parte de 5'], 40: ['40%', '40/100', '2/5', '2 partes de 5'] };
+  async function cenaPctFrac(s) {
+    const itens = (s.ps || [50, 25, 75, 10]).map((p) => PF7[p]);
+    L.classList.add('sem-hist', 'r3p');
+    await etiqueta('PORCENTAGEM E FRAÇÃO', 'simplifica o /100'); ajustaTopo();
+    const perg = s.perg || '50%, 25%, 75% e 10% são quais frações?';
+    await poePergunta(perg, false);
+    const c = cartao(); const ls = el('div', 'qd-lista3', '', c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, 'Escreve sobre 100 e simplifica.', 'passo');
+    for (const [pc, f1, f2, pq] of itens) {
+      const r = el('div', 'l3 qd-pop', `<span class="par">${pc} = ${f1}</span><span class="par" style="visibility: hidden; color: var(--qd-amarelo)">= ${f2}</span><span class="pq" style="visibility: hidden">${pq}</span>`, ls);
+      await wait(1300);
+      r.querySelectorAll('[style]').forEach((e) => { e.style.visibility = ''; e.classList.add('qd-pop'); });
+      await wait(900);
+    }
+    await apagar(p);
+    await respostaFinal(`<span>${s.resp || itens.map((i) => i[2]).join(' · ')}</span>`, { perg, manter: true });
+    await regras5(s, '% vira fração sobre 100; depois simplifica.');
+  }
+  // 8) desconto: p% de P
+  const DIVP = { 10: 10, 20: 5, 25: 4, 50: 2 };
+  async function cenaDesconto(s) {
+    const P = s.P ?? 50, pc = s.p ?? 10, k = DIVP[pc], v = P * pc / 100;
+    await etiqueta('DESCONTO', 'quanto sai do preço'); ajustaTopo();
+    const perg = s.perg || `Uma camiseta de R$ ${P} tem ${pc}% de desconto. Quanto é o desconto?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `O desconto é ${pc}% do preço.`, 'passo');
+    await E.linha(`<span>${pc}% de ${P}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `${pc}%: divide por ${k}.`, 'passo');
+    await E.linha(`<span>= ${P} ÷ ${k}</span>`);
+    await E.final(`= R$ ${nf(v)}`);
+    await apagar(p);
+    await nota(c.notas, 'a pergunta é o desconto, não o preço final', 'detalhe');
+    await wait(900);
+    await respostaFinal(`<span>R$ ${nf(v)}</span>`, { perg });
+    await regras5(s, 'Desconto = a porcentagem do preço.');
+  }
+  // 9) preço final: P − p% de P
+  async function cenaPrecoFinal(s) {
+    const P = s.P ?? 80, pc = s.p ?? 25, k = DIVP[pc], d = P * pc / 100, v = P - d;
+    const perg = s.perg || `Um tênis de R$ ${P} tem ${pc}% de desconto. Qual é o preço final?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `1º Calcula o desconto: ${pc}% de ${P}.`, 'passo');
+    await E.linha(`<span>${P} ÷ ${k} = ${nf(d)}</span><span class="pz">desconto</span>`);
+    await apagar(p);
+    p = await nota(c.notas, '2º Tira o desconto do preço.', 'passo');
+    await E.linha(`<span>${P} − ${nf(d)}</span>`);
+    await E.final(`= R$ ${nf(v)}`);
+    await apagar(p);
+    await pegadinha(c, `R$ ${nf(d)}`, `R$ ${nf(d)} é o desconto; o preço final é o que sobra`, `R$ ${nf(v)}`);
+    await respostaFinal(`<span>R$ ${nf(v)}</span>`, { perg });
+    await regras5(s, 'Preço final = preço − desconto.');
+  }
+  // 10) qual porcentagem: f de N
+  async function cenaQualPct(s) {
+    const N = s.N ?? 40, f = s.f ?? 10, d = N / f, pc = 100 / d, Cm = cem();
+    const perg = s.perg || `Numa turma de ${N} alunos, ${f} faltaram. Qual porcentagem faltou?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `Escreve a fração: ${f} de ${N}.`, 'passo');
+    await E.linha(`<span>${f}/${N}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `Simplifica: divide em cima e embaixo por ${f}.`, 'passo');
+    await E.linha(`<span>= 1/${d}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `1/${d} é ${pc}%.`, 'passo');
+    await Cm.pinta(pc, 'on2', 200, `1/${d} = ${pc} de 100`);
+    await E.final(`= ${pc}%`);
+    await apagar(p);
+    await respostaFinal(`<span>${pc}%</span>`, { perg });
+    await regras5(s, 'Qual porcentagem? Faz a fração (parte/todo) e transforma em %.');
+  }
+
+  // ── 7-B: porcentagem, qual é a conta? ──
+  // a porcentagem em decimal, com 2 casas (20 → "0,20 = 0,2"; 5 → "0,05"; 100 → "1,00 = 1")
+  const decLinha = (p) => { const d2 = (p / 100).toFixed(2).replace('.', ','), d = dec2(p); return d2 === d ? `= ${d}` : `= ${d2} = ${d}`; };
+  // 1) % em decimal: { ps: [20, 5] }
+  async function cenaPctDec(s) {
+    const ps = s.ps || [20, 5];
+    await etiqueta('% EM DECIMAL', 'divide por 100'); ajustaTopo();
+    const perg = s.perg || `Quanto é ${ps[0]}% em número decimal?${ps[1] !== undefined ? ` E ${ps[1]}%?` : ''}`;
+    await poePergunta(perg, false);
+    let c = null, E = null;
+    for (const [i, pc] of ps.entries()) {
+      if (c) await paraHist(c);
+      c = cartao(); E = contaEq(c.conta);
+      if (i === 0) await ler(perg);
+      const falta = pc < 10;
+      const p = await nota(c.notas, i === 0 ? `Porcentagem é sobre 100. Dividir por 100 anda a vírgula 2 casas para a esquerda.${falta ? ' Falta casa: põe zero.' : ''}` : `${pc}% também: a vírgula anda 2 casas.${falta ? ' Falta casa: põe zero.' : ''}`, 'passo');
+      await E.linha(`<span>${pc}% = ${pc}/100</span>`);
+      await E.linha(`<span>${decLinha(pc)}</span>`, 1100);
+      await apagar(p);
+    }
+    const ult = ps[ps.length - 1];
+    if (ult < 10) await pegadinha(c, `${ult}% = ${dec2(ult * 10)}`, `${dec2(ult * 10)} é ${ult * 10}%`, `${ult}% = ${dec2(ult)}`);
+    await respostaFinal(`<span>${ps.map(dec2).join(' · ')}</span>`, { perg });
+    await regras5(s, '% em decimal: divide por 100 (a vírgula anda 2 casas). 20% = 0,2; 5% = 0,05.');
+  }
+  // 2) "de" vira vezes: p% de N = N × 0,p
+  async function cenaQualConta(s) {
+    const pc = s.p ?? 25, N = s.N ?? 60, d = dec2(pc);
+    await etiqueta('QUAL É A CONTA?', '"de" vira vezes'); ajustaTopo();
+    const perg = s.perg || `"${pc}% de ${N}" é o mesmo que qual conta?`;
+    await poePergunta(perg, false);
+    const c = cartao();
+    await ler(perg);
+    const { E } = await fraseExpr(c, [[`${pc}%`, d], ['de', '×'], [String(N), String(N)]], `<span>${N} × ${d}</span>`, `Troca cada pedaço: ${pc}% vira ${d} e "de" vira ×.`);
+    await E.final(`= ${nf(N * pc / 100)}`);
+    await pegadinha(c, `${N} × ${pc}`, `o ${pc}% precisa virar ${d} antes`, `${N} × ${d}`);
+    await respostaFinal(`<span>${N} × ${d}</span>`, { perg });
+    await regras5(s, '"p% de N" = N × (p ÷ 100).');
+  }
+  // 3) 50% também é ÷ 2
+  async function cenaConta50(s) {
+    const N = s.N ?? 30;
+    const perg = s.perg || `"50% de ${N}" é o mesmo que qual conta?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, 'Pelo jeito de sempre: 50% = 0,5.', 'passo');
+    await E.linha(`<span>${N} × 0,5</span>`);
+    await apagar(p);
+    p = await nota(c.notas, 'E 50% é a metade: dá o mesmo que dividir por 2.', 'passo');
+    await E.linha(`<span>= ${N} ÷ 2</span>`);
+    await E.final(`= ${nf(N / 2)}`);
+    await apagar(p);
+    await respostaFinal(`<span>${N} × 0,5 ou ${N} ÷ 2</span>`, { perg });
+    await regras5(s, '50% de N: N × 0,5 = N ÷ 2.');
+  }
+  // 4) num problema: { p, N, oQue: '30 alunos', passo, detalhe }
+  async function cenaContaCtx(s) {
+    const pc = s.p ?? 40, N = s.N ?? 30, d = dec2(pc), oQue = s.oQue || `${N} alunos`;
+    const perg = s.perg || `Numa turma de ${N} alunos, ${pc}% são meninas. Qual conta dá o número de meninas?`;
+    await poePergunta(perg, false);
+    const c = cartao();
+    await ler(perg);
+    const { E } = await fraseExpr(c, [[`${pc}%`, d], ['de', '×'], [oQue, String(N)]], `<span>${N} × ${d}</span>`, s.passo || `As meninas são ${pc}% DE ${N} alunos.`);
+    const v = N * pc / 100;
+    await E.final(`= ${nf(v)}`);
+    const det = s.detalhe !== undefined ? s.detalhe : `${nf(v)} meninas; os outros ${nf(N - v)} são meninos`;
+    if (det) { await nota(c.notas, det, 'detalhe'); await wait(900); }
+    await tiraTrad();
+    await respostaFinal(`<span>${N} × ${d}</span>`, { perg });
+    await regras5(s, 'No problema: acha "quanto %" e "de quanto"; a conta é todo × decimal.');
+  }
+  // 5) ler a conta: N × 0,p calcula o quê?
+  async function cenaLeConta(s) {
+    const pc = s.p ?? 25, N = s.N ?? 60, d = dec2(pc), d2 = (pc / 100).toFixed(2).replace('.', ',');
+    const perg = s.perg || `A conta ${N} × ${d} calcula o quê?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, 'Faz o caminho de volta: o decimal vira porcentagem (vezes 100).', 'passo');
+    await E.linha(`<span>${d}${d2 !== d ? ` = ${d2}` : ''} = ${pc}/100 = ${pc}%</span>`, 1300);
+    await apagar(p);
+    p = await nota(c.notas, 'O × vira "de".', 'passo');
+    await E.linha(`<span>${N} × ${d} = ${pc}% de ${N}</span>`, 1300);
+    await apagar(p);
+    await pegadinha(c, `${nf(pc / 10)}% de ${N}`, `${d2} tem 2 casas: é ${pc}%`, `${pc}% de ${N}`);
+    await respostaFinal(`<span>${pc}% de ${N}</span>`, { perg });
+    await regras5(s, 'Decimal em %: anda a vírgula 2 casas para a direita. 0,25 = 25%.');
+  }
+  // 6 e 7) preço final com desconto (P − P × 0,p) e aumento (P + P × 0,p): { P, p, aumento }
+  async function cenaContaFinal(s) {
+    const P = s.P ?? 200, pc = s.p ?? 10, up = !!s.aumento, d = dec2(pc), D = P * pc / 100, op = up ? '+' : '−', v = up ? P + D : P - D;
+    const perg = s.perg || (up ? `A mesada de R$ ${P} teve aumento de ${pc}%. Qual conta dá a nova mesada?` : `Um produto de R$ ${P} tem ${pc}% de desconto. Qual conta dá o preço final?`);
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, up ? `O aumento é ${pc}% de ${P}.` : `O desconto é ${pc}% de ${P}.`, 'passo');
+    await E.linha(`<span>${P} × ${d}</span><span class="pz">${up ? 'aumento' : 'desconto'}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, up ? 'Aumento soma: a mesada mais o aumento.' : 'Preço final: o preço menos o desconto.', 'passo');
+    await E.linha(`<span>${P} ${op} ${P} × ${d}</span>`);
+    await E.linha(`<span>= ${P} ${op} ${rs(D)}</span>`);
+    await E.final(`= R$ ${rs(v)}`);
+    await apagar(p);
+    await respostaFinal(`<span>${P} ${op} ${P} × ${d}</span>`, { perg });
+    await regras5(s, up ? 'Aumento: soma. Desconto: tira.' : 'Preço final = preço − preço × desconto.');
+  }
+  // 8) direto: com p% de desconto, paga (100 − p)%
+  async function cenaContaDireta(s) {
+    const P = s.P ?? 60, pc = s.p ?? 25, r = 100 - pc, d = dec2(r), v = P * r / 100, Cm = cem();
+    const perg = s.perg || `Uma camiseta de R$ ${P} tem ${pc}% de desconto. Qual conta dá direto o preço final?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `Se tiram ${pc}%, eu pago o resto: 100% − ${pc}% = ${r}%.`, 'passo');
+    await Cm.pinta(100, 'on', 0, ''); await wait(400);
+    await Cm.pinta(r, 'on2', 150, `pago ${r}%`);
+    await E.linha(`<span>100% − ${pc}% = ${r}%</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `${r}% = ${d}. Uma conta só:`, 'passo');
+    await E.linha(`<span>${P} × ${d}</span>`);
+    await E.final(`= R$ ${rs(v)}`);
+    await apagar(p);
+    await nota(c.notas, `confere: ${P} − ${rs(P - v)} = ${rs(v)} ✔`, 'detalhe');
+    await wait(800);
+    await respostaFinal(`<span>${P} × ${d}</span>`, { perg });
+    await regras5(s, 'Direto: com p% de desconto, paga (100 − p)%.');
+  }
+
+  // ══════════════════ 1: a ordem das operações (PROMPT-223) ══════════════════
+  // lateral com a lista da ordem; marca(i) acende o passo da vez
+  function ordemLado(itens) {
+    L.classList.add('com-lado', 'lado-xl', 'plano-alto');
+    LADO.innerHTML = ''; LADO.style.opacity = '';
+    const box = el('div', 'qd-ordem-box', '', LADO);
+    el('div', 'qd-ordem-tit', 'A ordem', box);
+    const li = itens.map((t) => el('div', 'qd-ordem-i', t, box));
+    return { marca(i) { li.forEach((e, k) => e.classList.toggle('on', k === i)); } };
+  }
+  const FZ = (s) => `<span class="faz">${s}</span>`;   // a parte que vai ser feita agora
+  // um passo: a parte marcada na própria linha que já está no quadro (não escreve de novo), a ordem acesa, a nota, e a linha com o resultado
+  async function passoOrd(E, O, i, antes, depois, txt, c) {
+    if (O && i !== null) O.marca(i);
+    const ult = [...E.box.querySelectorAll(':scope > .ln')].pop();
+    if (ult) { ult.innerHTML = `<span>${virgH(antes)}</span>`; await wait(600); }
+    else await E.linha(`<span>${antes}</span>`, 600);
+    const p = txt ? await nota(c.notas, txt, 'passo') : null;
+    await wait(900);
+    const l2 = await E.linha(`<span>${depois}</span>`, 900);
+    if (p) await apagar(p);
+    return l2;
+  }
+  const ORD1A = ['1º × e ÷', '2º + e −', 'empate: da esquerda', 'para a direita'];
+  const ORD1B = ['1º ( )', '2º [ ]', '3º { }', '4º × e ÷', '5º + e −'];
+  // o resolvedor: a expressão em pedaços e, a cada passo, o que marcar e o que escrever (do jeito dos protótipos)
+  const AB1 = '([{', FE1 = ')]}';
+  const n1 = (t) => Number(String(t).replace('−', '-').replace(',', '.'));
+  const s1 = (v) => { v = Math.round(v * 1e6) / 1e6; return (v < 0 ? '−' : '') + String(Math.abs(v)).replace('.', ','); };
+  const conta1 = (a, op, b) => (op === '×' ? a * b : op === '÷' ? a / b : op === '+' ? a + b : a - b);
+  const junta1 = (tk, fz = [], sb = new Set()) => {   // fz: [[i, j]…] vão sublinhados; sb: posições com o resultado (amarelo)
+    let o = '';
+    tk.forEach((t, i) => {
+      if (i && !AB1.includes(tk[i - 1]) && !FE1.includes(t)) o += ' ';
+      if (fz.some(([a]) => a === i)) o += '<span class="faz">';
+      o += sb.has(i) ? SB(t) : t;
+      if (fz.some(([, b]) => b === i)) o += '</span>';
+    });
+    return o;
+  };
+  // um passo num trecho sem colchetes: × e ÷ (o primeiro de cada bloco; bloco com mais de um, só o primeiro dele), depois + e − da esquerda
+  function plano1(tk, i0, i1) {
+    const ops = []; for (let k = i0 + 1; k < i1; k += 2) ops.push(k);
+    if (ops.length <= 1) return null;
+    const md = ops.filter((k) => tk[k] === '×' || tk[k] === '÷');
+    if (md.length) {
+      const blocos = []; for (const k of md) { const b = blocos[blocos.length - 1]; if (b && b[b.length - 1] === k - 2) b.push(k); else blocos.push([k]); }
+      const longo = blocos.find((b) => b.length > 1);
+      return { ks: longo ? [longo[0]] : blocos.map((b) => b[0]), tipo: 'md' };
+    }
+    return { ks: [ops[0]], tipo: 'as' };
+  }
+  function passos1(expr) {
+    let tk = String(expr).match(/\d+(?:,\d+)?|[+−×÷()[\]{}]/g);
+    const out = [];
+    for (let guarda = 0; guarda < 30; guarda++) {
+      // o colchete mais de dentro
+      let ab = -1, fe = -1, faz;
+      for (let i = 0; i < tk.length; i++) { if (AB1.includes(tk[i])) ab = i; else if (FE1.includes(tk[i])) { fe = i; break; } }
+      if (fe >= 0) {
+        const dentro = plano1(tk, ab + 1, fe), tipo = AB1.indexOf(tk[ab]);
+        if (!dentro) {   // uma conta só dentro: faz e tira o colchete
+          const v = conta1(n1(tk[ab + 1]), tk[ab + 2], n1(tk[ab + 3]));
+          const novo = [...tk.slice(0, ab), s1(v), ...tk.slice(fe + 1)];
+          out.push({ antes: junta1(tk, [[ab, fe]]), depois: junta1(novo, [], new Set([ab])), tipo, cs: `${tk[ab + 1]} ${tk[ab + 2]} ${tk[ab + 3]} = ${s1(v)}` });
+          tk = novo; continue;
+        }
+        faz = dentro;
+      } else faz = plano1(tk, 0, tk.length);
+      if (!faz) break;
+      // troca cada conta marcada pelo resultado (da direita para a esquerda, para as posições não mudarem)
+      let novo = [...tk]; const cs = []; const pos = [];
+      for (const k of [...faz.ks].reverse()) { const v = conta1(n1(tk[k - 1]), tk[k], n1(tk[k + 1])); novo.splice(k - 1, 3, s1(v)); cs.unshift(`${tk[k - 1]} ${tk[k]} ${tk[k + 1]} = ${s1(v)}`); }
+      faz.ks.forEach((k, j) => pos.push(k - 1 - 2 * j));
+      out.push({ antes: junta1(tk, faz.ks.map((k) => [k - 1, k + 1])), depois: junta1(novo, [], new Set(pos)), tipo: fe >= 0 ? AB1.indexOf(tk[ab]) : faz.tipo, cs: cs.join(' e ') });
+      tk = novo;
+    }
+    // sobrou uma conta: o resultado final
+    const v = tk.length === 3 ? conta1(n1(tk[0]), tk[1], n1(tk[2])) : n1(tk[0]);
+    return { passos: out, ultimo: tk.length === 3 ? (tk[1] === '×' || tk[1] === '÷' ? 'md' : 'as') : null, v };
+  }
+  // a página do 1-A e do 1-B: { expr, b (com colchetes), perg, etq: [nome, sub], intro, introMs, frase: { pares, nota }, notas: […] ({c} = a conta do passo), peg: [errada, porque, certa], rs, resp, regra }
+  async function cenaOrdem1(s) {
+    const B = !!s.b, O = ordemLado(B ? ORD1B : ORD1A);
+    if (s.etq) { await etiqueta(s.etq[0], s.etq[1] || ''); }
+    ajustaTopo();
+    const { passos, ultimo, v } = passos1(s.expr);
+    const idx = (t) => (typeof t === 'number' ? t : B ? (t === 'md' ? 3 : 4) : t === 'md' ? 0 : 2);
+    const perg = s.perg || `Quanto é ${s.expr}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); let E;
+    if (s.frase) {
+      await ler(perg);
+      ({ E } = await fraseExpr(c, s.frase.pares, `<span>${s.expr}</span>`, s.frase.nota));
+      await tiraTrad();
+    } else {
+      E = contaEq(c.conta);
+      await ler(perg);
+    }
+    if (s.intro) { const p = await nota(c.notas, s.intro, 'passo'); await wait(s.introMs || 1500); await apagar(p); }
+    const auto = (p, k) => (typeof p.tipo === 'number' ? (B && !s.expr.includes('[') ? 'Primeiro dentro: {c}.' : ['Primeiro ( ): {c}.', 'Depois [ ]: {c}.', 'Depois { }: {c}.'][p.tipo])
+      : p.tipo === 'md' ? (p.cs.includes(' e ') ? 'Primeiro todos os × e ÷.' : 'Primeiro o ' + p.cs.split(' ')[1] + ': {c}.') : 'Sobrou + e −: vai da esquerda para a direita.');
+    for (const [k, p] of passos.entries()) {
+      const txt = (s.notas && s.notas[k] !== undefined ? s.notas[k] : auto(p, k)).replace('{c}', p.cs);
+      await passoOrd(E, O, idx(p.tipo), (k ? '= ' : '') + p.antes, '= ' + p.depois, txt, c);
+    }
+    const res = s1(v), din = s.rs ? (v < 0 ? '−R$ ' + res.slice(1) : 'R$ ' + res) : res;
+    O.marca(ultimo === 'md' ? (B ? 3 : 0) : B ? 4 : 1);
+    await E.final(`= ${din}`);
+    if (s.peg) await pegadinha(c, ...s.peg);
+    await respostaFinal(`<span>${s.resp || din}</span>`, { perg });
+    await regras5(s, s.regra || (B ? 'De dentro para fora: ( ), [ ], { }. Depois a ordem de sempre.' : 'Primeiro × e ÷. Depois + e −.'));
+  }
+
+  // ══════════════════ 2 e 3: o quadro das casas e os negativos (PROMPT-222; protótipos referencia/lousa-2a/2b/3a/3b.html) ══════════════════
+  // lateral com a tabela das casas: cada número entra numa linha, os algarismos no lugar certo
+  // cab: ex. ['M', 'C', 'D', 'U', ',', 'd', 'c']; a coluna ',' só mostra a vírgula se o número tiver decimais
+  function casas(cab, legenda) {
+    L.classList.add('com-lado', 'lado-xl', 'plano-alto');
+    LADO.innerHTML = ''; LADO.style.opacity = '';
+    ajustaTopo();
+    const box = el('div', 'qd-casas-box', '', LADO);
+    const t = el('div', 'qd-casas', '', box);
+    t.style.gridTemplateColumns = cab.map((c) => (c === ',' ? '.5em' : '1.15em')).join(' ') + ' auto';
+    cab.forEach((c) => el('div', 'cab' + (c === ',' ? ' vg' : ''), c === ',' ? '' : c, t));
+    el('div', 'cab rt', '', t);
+    if (legenda) el('div', 'qd-casas-leg', legenda, box);
+    const iU = cab.indexOf('U'), iV = cab.indexOf(',');
+    // muitas casas (número grande do cartão): a tabela encolhe para caber na lateral
+    const cabe = () => { t.style.fontSize = ''; const f = box.clientWidth / Math.max(t.scrollWidth, 1); if (f < 1) t.style.fontSize = `max(2.4cqw, ${3.6 * f * .97}cqw)`; };
+    return {
+      async linha(str, rot = '', cls = '') {
+        const [ip, dp = ''] = String(str).split(',');
+        const cel = cab.map(() => '');
+        [...ip].reverse().forEach((d, k) => { if (iU - k >= 0) cel[iU - k] = d; });
+        if (dp && iV >= 0) { cel[iV] = ','; [...dp].forEach((d, k) => { cel[iV + 1 + k] = d; }); }
+        const row = cel.map((d, j) => el('div', 'cd qd-pop ' + cls + (cab[j] === ',' ? ' vg' : ''), d, t));
+        el('div', 'cd rt qd-pop', rot, t);
+        cabe();
+        await wait(900);
+        return row;
+      },
+    };
+  }
+  // as casas que os números pedem (no mínimo as do protótipo)
+  const CASA_I = ['U', 'D', 'C', 'M', 'DM', 'CM'], CASA_D = ['d', 'c', 'm'];
+  function cabDe(nums, minI, minD = 0) {
+    let ni = minI, nd = minD;
+    for (const s of nums) { const [ip, dp = ''] = String(s).split(','); ni = Math.max(ni, ip.length); nd = Math.max(nd, dp.length); }
+    const c = CASA_I.slice(0, Math.min(ni, CASA_I.length)).reverse();
+    return nd ? [...c, ',', ...CASA_D.slice(0, Math.min(nd, 3))] : c;
+  }
+  const zerosDe = (k) => String(k).length - 1;
+  // o decimal com z casas depois da vírgula (0,75 → "0,750"), sem a vírgula se for inteiro
+  const comCasas = (v, z) => (Number.isInteger(v) ? nf(v) : v.toFixed(z).replace('.', ','));
+  const dinheiro = (v) => (Number.isInteger(v) ? nf(v) : v.toFixed(2).replace('.', ','));
+  const nD = (t) => Number(String(t).replace(',', '.'));
+
+  // ── 2-A: × e ÷ por 10, 100 e 1000 ──
+  // 1 e 2) vezes: { itens: [[a, k], …] } (k = 10: a página 1, com a legenda e a etiqueta)
+  async function cenaCasasVz(s) {
+    const itens = s.itens || [[7, 10]], p1 = itens[0][1] === 10;
+    const K = casas(cabDe(itens.map(([a, k]) => String(a * k)), 4), p1 ? 'M milhar · C centena · D dezena · U unidade' : undefined);
+    if (p1) { await etiqueta('× 10, 100 e 1000', 'os algarismos mudam de casa'); ajustaTopo(); }
+    const perg = s.perg || (itens.length > 1 ? `Quanto é ${itens[0][0]} × ${itens[0][1]}? E ${itens[1][0]} × ${itens[1][1]}?` : `Quanto é ${itens[0][0]} × ${itens[0][1]}?`);
+    await poePergunta(perg, false);
+    let c = null, E = null;
+    for (const [i, [a, k]] of itens.entries()) {
+      if (c) await paraHist(c);
+      c = cartao(); E = contaEq(c.conta);
+      if (i === 0) await ler(perg);
+      const z = zerosDe(k), v = a * k;
+      await K.linha(String(a), k === 10 && a < 10 ? `${a} unidades` : '');
+      const p = await nota(c.notas, k === 10 ? 'Vezes 10: cada algarismo anda 1 casa para a esquerda. A unidade fica vazia: põe 0.' : `× ${k} tem ${z} zeros: anda ${z} casas. Põe ${z} zeros.`, 'passo');
+      await K.linha(String(v), `← ${casasTxt(z)}`, 'novo');
+      await E.linha(`<span>${a} × ${k}</span>`);
+      await E.final(`= ${v}`);
+      await apagar(p);
+      if (k === 10 && itens.length === 1) { await nota(c.notas, a < 10 ? `${a} unidades viraram ${a} dezenas` : 'cada algarismo subiu uma casa', 'detalhe'); await wait(800); }
+    }
+    await respostaFinal(`<span>${itens.map(([a, k]) => a * k).join(' · ')}</span>`, { perg });
+    await regras5(s, p1 ? '× 10: anda 1 casa para a esquerda (põe um zero no fim).' : 'Conta os zeros do 10, 100, 1000: são as casas que andam (os zeros que põe).');
+  }
+  // 3 e 4) dividir: { itens: [[a, k], …] }
+  async function cenaCasasDv(s) {
+    const itens = s.itens || [[300, 10]], so10 = itens.length === 1 && itens[0][1] === 10;
+    const K = casas(cabDe(itens.map(([a]) => String(a)), 4));
+    const perg = s.perg || (itens.length > 1 ? `Quanto é ${itens[0][0]} ÷ ${itens[0][1]}? E ${itens[1][0]} ÷ ${itens[1][1]}?` : `Quanto é ${itens[0][0]} ÷ ${itens[0][1]}?`);
+    await poePergunta(perg, false);
+    let c = null, E = null;
+    for (const [i, [a, k]] of itens.entries()) {
+      if (c) await paraHist(c);
+      c = cartao(); E = contaEq(c.conta);
+      if (i === 0) await ler(perg);
+      const z = zerosDe(k), v = a / k;
+      await K.linha(String(a));
+      const p = await nota(c.notas, k === 10 ? 'Dividir por 10 é o caminho de volta: anda 1 casa para a direita. Sai um zero do fim.' : k === 100 ? '÷ 100: 2 zeros, anda 2 casas para a direita. Tira 2 zeros.' : '÷ 1000: tira 3 zeros.', 'passo');
+      await K.linha(String(v), `→ ${casasTxt(z)}`, 'novo');
+      await E.linha(`<span>${a} ÷ ${k}</span>`);
+      await E.final(`= ${v}`);
+      await apagar(p);
+      if (so10) { await nota(c.notas, `confere: ${v} × 10 = ${a} ✔`, 'detalhe'); await wait(800); }
+    }
+    await respostaFinal(`<span>${itens.map(([a, k]) => a / k).join(' · ')}</span>`, { perg });
+    await regras5(s, so10 ? '÷ 10: anda 1 casa para a direita (tira um zero do fim).' : '÷ 100 tira 2 zeros; ÷ 1000 tira 3 zeros.');
+  }
+  // 5) zero do meio: a ÷ 10 (a pegadinha põe o zero no meio do resultado)
+  async function cenaZeroMeio(s) {
+    const a = s.a ?? 450, v = a / 10;
+    const K = casas(cabDe([String(a)], 4));
+    const perg = s.perg || `Quanto é ${a} ÷ 10?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await K.linha(String(a));
+    const p = await nota(c.notas, 'Só sai o zero do FIM. Os outros algarismos andam juntos.', 'passo');
+    await K.linha(String(v), '→ 1 casa', 'novo');
+    await E.linha(`<span>${a} ÷ 10</span>`);
+    await E.final(`= ${v}`);
+    await apagar(p);
+    if (v >= 10) { const sv = String(v); await pegadinha(c, sv.slice(0, -1) + '0' + sv.slice(-1), 'não tira um algarismo do meio', sv); }
+    await respostaFinal(`<span>${v}</span>`, { perg });
+    await regras5(s, 'Tira zero só do fim do número.');
+  }
+  // 6) duas vezes: a × 10 × 10 ou a ÷ 10 ÷ 10
+  async function cenaDuasVezes(s) {
+    const a = s.a ?? 23, dv = s.op === '÷', m = dv ? a / 10 : a * 10, v = dv ? a / 100 : a * 100, op = dv ? '÷' : '×';
+    const perg = s.perg || `Quanto é ${a} ${op} 10 ${op} 10?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, `Faz da esquerda para a direita, um ${op} 10 de cada vez.`, 'passo');
+    await E.linha(`<span>${a} ${op} 10 ${op} 10</span>`);
+    await E.linha(`<span>= ${m} ${op} 10</span>`);
+    await E.final(`= ${v}`);
+    await apagar(p);
+    await nota(c.notas, dv ? '÷ 10 ÷ 10 é o mesmo que ÷ 100: tira 2 zeros' : '× 10 × 10 é o mesmo que × 100: 2 zeros', 'detalhe');
+    await wait(900);
+    await respostaFinal(`<span>${v}</span>`, { perg });
+    await regras5(s, dv ? '÷ 10 ÷ 10 = ÷ 100.' : '× 10 × 10 = × 100.');
+  }
+  // 7) juntando: a × 100 + b × 10
+  async function cenaJuntando(s) {
+    const a = s.a ?? 5, b = s.b ?? 3;
+    const perg = s.perg || `Quanto é ${a} × 100 + ${b} × 10?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, 'Primeiro as vezes, depois a soma.', 'passo');
+    await E.linha(`<span>${a} × 100 + ${b} × 10</span>`);
+    await E.linha(`<span>= ${a * 100} + ${b * 10}</span>`);
+    await E.final(`= ${a * 100 + b * 10}`);
+    await apagar(p);
+    await nota(c.notas, `${a} ${a === 1 ? 'centena' : 'centenas'} e ${b} ${b === 1 ? 'dezena' : 'dezenas'}`, 'detalhe');
+    await wait(900);
+    await respostaFinal(`<span>${a * 100 + b * 10}</span>`, { perg });
+    await regras5(s, 'Numa expressão: primeiro × e ÷, depois + e −.');
+  }
+
+  // ── 2-B: decimais e medidas ──
+  // 1) decimal × 10
+  async function cenaDecX10(s) {
+    const a = s.a ?? '3,5', v = nf(Math.round(nD(a) * 1e6) * 10 / 1e6);
+    const K = casas(cabDe([a, v], 3, 2), 'd décimo · c centésimo');
+    await etiqueta('DECIMAIS × e ÷', 'a vírgula anda'); ajustaTopo();
+    const perg = s.perg || `Quanto é ${a} × 10?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await K.linha(a);
+    const p = await nota(c.notas, 'Com vírgula é igual: × 10 anda 1 casa. É como se a vírgula pulasse 1 casa para a direita.', 'passo');
+    await K.linha(v, 'vírgula →', 'novo');
+    await E.linha(`<span>${a} × 10</span>`);
+    await E.final(`= ${v}`);
+    await apagar(p);
+    if (/,/.test(a)) await pegadinha(c, a + '0', 'pôr zero no fim não muda um decimal', v);
+    await respostaFinal(`<span>${v}</span>`, { perg });
+    await regras5(s, 'Decimal × 10: a vírgula anda 1 casa para a direita.');
+  }
+  // 2) decimal × 100 ou × 1000: falta casa, completa com zero
+  async function cenaDecX100(s) {
+    const a = s.a ?? '0,7', k = s.k ?? 100, z = zerosDe(k), d = (a.split(',')[1] || '').length;
+    const vN = Math.round(nD(a) * k * 1e6) / 1e6, v = nf(vN), falta = /,/.test(a) && d < z, pad = falta ? a + '0'.repeat(z - d) : a;
+    const K = casas(cabDe([a, v], 3, 2));
+    const perg = s.perg || `Quanto é ${a} × ${k}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await K.linha(a);
+    const p = await nota(c.notas, falta ? `× ${k}: a vírgula anda ${z} casas. Só tem ${d} depois da vírgula: completa com zero.` : `× ${k}: a vírgula anda ${z} casas para a direita.`, 'passo');
+    if (pad !== a) await E.linha(`<span>${a} = ${pad}</span>`);
+    await K.linha(v, `vírgula → ${z}`, 'novo');
+    await E.linha(`<span>${pad} × ${k}</span>`);
+    await E.final(`= ${v}`);
+    await apagar(p);
+    const dig = pad.replace(',', '');
+    if (/^0/.test(dig) && Number.isInteger(vN)) { await nota(c.notas, `zero na frente sem valor sai: ${dig} = ${v}`, 'detalhe'); await wait(800); }
+    await respostaFinal(`<span>${v}</span>`, { perg });
+    await regras5(s, 'Faltou casa para a vírgula andar? Completa com zero.');
+  }
+  // 3) ÷ 10 com vírgula: { itens: [37, 5] }
+  async function cenaDecDv10(s) {
+    const itens = s.itens || [37, 5];
+    const K = casas(cabDe(itens.map(String), 3, 2));
+    const perg = s.perg || (itens.length > 1 ? `Quanto é ${itens[0]} ÷ 10? E ${itens[1]} ÷ 10?` : `Quanto é ${itens[0]} ÷ 10?`);
+    await poePergunta(perg, false);
+    let c = null, E = null;
+    for (const [i, a] of itens.entries()) {
+      if (c) await paraHist(c);
+      c = cartao(); E = contaEq(c.conta);
+      if (i === 0) await ler(perg);
+      const v = nf(a / 10), u = a % 10;
+      await K.linha(String(a));
+      const p = await nota(c.notas, u === 0 ? '÷ 10: anda 1 casa para a direita. Sai o zero do fim.' : a < 10 ? `O ${a} vai para os décimos. A unidade fica vazia: põe 0.` : `÷ 10: anda 1 casa para a direita. O ${u} passa da unidade: aparece a vírgula.`, 'passo');
+      await K.linha(v, u === 0 ? '→ 1 casa' : '← vírgula', 'novo');
+      await E.linha(`<span>${a} ÷ 10</span>`);
+      await E.final(`= ${v}`);
+      await apagar(p);
+    }
+    await respostaFinal(`<span>${itens.map((a) => nf(a / 10)).join(' · ')}</span>`, { perg });
+    await regras5(s, '÷ 10: a vírgula anda 1 casa para a esquerda. Ficou vazio na frente: 0.');
+  }
+  // 4) ÷ 100
+  async function cenaDecDv100(s) {
+    const a = s.a ?? 37, vN = a / 100, v = nf(vN), cheio = comCasas(vN, 2);
+    const K = casas(cabDe([String(a), cheio], 3, 2));
+    const perg = s.perg || `Quanto é ${a} ÷ 100?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await K.linha(String(a));
+    const ds = String(a).padStart(2, '0').slice(-2);
+    const p = await nota(c.notas, a % 100 === 0 ? '÷ 100: anda 2 casas para a direita. Saem os 2 zeros do fim.' : `÷ 100: anda 2 casas para a direita. O ${ds[0]} e o ${ds[1]} passam da unidade.`, 'passo');
+    await K.linha(cheio, '← 2 casas', 'novo');
+    await E.linha(`<span>${a} ÷ 100</span>`);
+    await E.final(`= ${v}`);
+    await apagar(p);
+    if (cheio !== v) { await nota(c.notas, `zero no fim do decimal sai: ${cheio} = ${v}`, 'detalhe'); await wait(800); }
+    const um = nf(a / 10);
+    if (um !== v) await pegadinha(c, um, `${um} é ÷ 10 (1 casa só)`, v);
+    await respostaFinal(`<span>${v}</span>`, { perg });
+    await regras5(s, '÷ 100: a vírgula anda 2 casas para a esquerda.');
+  }
+  // 5) as medidas
+  async function cenaMedidas2(s) {
+    L.classList.add('sem-hist', 'r3p');
+    await etiqueta('MEDIDAS', 'quanto vale cada uma'); ajustaTopo();
+    const perg = s.perg || 'Quanto vale 1 metro, 1 quilo e 1 litro?';
+    await poePergunta(perg, false);
+    const c = cartao(); const ls = el('div', 'qd-lista3', '', c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, 'Estas são as trocas que aparecem nas questões.', 'passo');
+    for (const [a, b, pq] of [['1 m', '100 cm', 'centímetro: 100 em 1 metro'], ['1 kg', '1000 g', 'quilo = mil gramas'], ['1 L', '1000 mL', 'mili = mil em 1'], ['1 km', '1000 m', 'quilo = mil']]) {
+      el('div', 'l3 qd-pop', `<span class="par">${a} =</span><span class="par" style="color: var(--qd-amarelo)">${b}</span><span class="pq">${pq}</span>`, ls);
+      await wait(1300);
+    }
+    await apagar(p);
+    await respostaFinal(`<span>${s.resp || '100 cm · 1000 g · 1000 mL'}</span>`, { perg, manter: true });
+    await regras5(s, '"Quilo" é mil. "Centi" é 100 em 1. "Mili" é 1000 em 1.');
+  }
+  const UN2 = { m: ['metro', 'centímetro', 'cm', 100], kg: ['quilo', 'grama', 'g', 1000], L: ['litro', 'mililitro', 'mL', 1000] };
+  // 6) da maior para a menor: a (m, kg, L) → × k
+  async function cenaConvMaior(s) {
+    const a = s.a ?? '1,5', u = s.u || 'm', [n1, n2, su, k] = UN2[u], z = zerosDe(k), v = nf(Math.round(nD(a) * k * 1e6) / 1e6);
+    const perg = s.perg || `${a} ${n1} são quantos ${n2}s?`;
+    await poePergunta(perg, false);
+    const K = casas(cabDe([a, v], 3, 2));
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, `De ${n1} para ${n2}: a unidade fica menor, o número fica maior. Multiplica por ${k}.`, 'passo');
+    await E.linha(`<span>1 ${u} = ${k} ${su}</span>`);
+    await K.linha(a);
+    await K.linha(v, /,/.test(a) ? `vírgula → ${z}` : `← ${casasTxt(z)}`, 'novo');
+    await E.linha(`<span>${a} × ${k}</span>`);
+    await E.final(`= ${v} ${su}`);
+    await apagar(p);
+    await respostaFinal(`<span>${v} ${su}</span>`, { perg });
+    await regras5(s, `Da maior para a menor (${u} → ${su}): multiplica.`);
+  }
+  // 7) da menor para a maior: a (cm, g, mL) → ÷ k
+  async function cenaConvMenor(s) {
+    const a = s.a ?? 750, u = s.u || 'L', [n1, , su, k] = UN2[u], z = zerosDe(k), vN = a / k, v = nf(vN), cheio = comCasas(vN, z);
+    const perg = s.perg || `${a} ${su} são quantos ${n1}s?`;
+    await poePergunta(perg, false);
+    const K = casas(cabDe([String(a), cheio], 4, z));
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, `De ${su} para ${n1}: a unidade fica maior, o número fica menor. Divide por ${k}.`, 'passo');
+    await E.linha(`<span>1 ${u} = ${k} ${su}</span>`);
+    await K.linha(String(a));
+    await K.linha(cheio, `← ${casasTxt(z)}`, 'novo');
+    await E.linha(`<span>${a} ÷ ${k}</span>`);
+    await E.final(`= ${v} ${u}`);
+    await apagar(p);
+    if (cheio !== v) { await nota(c.notas, `zero no fim do decimal sai: ${cheio} = ${v}`, 'detalhe'); await wait(800); }
+    await respostaFinal(`<span>${v} ${u}</span>`, { perg });
+    await regras5(s, `Da menor para a maior (${su} → ${u}): divide.`);
+  }
+  // 8) dinheiro: k itens de R$ p
+  async function cenaDinheiro(s) {
+    const p0 = s.p ?? '0,25', k = s.k ?? 10, item = s.item || 'balas', z = zerosDe(k), vN = Math.round(nD(p0) * k * 1e6) / 1e6, v = nf(vN), rs2 = dinheiro(vN);
+    const perg = s.perg || `Uma bala custa R$ ${p0}. Quanto custam ${k} balas?`;
+    await poePergunta(perg, false);
+    const K = casas(cabDe([p0, v], 3, 2));
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, `${k} ${item} de R$ ${p0}: vezes ${k}.`, 'passo');
+    await K.linha(p0);
+    await K.linha(v, /,/.test(p0) ? 'vírgula →' : `← ${casasTxt(z)}`, 'novo');
+    await E.linha(`<span>${p0} × ${k}</span>`);
+    await E.final(`= R$ ${rs2}`);
+    await apagar(p);
+    if (rs2 !== v) { await nota(c.notas, `em dinheiro, escreve com 2 casas: ${v} = ${rs2}`, 'detalhe'); await wait(800); }
+    await respostaFinal(`<span>R$ ${rs2}</span>`, { perg });
+    await regras5(s, 'Dinheiro × 10, 100: anda a vírgula e escreve com 2 casas.');
+  }
+
+  // ── 3-A: negativos, comparar, somar e subtrair ──
+  const Pn = (v) => (v < 0 ? `(${negS(v)})` : nf(v));   // negativo entre parênteses
+  // a reta do tamanho da conta: do menor ao maior (com o 0), uma casa de folga
+  const faixaR = (vals, de, ate) => { const lo = Math.min(...vals, 0) - 1, hi = Math.max(...vals, 0) + 1; return [de ?? lo, ate ?? hi]; };
+  const passoR = (de, ate) => (ate - de > 10 ? (ate - de > 15 ? 5 : 2) : 1);
+  // 1) onde ficam os negativos
+  async function cenaNegos(s) {
+    const R = retaNum(-5, 5);
+    await etiqueta('NÚMEROS NEGATIVOS', 'abaixo de zero'); ajustaTopo();
+    const perg = s.perg || 'Onde ficam os números negativos?';
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, 'Na reta, o 0 fica no meio. Os positivos à direita, os negativos à esquerda.', 'passo');
+    R.ponto(0); await wait(1200);
+    R.ponto(2); await E.linha('<span>2: 2 casas à direita do 0</span>', 1100);
+    R.ponto(-3); await E.linha('<span>−3: 3 casas à esquerda do 0</span>', 1100);
+    await apagar(p);
+    await nota(c.notas, 'como temperatura abaixo de zero, garagem no subsolo, dívida', 'detalhe');
+    await wait(900);
+    await respostaFinal('<span>à esquerda do zero</span>', { perg });
+    await regras5(s, 'Negativo: à esquerda do 0 na reta. Quanto mais à esquerda, menor.');
+  }
+  // 2) qual é maior (ou menor): { ns, menor }
+  async function cenaNegMaior(s) {
+    const ns = s.ns || [-5, -2], menor = !!s.menor, [de, ate] = faixaR(ns, s.de, s.ate);
+    const R = retaNum(de, ate, passoR(de, ate));
+    const ord = [...ns].sort((x, y) => x - y), certo = menor ? ord[0] : ord[ord.length - 1];
+    const lista = ns.map(negS), perg = s.perg || `Qual é ${menor ? 'menor' : 'maior'}: ${lista.slice(0, -1).join(', ')} ou ${lista[lista.length - 1]}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, ns.length === 2 ? `Marca os dois na reta. O que está mais à ${menor ? 'esquerda é o menor' : 'direita é o maior'}.` : `Marca todos na reta. O que está mais à ${menor ? 'esquerda é o menor' : 'direita é o maior'}.`, 'passo');
+    for (const [i, v] of ns.entries()) { R.ponto(v); await wait(i === ns.length - 1 ? 1000 : 600); }
+    if (ns.length === 2) {
+      const outro = ns.find((v) => v !== certo);
+      await E.linha(`<span>${negS(certo)} está à ${menor ? 'esquerda' : 'direita'} de ${negS(outro)}</span>`, 1200);
+      await E.final(menor ? `${negS(certo)} < ${negS(outro)}` : `${negS(certo)} > ${negS(outro)}`);
+    } else {
+      await E.linha(`<span>${ord.map(negS).join(' < ')}</span>`, 1200);
+      await E.final(`${menor ? 'menor' : 'maior'}: ${negS(certo)}`);
+    }
+    await apagar(p);
+    // a pegadinha: achar que −5 > −2 porque 5 > 2
+    const negs = ns.filter((v) => v < 0);
+    const trap = menor ? (negs.length ? Math.max(...negs) : null) : (negs.length ? Math.min(...negs) : null);
+    if (trap !== null && trap !== certo && Math.abs(trap) > Math.abs(certo) === !menor) {
+      await pegadinha(c, menor ? `${negS(trap)} < ${negS(certo)}` : `${negS(trap)} > ${negS(certo)}`, menor ? `no negativo, o ${-trap} é mais perto do zero` : `no negativo, o ${-trap} é mais longe do zero, para baixo`, menor ? `${negS(certo)} < ${negS(trap)}` : `${negS(certo)} > ${negS(trap)}`);
+    }
+    await respostaFinal(`<span>${negS(certo)}</span>`, { perg });
+    await regras5(s, 'Mais à direita é maior. Entre negativos: o mais perto do zero é o maior.');
+  }
+  // a página de reta do protótipo (pagReta): começa no ini, pula até cada ponto de "pts"
+  async function pagReta(s, perg, ini, pts, linhas, passo1, final) {
+    const [de, ate] = faixaR([ini, ...pts], s.de, s.ate);
+    const R = retaNum(de, ate, passoR(de, ate));
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${linhas[0]}</span>`);
+    const p = await nota(c.notas, passo1, 'passo');
+    R.ponto(ini); await wait(500);
+    let a = ini;
+    for (const b of pts) { await R.salto(a, b); R.ponto(b); a = b; }
+    for (const l of linhas.slice(1)) await E.linha(`<span>${l}</span>`);
+    await E.final(final);
+    await apagar(p);
+    return { c, E };
+  }
+  // 3 a 6) a + b
+  async function cenaNegSoma(s) {
+    const a = s.a ?? -5, b = s.b ?? 8, v = a + b, A = negS(a), B = negS(b), mb = Math.abs(b);
+    const perg = s.perg || `Quanto é ${A} + ${Pn(b)}?`;
+    let r, det = null;
+    if (b < 0) {
+      const passo = a < 0 ? `"+ (${B})" é somar uma dívida: anda ${mb} para a esquerda.` : v < 0 ? `Começa no ${A} e anda ${mb} para a esquerda: passa do zero.` : v === 0 ? `Começa no ${A} e anda ${mb} para a esquerda: chega no 0.` : `Começa no ${A} e anda ${mb} para a esquerda.`;
+      const { c } = await pagReta(s, perg, a, [v], [`${A} + (${B})`, `= ${A} − ${mb}`], passo, `= ${negS(v)}`);
+      det = a < 0 ? '+ (−) vira −' : v < 0 ? `tinha ${A}, tirou ${mb}: faltam ${-v}` : v === 0 ? `tinha ${A}, tirou ${mb}: não sobra nada` : `tinha ${A}, tirou ${mb}: sobram ${v}`;
+      await nota(c.notas, det, 'detalhe'); await wait(800);
+      r = a < 0 ? `Somar negativo é andar para a esquerda: + (${B}) = − ${mb}.` : v < 0 ? 'Passou do zero para a esquerda: fica negativo.' : 'Somar negativo: anda para a esquerda na reta.';
+    } else {
+      await pagReta(s, perg, a, [v], [`${A} + ${B}`], v === 0 ? `Começa no ${A} e anda ${b} para a direita: chega no 0.` : `Começa no ${A}. "+ ${b}": anda ${b} casas para a direita.`, `= ${negS(v)}`);
+      r = v === 0 ? `Um número mais o oposto dele dá 0: ${A} + ${B} = 0.` : 'Somar positivo: anda para a direita na reta.';
+    }
+    await respostaFinal(`<span>${negS(v)}</span>`, { perg });
+    await regras5(s, r);
+  }
+  // 7 e 8) a − b (b positivo)
+  async function cenaNegSub(s) {
+    const a = s.a ?? 6, b = s.b ?? 10, v = a - b, A = negS(a);
+    const perg = s.perg || `Quanto é ${A} − ${b}?`;
+    if (a >= 0) {
+      const { c } = await pagReta(s, perg, a, [v], [`${A} − ${b}`], `Subtrair: anda para a esquerda. Do ${A}, ${b} casas.`, `= ${negS(v)}`);
+      if (b > a) await pegadinha(c, String(b - a), `${b} − ${A} = ${b - a}, mas a conta é ${A} − ${b}: passa do zero`, negS(v));
+      await respostaFinal(`<span>${negS(v)}</span>`, { perg });
+      await regras5(s, 'Tirar mais do que tem: o resultado fica negativo.');
+    } else {
+      const { c } = await pagReta(s, perg, a, [v], [`${A} − ${b}`], `Já está no ${A} e anda mais ${b} para a esquerda.`, `= ${negS(v)}`);
+      await nota(c.notas, `dívida de ${-a} e mais uma de ${b}: dívida de ${-v}`, 'detalhe');
+      await wait(800);
+      await respostaFinal(`<span>${negS(v)}</span>`, { perg });
+      await regras5(s, 'Negativo menos positivo: soma os números e fica negativo.');
+    }
+  }
+  // 9) menos com menos: a − (−b)
+  async function cenaMenosMenos(s) {
+    const a = s.a ?? 5, b = s.b ?? 3, v = a + b, A = negS(a), [de, ate] = faixaR([a, v], s.de, s.ate);
+    const R = retaNum(de, ate, passoR(de, ate));
+    const perg = s.perg || `Quanto é ${A} − (−${b})?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${A} − (−${b})</span>`);
+    let p = await nota(c.notas, `Menos com menos: tirar uma dívida é ganhar. − (−${b}) vira + ${b}.`, 'passo');
+    await E.linha(`<span>= ${A} ${SB('+')} ${b}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `Do ${A}, anda ${b} para a direita.`, 'passo');
+    R.ponto(a); await R.salto(a, v); R.ponto(v);
+    await E.final(`= ${negS(v)}`);
+    await apagar(p);
+    await pegadinha(c, `${A} − ${b} = ${negS(a - b)}`, 'os dois sinais de menos viram +', `${A} + ${b} = ${negS(v)}`);
+    await respostaFinal(`<span>${negS(v)}</span>`, { perg });
+    await regras5(s, '− (−) vira +. + (−) vira −.');
+  }
+  // 10) temperatura (e o elevador): de a, sobe b
+  async function cenaTemperatura(s) {
+    const a = s.a ?? -2, b = s.b ?? 5, v = a + b, A = negS(a), el2 = !!s.elevador;
+    const perg = s.perg || `A temperatura era ${A} °C e subiu ${b} graus. Quanto está agora?`;
+    await pagReta(s, perg, a, [v], [`${A} + ${b}`], `"${el2 ? 'Subo' : 'Subiu'}" é +: do ${A}, anda ${b} para cima (para a direita na reta).`, `= ${negS(v)}`);
+    await respostaFinal(`<span>${el2 ? `andar ${negS(v)}` : `${negS(v)} °C`}</span>`, { perg });
+    await regras5(s, 'Subiu, ganhou: +. Desceu, gastou: −.');
+  }
+  // 11) saldo: tinha t, gastou g
+  async function cenaSaldo(s) {
+    const t = s.tinha ?? 10, g = s.g ?? 15, v = t - g;
+    const perg = s.perg || `Tinha R$ ${t} na conta e gastei R$ ${g}. Qual é o saldo?`;
+    await pagReta(s, perg, t, [v], [`${t} − ${g}`], `"Gastei" é −: do ${t}, anda ${g} para a esquerda.`, `= ${negS(v)}`);
+    await respostaFinal(`<span>${v < 0 ? `−R$ ${-v} (devendo ${-v})` : `R$ ${v}`}</span>`, { perg });
+    await regras5(s, v < 0 ? 'Saldo negativo: gastou mais do que tinha.' : 'Saldo: o que tinha menos o que gastou.');
+  }
+  // a + b − c (cartão; na reta, um pulo de cada vez)
+  async function cenaNegTres(s) {
+    const a = s.a ?? -3, b = s.b ?? 3, c0 = s.c ?? 4, m = a + b, v = m - c0, A = negS(a);
+    const perg = s.perg || `Quanto é ${A} + ${Pn(b)} − ${Pn(c0)}?`;
+    const lin = [`${A} + ${Pn(b)} − ${Pn(c0)}`];
+    if (b < 0 || c0 < 0) lin.push(`= ${A} ${b < 0 ? '−' : '+'} ${Math.abs(b)} ${c0 < 0 ? '+' : '−'} ${Math.abs(c0)}`);
+    const ida = (x, sinal) => (x > 0 === (sinal === '+') ? `anda ${Math.abs(x)} para a direita` : `anda ${Math.abs(x)} para a esquerda`);
+    const passo = `Começa no ${A}. "+ ${Pn(b)}": ${ida(b, '+')}; depois "− ${Pn(c0)}": ${ida(c0, '−')}.`;
+    await pagReta(s, perg, a, [m, v], lin, passo, `= ${negS(v)}`);
+    await respostaFinal(`<span>${negS(v)}</span>`, { perg });
+    await regras5(s, 'Na reta: + anda para a direita, − para a esquerda. + (−) vira −; − (−) vira +.');
+  }
+
+  // ── 3-B: negativos, multiplicar e dividir ──
+  // 1) a regra dos sinais
+  async function cenaRegraSinais(s) {
+    L.classList.add('sem-hist', 'r3p');
+    await etiqueta('REGRA DOS SINAIS', 'vale para × e ÷'); ajustaTopo();
+    const perg = s.perg || 'Que sinal dá a multiplicação de negativos?';
+    await poePergunta(perg, false);
+    const c = cartao(); const ls = el('div', 'qd-lista3', '', c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, 'Primeiro faz a conta sem sinal. Depois olha os sinais:', 'passo');
+    for (const [a, r, pq] of [['+ × +', '+', 'sinais iguais'], ['− × −', '+', 'sinais iguais'], ['+ × −', '−', 'sinais diferentes'], ['− × +', '−', 'sinais diferentes']]) {
+      el('div', 'l3 qd-pop', `<span class="par">${a} =</span><span class="par" style="color: var(--qd-amarelo)">${r}</span><span class="pq">${pq}</span>`, ls);
+      await wait(1400);
+    }
+    await apagar(p);
+    await respostaFinal(`<span>${s.resp || 'iguais: + · diferentes: −'}</span>`, { perg, manter: true });
+    await regras5(s, 'Sinais iguais dão +. Sinais diferentes dão −. Vale para × e para ÷.');
+  }
+  const EXT3 = ['zero', 'uma', 'duas', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
+  // 2) negativo × positivo na reta: b pulos de a
+  async function cenaNegVezes(s) {
+    const a = s.a ?? -2, b = s.b ?? 3, v = a * b, A = negS(a), ma = -a;
+    const R = retaNum(s.de ?? v - 1, s.ate ?? 1);
+    const perg = s.perg || `Quanto é ${Pn(a)} × ${b}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${Pn(a)} × ${b}</span>`);
+    const p = await nota(c.notas, `${b} vezes o ${A}: soma o ${A} ${EXT3[b] || b} vezes. Na reta, ${b} pulos de ${ma} para a esquerda.`, 'passo');
+    await E.linha(`<span>= ${b <= 4 ? Array(b).fill(Pn(a)).join(' + ') : `${Pn(a)} + ${Pn(a)} + … + ${Pn(a)}`}</span>`);
+    R.ponto(0);
+    for (let i = 0; i < b; i++) await R.salto(i * a, (i + 1) * a);
+    R.ponto(v);
+    await E.final(`= ${negS(v)}`);
+    await apagar(p);
+    await nota(c.notas, 'sinais diferentes (− e +): dá −', 'detalhe');
+    await wait(800);
+    await respostaFinal(`<span>${negS(v)}</span>`, { perg });
+    await regras5(s, 'Negativo × positivo = negativo.');
+  }
+  // 3 a 6) a regra dos sinais na conta: a × b ou a ÷ b
+  async function cenaNegSinal(s) {
+    const a = s.a ?? -4, b = s.b ?? -5, op = s.op || '×', dv = op === '÷', v = dv ? a / b : a * b, r = Math.abs(v);
+    const ig = (a < 0) === (b < 0), w = (x) => (x < 0 ? 'menos' : 'mais');
+    const perg = s.perg || `Quanto é ${Pn(a)} ${op} ${Pn(b)}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${Pn(a)} ${op} ${Pn(b)}</span>`);
+    let p = await nota(c.notas, '1º A conta sem sinal.', 'passo');
+    await E.linha(`<span>${Math.abs(a)} ${op} ${Math.abs(b)} = ${r}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `2º Os sinais: ${w(a)} com ${w(b)}, ${ig ? 'iguais, dá +' : 'diferentes, dá −'}.`, 'passo');
+    await E.final(`= ${SB(ig ? '+' : '−')}${r}`);
+    await apagar(p);
+    if (dv && !ig) { await nota(c.notas, `confere: ${Pn(v)} × ${Pn(b)} = ${negS(a)} ✔`, 'detalhe'); await wait(800); }
+    if (!dv && a < 0 && b < 0) await pegadinha(c, `−${r}`, 'dois negativos: os sinais são iguais', `+${r}`);
+    await respostaFinal(`<span>${negS(v)}</span>`, { perg });
+    await regras5(s, dv ? (ig ? 'Negativo ÷ negativo = positivo.' : 'Na divisão, a regra dos sinais é a mesma.') : ig ? 'Negativo × negativo = positivo.' : 'Positivo × negativo = negativo.');
+  }
+  // 7) vezes zero
+  async function cenaVezesZero(s) {
+    const a = s.a ?? -6;
+    const perg = s.perg || `Quanto é ${Pn(a)} × 0?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${Pn(a)} × 0</span>`);
+    const p = await nota(c.notas, 'Qualquer número vezes zero dá zero. O zero não tem sinal.', 'passo');
+    await E.final('= 0');
+    await apagar(p);
+    await respostaFinal('<span>0</span>', { perg });
+    await regras5(s, 'Vezes 0 dá 0, com ou sem sinal.');
+  }
+  // 8) três números: a × b × c
+  async function cenaTresNum(s) {
+    const a = s.a ?? -3, b = s.b ?? -2, c0 = s.c ?? -1, ab = a * b, v = ab * c0, nNeg = [a, b, c0].filter((x) => x < 0).length;
+    const perg = s.perg || `Quanto é ${Pn(a)} × ${Pn(b)} × ${Pn(c0)}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${Pn(a)} × ${Pn(b)} × ${Pn(c0)}</span>`);
+    const ig1 = (a < 0) === (b < 0);
+    let p = await nota(c.notas, `De dois em dois. Os dois primeiros: ${ig1 ? 'iguais, dá +' : 'diferentes, dá −'}${Math.abs(ab)}.`, 'passo');
+    await E.linha(`<span>= ${Pn(ab)} × ${Pn(c0)}</span>`);
+    await apagar(p);
+    const ig2 = (ab < 0) === (c0 < 0);
+    p = await nota(c.notas, `Agora ${ab < 0 ? '−' : '+'} com ${c0 < 0 ? '−' : '+'}: dá ${ig2 ? '+' : '−'}.`, 'passo');
+    await E.final(`= ${negS(v)}`);
+    await apagar(p);
+    await nota(c.notas, nNeg === 3 ? '3 sinais de menos: um fica sem par, dá −' : nNeg % 2 ? `${nNeg} sinal de menos: ímpar, dá −` : `${nNeg} sinais de menos: par, dá +`, 'detalhe');
+    await wait(900);
+    await respostaFinal(`<span>${negS(v)}</span>`, { perg });
+    await regras5(s, 'Conta os sinais de menos: par dá +, ímpar dá −.');
+  }
+  // 9) vezes (ou dividido) e mais: a op b + c
+  async function cenaVezesMais(s) {
+    const a = s.a ?? -2, b = s.b ?? 5, c0 = s.c ?? 4, op = s.op || '×', m = op === '÷' ? a / b : a * b, v = m + c0;
+    const [de, ate] = faixaR([m, v], s.de, s.ate);
+    const R = retaNum(de, ate, passoR(de, ate));
+    const ig = (a < 0) === (b < 0);
+    const perg = s.perg || `Quanto é ${Pn(a)} ${op} ${Pn(b)} + ${Pn(c0)}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    await E.linha(`<span>${Pn(a)} ${op} ${Pn(b)} + ${Pn(c0)}</span>`);
+    let p = await nota(c.notas, `Primeiro o ${op}: ${Pn(a)} ${op} ${Pn(b)} = ${negS(m)} (${ig ? 'iguais, dá +' : 'diferentes, dá −'}).`, 'passo');
+    await E.linha(`<span>= ${negS(m)} + ${Pn(c0)}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `Depois a soma na reta: do ${negS(m)}, anda ${Math.abs(c0)} para a ${c0 > 0 ? 'direita' : 'esquerda'}.`, 'passo');
+    R.ponto(m); await R.salto(m, v); R.ponto(v);
+    await E.final(`= ${negS(v)}`);
+    await apagar(p);
+    await respostaFinal(`<span>${negS(v)}</span>`, { perg });
+    await regras5(s, 'Primeiro × e ÷ (com a regra dos sinais), depois + e − (na reta).');
+  }
+
   // ══════════════════ 10: regra de três (PROMPT-217; protótipos referencia/lousa-10a.html e lousa-10b.html) ══════════════════
   // A tabela é a conta: fica no quadro até o fim (sem histórico), com a resolução ao lado e a resposta embaixo.
   // tabela: cab = nomes das colunas; lin = [[linha 1], [linha 2]] (o 'x' na última coluna, embaixo)
@@ -3889,12 +6529,26 @@ export function criarQuadro(raiz) {
     area: cenaArea, arear: cenaAreaR, lajotas: cenaLajotas, areaper: cenaAreaPer, comparaa: cenaComparaA, areat: cenaAreaT, areap: cenaAreaP,
     metade: cenaMetade, ladoa: cenaLadoA,
     r3: cenaR3, r3comp: cenaR3Comp, grandezas: cenaGrandezas,
-    prop: cenaProp, setas: cenaSetas, diminui: cenaDiminui, treinodi: cenaTreinoDI };   // PROMPT-218
+    prop: cenaProp, setas: cenaSetas, diminui: cenaDiminui, treinodi: cenaTreinoDI,   // PROMPT-218
+    eqbal: cenaEqBal, eqsoma: cenaEqSoma, eqsub: cenaEqSub, eqmult: cenaEqMult, eqdiv: cenaEqDiv, eq2: cenaEq2, eqneg: cenaEqNeg,   // PROMPT-219
+    eqdois: cenaEqDois, eqparen: cenaEqParen, sinais: cenaSinais, frase: cenaFrase, baleq: cenaBalEq,
+    algletra: cenaAlgLetra, algmaismenos: cenaAlgMaisMenos, algdobro: cenaAlgDobro, algmetade: cenaAlgMetade, algquad: cenaAlgQuad, algduas: cenaAlgDuas,   // PROMPT-220
+    algcada: cenaAlgCada, algvalor: cenaAlgValor, algmenos: cenaAlgMenos, algxx: cenaAlgXX, algkx: cenaAlgKx, algkxc: cenaAlgKxc, algneg: cenaAlgNeg,
+    algquad2: cenaAlgQuad2, alg2l: cenaAlg2L, termo: cenaTermo, semlista: cenaSemLista, semsoma: cenaSemSoma, semum: cenaSemUm, semsub: cenaSemSub,
+    semtres: cenaSemTres, semdif: cenaSemDif, simpl: cenaSimpl, perimletra: cenaPerimL,
+    raiz1: cenaRaiz1, raiz2: cenaRaiz2, quadtab: cenaQuadTab, exp1: cenaExp1, exp0: cenaExp0, negpar: cenaNegPar, negimpar: cenaNegImpar, raizpot: cenaRaizPot, multiplos: cenaMultiplos, ehmult: cenaEhMult, mult2: cenaMult2, mult510: cenaMult510, qualmult: cenaQualMult, multdois: cenaMultDois, primmult: cenaPrimMult, ehdiv: cenaEhDiv, divmult: cenaDivMult, todosdiv: cenaTodosDiv, divprimo: cenaDivPrimo, primo: cenaPrimo, naodiv: cenaNaoDiv, pctcem: cenaPctCem, pct50: cenaPct50, pctatalho: cenaPctAtalho, pctfrac: cenaPctFrac, desconto: cenaDesconto, precofinal: cenaPrecoFinal, qualpct: cenaQualPct, pctdec: cenaPctDec, qualconta: cenaQualConta, conta50: cenaConta50, contactx: cenaContaCtx, leconta: cenaLeConta, contafinal: cenaContaFinal, contadireta: cenaContaDireta,   // PROMPT-221
+    casasvz: cenaCasasVz, casasdv: cenaCasasDv, zeromeio: cenaZeroMeio, duasvezes: cenaDuasVezes, juntando: cenaJuntando, decx10: cenaDecX10, decx100: cenaDecX100, decdv10: cenaDecDv10, decdv100: cenaDecDv100, medidas2: cenaMedidas2, convmaior: cenaConvMaior, convmenor: cenaConvMenor, dinheiro: cenaDinheiro, negos: cenaNegos, negmaior: cenaNegMaior, negsoma: cenaNegSoma, negsub: cenaNegSub, menosmenos: cenaMenosMenos, temperatura: cenaTemperatura, saldo: cenaSaldo, negtres: cenaNegTres, regrasinais: cenaRegraSinais, negvezes: cenaNegVezes, negsinal: cenaNegSinal, vezeszero: cenaVezesZero, tresnum: cenaTresNum, vezesmais: cenaVezesMais,   // PROMPT-222
+    ordem1: cenaOrdem1 };   // PROMPT-223
   // PROMPT-215: as páginas do plano põem a pergunta elas mesmas (primeiro a pergunta, depois o plano, depois a pausa de leitura)
   const PERG_PROPRIA = new Set(['plano', 'ponto', 'valor', 'ordem', 'eixos', 'maislado', 'negativos', 'quadrantes', 'andar', 'caminho',
     'perim', 'iguais', 'volta', 'ladoq', 'lador', 'medidas', 'trocar', 'tiposang', 'poligonos', 'quadrilateros', 'angtri', 'faltatri', 'angquad', 'faltaquad',
     'area', 'arear', 'lajotas', 'areaper', 'comparaa', 'areat', 'areap', 'metade', 'ladoa',
-    'r3', 'r3comp', 'grandezas', 'prop', 'setas', 'diminui', 'treinodi']);   // PROMPT-218: direta ou inversa   // PROMPT-217: as do mapa 10   // PROMPT-216: as do mapa 11 também
+    'r3', 'r3comp', 'grandezas', 'prop', 'setas', 'diminui', 'treinodi',
+    'eqbal', 'eqsoma', 'eqsub', 'eqmult', 'eqdiv', 'eq2', 'eqneg', 'eqdois', 'eqparen', 'sinais', 'frase', 'baleq',
+    'algletra', 'algmaismenos', 'algdobro', 'algmetade', 'algquad', 'algduas', 'algcada', 'algvalor', 'algmenos', 'algxx', 'algkx', 'algkxc', 'algneg',   // PROMPT-220: as do mapa 8
+    'algquad2', 'alg2l', 'termo', 'semlista', 'semsoma', 'semum', 'semsub', 'semtres', 'semdif', 'simpl', 'perimletra',
+    'raiz1', 'raiz2', 'quadtab', 'exp1', 'exp0', 'negpar', 'negimpar', 'raizpot', 'multiplos', 'ehmult', 'mult2', 'mult510', 'qualmult', 'multdois', 'primmult', 'ehdiv', 'divmult', 'todosdiv', 'divprimo', 'primo', 'naodiv', 'pctcem', 'pct50', 'pctatalho', 'pctfrac', 'desconto', 'precofinal', 'qualpct', 'pctdec', 'qualconta', 'conta50', 'contactx', 'leconta', 'contafinal', 'contadireta',   // PROMPT-221: as do 5-B, 6 e 7
+    'casasvz', 'casasdv', 'zeromeio', 'duasvezes', 'juntando', 'decx10', 'decx100', 'decdv10', 'decdv100', 'medidas2', 'convmaior', 'convmenor', 'dinheiro', 'negos', 'negmaior', 'negsoma', 'negsub', 'menosmenos', 'temperatura', 'saldo', 'negtres', 'regrasinais', 'negvezes', 'negsinal', 'vezeszero', 'tresnum', 'vezesmais', 'ordem1']);   // PROMPT-223: a do mapa 1   // PROMPT-222: as do 2 e 3   // PROMPT-219: as do mapa 9   // PROMPT-218: direta ou inversa   // PROMPT-217: as do mapa 10   // PROMPT-216: as do mapa 11 também
 
   function limpar() {
     token++;
