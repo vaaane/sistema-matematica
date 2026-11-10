@@ -641,27 +641,23 @@ function quadro6b(q) {
   if ((m = /^Qual NÃO é divisor de (\d+)\?$/.exec(en))) return [{ t: 'naodiv', n: +m[1], ops: opcoes221(q), pag: 7 }];
   return null;
 }
-const PAG7A = { 10: 3, 25: 4, 75: 4, 20: 5, 1: 6 };
+// PROMPT-229: o 7-A é o decimal (p.4); com 2 casas depois da vírgula (25%, 75%, 5%, 1%…), "vezes um decimal" (p.5)
 const PF221 = { '1/2': 50, '1/4': 25, '3/4': 75, '1/10': 10, '1/5': 20, '2/5': 40 };
+const pct229 = (p, N) => (p % 10 && p < 100 ? { t: 'pctdec2', p, N, pag: 5 } : { t: 'pctdecx', p, N, pag: 4 });
 function quadro7a(q) {
   const en = String(q.enunciado || '').trim();
   let m;
-  if ((m = /^Quanto é (\d+)% de (\d+)\?$/.exec(en))) {
-    const p = +m[1], N = +m[2];
-    if (p === 50 || p === 100) return [{ t: 'pct50', N, p, pag: 2 }];
-    return PAG7A[p] ? [{ t: 'pctatalho', p, N, pag: PAG7A[p] }] : null;
-  }
-  if ((m = /^Numa turma de (\d+) alunos, 50% são meninas\./.exec(en))) return [{ t: 'pct50', N: +m[1], p: 50, pag: 2 }];
-  if (/^100% de algo significa/.test(en)) return [{ t: 'pct50', N: 40, p: 100, resp: 'o todo', pag: 2 }];
+  if ((m = /^Quanto é (\d+)% de (\d+)\?$/.exec(en))) return [pct229(+m[1], +m[2])];
+  if ((m = /^Na calculadora, como faço (\d+)% de (\d+)\?$/.exec(en))) return [{ t: 'pctdecx', p: +m[1], N: +m[2], pag: 4 }];
+  if ((m = /^Numa turma de (\d+) alunos, (\d+)% são meninas\./.exec(en))) return [{ t: 'pctdecx', p: +m[2], N: +m[1], pag: 4 }];
+  if (/^100% de algo significa/.test(en)) return [{ t: 'pctcem', p: 100, pag: 1 }];
   if ((m = /^(\d+)% é igual a qual fração\?$/.exec(en)) || (m = /^(\d+\/\d+) é igual a quantos por cento\?$/.exec(en))) {
     const p = /\//.test(m[1]) ? PF221[m[1]] : +m[1];
-    if (!p || ![50, 25, 75, 10, 20, 40].includes(p)) return null;
-    const outros = [50, 25, 75, 10].filter((x) => x !== p).slice(0, 3);
-    return [{ t: 'pctfrac', ps: [p, ...outros], resp: /\//.test(m[1]) ? `${m[1]} = ${p}%` : `${p}% = ${String(q.resposta)}`, pag: 7 }];
+    return p ? [{ t: 'pctcem', p, pag: 1 }] : null;
   }
   if ((m = /^Uma camiseta de R\$ (\d+) tem (\d+)% de desconto\. Quanto é o desconto\?$/.exec(en))) return [{ t: 'desconto', P: +m[1], p: +m[2], pag: 8 }];
   if ((m = /^Um tênis de R\$ (\d+) tem (\d+)% de desconto\. Qual (?:é )?o preço final\?$/.exec(en))) return [{ t: 'precofinal', P: +m[1], p: +m[2], pag: 9 }];
-  if ((m = /^Numa turma de (\d+) alunos, (\d+) faltaram\./.exec(en))) { const N = +m[1], f = +m[2]; return N % f || ![2, 4, 5, 10].includes(N / f) ? null : [{ t: 'qualpct', N, f, pag: 10 }]; }
+  if ((m = /^Numa turma de (\d+) alunos, (\d+) faltaram\./.exec(en))) { const N = +m[1], f = +m[2]; return (f * 100) % N ? null : [{ t: 'qualpct', N, f, pag: 10 }]; }
   return null;
 }
 // 7-B: o "de quanto" de cada problema (para a tradução da frase e o detalhe)
@@ -677,16 +673,18 @@ function quadro7b(q) {
   const en = String(q.enunciado || '').trim();
   let m;
   if ((m = /^(\d+)% em número decimal:?$/.exec(en))) return [{ t: 'pctdec', ps: [+m[1]], pag: 1 }];
-  if ((m = /^"(\d+)% de (\d+)" é o mesmo que:?$/.exec(en))) { const p = +m[1], N = +m[2]; return [p === 50 && /÷ 2/.test(String(q.resposta)) ? { t: 'conta50', N, pag: 3 } : { t: 'qualconta', p, N, pag: 2 }]; }
-  if ((m = /^A conta (\d+) × (\d+(?:,\d+)?) calcula:?$/.exec(en))) return [{ t: 'leconta', N: +m[1], p: Math.round(n221(m[2]) * 100), pag: 5 }];
-  if ((m = /^Um produto de R\$ (\d+) tem (\d+)% de desconto\. Qual conta dá o preço final\?$/.exec(en))) return [{ t: 'contafinal', P: +m[1], p: +m[2], pag: 6 }];
-  if ((m = /^A mesada de R\$ (\d+) teve aumento de (\d+)%\. Qual conta dá a nova mesada\?$/.exec(en))) return [{ t: 'contafinal', P: +m[1], p: +m[2], aumento: true, pag: 7 }];
-  if ((m = /^Uma camiseta de R\$ (\d+) tem (\d+)% de desconto\. Qual conta dá direto o preço final\?$/.exec(en))) return [{ t: 'contadireta', P: +m[1], p: +m[2], pag: 8 }];
+  if ((m = /^"(\d+)% de (\d+)" é o mesmo que:?$/.exec(en))) { const p = +m[1], N = +m[2]; return [p === 50 && /÷ 2/.test(String(q.resposta)) ? { t: 'conta50', N, pag: 4 } : { t: 'qualconta', p, N, pag: 2 }]; }
+  if ((m = /^Na calculadora, como faço (\d+)% de (\d+)\?$/.exec(en))) return [{ t: 'qualconta', p: +m[1], N: +m[2], pag: 2 }];   // PROMPT-229
+  if ((m = /^(\d+)% de (\d+) é o mesmo que:?$/.exec(en))) return [{ t: 'contafr', p: +m[1], N: +m[2], pag: 3 }];   // PROMPT-229: em fração
+  if ((m = /^A conta (\d+) × (\d+(?:,\d+)?) calcula:?$/.exec(en))) return [{ t: 'leconta', N: +m[1], p: Math.round(n221(m[2]) * 100), pag: 6 }];
+  if ((m = /^Um produto de R\$ (\d+) tem (\d+)% de desconto\. Qual conta dá o preço final\?$/.exec(en))) return [{ t: 'contafinal', P: +m[1], p: +m[2], pag: 7 }];
+  if ((m = /^A mesada de R\$ (\d+) teve aumento de (\d+)%\. Qual conta dá a nova mesada\?$/.exec(en))) return [{ t: 'contafinal', P: +m[1], p: +m[2], aumento: true, pag: 8 }];
+  if ((m = /^Uma camiseta de R\$ (\d+) tem (\d+)% de desconto\. Qual conta dá direto o preço final\?$/.exec(en))) return [{ t: 'contadireta', P: +m[1], p: +m[2], pag: 9 }];
   for (const [re, f] of CTX221) {
     if (!(m = re.exec(en))) continue;
     const o = f(m, '');
     const v = v221(o.p, o.N);
-    const c = { t: 'contactx', ...f(m, v), pag: 4 };
+    const c = { t: 'contactx', ...f(m, v), pag: 5 };
     if (c.detalhe !== undefined && !v) c.detalhe = '';
     if (c.oQue === undefined) delete c.oQue;
     if (c.oQue === undefined && !v) c.detalhe = '';   // meninas: "7,5 meninas" não existe

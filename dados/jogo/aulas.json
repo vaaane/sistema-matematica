@@ -1215,65 +1215,66 @@
      "texto": "O que é porcentagem",
      "quadro": [
       {
-       "t": "pctcem"
+       "t": "pctcem",
+       "p": 20
       }
      ]
     },
     {
-     "texto": "100% e 50%",
+     "texto": "Jeito 1: regra de três",
      "quadro": [
       {
-       "t": "pct50",
-       "N": 40,
-       "p": 50
-      }
-     ]
-    },
-    {
-     "texto": "10%",
-     "quadro": [
-      {
-       "t": "pctatalho",
-       "p": 10,
-       "N": 80
-      }
-     ]
-    },
-    {
-     "texto": "25%",
-     "quadro": [
-      {
-       "t": "pctatalho",
-       "p": 25,
-       "N": 40
-      }
-     ]
-    },
-    {
-     "texto": "20%",
-     "quadro": [
-      {
-       "t": "pctatalho",
+       "t": "pctr3",
        "p": 20,
-       "N": 50
+       "N": 30
       }
      ]
     },
     {
-     "texto": "1%",
+     "texto": "Jeito 2: fração",
      "quadro": [
       {
-       "t": "pctatalho",
-       "p": 1,
-       "N": 300
+       "t": "pctfr",
+       "p": 20,
+       "N": 30
       }
      ]
     },
     {
-     "texto": "Porcentagem e fração",
+     "texto": "Jeito 3: decimal (calculadora)",
      "quadro": [
       {
-       "t": "pctfrac"
+       "t": "pctdecx",
+       "p": 20,
+       "N": 30
+      }
+     ]
+    },
+    {
+     "texto": "Vezes um decimal",
+     "quadro": [
+      {
+       "t": "pctdec2",
+       "p": 25,
+       "N": 60
+      }
+     ]
+    },
+    {
+     "texto": "Os 3 jeitos",
+     "quadro": [
+      {
+       "t": "pct3",
+       "p": 20,
+       "N": 30
+      }
+     ]
+    },
+    {
+     "texto": "Atalhos para conferir",
+     "quadro": [
+      {
+       "t": "pctatalhos"
       }
      ]
     },
@@ -1330,6 +1331,16 @@
      "quadro": [
       {
        "t": "qualconta",
+       "p": 25,
+       "N": 60
+      }
+     ]
+    },
+    {
+     "texto": "A mesma conta em fração",
+     "quadro": [
+      {
+       "t": "contafr",
        "p": 25,
        "N": 60
       }

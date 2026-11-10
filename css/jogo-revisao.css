@@ -683,6 +683,10 @@ html.jr-deitado .jr-erro-balao { font-size: calc(13px * var(--letra, 1)); paddin
 .jr-erro-rodape .jr-btn { flex: none; }
 #erro-continuar { flex: none; min-width: 140px; margin-left: auto; }
 #erro-continuar:disabled { opacity: .45; cursor: default; }
+/* ⏭ PROMPT-229: Pular a explicação do erro (3 vezes); depois, apagado (o toque só mostra o aviso) */
+#erro-pular { flex: none; margin-left: auto; }
+#erro-pular[hidden] { display: none; }
+#erro-pular.off { opacity: .4; filter: grayscale(1); }
 html.jr-deitado .jr-erro { padding: max(6px, var(--sa-t, 0px)) max(10px, var(--sa-r, 0px)) max(6px, var(--sa-b, 0px)) max(10px, var(--sa-l, 0px)); }
 html.jr-deitado .jr-erro-caixa { padding: 8px 14px; gap: 6px; }
 html.jr-deitado .jr-erro-resp b { font-size: calc(20px * var(--letra, 1)); }

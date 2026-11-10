@@ -4098,166 +4098,203 @@ export function criarQuadro(raiz) {
     await regras5(s, 'Leia o NÃO: a resposta é o único que sobra na divisão.');
   }
 
-  // ── 7-A: porcentagem, calcular ──
-  // 1) o que é porcentagem: a grade de 100
+  // ── 7-A: porcentagem, calcular (PROMPT-229: o jeito principal é o decimal, como na calculadora; regra de três e fração
+  //    são os outros jeitos; os atalhos só conferem. Protótipo referencia/lousa-7a.html) ──
+  // p% em decimal sem a vírgula e quantas casas: 20 → { m: 2, k: 1 }; 25 → { m: 25, k: 2 }; 5 → { m: 5, k: 2 }; 100 → { m: 1, k: 0 }
+  const semVirg = (p) => { const d = dec2(p), k = (d.split(',')[1] || '').length; return { d, k, m: Number(d.replace(',', '')) }; };
+  const comVirg = (v, k) => { const t = String(v).padStart(k + 1, '0'); return k ? `${t.slice(0, -k)},${t.slice(-k)}` : t; };   // 60, 1 → "6,0"
+  const casasTxt = (k) => `${k} casa${k === 1 ? '' : 's'}`;
+  // 1) o que é porcentagem: a grade de 100 { p }
   async function cenaPctCem(s) {
-    const Cm = cem();
+    const pc = s.p ?? 20, Cm = cem();
     await etiqueta('PORCENTAGEM', 'quantos de cada 100'); ajustaTopo();
-    const perg = s.perg || 'O que quer dizer 25%?';
+    const perg = s.perg || `O que quer dizer ${pc}%?`;
     await poePergunta(perg, false);
     const c = cartao(); const E = contaEq(c.conta);
     await ler(perg);
-    let p = await nota(c.notas, 'Divide o todo em 100 partes iguais.', 'passo');
-    await Cm.pinta(0, 'on', 0, '100 partes');
-    await wait(1200); await apagar(p);
-    p = await nota(c.notas, '25% são 25 dessas 100 partes.', 'passo');
-    await Cm.pinta(25, 'on', 250);
-    await E.linha('<span>25% = 25 de 100</span>');
-    await E.linha('<span>= 25/100</span>');
+    const p = await nota(c.notas, `Divide o todo em 100 partes iguais. ${pc}% são ${pc} dessas partes.`, 'passo');
+    await Cm.pinta(pc, 'on', 250);
+    await E.linha(`<span>${pc}% = ${pc} de 100</span>`);
+    await E.linha(`<span>= ${pc}/100</span>`);
     await apagar(p);
-    await nota(c.notas, '% quer dizer "por cem"', 'detalhe');
+    await nota(c.notas, '% quer dizer "por cem": 100% é o todo', 'detalhe');
     await wait(800);
-    await respostaFinal('<span>25 de cada 100</span>', { perg });
-    await regras5(s, 'Porcentagem: quantos de cada 100. 25% = 25/100.');
+    await respostaFinal(`<span>${pc} de cada 100</span>`, { perg });
+    await regras5(s, `Porcentagem: quantos de cada 100. ${pc}% = ${pc}/100.`);
   }
-  // 2) 100% e 50%: { N, p: 50 | 100, resp }
-  async function cenaPct50(s) {
-    const N = s.N ?? 40, p0 = s.p ?? 50, Cm = cem();
-    const perg = s.perg || `Quanto é ${p0}% de ${N}?`;
-    await poePergunta(perg, false);
-    const c = cartao(); const E = contaEq(c.conta);
-    await ler(perg);
-    let p = await nota(c.notas, '100% é o todo. 50% é metade de 100%.', 'passo');
-    await Cm.pinta(100, 'on', 0, '100% = tudo'); await wait(1300);
-    if (p0 === 50) { await Cm.pinta(50, 'on2', 0, '50% = metade'); await wait(1300); }
-    await apagar(p);
-    if (p0 === 50) {
-      p = await nota(c.notas, `50% de ${N} é a metade de ${N}.`, 'passo');
-      await E.linha(`<span>${N} ÷ 2</span>`);
-      await E.final(`= ${nf(N / 2)}`);
-      await apagar(p);
-      await nota(c.notas, `100% de ${N} = ${N} (tudo)`, 'detalhe');
-    } else {
-      p = await nota(c.notas, `100% de ${N} é o ${N} inteiro.`, 'passo');
-      await E.linha(`<span>100% de ${N}</span>`);
-      await E.final(`= ${N}`);
-      await apagar(p);
-      await nota(c.notas, `50% de ${N} = ${nf(N / 2)} (a metade)`, 'detalhe');
-    }
-    await wait(800);
-    await respostaFinal(`<span>${s.resp || nf(N * p0 / 100)}</span>`, { perg });
-    await regras5(s, '100% é o todo. 50% é a metade: divide por 2.');
+  // 2) jeito 1, regra de três: 100% → N; p% → x { p, N }
+  async function cenaPctR3(s) {
+    const pc = s.p ?? 20, N = s.N ?? 30, v = N * pc / 100;
+    await etiqueta('JEITO 1', 'regra de três'); ajustaTopo();
+    await cenaR3({ perg: s.perg || `Quanto é ${pc}% de ${N}?`, cab: ['%', 'valor'], lin: [[100, N], [pc, 'x']],
+      porque: `100% é o todo (${N}). Menos %, menos valor: as duas diminuem, seta para baixo também.`,
+      linhas: [`100 · x = ${pc} · ${N}`, `100 · x = ${nf(pc * N)}`, `x = ${nf(pc * N)} ÷ 100`], final: nf(v), resp: `<span>${pc}% de ${N} = ${nf(v)}</span>`,
+      regras: s.regras || ['Regra de três: 100% fica em cima com o valor todo; a % que quer, embaixo com o x.'] });
   }
-  // 3 a 6) os atalhos: 10% (÷ 10), 25% (÷ 4), 20% (÷ 5), 1% (÷ 100); 75% = 3 × 25%
-  const ATALHO7 = { 10: [10, '10% é 1 parte de 10: 10 partes de 10% fazem 100%.', '10 de 100 = 1 de 10', '10%: divide por 10.'],
-    25: [4, '25% é 1 parte de 4: 4 × 25% = 100%.', '25 de 100 = 1 de 4', '25%: divide por 4 (a quarta parte).'],
-    75: [4, '75% são 3 partes de 4: 3 × 25%.', '75 de 100 = 3 de 4', '75%: divide por 4 e multiplica por 3.'],
-    20: [5, '20% é 1 parte de 5: 5 × 20% = 100%.', '20 de 100 = 1 de 5', '20%: divide por 5.'],
-    1: [100, '1% é 1 parte de 100.', '1 de 100', '1%: divide por 100.'] };
-  async function cenaPctAtalho(s) {
-    const pc = s.p ?? 10, N = s.N ?? 80, [k, frase, pintaTxt, rg] = ATALHO7[pc], v = N * pc / 100;
-    const Cm = cem();
+  // 3) jeito 2, fração: p/100 × N/1 { p, N }
+  async function cenaPctFr(s) {
+    const pc = s.p ?? 20, N = s.N ?? 30, v = N * pc / 100, Cm = cem();
+    await etiqueta('JEITO 2', 'fração'); ajustaTopo();
     const perg = s.perg || `Quanto é ${pc}% de ${N}?`;
     await poePergunta(perg, false);
     const c = cartao(); const E = contaEq(c.conta);
     await ler(perg);
-    let p = await nota(c.notas, frase, 'passo');
-    await Cm.pinta(pc, 'on2', 200, pintaTxt);
-    await wait(800); await apagar(p);
-    if (pc === 75) {
-      p = await nota(c.notas, `Então 75% de ${N} é 3 × (${N} ÷ 4).`, 'passo');
-      await E.linha(`<span>${N} ÷ 4 = ${nf(N / 4)}</span>`);
-      await E.linha(`<span>${nf(N / 4)} × 3</span>`);
-    } else {
-      p = await nota(c.notas, `Então ${pc}% de ${N} é ${N} ÷ ${k}.`, 'passo');
-      await E.linha(`<span>${N} ÷ ${k}</span>`);
-    }
+    let p = await nota(c.notas, `${pc}% é a fração ${pc}/100. O "de" vira vezes. O ${N} vira ${N}/1.`, 'passo');
+    await Cm.pinta(pc, 'on2', 150, `${pc}/100`);
+    await E.linha(`<span>${pc}/100 × ${N}/1</span>`);
+    await apagar(p);
+    p = await nota(c.notas, 'Fração vezes fração: em cima × em cima, embaixo × embaixo.', 'passo');
+    await E.linha(`<span>= (${pc} × ${N})/(100 × 1)</span>`);
+    await E.linha(`<span>= ${nf(pc * N)}/100</span>`);
+    await apagar(p);
+    p = await nota(c.notas, `${nf(pc * N)}/100 é ${nf(pc * N)} ÷ 100.`, 'passo');
     await E.final(`= ${nf(v)}`);
     await apagar(p);
-    if (pc === 10) await pegadinha(c, `${N} − 10 = ${N - 10}`, 'porcentagem não é tirar o número', `${N} ÷ 10 = ${nf(v)}`);
     await respostaFinal(`<span>${nf(v)}</span>`, { perg });
-    await regras5(s, rg);
+    await regras5(s, 'Fração: p% de N = p/100 × N/1.');
   }
-  // 7) porcentagem e fração: { itens: [[pc, f1, f2, motivo]] }
-  const PF7 = { 50: ['50%', '50/100', '1/2', 'a metade'], 25: ['25%', '25/100', '1/4', 'a quarta parte'], 75: ['75%', '75/100', '3/4', '3 partes de 4'], 10: ['10%', '10/100', '1/10', 'a décima parte'],
-    20: ['20%', '20/100', '1/5', '1 parte de 5'], 40: ['40%', '40/100', '2/5', '2 partes de 5'] };
-  async function cenaPctFrac(s) {
-    const itens = (s.ps || [50, 25, 75, 10]).map((p) => PF7[p]);
+  // 4) jeito 3, decimal (o da calculadora): p% = 0,p → N × 0,p { p, N }
+  async function cenaPctDecX(s) {
+    const pc = s.p ?? 20, N = s.N ?? 30, v = N * pc / 100, { d, k, m } = semVirg(pc), d2 = (pc / 100).toFixed(2).replace('.', ',');
+    const K = casas(pc >= 100 ? ['C', 'D', 'U', ',', 'd', 'c'] : ['D', 'U', ',', 'd', 'c']);
+    await etiqueta('JEITO 3', 'decimal: o da calculadora'); ajustaTopo();
+    const perg = s.perg || `Quanto é ${pc}% de ${N}?`;
+    await poePergunta(perg, false);
+    let c = cartao(); let E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `${pc}% é ${pc} ÷ 100: a vírgula anda 2 casas para a esquerda.${pc < 10 ? ' Falta casa: põe zero.' : ''}`, 'passo');
+    await K.linha(String(pc));
+    await K.linha(d2, '← 2 casas', 'novo');
+    await E.linha(`<span>${pc}% = ${pc}/100 ${decLinha(pc)}</span>`);
+    await apagar(p);
+    if (d2 !== d) { await nota(c.notas, `zero no fim do decimal não muda: ${d2} = ${d}`, 'detalhe'); await wait(800); }
+    await paraHist(c);
+    c = cartao(); E = contaEq(c.conta);
+    p = await nota(c.notas, `O "de" vira vezes: ${pc}% de ${N} = ${N} × ${d}.`, 'passo');
+    await E.linha(`<span>${N} × ${SB(d)}</span>`);
+    await apagar(p);
+    if (k) {
+      p = await nota(c.notas, `Faz sem a vírgula: ${N} × ${m} = ${nf(N * m)}. O ${d} tem ${casasTxt(k)} depois da vírgula: o resultado também tem ${k}.`, 'passo');
+      await E.linha(`<span>${N} × ${m} = ${nf(N * m)}</span>`);
+      await E.linha(`<span>${nf(N * m)} → ${comVirg(N * m, k)}</span>`);
+    } else p = await nota(c.notas, 'Vezes 1 dá o próprio número.', 'passo');
+    await E.final(`= ${nf(v)}`);
+    await apagar(p);
+    await nota(c.notas, `na calculadora: ${N} × ${d} =`, 'detalhe');
+    await wait(800);
+    await respostaFinal(`<span>${N} × ${d} = ${nf(v)}</span>`, { perg });
+    await regras5(s, `Na calculadora: p% de N = N × (p ÷ 100). ${pc}% = × ${d}.`);
+  }
+  // 5) vezes um decimal de 2 casas: N × 0,25 { p, N } (25%, 75%, 5%, 1%…)
+  async function cenaPctDec2(s) {
+    const pc = s.p ?? 25, N = s.N ?? 60, v = N * pc / 100, { d, k, m } = semVirg(pc), prod = N * m;
+    const K = casas([...['DM', 'M', 'C', 'D', 'U'].slice(-Math.min(5, String(prod).length)), ',', 'd', 'c']);   // cabe o produto sem a vírgula
+    const perg = s.perg || `Quanto é ${N} × ${d}?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    const [di, dd = ''] = d.split(',');
+    let p = await nota(c.notas, `1º Conta quantas casas tem depois da vírgula: ${d} tem ${k}.`, 'passo');
+    await E.linha(`<span>${di},${SB(dd)}: ${casasTxt(k)}</span>`);
+    await apagar(p);
+    p = await nota(c.notas, '2º Multiplica sem a vírgula.', 'passo');
+    await E.linha(`<span>${N} × ${m} = ${nf(prod)}</span>`);
+    await K.linha(String(prod));
+    await apagar(p);
+    p = await nota(c.notas, `3º Põe a vírgula: anda ${casasTxt(k)} para a esquerda.${String(prod).length <= k ? ' Falta casa: põe zero.' : ''}`, 'passo');
+    await K.linha(comVirg(prod, k), `← ${casasTxt(k)}`, 'novo');
+    await E.linha(`<span>${comVirg(prod, k)}</span>`);
+    await E.final(`= ${nf(v)}`);
+    await apagar(p);
+    await nota(c.notas, `então ${pc}% de ${N} = ${nf(v)}`, 'detalhe');
+    await wait(800);
+    await respostaFinal(`<span>${nf(v)}</span>`, { perg });
+    await regras5(s, 'Vezes decimal: multiplica sem vírgula e devolve as casas depois da vírgula.');
+  }
+  // 6) os 3 jeitos lado a lado { p, N }
+  async function cenaPct3(s) {
+    const pc = s.p ?? 20, N = s.N ?? 30, v = nf(N * pc / 100), d = dec2(pc);
     L.classList.add('sem-hist', 'r3p');
-    await etiqueta('PORCENTAGEM E FRAÇÃO', 'simplifica o /100'); ajustaTopo();
-    const perg = s.perg || '50%, 25%, 75% e 10% são quais frações?';
+    const perg = s.perg || `${pc}% de ${N} pelos 3 jeitos: dá o mesmo?`;
     await poePergunta(perg, false);
     const c = cartao(); const ls = el('div', 'qd-lista3', '', c.conta);
     await ler(perg);
-    const p = await nota(c.notas, 'Escreve sobre 100 e simplifica.', 'passo');
-    for (const [pc, f1, f2, pq] of itens) {
-      const r = el('div', 'l3 qd-pop', `<span class="par">${pc} = ${f1}</span><span class="par" style="visibility: hidden; color: var(--qd-amarelo)">= ${f2}</span><span class="pq" style="visibility: hidden">${pq}</span>`, ls);
-      await wait(1300);
-      r.querySelectorAll('[style]').forEach((e) => { e.style.visibility = ''; e.classList.add('qd-pop'); });
-      await wait(900);
+    const p = await nota(c.notas, 'Cada jeito escreve a conta de um modo; o resultado é o mesmo.', 'passo');
+    for (const [j, conta] of [['regra de três', `100 · x = ${pc} · ${N} → x = ${v}`], ['fração', `${pc}/100 × ${N}/1 = ${nf(pc * N)}/100 = ${v}`], ['decimal', `${N} × ${d} = ${v}`]]) {
+      el('div', 'l3 qd-pop', `<span class="pq">${j}</span><span class="par">${conta}</span><span class="vd sim">✔</span>`, ls);
+      await wait(1600);
     }
     await apagar(p);
-    await respostaFinal(`<span>${s.resp || itens.map((i) => i[2]).join(' · ')}</span>`, { perg, manter: true });
-    await regras5(s, '% vira fração sobre 100; depois simplifica.');
+    await nota(c.notas, 'o do dia a dia (calculadora) é o decimal', 'detalhe');
+    await wait(800);
+    await respostaFinal(`<span>os 3 dão ${v}</span>`, { perg, manter: true });
+    await regras5(s, 'Escolhe o jeito que preferir; para a calculadora, use o decimal.');
   }
-  // 8) desconto: p% de P
-  const DIVP = { 10: 10, 20: 5, 25: 4, 50: 2 };
+  // 7) atalhos para conferir
+  async function cenaPctAtalhos(s) {
+    L.classList.add('sem-hist', 'r3p');
+    await etiqueta('ATALHOS', 'para conferir de cabeça'); ajustaTopo();
+    const perg = s.perg || 'Que atalhos ajudam a conferir?';
+    await poePergunta(perg, false);
+    const c = cartao(); const ls = el('div', 'qd-lista3', '', c.conta);
+    await ler(perg);
+    const p = await nota(c.notas, 'Algumas porcentagens são uma parte fácil do todo:', 'passo');
+    for (const [pc, dv, pq] of [['50% = × 0,5', '÷ 2', 'a metade'], ['25% = × 0,25', '÷ 4', 'a quarta parte'], ['20% = × 0,2', '÷ 5', 'a quinta parte'], ['10% = × 0,1', '÷ 10', 'a décima parte']]) {
+      el('div', 'l3 qd-pop', `<span class="par">${pc}</span><span class="par" style="color: var(--qd-amarelo)">${dv}</span><span class="pq">${pq}</span>`, ls);
+      await wait(1300);
+    }
+    await apagar(p);
+    await nota(c.notas, 'ex.: 60 × 0,25 = 15; confere: 60 ÷ 4 = 15 ✔', 'detalhe');
+    await wait(900);
+    await respostaFinal('<span>conta com decimal, confere com o atalho</span>', { perg, manter: true });
+    await regras5(s, 'Atalho é para conferir. A conta é a do decimal.');
+  }
+  // 8) desconto: P × 0,p { P, p }
   async function cenaDesconto(s) {
-    const P = s.P ?? 50, pc = s.p ?? 10, k = DIVP[pc], v = P * pc / 100;
+    const P = s.P ?? 50, pc = s.p ?? 10, v = P * pc / 100, { d, k, m } = semVirg(pc);
     await etiqueta('DESCONTO', 'quanto sai do preço'); ajustaTopo();
     const perg = s.perg || `Uma camiseta de R$ ${P} tem ${pc}% de desconto. Quanto é o desconto?`;
     await poePergunta(perg, false);
     const c = cartao(); const E = contaEq(c.conta);
     await ler(perg);
-    let p = await nota(c.notas, `O desconto é ${pc}% do preço.`, 'passo');
+    let p = await nota(c.notas, `O desconto é ${pc}% do preço. ${pc}% = ${d}.`, 'passo');
     await E.linha(`<span>${pc}% de ${P}</span>`);
+    await E.linha(`<span>= ${P} × ${SB(d)}</span>`);
     await apagar(p);
-    p = await nota(c.notas, `${pc}%: divide por ${k}.`, 'passo');
-    await E.linha(`<span>= ${P} ÷ ${k}</span>`);
-    await E.final(`= R$ ${nf(v)}`);
+    p = await nota(c.notas, `${P} × ${m} = ${nf(P * m)}; o ${d} tem ${casasTxt(k)}: ${comVirg(P * m, k)}.`, 'passo');
+    await E.final(`= R$ ${rs(v)}`);
     await apagar(p);
     await nota(c.notas, 'a pergunta é o desconto, não o preço final', 'detalhe');
     await wait(900);
-    await respostaFinal(`<span>R$ ${nf(v)}</span>`, { perg });
-    await regras5(s, 'Desconto = a porcentagem do preço.');
+    await respostaFinal(`<span>R$ ${rs(v)}</span>`, { perg });
+    await regras5(s, 'Desconto = preço × a porcentagem em decimal.');
   }
-  // 9) preço final: P − p% de P
+  // 9) preço final: P − P × 0,p { P, p }
   async function cenaPrecoFinal(s) {
-    const P = s.P ?? 80, pc = s.p ?? 25, k = DIVP[pc], d = P * pc / 100, v = P - d;
+    const P = s.P ?? 80, pc = s.p ?? 25, d = dec2(pc), D = P * pc / 100, v = P - D;
     const perg = s.perg || `Um tênis de R$ ${P} tem ${pc}% de desconto. Qual é o preço final?`;
     await poePergunta(perg, false);
     const c = cartao(); const E = contaEq(c.conta);
     await ler(perg);
-    let p = await nota(c.notas, `1º Calcula o desconto: ${pc}% de ${P}.`, 'passo');
-    await E.linha(`<span>${P} ÷ ${k} = ${nf(d)}</span><span class="pz">desconto</span>`);
+    let p = await nota(c.notas, `1º O desconto: ${pc}% de ${P} = ${P} × ${d}.`, 'passo');
+    await E.linha(`<span>${P} × ${d} = ${rs(D)}</span><span class="pz">desconto</span>`);
     await apagar(p);
     p = await nota(c.notas, '2º Tira o desconto do preço.', 'passo');
-    await E.linha(`<span>${P} − ${nf(d)}</span>`);
-    await E.final(`= R$ ${nf(v)}`);
+    await E.linha(`<span>${P} − ${rs(D)}</span>`);
+    await E.final(`= R$ ${rs(v)}`);
     await apagar(p);
-    await pegadinha(c, `R$ ${nf(d)}`, `R$ ${nf(d)} é o desconto; o preço final é o que sobra`, `R$ ${nf(v)}`);
-    await respostaFinal(`<span>R$ ${nf(v)}</span>`, { perg });
+    await pegadinha(c, `R$ ${rs(D)}`, `R$ ${rs(D)} é o desconto; o preço final é o que sobra`, `R$ ${rs(v)}`);
+    await respostaFinal(`<span>R$ ${rs(v)}</span>`, { perg });
     await regras5(s, 'Preço final = preço − desconto.');
   }
-  // 10) qual porcentagem: f de N
+  // 10) qual porcentagem? regra de três: N → 100%; f → x { N, f }
   async function cenaQualPct(s) {
-    const N = s.N ?? 40, f = s.f ?? 10, d = N / f, pc = 100 / d, Cm = cem();
-    const perg = s.perg || `Numa turma de ${N} alunos, ${f} faltaram. Qual porcentagem faltou?`;
-    await poePergunta(perg, false);
-    const c = cartao(); const E = contaEq(c.conta);
-    await ler(perg);
-    let p = await nota(c.notas, `Escreve a fração: ${f} de ${N}.`, 'passo');
-    await E.linha(`<span>${f}/${N}</span>`);
-    await apagar(p);
-    p = await nota(c.notas, `Simplifica: divide em cima e embaixo por ${f}.`, 'passo');
-    await E.linha(`<span>= 1/${d}</span>`);
-    await apagar(p);
-    p = await nota(c.notas, `1/${d} é ${pc}%.`, 'passo');
-    await Cm.pinta(pc, 'on2', 200, `1/${d} = ${pc} de 100`);
-    await E.final(`= ${pc}%`);
-    await apagar(p);
-    await respostaFinal(`<span>${pc}%</span>`, { perg });
-    await regras5(s, 'Qual porcentagem? Faz a fração (parte/todo) e transforma em %.');
+    const N = s.N ?? 40, f = s.f ?? 10, pc = nf(f * 100 / N);
+    await etiqueta('QUAL PORCENTAGEM?', 'regra de três'); ajustaTopo();
+    await cenaR3({ perg: s.perg || `Numa turma de ${N} alunos, ${f} faltaram. Qual porcentagem faltou?`, cab: ['alunos', '%'], lin: [[N, 100], [f, 'x']],
+      porque: `Os ${N} alunos são 100%. Menos alunos, menos %: seta para baixo também.`,
+      linhas: [`${N} · x = ${f} · 100`, `${N} · x = ${nf(f * 100)}`, `x = ${nf(f * 100)} ÷ ${N}`], final: `${pc}%`, resp: `<span>faltaram ${pc}%</span>`,
+      regras: s.regras || ['Qual %? O todo é 100%: monta a regra de três e acha o x.'] });
   }
 
   // ── 7-B: porcentagem, qual é a conta? ──
@@ -4295,9 +4332,29 @@ export function criarQuadro(raiz) {
     await ler(perg);
     const { E } = await fraseExpr(c, [[`${pc}%`, d], ['de', '×'], [String(N), String(N)]], `<span>${N} × ${d}</span>`, `Troca cada pedaço: ${pc}% vira ${d} e "de" vira ×.`);
     await E.final(`= ${nf(N * pc / 100)}`);
+    await nota(c.notas, `na calculadora: ${N} × ${d} =`, 'detalhe');   // PROMPT-229
     await pegadinha(c, `${N} × ${pc}`, `o ${pc}% precisa virar ${d} antes`, `${N} × ${d}`);
     await respostaFinal(`<span>${N} × ${d}</span>`, { perg });
     await regras5(s, '"p% de N" = N × (p ÷ 100).');
+  }
+  // 3) a mesma conta em fração: p/100 × N/1 (PROMPT-229) { p, N }
+  async function cenaContaFr(s) {
+    const pc = s.p ?? 25, N = s.N ?? 60, d = dec2(pc);
+    const perg = s.perg || `"${pc}% de ${N}" em fração: qual é a conta?`;
+    await poePergunta(perg, false);
+    const c = cartao(); const E = contaEq(c.conta);
+    await ler(perg);
+    let p = await nota(c.notas, `${pc}% é ${pc}/100; o "de" vira vezes; o ${N} vira ${N}/1.`, 'passo');
+    await E.linha(`<span>${pc}/100 × ${N}/1</span>`);
+    await apagar(p);
+    p = await nota(c.notas, 'Em cima × em cima, embaixo × embaixo.', 'passo');
+    await E.linha(`<span>= ${nf(pc * N)}/100</span>`);
+    await E.final(`= ${nf(N * pc / 100)}`);
+    await apagar(p);
+    await nota(c.notas, `é a mesma conta que ${N} × ${d} (${pc}/100 = ${d})`, 'detalhe');
+    await wait(900);
+    await respostaFinal(`<span>${pc}/100 × ${N}</span>`, { perg });
+    await regras5(s, 'p% de N = p/100 × N = N × (p ÷ 100).');
   }
   // 3) 50% também é ÷ 2
   async function cenaConta50(s) {
@@ -6536,7 +6593,7 @@ export function criarQuadro(raiz) {
     algcada: cenaAlgCada, algvalor: cenaAlgValor, algmenos: cenaAlgMenos, algxx: cenaAlgXX, algkx: cenaAlgKx, algkxc: cenaAlgKxc, algneg: cenaAlgNeg,
     algquad2: cenaAlgQuad2, alg2l: cenaAlg2L, termo: cenaTermo, semlista: cenaSemLista, semsoma: cenaSemSoma, semum: cenaSemUm, semsub: cenaSemSub,
     semtres: cenaSemTres, semdif: cenaSemDif, simpl: cenaSimpl, perimletra: cenaPerimL,
-    raiz1: cenaRaiz1, raiz2: cenaRaiz2, quadtab: cenaQuadTab, exp1: cenaExp1, exp0: cenaExp0, negpar: cenaNegPar, negimpar: cenaNegImpar, raizpot: cenaRaizPot, multiplos: cenaMultiplos, ehmult: cenaEhMult, mult2: cenaMult2, mult510: cenaMult510, qualmult: cenaQualMult, multdois: cenaMultDois, primmult: cenaPrimMult, ehdiv: cenaEhDiv, divmult: cenaDivMult, todosdiv: cenaTodosDiv, divprimo: cenaDivPrimo, primo: cenaPrimo, naodiv: cenaNaoDiv, pctcem: cenaPctCem, pct50: cenaPct50, pctatalho: cenaPctAtalho, pctfrac: cenaPctFrac, desconto: cenaDesconto, precofinal: cenaPrecoFinal, qualpct: cenaQualPct, pctdec: cenaPctDec, qualconta: cenaQualConta, conta50: cenaConta50, contactx: cenaContaCtx, leconta: cenaLeConta, contafinal: cenaContaFinal, contadireta: cenaContaDireta,   // PROMPT-221
+    raiz1: cenaRaiz1, raiz2: cenaRaiz2, quadtab: cenaQuadTab, exp1: cenaExp1, exp0: cenaExp0, negpar: cenaNegPar, negimpar: cenaNegImpar, raizpot: cenaRaizPot, multiplos: cenaMultiplos, ehmult: cenaEhMult, mult2: cenaMult2, mult510: cenaMult510, qualmult: cenaQualMult, multdois: cenaMultDois, primmult: cenaPrimMult, ehdiv: cenaEhDiv, divmult: cenaDivMult, todosdiv: cenaTodosDiv, divprimo: cenaDivPrimo, primo: cenaPrimo, naodiv: cenaNaoDiv, pctcem: cenaPctCem, pctr3: cenaPctR3, pctfr: cenaPctFr, pctdecx: cenaPctDecX, pctdec2: cenaPctDec2, pct3: cenaPct3, pctatalhos: cenaPctAtalhos, contafr: cenaContaFr, desconto: cenaDesconto, precofinal: cenaPrecoFinal, qualpct: cenaQualPct, pctdec: cenaPctDec, qualconta: cenaQualConta, conta50: cenaConta50, contactx: cenaContaCtx, leconta: cenaLeConta, contafinal: cenaContaFinal, contadireta: cenaContaDireta,   // PROMPT-221
     casasvz: cenaCasasVz, casasdv: cenaCasasDv, zeromeio: cenaZeroMeio, duasvezes: cenaDuasVezes, juntando: cenaJuntando, decx10: cenaDecX10, decx100: cenaDecX100, decdv10: cenaDecDv10, decdv100: cenaDecDv100, medidas2: cenaMedidas2, convmaior: cenaConvMaior, convmenor: cenaConvMenor, dinheiro: cenaDinheiro, negos: cenaNegos, negmaior: cenaNegMaior, negsoma: cenaNegSoma, negsub: cenaNegSub, menosmenos: cenaMenosMenos, temperatura: cenaTemperatura, saldo: cenaSaldo, negtres: cenaNegTres, regrasinais: cenaRegraSinais, negvezes: cenaNegVezes, negsinal: cenaNegSinal, vezeszero: cenaVezesZero, tresnum: cenaTresNum, vezesmais: cenaVezesMais,   // PROMPT-222
     ordem1: cenaOrdem1 };   // PROMPT-223
   // PROMPT-215: as páginas do plano põem a pergunta elas mesmas (primeiro a pergunta, depois o plano, depois a pausa de leitura)
@@ -6547,7 +6604,7 @@ export function criarQuadro(raiz) {
     'eqbal', 'eqsoma', 'eqsub', 'eqmult', 'eqdiv', 'eq2', 'eqneg', 'eqdois', 'eqparen', 'sinais', 'frase', 'baleq',
     'algletra', 'algmaismenos', 'algdobro', 'algmetade', 'algquad', 'algduas', 'algcada', 'algvalor', 'algmenos', 'algxx', 'algkx', 'algkxc', 'algneg',   // PROMPT-220: as do mapa 8
     'algquad2', 'alg2l', 'termo', 'semlista', 'semsoma', 'semum', 'semsub', 'semtres', 'semdif', 'simpl', 'perimletra',
-    'raiz1', 'raiz2', 'quadtab', 'exp1', 'exp0', 'negpar', 'negimpar', 'raizpot', 'multiplos', 'ehmult', 'mult2', 'mult510', 'qualmult', 'multdois', 'primmult', 'ehdiv', 'divmult', 'todosdiv', 'divprimo', 'primo', 'naodiv', 'pctcem', 'pct50', 'pctatalho', 'pctfrac', 'desconto', 'precofinal', 'qualpct', 'pctdec', 'qualconta', 'conta50', 'contactx', 'leconta', 'contafinal', 'contadireta',   // PROMPT-221: as do 5-B, 6 e 7
+    'raiz1', 'raiz2', 'quadtab', 'exp1', 'exp0', 'negpar', 'negimpar', 'raizpot', 'multiplos', 'ehmult', 'mult2', 'mult510', 'qualmult', 'multdois', 'primmult', 'ehdiv', 'divmult', 'todosdiv', 'divprimo', 'primo', 'naodiv', 'pctcem', 'pctr3', 'pctfr', 'pctdecx', 'pctdec2', 'pct3', 'pctatalhos', 'contafr', 'desconto', 'precofinal', 'qualpct', 'pctdec', 'qualconta', 'conta50', 'contactx', 'leconta', 'contafinal', 'contadireta',   // PROMPT-221: as do 5-B, 6 e 7
     'casasvz', 'casasdv', 'zeromeio', 'duasvezes', 'juntando', 'decx10', 'decx100', 'decdv10', 'decdv100', 'medidas2', 'convmaior', 'convmenor', 'dinheiro', 'negos', 'negmaior', 'negsoma', 'negsub', 'menosmenos', 'temperatura', 'saldo', 'negtres', 'regrasinais', 'negvezes', 'negsinal', 'vezeszero', 'tresnum', 'vezesmais', 'ordem1']);   // PROMPT-223: a do mapa 1   // PROMPT-222: as do 2 e 3   // PROMPT-219: as do mapa 9   // PROMPT-218: direta ou inversa   // PROMPT-217: as do mapa 10   // PROMPT-216: as do mapa 11 também
 
   function limpar() {

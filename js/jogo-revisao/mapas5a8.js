@@ -108,12 +108,14 @@ const M6 = {
 
 // ===================== MAPA 7 =====================
 const ATALHO = { 50: ['a metade', 2], 10: ['dividir por 10', 10], 25: ['dividir por 4', 4], 20: ['dividir por 5', 5], 1: ['dividir por 100', 100], 100: ['o todo', 1], 75: ['3 partes de 4', 4] };
-const atalho = (p, N) => p === 100 ? `100% é o todo: ${num(N)}` : p === 75 ? `75% = 3 × 25%: ${num(N)} ÷ 4 = ${num(N / 4)} e ${num(N / 4)} × 3 = ${num(N * 0.75)}` : `${p}% é ${ATALHO[p][0]}: ${num(N)} ÷ ${ATALHO[p][1]} = ${num(N * p / 100)}`;
-// PROMPT-101: a explicação ensina primeiro "20% = 20/100 = 0,2 → valor × 0,2"; o atalho de cabeça vem depois, como 💡 Atalho.
-// Os passos do cartão de erro são separados por "; " (passosDe). A linha "Na calculadora" é acrescentada pelo jogo.
+// PROMPT-101/229: a explicação ensina "20% = 20/100 = 0,2 → valor × 0,2"; o atalho de cabeça vem no fim, como 💡 Confere.
+// Os passos do cartão de erro são separados por "; " (passosDe). Com a linha "Na calculadora" aqui, o jogo não acrescenta a dele.
 const pctDecimal = (p) => `${p}% = ${p}/100 = ${dec(p)}`;
 const pctVezes = (p, N, v = N * p / 100) => `${p}% de ${num(N)} = ${num(N)} × ${dec(p)} = ${num(v)}`;
-const passosPct = (p, N) => `${pctDecimal(p)}; ${pctVezes(p, N)}; 💡 Atalho: ${atalho(p, N)}`;
+// PROMPT-229: o × decimal é o jeito principal: "20% = 20/100 = 0,2; 20% de 30 = 30 × 0,2 = 6; Na calculadora: 30 × 0,2 =; 💡 Confere: 30 ÷ 5 = 6"
+const confere = (p, N) => p === 100 ? `100% é o todo: ${num(N)}` : p === 75 ? `${num(N)} ÷ 4 × 3 = ${num(N * 0.75)}` : `${num(N)} ÷ ${ATALHO[p][1]} = ${num(N * p / 100)}`;
+const naCalcTxt = (p, N) => `Na calculadora: ${num(N)} × ${dec(p)} =`;
+const passosPct = (p, N) => `${pctDecimal(p)}; ${pctVezes(p, N)}; ${naCalcTxt(p, N)}; 💡 Confere: ${confere(p, N)}`;
 function pct(ps) {
   return () => {
     const p = pick(ps); const base = { 50: 2, 10: 10, 25: 4, 20: 5, 1: 100, 100: 1, 75: 4 }[p]; const N = base * int(2, p === 1 ? 6 : 30);
@@ -125,12 +127,25 @@ const PF = [[50, 1, 2], [25, 1, 4], [75, 3, 4], [10, 1, 10], [20, 1, 5], [40, 2,
 const pctFrac = () => { const [p, a, b] = pick(PF); return coin() ? Q(`${p}% é igual a qual fração?`, frac(a, b), erradasFrac(a, b, [[1, p], [a, b * 2], [b, a], [1, 3], [a, b + 1]]), X(`${p}% = ${p}/100 = ${frac(a, b)}`)) : Q(`${frac(a, b)} é igual a quantos por cento?`, `${p}%`, erradasNum(p, [p * 10, p * 2, p / 2, a + b], { fmt: x => `${num(x)}%`, inteiro: false }), X(`${frac(a, b)} = ${p}/100 = ${p}%`)); };
 const todo = () => Q('100% de algo significa:', 'o todo', ['a metade', 'nada', 'o dobro'], X('100% = 100/100 = 1 inteiro: é tudo.'));
 function desconto() { const p = pick([10, 20, 50]), P = 10 * int(2, 12); const v = P * p / 100; return Q(`Uma camiseta de R$ ${P} tem ${p}% de desconto. Quanto é o desconto?`, reais(v), erradasNum(v, [P - v, p, v * 2, v / 2], { fmt: reais, inteiro: false }),
-  X(`${pctDecimal(p)}; Desconto = ${P} × ${dec(p)} = ${reais(v)}; 💡 Atalho: ${atalho(p, P)}`)); }
+  X(`${pctDecimal(p)}; Desconto = ${p}% de ${P} = ${P} × ${dec(p)} = ${reais(v)}; ${naCalcTxt(p, P)}; 💡 Confere: ${confere(p, P)}`)); }
 function turma() { const N = 2 * int(8, 20); const v = N / 2; return Q(`Numa turma de ${N} alunos, 50% são meninas. Quantas meninas?`, num(v), erradasNum(v, [N, v / 2, 50]), X(passosPct(50, N))); }
 function precoFinal() { const p = pick([10, 20, 25, 50]), P = 20 * int(2, 10); const v = P - P * p / 100; return Q(`Um tênis de R$ ${P} tem ${p}% de desconto. Qual o preço final?`, reais(v), erradasNum(v, [P * p / 100, P - p, P + P * p / 100], { fmt: reais, inteiro: false }),
-  X(`${pctDecimal(p)} → desconto = ${P} × ${dec(p)} = ${num(P * p / 100)}; Preço final = ${P} − ${num(P * p / 100)} = ${reais(v)}; Ou direto: com ${p}% de desconto você paga ${100 - p}% → ${P} × ${dec(100 - p)} = ${reais(v)}`)); }
+  X(`${pctDecimal(p)}; Desconto = ${p}% de ${P} = ${P} × ${dec(p)} = ${num(P * p / 100)}; Preço final = ${P} − ${num(P * p / 100)} = ${reais(v)}; ${naCalcTxt(p, P)} (o desconto); 💡 Confere: ${confere(p, P)}`)); }
 function faltaram() { const [p, d] = pick([[25, 4], [10, 10], [20, 5], [50, 2]]); const N = d * int(4, 10), f = N / d; return Q(`Numa turma de ${N} alunos, ${f} faltaram. Qual porcentagem faltou?`, `${p}%`, erradasNum(p, [f, 100 - p, p * 2 <= 100 ? p * 2 : p / 2, p / 2, 100 / f], { fmt: x => `${num(x)}%`, inteiro: false }), X(`${f} ÷ ${N} = ${dec(p)}; ${dec(p)} = ${p}/100 = ${p}%; Em fração: ${frac(f, N)} = ${frac(1, d)} = ${p}%`)); }
 const dec = p => num(p / 100);
+// PROMPT-229: "Na calculadora, como faço 20% de 30?" → 30 × 0,2 (às vezes a errada "30 × 2": esqueceu a vírgula)
+function naCalc() {
+  const p = pick([10, 20, 25, 30, 40, 50, 75]), N = 10 * int(2, 12), d = dec(p);
+  const erradas = [`${N} × ${p}`, `${N} ÷ ${d}`, `${N} − ${p}`];
+  if (p % 10 === 0 && p / 10 !== 1 && coin()) erradas[int(1, 2)] = `${N} × ${p / 10}`;
+  return Q(`Na calculadora, como faço ${p}% de ${N}?`, `${N} × ${d}`, erradas, X(`${pctDecimal(p)}; "De" vira vezes: ${p}% de ${N} = ${N} × ${d}; ${naCalcTxt(p, N)} ${num(N * p / 100)}`));
+}
+// PROMPT-229: "20% de 30 é o mesmo que:" → 20/100 × 30
+function emFracao() {
+  const p = pick([10, 20, 25, 30, 40, 50, 75]), N = 10 * int(2, 12);
+  return Q(`${p}% de ${N} é o mesmo que:`, `${p}/100 × ${N}`, [`${p} × ${N}`, `100/${p} × ${N}`, `${p}/${N} × 100`],
+    X(`${p}% = ${p}/100; "De" vira vezes: ${p}% de ${N} = ${p}/100 × ${N}; = ${p * N}/100 = ${num(N * p / 100)}`));
+}
 const pctX = p => `${p}% = ${p}/100 = ${dec(p)}; "De" vira vezes: ${p}% de um valor = valor × ${dec(p)}`;
 function qualConta() {
   const p = pick([10, 20, 25, 30, 40, 50, 75]), N = 10 * int(2, 12);
@@ -156,12 +171,12 @@ const M7 = {
   A: {
     treinador1: [pct([50]), pct([50]), pct([10]), pct([10]), pct([10])],
     treinador2: [pct([25]), pct([25]), pct([100]), pct([20]), pct([1])],
-    treinador3: [pctFrac, pctFrac, pctFrac, todo, pctFrac],
-    lider: [desconto, pct([50]), turma, pct([10]), pct([25])],
+    treinador3: [pctFrac, naCalc, pctFrac, naCalc, todo],   // PROMPT-229
+    lider: [desconto, pct([50]), turma, naCalc, pct([25])],   // PROMPT-229: naCalc no lugar de um pct([10])
     revanche: [precoFinal, pct([20]), faltaram],
   },
   B: {
-    treinador1: [qualConta, qualConta, qualConta, qualConta, qualConta],
+    treinador1: [qualConta, naCalc, qualConta, emFracao, qualConta],   // PROMPT-229
     treinador2: [pctDec, pctDec, pctDec, pctDec, pctDec],
     treinador3: [contaCtx, contaCtx, contaCtx, contaCtx, contaCtx],
     lider: [qualConta, pctDec, contaCtx, contaCtx, leConta],

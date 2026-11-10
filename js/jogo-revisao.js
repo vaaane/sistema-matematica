@@ -507,6 +507,7 @@ async function carregarEstado() {
     liberarCoresDaConta();
     estado.revisaoSemanal = v.revisao_semanal || {};
     estado.relembre = v.relembre && typeof v.relembre === 'object' ? { ...v.relembre } : {};
+    estado.pulosErro = Math.max(0, Number(v.pulos_erro) || 0);   // ⏭ PROMPT-229: quantas vezes pulou a explicação do erro (3 no total)
     estado.aulasVistas = v.aulas_vistas && typeof v.aulas_vistas === 'object' ? { ...v.aulas_vistas } : {};   // 🧑‍🏫 (PROMPT-185)
     estado.programe = v.programe && typeof v.programe === 'object' ? { ...v.programe, fases: { ...(v.programe.fases || {}) } } : { fases: {} };   // PROMPT-50
     estado.mestre = v.mestre?.data ? { data: v.mestre.data } : null;   // Mestre da Revisão: as 26 insígnias (PROMPT-57)
@@ -14990,7 +14991,7 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   const ultimo = passos[passos.length - 1] || '';
   if (posDaResposta(ultimo, certa) < 0) passos.push(`Resposta: ${certa}`);
   const naCalc = calcNaPergunta(q) ? passoCalculadora(q.enunciado) : '';
-  if (naCalc) { if (/^Resposta: /.test(passos[passos.length - 1])) passos.splice(passos.length - 1, 0, naCalc); else passos.push(naCalc); }
+  if (naCalc && !passos.some((t) => /^Na calculadora/.test(t))) { if (/^Resposta: /.test(passos[passos.length - 1])) passos.splice(passos.length - 1, 0, naCalc); else passos.push(naCalc); }
   $('erro-enun').textContent = q.enunciado;
   $('erro-sua').textContent = sua;
   $('erro-certa').textContent = certa;
@@ -15047,9 +15048,11 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   }
   const b = $('erro-continuar');
   b.hidden = false;
+  $('erro-pular').hidden = true;
   $('perg-erro').hidden = false;
   if (comQuadro && erroPag?.pendente) {   // PROMPT-207: pulou a página do resumo → o Continuar espera o fim (2× e 4× valem)
     b.hidden = true; b.disabled = true;
+    mostrarPular();
     mostrarPetPulou();
     erroQuadro ||= criarQuadro($('erro-quadro'));
     tocarErroQuadro();
@@ -15202,6 +15205,7 @@ function tocarErroQuadro() {
     if (!ok || erroCenas !== cs || $('perg-erro').hidden || !erroPag?.pendente) return;
     erroPag.pendente = false;
     marcarPaginaResumo(erroPag.chave, erroPag.n, 'lida');
+    $('erro-pular').hidden = true;
     const b = $('erro-continuar');
     b.hidden = false; b.disabled = false;
     b.focus({ preventScroll: true });
@@ -15234,8 +15238,28 @@ function marcarPaginaResumo(chave, n, st) {
   gravar({ [`relembre/${chave}/paginas/${n}`]: st });
 }
 
+// ⏭ PROMPT-229: no ginásio, enquanto a explicação obrigatória toca, "Pular ⏭" vai direto para a próxima pergunta.
+// 3 pulos no total (estado.pulosErro, gravado em pulos_erro); da 4ª vez em diante o botão fica apagado e a explicação segue até o fim.
+const PULOS_ERRO = 3;
+function mostrarPular() {
+  const bp = $('erro-pular'), acabou = (estado?.pulosErro || 0) >= PULOS_ERRO;
+  bp.hidden = pg?.modo === 'treino';   // só no ginásio (e na revisão, que é a mesma tela)
+  bp.classList.toggle('off', acabou);
+  bp.setAttribute('aria-disabled', String(acabou));
+}
+function pularDoErro() {
+  if ($('erro-pular').hidden || $('perg-erro').hidden) return;
+  if ((estado.pulosErro || 0) >= PULOS_ERRO) { $('erro-volta').textContent = 'Agora você precisa ver a explicação até o fim 👀'; return; }
+  estado.pulosErro = (estado.pulosErro || 0) + 1;
+  gravar({ pulos_erro: estado.pulosErro });
+  fecharErro();
+}
 function continuarDoErro() {
   if ($('erro-continuar').disabled || $('erro-continuar').hidden) return;
+  fecharErro();
+}
+function fecharErro() {
+  $('erro-pular').hidden = true;
   esconderPetPulou();
   pararDigitacao();
   erroLousa?.cancelar(); erroQuadro?.cancelar();
@@ -17742,6 +17766,7 @@ function ligarEventos() {
     else if (e.key === 'ArrowLeft' && aula.modo === 'aula') { e.stopPropagation(); irPaginaAula(aula.pag - 1); }
   }, true);
   $('erro-continuar').addEventListener('click', continuarDoErro);
+  $('erro-pular').addEventListener('click', pularDoErro);   // ⏭ PROMPT-229
   $('bt-rev-lista').addEventListener('click', (e) => {
     const c = e.target.closest('[data-como]');   // ▶ (PROMPT-185)
     if (c) { abrirComoFaz(comoFazDe({ enunciado: c.dataset.como, explicacao: c.dataset.comoExp, relembre: c.dataset.comoRel, resposta: c.dataset.comoCerta || undefined }), c.dataset.como); return; }
