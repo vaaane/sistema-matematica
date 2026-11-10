@@ -133,8 +133,13 @@ const relDuelo = (forma) => {
 };
 // Meu Pet e foto na parede: fração da altura do palco que o desenho do adulto ocupa (dragões 0,86; o tigre, alto de pé, 0,76)
 const fracaoPalco = (forma, k = TAM_ADULTO_TIGRE[formaDeTamanho(forma)]) => (k ? Math.min(0.76 * k, 0.86) : 0.86);
-// 🐾 PROMPT-224: tamanho só no Meu Pet (por forma ou por pet): o unicórnio adulto 25% maior, o gato (todas as formas) 20% menor
-const MP_CRESCE = { unicornio_adulto: 1.25, gato: 0.8 };
+// 🐾 PROMPT-224: tamanho só no Meu Pet (por forma ou por pet): o unicórnio adulto 25% maior
+const MP_CRESCE = { unicornio_adulto: 1.25 };
+// 🐾 PROMPT-225: no Meu Pet o gato e o axolote (todas as formas, filhote e adulto) ficam do tamanho do gavião: o desenho deles
+// ocupa 604 px do quadro e o do gavião 556 × 606/556 (TAM_VISUAL), o mesmo; então a imagem fica no tamanho base, sem extra
+const MP_COMO_GAVIAO = new Set(['gato', 'axolote']);
+// 🦄 PROMPT-225: contorno de luz que muda de cor (CSS .brilho-arco), no Meu Pet e na batalha (no mapa não)
+const brilhoArco = (forma) => /^unicornio_adulto/.test(forma || '');
 // caixas pequenas feitas para o filhote (coleção, HUD, chips, cartões): sem a escala, para nada ser cortado
 const fatorFormaCaixa = (pet, forma) => fatorForma(pet, forma) / (ehFormaAdulta(forma) ? escalaPet(forma) : 1);
 // Imagem pequena numa caixa feita para o filhote (coleção, HUD, chips, cartões): o quadro do adulto é mais largo
@@ -1902,7 +1907,17 @@ function medirMeuPet() {
   const palco = $('mp-palco'), { forma } = mp;
   let h = Math.min(palco.clientHeight * 0.68, MP_ALT_MAX);
   const cresce = MP_CRESCE[forma] || MP_CRESCE[mp.pet] || 1;   // 🐾 PROMPT-224: só nesta página
-  if (ehFormaAdulta(forma)) {
+  if (MP_COMO_GAVIAO.has(mp.pet)) {
+    // 🐾 PROMPT-225: sem o 1,5 do adulto (PROMPT-209) nem o 0,8 do gato (PROMPT-224); e com o palco do gavião, que tem a
+    // fileira de truques embaixo (sem ela o palco fica mais alto e o pet, maior): mede o palco com uma fileira de mentira
+    const fila = $('mp-tq-fila');
+    if (fila.hidden) {
+      fila.hidden = false; fila.style.visibility = 'hidden';
+      fila.innerHTML = '<button class="mp-tq" tabindex="-1"><span class="mp-tq-ic">🐾</span><small>.</small></button>';
+      h = Math.min(palco.clientHeight * 0.68, MP_ALT_MAX);
+      fila.hidden = true; fila.style.visibility = ''; fila.innerHTML = '';
+    }
+  } else if (ehFormaAdulta(forma)) {
     // (sentado_altura + ~1% de folga embaixo do pé, em fração do quadro)
     // 🐯 o tigre adulto (sem asas, de pé ele é alto) um pouco menor, para as orelhas não baterem no topo (PROMPT-181)
     // 🦄 PROMPT-224: o unicórnio aqui é 25% maior que antes (a fração do palco de antes, com 1 na TAM_ADULTO_TIGRE, × 1,25)
@@ -1913,6 +1928,7 @@ function medirMeuPet() {
   }
   h *= cresce;
   $('mp-img').style.height = h + 'px';
+  $('mp-corpo').classList.toggle('brilho-arco', brilhoArco(forma));   // 🦄 PROMPT-225
   $('mp-palco').classList.toggle('largo', ehFormaAdulta(forma));   // adulto: asas, comida e fogo podem passar da borda do palco
 }
 
@@ -3026,7 +3042,24 @@ function renderVisual() {
   const vazio = $('mp-cores-bloco').hidden;   // pet sem cores à venda
   $('mp-visual-vazio').hidden = !vazio;
   $('mp-visual-vazio').textContent = vazio ? `${nomePet(mp.pet)} ainda não tem outras cores.` : '';
+  renderEfeitosMp();
   renderFundos();
+}
+// ✨ PROMPT-225: os efeitos na aba Visual. Os comprados valem para todos os pets (PROMPT-224): tocar veste no pet da vez, tocar
+// de novo tira. Os que o aluno ainda não tem aparecem com 🔒 e o preço e levam para a loja (aba ✨ Efeitos).
+function renderEfeitosMp() {
+  const lista = efeitos(), atual = cuidadosDe(mp.pet)?.efeito || null;
+  $('mp-efeitos-bloco').hidden = !lista.length;
+  const amostra = (id) => `<span class="mp-efx-amostra" aria-hidden="true"><i class="jr-efx-forma jr-efx-${esc(id)}"></i><i class="jr-efx-forma jr-efx-${esc(id)}"></i></span>`;
+  $('mp-efeitos').innerHTML = lista.map(e => (estado.pets.efeitos?.[e.id]
+    ? `<button class="mp-chip${atual === e.id ? ' sel' : ''}" data-efeito-mp="${esc(e.id)}" aria-pressed="${atual === e.id}">${amostra(e.id)}${esc(e.nome)}</button>`
+    : `<button class="mp-chip trancada" data-efeito-loja="${esc(e.id)}" title="Comprar na loja">${amostra(e.id)}🔒 ${esc(e.nome)} ${moedaHtml()} ${e.preco}</button>`)).join('');
+}
+// 🔒 efeito que o aluno ainda não tem: vai à loja da Dona Cida, na aba ✨ Efeitos
+function irComprarEfeito() {
+  fecharMeuPet();
+  if (cena?.n === 'loja') { abrirLoja('efeitos'); return; }
+  transicao(async () => { await abrirLojaInterior({ tipo: 'praca' }); abrirLoja('efeitos'); });
 }
 
 // ── 🖼️ Fundo do cartão do pet (PROMPT-179): um só para o aluno (vale para todos os pets), por enquanto só no Meu Pet ──
@@ -3207,6 +3240,19 @@ function bonusMoedasRetroativo() {
 function escolherVisual(e) {
   const bc = e.target.closest('[data-cor]');
   if (bc) { escolherCor(bc.dataset.cor); return; }
+  if (e.target.closest('[data-efeito-loja]')) { tocar('clique'); irComprarEfeito(); return; }   // ✨ PROMPT-225
+  const be = e.target.closest('[data-efeito-mp]');
+  if (be && mp) {   // ✨ PROMPT-225: veste no pet da vez; tocar de novo tira
+    const pet = mp.pet, c = cuidadosDe(pet), id = be.dataset.efeitoMp;
+    if (!c || !estado.pets.efeitos?.[id]) return;
+    c.efeito = c.efeito === id ? null : id;
+    gravar({ [`pets/conquistados/${pet}/efeito`]: c.efeito });
+    atualizarVisualPet();
+    enviarOnline(visualOnline(pet));
+    tocar('clique');
+    renderVisual();
+    return;
+  }
   const b = e.target.closest('[data-tinta], [data-efeito]');
   if (!b || !mp) return;
   const pet = mp.pet, c = cuidadosDe(pet), campo = 'tinta' in b.dataset ? 'tinta' : 'efeito', v = b.dataset[campo] || null;
@@ -13036,24 +13082,41 @@ function medirDesenho(src) {
     im.src = src;
   });
 }
+// 🦄 PROMPT-225: o maior pet da batalha (pelo desenho, a altura da tabela do mapa) fica com 70% do tamanho que o unicórnio adulto
+// tinha aqui (a conta de antes, só com ele); os outros diminuem pelo mesmo fator (a proporção do PROMPT-224 continua). Nunca cresce.
+const BT_REF_MAIOR = 'unicornio_adulto', BT_MAIOR = 0.7;
+// 🐘 quadros mais altos que o resto do pet (o ataque do elefante adulto: 700 em vez de 566), alinhados pela base (CSS .quadro-alto)
+const QUADRO_ALTO = { elefante_adulto: { anim: 'ataque_direita', q: 2, alt: 700 } };   // q = o quadro mais alto (2: ele empina)
 function ajustarLutadores() {
   if (!bt) return;
   const arena = $('bt-arena'), W = arena.clientWidth, H = arena.clientHeight;
   if (!W || !H) return;
   const ref = altImagemPet('gato');
-  const L = [['L', bt.forma], ['R', bt.t.pet]].map(([l, forma]) => {
-    const [qw, qh] = tamanhoQuadro(forma), adulto = ehFormaAdulta(forma);
-    const src = quadrosDe(forma, temAnim(forma, 'voando') ? 'voando' : 'andar_direita')[0];
+  const caixa = (src, padrao) => {
     if (src && !caixaDesenho.has(src)) medirDesenho(src).then((r) => { if (r && bt) ajustarLutadores(); });
-    let c = (src && caixaDesenho.get(src)) || (adulto ? { x0: 275 / 1219, x1: 918 / 1219, y0: 0.05 } : { x0: 0.1, x1: 0.9, y0: 0.1 });
+    return (src && caixaDesenho.get(src)) || padrao;
+  };
+  const lutador = (l, forma) => {
+    const [qw, qh] = tamanhoQuadro(forma), adulto = ehFormaAdulta(forma);
+    let c = caixa(quadrosDe(forma, animParadoBt(forma))[0], adulto ? { x0: 275 / 1219, x1: 918 / 1219, y0: 0.05 } : { x0: 0.1, x1: 0.9, y0: 0.1 });
+    const alto = QUADRO_ALTO[formaDeTamanho(forma)];
+    if (alto && temAnim(forma, alto.anim)) {   // 🐘 o topo do quadro alto, na escala do quadro normal (a base é a mesma)
+      const ca = caixa(quadrosDe(forma, alto.anim)[alto.q - 1], null);
+      if (ca) c = { ...c, y0: Math.min(c.y0, 1 - (1 - ca.y0) * alto.alt / qh) };
+    }
     if (l === 'R') c = { ...c, x0: 1 - c.x1, x1: 1 - c.x0 };   // o lado R é desenhado espelhado
-    return { l, prop: qw / qh, c, h1: BT_ALT_GATO * H * altImagemPet(forma) / ref, chao: (adulto ? 0.03 : 0.09) * H };
-  });
+    return { l, forma, prop: qw / qh, c, h1: BT_ALT_GATO * H * altImagemPet(forma) / ref, chao: (adulto ? 0.03 : 0.09) * H };
+  };
   const m = 0.03 * W, gap = 0.04 * W;
+  // quanto um lutador cabe sozinho: o corpo na metade dele (com margem e o espaço do meio) e o topo do desenho dentro da arena
+  const cabe = (p) => Math.min((W / 2 - m - gap / 2) / ((p.c.x1 - p.c.x0) * p.h1 * p.prop), (0.98 * H - p.chao) / (p.h1 * (1 - p.c.y0)));
+  const L = [lutador('L', bt.forma), lutador('R', bt.t.pet)];
+  const u = lutador('L', BT_REF_MAIOR), corpo = (p) => p.h1 * sentadoNoQuadro(p.forma);
+  const s = Math.min(1, BT_MAIOR * corpo(u) * Math.min(1, cabe(u)) / Math.max(...L.map(corpo)));
+  for (const p of L) p.h1 *= s;
   // fator comum: o topo do desenho dentro da arena e os dois corpos lado a lado, com margem e um espaço entre eles
   // cada corpo cabe na metade dele (área de cada lado), o mesmo k para os dois
-  let k = Math.min(1, ...L.map((p) => (W / 2 - m - gap / 2) / ((p.c.x1 - p.c.x0) * p.h1 * p.prop)));
-  for (const p of L) k = Math.min(k, (0.98 * H - p.chao) / (p.h1 * (1 - p.c.y0)));
+  const k = Math.min(1, ...L.map(cabe));
   for (const p of L) { p.h = p.h1 * k; p.w = p.h * p.prop; p.bw = (p.c.x1 - p.c.x0) * p.w; }
   const [E, D] = L;
   // corpos centrados em 27% e 73% da arena; se encostarem, afastam (sem passar da margem)
@@ -13104,7 +13167,10 @@ function iniciarBatalha(id, origem = 'lista') {
   ajustarLutadores();   // ⚔️ PROMPT-224: os dois pets na proporção do mapa
   $('bt-nomeL').innerHTML = `${esc(nomeAluno())}<small>· ${esc(nomePet(bt.pet))}</small>`;
   aplicarVisualPet($('bt-imgL'), bt.pet);
-  aplicarTinta($('bt-imgR'), t.tinta);   // pet do adversário: só se o treinador tiver tinta no batalhas.json
+  aplicarTinta($('bt-imgR'), t.tinta);
+  for (const l of ['L', 'R']) $('bt-img' + l).classList.remove('quadro-alto');
+  $('bt-corpoL').classList.toggle('brilho-arco', brilhoArco(bt.forma));   // 🦄 PROMPT-225
+  $('bt-corpoR').classList.toggle('brilho-arco', brilhoArco(formaR));   // pet do adversário: só se o treinador tiver tinta no batalhas.json
   $('bt-nomeR').innerHTML = `<small>${NOME_PET[t.pet]} ·</small>${esc(t.nome)}`;
   $('bt-bustoL').outerHTML = bustoHtml(urlQuadro('direita', -1), `bt-busto L${temBrilho() ? ' jr-brilho' : ''}`, BUSTO_PERS, false, 'bt-bustoL');
   $('bt-bustoR').outerHTML = bustoHtml(`${IMG}/npcs/${t.id}.webp`, 'bt-busto R', BUSTO_NPC, true, 'bt-bustoR');
@@ -13161,6 +13227,7 @@ function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
   const fs = quadrosDe(pet, nomeReal);
   const img = $('bt-img' + lado), el = $('bt-' + lado);
   pararSequencia(img);
+  img.classList.remove('quadro-alto');   // 🐘 PROMPT-225: fim do ataque do elefante
   if (!loop && fs.length === 1 && EMOCOES.has(nomeReal)) ms = Math.max(ms, MS_EMOCAO);   // emoção de 1 quadro: 1,5 s
   el.style.transform = lado === 'R' && nomeReal !== 'andar_esquerda' ? 'scaleX(-1)' : '';
   img.classList.toggle('pet-voando', nomeReal === 'voando');
@@ -13196,8 +13263,11 @@ function somNaSequencia(nome, forma, seq, de, ate, { fade = 200, deFrente = true
 }
 const btSom = (som) => { if (bt) (bt.sons ||= []).push(som); return som; };   // sons da batalha: param ao sair dela
 
-// o morcego espera voando no lugar (PROMPT-162); os outros, andando parado
-const btParado = (lado) => (bt && temAnim(btForma(lado), 'voando') ? btTocar(lado, 'voando', { ms: 130 }) : btTocar(lado, 'andar_direita', { ms: 420 }));
+// o morcego espera voando no lugar (PROMPT-162); o unicórnio adulto, parado de lado (PROMPT-225: ele só fica parado ou corre);
+// os outros, andando parado
+const animParadoBt = (forma) => (temAnim(forma, 'voando') ? 'voando' : /^unicornio_adulto/.test(forma || '') && temAnim(forma, 'parado_lado') ? 'parado_lado' : 'andar_direita');
+const MS_PARADO_BT = { voando: 130, parado_lado: 320, andar_direita: 420 };
+const btParado = (lado) => { if (!bt) return; const a = animParadoBt(btForma(lado)); btTocar(lado, a, { ms: MS_PARADO_BT[a] }); };
 const btForma = (lado) => (lado === 'L' ? bt.forma : bt.t.pet);
 const adultoNaBatalha = () => !!bt && ehFormaAdulta(bt.forma) && temAnim(bt.forma, 'rugido');
 // abertura do adulto: ruge
@@ -13253,6 +13323,112 @@ function btFogo(de, para, crit, especial) {
       btParticula(i % 4 === 3 ? '💥' : '🔥', x, y, { dx: b.x - x + (Math.random() - 0.5) * 40, dy: b.y - y + (Math.random() - 0.5) * 50, dur, size: especial ? 36 : crit ? 30 : 24, delay: i * 28 });
     btLater(ok, dur * 0.6 + n * 28);
   });
+}
+
+// 🐘 PROMPT-225: o ataque do elefante adulto (6 quadros: prepara, empina, avança, estica a tromba, golpe, volta com a poeira).
+// O lado L olha para a direita (ataque_direita); o R, para a esquerda (ataque), sem espelhar. Os quadros são mais altos (700):
+// a imagem ganha .quadro-alto (mesma escala, alinhada pela base). Resolve no golpe (quadro 5); bt.seqAtaque = o fim do 6º.
+const MS_ATAQUE_ELEFANTE = [260, 260, 180, 180, 300, 450], GOLPE_ELEFANTE = 5;
+const temAtaqueElefante = (forma) => temAnim(forma, 'ataque') && temAnim(forma, 'ataque_direita') && !!QUADRO_ALTO[formaDeTamanho(forma)];
+function btAtaqueElefante(de) {
+  const fs = quadrosDe(btForma(de), de === 'L' ? 'ataque_direita' : 'ataque'), img = $('bt-img' + de);
+  clearTimeout(bt.anim[de]);
+  pararSequencia(img);
+  $('bt-' + de).style.transform = '';
+  img.classList.remove('pet-voando');
+  let acabou;
+  (bt.seqAtaque ||= {})[de] = new Promise((ok) => { acabou = ok; });
+  return new Promise((golpe) => {
+    let i = 0;
+    const passo = () => {
+      if (!bt || i >= fs.length) { golpe(); acabou(); return; }
+      img.src = fs[i];
+      img.classList.add('quadro-alto');
+      if (i + 1 === GOLPE_ELEFANTE) golpe();
+      bt.anim[de] = setTimeout(passo, MS_ATAQUE_ELEFANTE[i++] ?? 300);
+    };
+    passo();
+  });
+}
+
+// 🦄 PROMPT-225: o feixe do chifre, desenhado por código (SVG) da ponta do chifre até o adversário. Enquanto ele sai, o unicórnio
+// fica no ataque_arcoiris_1 (o chifre brilhando; sequência ataque_batalha: o feixe sai no 2º passo). Ponta do chifre medida no
+// quadro, em % da imagem, olhando para a direita (direita/ataque_arcoiris_1); virado (lado R, scaleX(-1)): 100 − x.
+const PONTA_CHIFRE_ATAQUE = { unicornio_adulto: [72.8, 27.9] };
+const FEIXE_CORES = ['#ff3b3b', '#ff9a2e', '#ffe53b', '#3ddc6a', '#38b6ff', '#5a6cff', '#b05cff'];   // vermelho → violeta
+const FEIXE_MS = { cresce: 250, fica: 400, some: 220 };
+const temFeixe = (forma) => !!PONTA_CHIFRE_ATAQUE[formaDeTamanho(forma)] && temSequencia(forma, 'ataque_batalha');
+async function btAtaqueFeixe(de, para, crit, especial) {
+  const forma = btForma(de), img = $('bt-img' + de);
+  clearTimeout(bt.anim[de]);
+  $('bt-' + de).style.transform = de === 'R' ? 'scaleX(-1)' : '';
+  img.classList.remove('pet-voando', 'quadro-alto');
+  (bt.seqAtaque ||= {})[de] = tocarSequencia(img, forma, 'ataque_batalha', { deFrente: false });   // o turno espera o fim (btParado)
+  let n = 0;
+  await btEsperar(msAtePasso(forma, 'ataque_batalha', () => ++n === 2, { deFrente: false }));
+  if (!bt) return;
+  await btFeixe(de, para, crit, especial);
+}
+// resolve quando o feixe chega no adversário (o dano entra aí); depois ele fica ~0,4 s e some sozinho
+function btFeixe(de, para, crit, especial) {
+  return new Promise((ok) => {
+    if (btReduz()) { btLater(ok, 250); return; }
+    const el = $('bt-' + de), alvo = $('bt-' + para), fx = $('bt-fx');
+    const [px, py] = PONTA_CHIFRE_ATAQUE[formaDeTamanho(btForma(de))];
+    const virado = (el.style.transform || '').includes('scaleX(-1)');
+    // posições pelo layout da arena (offset*): valem com o jogo girado (jr-girado)
+    const x0 = el.offsetLeft + el.offsetWidth * (virado ? 100 - px : px) / 100, y0 = el.offsetTop + el.offsetHeight * py / 100;
+    const x1 = alvo.offsetLeft + alvo.offsetWidth / 2, y1 = alvo.offsetTop + alvo.offsetHeight * 0.5;
+    const len = Math.hypot(x1 - x0, y1 - y0), ang = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI;
+    const T = Math.max(8, el.offsetHeight * (especial ? 0.1 : crit ? 0.085 : 0.07));   // grossura: acompanha a escala do pet
+    const NS = 'http://www.w3.org/2000/svg', id = 'bt-feixe-' + Date.now();
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'bt-feixe');
+    svg.setAttribute('width', fx.clientWidth); svg.setAttribute('height', fx.clientHeight);
+    const faixas = FEIXE_CORES.map((c, i) => `<rect class="f" x="0" y="${(-T / 2 + i * T / 7).toFixed(2)}" height="${(T / 7 + 0.6).toFixed(2)}" width="0" fill="${c}"/>`).join('');
+    svg.innerHTML = `<defs><filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${(T * 0.3).toFixed(1)}"/></filter></defs>
+      <g transform="translate(${x0.toFixed(1)} ${y0.toFixed(1)}) rotate(${ang.toFixed(2)})">
+        <rect class="f" x="0" y="${(-T * 0.85).toFixed(1)}" height="${(T * 1.7).toFixed(1)}" rx="${(T * 0.85).toFixed(1)}" width="0" fill="#fff" opacity=".75" filter="url(#${id})"/>
+        ${faixas}
+        <rect class="f" x="0" y="${(-T * 0.09).toFixed(2)}" height="${(T * 0.18).toFixed(2)}" width="0" fill="#fff" opacity=".6"/>
+        <circle cx="0" cy="0" r="${(T * 0.75).toFixed(1)}" fill="#fff" filter="url(#${id})"/>
+        <circle class="clarao" cx="${len.toFixed(1)}" cy="0" r="${(T * 3).toFixed(1)}" fill="#fff" filter="url(#${id})" style="transform-box: fill-box; transform-origin: center; transform: scale(0)"/>
+      </g>`;
+    fx.appendChild(svg);
+    const rects = svg.querySelectorAll('rect.f'), clarao = svg.querySelector('.clarao');
+    const t0 = performance.now();
+    let chegou = false;
+    const crescer = () => {
+      if (!bt || !svg.isConnected) { if (!chegou) { chegou = true; ok(); } return; }
+      const k = Math.min(1, (performance.now() - t0) / FEIXE_MS.cresce);
+      for (const r of rects) r.setAttribute('width', (len * k).toFixed(1));
+      if (k < 1) { requestAnimationFrame(crescer); return; }
+      chegou = true;
+      // clarão no ponto de impacto e umas estrelinhas no caminho
+      clarao.animate([{ transform: 'scale(0)', opacity: 1 }, { transform: 'scale(.8)', opacity: 0.9, offset: 0.35 }, { transform: 'scale(1)', opacity: 0 }], { duration: FEIXE_MS.fica + FEIXE_MS.some, easing: 'ease-out', fill: 'forwards' });
+      for (let i = 0; i < (especial ? 9 : crit ? 7 : 5); i++) {
+        const f = 0.12 + Math.random() * 0.8;
+        btParticula(i % 3 ? '✦' : '✨', x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, { dx: (Math.random() - 0.5) * 30, dy: -(10 + Math.random() * 30), dur: 650, size: Math.max(12, T * 1.1), delay: i * 45 });
+      }
+      for (let i = 0; i < (especial ? 8 : 5); i++) btParticula(['✨', '💖', '🌈'][i % 3], x1, y1, { dx: (Math.random() - 0.5) * 120, dy: -(20 + Math.random() * 70), dur: 700, size: especial ? 26 : 20, delay: i * 30 });
+      ok();
+      btLater(() => svg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FEIXE_MS.some, fill: 'forwards' }).onfinish = () => svg.remove(), FEIXE_MS.fica);
+      setTimeout(() => svg.remove(), FEIXE_MS.fica + FEIXE_MS.some + 500);   // saiu da batalha no meio: não fica para trás
+    };
+    requestAnimationFrame(crescer);
+  });
+}
+// 🦄 PROMPT-225: vitória do unicórnio: um pulinho a cada `anim` da sequência vitoria (parado_lado ↔ animado, 3 vezes)
+function btPulinhos(lado, anim) {
+  const forma = btForma(lado), corpo = $('bt-corpo' + lado);
+  for (let k = 1; ; k++) {
+    let n = 0;
+    const total = msAtePasso(forma, 'vitoria', () => false, { deFrente: false });
+    const t = msAtePasso(forma, 'vitoria', ([a]) => a === anim && ++n === k, { deFrente: false });
+    if (t >= total) break;
+    btLater(() => corpo.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-9%)', offset: 0.4 }, { transform: 'translateY(0)' }],
+      { duration: 420, easing: 'ease-in-out' }), t);
+  }
 }
 
 function btCentro(el) { const a = $('bt-arena').getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left - a.left + r.width / 2, y: r.top - a.top + r.height * 0.5 }; }
@@ -13501,7 +13677,13 @@ async function btFechar() {
     }
     const fogo = temAnim(btForma(l), 'ataque_fogo');   // dragão adulto: sempre prepara e solta fogo pela boca ("Cuspir fogo" é só um truque do Meu Pet)
     if (fogo) await btAtaqueFogo(l, o, critico, especial);
-    else {
+    else if (temAtaqueElefante(btForma(l))) {   // 🐘 PROMPT-225: os 6 quadros do ataque; o golpe é no 5º
+      await btAtaqueElefante(l);
+      btSom(somAtaque(pet));
+    } else if (temFeixe(btForma(l))) {   // 🦄 PROMPT-225: o chifre brilha e o feixe de arco-íris vai até o adversário
+      btSom(somAtaque(pet));
+      await btAtaqueFeixe(l, o, critico, especial);
+    } else {
       if (temSequencia(btForma(l), 'ataque_batalha')) {   // 🦇 o morcego bate as asas rápido no bote (sem fogo)
         clearTimeout(bt.anim[l]);
         $('bt-' + l).style.transform = l === 'R' ? 'scaleX(-1)' : '';
@@ -13543,8 +13725,9 @@ function btFim() {
   if (v === 'L' && temSequencia(bt.forma, 'vitoria')) {   // dragão adulto: a comemoração `vitoria` e a fala arrogante (PROMPT-65)
     clearTimeout(bt.anim.L);
     $('bt-L').style.transform = '';
+    $('bt-imgL').classList.remove('quadro-alto', 'pet-voando');
     if (btReduz()) { pararSequencia($('bt-imgL')); $('bt-imgL').src = quadrosSeq(bt.forma, 'vitoria').at(-1); }
-    else tocarSequencia($('bt-imgL'), bt.forma, 'vitoria', { deFrente: false });
+    else { tocarSequencia($('bt-imgL'), bt.forma, 'vitoria', { deFrente: false }); if (/^unicornio_adulto/.test(bt.forma)) btPulinhos('L', 'animado'); }
     falaVitoria($('bt-imgL'), bt.pet, $('bt-L'));
   } else if (v === 'L' && adultoNaBatalha()) {   // adulto: orgulhoso (ufa, se venceu com pouca vida) e depois o rugido sentado
     btTocar('L', hp.L <= bt.max.L * 0.25 ? 'ufa' : 'orgulhoso', { loop: false, ms: 1000, depois: () => btTocar('L', 'rugido_sentado', { ms: 600 }) });

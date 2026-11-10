@@ -730,8 +730,8 @@
     </div>
     <div class="bt-arena" id="bt-arena">
       <div class="bt-status" id="bt-stL"></div><div class="bt-status" id="bt-stR"></div>
-      <div class="bt-lutador" id="bt-L"><div class="bt-sombra"></div><img id="bt-imgL" alt="" draggable="false"/></div>
-      <div class="bt-lutador" id="bt-R"><div class="bt-sombra"></div><img id="bt-imgR" alt="" draggable="false"/></div>
+      <div class="bt-lutador" id="bt-L"><div class="bt-sombra"></div><div class="bt-corpo" id="bt-corpoL"><img id="bt-imgL" alt="" draggable="false"/></div></div>
+      <div class="bt-lutador" id="bt-R"><div class="bt-sombra"></div><div class="bt-corpo" id="bt-corpoR"><img id="bt-imgR" alt="" draggable="false"/></div></div>
       <div class="bt-fx" id="bt-fx" aria-hidden="true"></div>
       <div class="bt-banner" id="bt-banner"></div>
     </div>
@@ -1038,6 +1038,11 @@
             <div class="mp-visual-dica" id="mp-cor-msg"></div>
           </div>
           <div class="mp-visual-dica" id="mp-visual-vazio" hidden></div>
+          <!-- ✨ PROMPT-225: os efeitos (valem para todos os pets): tocar veste no pet da vez, tocar de novo tira; 🔒 = ainda não tem (leva à loja) -->
+          <div id="mp-efeitos-bloco">
+            <div class="mp-visual-rot">✨ Efeitos</div>
+            <div class="mp-chips" id="mp-efeitos"></div>
+          </div>
           <!-- 🖼️ PROMPT-179: fundo do cartão do pet (um só para todos os pets) -->
           <div id="mp-fundos-bloco">
             <div class="mp-visual-rot">🖼️ Fundo</div>

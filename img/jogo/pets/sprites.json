@@ -192,6 +192,22 @@
     "pets/elefante_adulto/direita/comendo_2.webp",
     "pets/elefante_adulto/direita/comendo_3.webp",
     "pets/elefante_adulto/direita/comendo_4.webp"
+   ],
+   "ataque": [
+    "pets/elefante_adulto/ataque_1.webp",
+    "pets/elefante_adulto/ataque_2.webp",
+    "pets/elefante_adulto/ataque_3.webp",
+    "pets/elefante_adulto/ataque_4.webp",
+    "pets/elefante_adulto/ataque_5.webp",
+    "pets/elefante_adulto/ataque_6.webp"
+   ],
+   "ataque_direita": [
+    "pets/elefante_adulto/direita/ataque_1.webp",
+    "pets/elefante_adulto/direita/ataque_2.webp",
+    "pets/elefante_adulto/direita/ataque_3.webp",
+    "pets/elefante_adulto/direita/ataque_4.webp",
+    "pets/elefante_adulto/direita/ataque_5.webp",
+    "pets/elefante_adulto/direita/ataque_6.webp"
    ]
   },
   "axolote": {
@@ -659,10 +675,16 @@
     "pets/unicornio_adulto/andar_costas_4.webp"
    ],
    "andar_esquerda": [
-    "pets/unicornio_adulto/andar_esquerda_1.webp"
+    "pets/unicornio_adulto/esquerda/correndo_1.webp",
+    "pets/unicornio_adulto/esquerda/correndo_2.webp",
+    "pets/unicornio_adulto/esquerda/correndo_3.webp",
+    "pets/unicornio_adulto/esquerda/correndo_4.webp"
    ],
    "andar_direita": [
-    "pets/unicornio_adulto/direita/andar_direita_1.webp"
+    "pets/unicornio_adulto/correndo_1.webp",
+    "pets/unicornio_adulto/correndo_2.webp",
+    "pets/unicornio_adulto/correndo_3.webp",
+    "pets/unicornio_adulto/correndo_4.webp"
    ],
    "correndo": [
     "pets/unicornio_adulto/correndo_1.webp",
@@ -3089,9 +3111,7 @@
    ],
    "ataque_batalha": [
     ["ataque_arcoiris", 1, 300],
-    ["ataque_arcoiris", 2, 250],
-    ["ataque_arcoiris", 3, 450],
-    ["ataque_arcoiris", 4, 300]
+    ["ataque_arcoiris", 1, 1000]
    ],
    "perdeu": [
     ["bravo", 1, 300],
@@ -3124,11 +3144,13 @@
     ["parado_lado", 1, 500]
    ],
    "vitoria": [
-    ["parado_lado", 1, 500],
-    ["animado", 1, 1100],
-    ["feliz", 1, 450],
-    ["feliz", 2, 450],
-    ["animado", 1, 1100]
+    ["parado_lado", 1, 450],
+    ["animado", 1, 550],
+    ["parado_lado", 1, 450],
+    ["animado", 1, 550],
+    ["parado_lado", 1, 450],
+    ["animado", 1, 550],
+    ["parado_lado", 1, 600]
    ]
   },
   "tigre_adulto": {

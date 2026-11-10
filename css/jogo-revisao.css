@@ -5331,3 +5331,26 @@ html.jr-deitado .jr-erro-pulou-balao { font-size: calc(12px * var(--letra, 1)); 
   100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, -12px))) scale(.7); }
 }
 @media (prefers-reduced-motion: reduce) { .mp-chifre { animation: none; opacity: .7; } .mp-chifre-estrela { display: none; } }
+
+/* ── PROMPT-225 ──
+   ⚔️ batalha: a imagem do pet fica dentro de .bt-corpo (o contorno de luz do unicórnio não pega a sombra no chão).
+   🐘 quadro alto (o ataque do elefante adulto: 1219 × 700, os outros 1219 × 566): mesma escala e alinhado pela base (os pés
+   ficam a 7 px do fim nos dois tamanhos), então a imagem só cresce para cima. */
+.bt-corpo { position: absolute; inset: 0; }
+#jr-app .bt-corpo img.quadro-alto { position: absolute; left: 0; bottom: 0; height: calc(100% * 700 / 566); }
+/* 🦄 contorno de luz em volta do corpo todo, mudando de cor pelo arco-íris (~4 s por volta): Meu Pet e batalha */
+.brilho-arco { animation: brilho-arco 4s linear infinite; }
+@keyframes brilho-arco {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(255,90,90,.95)) drop-shadow(0 0 8px rgba(255,90,90,.6)); }
+  16.6% { filter: drop-shadow(0 0 2px rgba(255,170,60,.95)) drop-shadow(0 0 8px rgba(255,170,60,.6)); }
+  33.3% { filter: drop-shadow(0 0 2px rgba(255,235,80,.95)) drop-shadow(0 0 8px rgba(255,235,80,.6)); }
+  50% { filter: drop-shadow(0 0 2px rgba(90,230,120,.95)) drop-shadow(0 0 8px rgba(90,230,120,.6)); }
+  66.6% { filter: drop-shadow(0 0 2px rgba(80,180,255,.95)) drop-shadow(0 0 8px rgba(80,180,255,.6)); }
+  83.3% { filter: drop-shadow(0 0 2px rgba(190,110,255,.95)) drop-shadow(0 0 8px rgba(190,110,255,.6)); }
+}
+@media (prefers-reduced-motion: reduce) { .brilho-arco { animation: none; filter: drop-shadow(0 0 2px rgba(255,214,240,.95)) drop-shadow(0 0 8px rgba(190,110,255,.55)); } }
+/* 🌈 feixe do chifre (SVG desenhado no JS, por cima da arena) */
+.bt-feixe { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+/* ✨ efeitos na aba Visual do Meu Pet */
+.mp-efx-amostra { --e: 1; display: inline-flex; gap: 2px; align-items: center; margin-right: 2px; }
+.mp-chip.trancada .mp-efx-amostra { filter: grayscale(.6); }
