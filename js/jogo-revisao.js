@@ -4017,7 +4017,7 @@ function renderListaAmigos() {
     .sort((a, b) => Number(b.on) - Number(a.on) || rotuloColega(a.uid, a.r).localeCompare(rotuloColega(b.uid, b.r)));
   const linha = ({ uid, r, on: online }) => `<li><span class="jr-rosto">${online && r ? rostoPet(petAtual(r.pet), r.pet_tinta, r.pet_forma) : '👤'}</span>
       <span class="jr-online-nome">${online ? '🟢' : '⚪'} ${esc(rotuloColega(uid, r))}</span>
-      <span class="jr-online-det">${esc(nomeVisivel(r?.turma || turmaDoUid(uid)))} · ${online ? esc(lugarDe(r)) : esc(vistoHa(vistoAmigos[uid]?.t) || 'offline')}</span>
+      <span class="jr-online-det">${nomeRealProf(uid, r) ? `<b>${esc(nomeRealProf(uid, r))}</b> · ` : ''}${esc(nomeVisivel(r?.turma || turmaDoUid(uid)))} · ${online ? esc(lugarDe(r)) : esc(vistoHa(vistoAmigos[uid]?.t) || 'offline')}</span>
       <span class="jr-amigo-acoes"><button class="jr-online-acao" data-visitar-amigo="${esc(uid)}">🏠 Visitar</button><button class="jr-online-acao" data-presente-amigo="${esc(uid)}">🎁 Presente</button></span></li>`;
   $('online-itens').innerHTML = buscaAmigosHtml() + (ped ? `<li class="jr-online-grupo">📨 Pedidos de amizade · ${Object.keys(pedidosAmizade).length}</li>${ped}` : '') +
     `<li class="jr-online-grupo">🤝 Seus amigos · ${lista.length}/${MAX_AMIGOS}</li>` +
@@ -4270,6 +4270,12 @@ try { localStorage.removeItem('jr_colegas_ocultos'); } catch (_) {}
 // Etiqueta do colega: o apelido (ou primeiro nome); sem nome no registro → o primeiro nome do uid ("8F_Ana_Clara" → "Ana"),
 // e só sem isso "Colega"; a conta da professora → "Professora" (nunca a palavra PROFESSOR).
 const nomeDoUid = (uid) => nomeVisivel(String(uid || '').split('_')[1] || '');
+// 👩‍🏫 só para a professora: o nome completo do aluno (vem do uid: "8F_Ana_Clara" → "Ana Clara"), além do apelido. '' se for igual ao apelido
+const nomeRealProf = (uid, r) => {
+  if (!ehProfessora() || uid === UID_PROFESSORA) return '';
+  const n = nomeVisivel(String(uid || '').split('_').slice(1).join(' ').trim());
+  return n && n !== String(r?.apelido || '').trim() ? n : '';
+};
 const rotuloColega = (uid, r) => (/PROFESSOR/i.test(`${uid} ${r?.apelido || ''}`) ? 'Professora' : nomeVisivel(r?.apelido) || nomeDoUid(uid) || 'Colega') + medalhaPesca(uid);
 // Turma TESTE e alunos de teste nunca aparecem para os alunos (no modo teste, todos são de teste). A professora
 // jogando pelo menu dela (UID_PROFESSORA) aparece; a conta de teste da professora grava em outro nó e não aparece.
@@ -4707,7 +4713,7 @@ function linhaOnline(r) {
   const pet = petAtual(r.pet);
   return `<li><span class="jr-rosto">${rostoPet(pet, r.pet_tinta, r.pet_forma)}</span>
     <span class="jr-online-nome">${nomeT(r.uid, rotuloColega(r.uid, r), r)}</span>
-    <span class="jr-online-det">${esc(nomeVisivel(r.turma))}${petValido(pet) ? ' · ' + esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[pet]) : ''} · ${esc(lugarDe(r))}</span>
+    <span class="jr-online-det">${nomeRealProf(r.uid, r) ? `<b>${esc(nomeRealProf(r.uid, r))}</b> · ` : ''}${esc(nomeVisivel(r.turma))}${petValido(pet) ? ' · ' + esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[pet]) : ''} · ${esc(lugarDe(r))}</span>
     ${botaoOnline(r)}${casaPub(r.uid) || (ehProfessora() && r.uid !== sessao.uid) ? `<button class="jr-online-acao" data-visitar-online="${esc(r.uid)}">🏠 Visitar</button>` : ''}</li>`;
 }
 // na Praça (eu também lá): ⚔️ Desafiar; senão 📨 Chamar pra Praça
@@ -13096,9 +13102,9 @@ function ajustarLutadores() {
     if (src && !caixaDesenho.has(src)) medirDesenho(src).then((r) => { if (r && bt) ajustarLutadores(); });
     return (src && caixaDesenho.get(src)) || padrao;
   };
-  const lutador = (l, forma) => {
+  const lutador = (l, forma, pose = animParadoBt(forma)) => {
     const [qw, qh] = tamanhoQuadro(forma), adulto = ehFormaAdulta(forma);
-    let c = caixa(quadrosDe(forma, animParadoBt(forma))[0], adulto ? { x0: 275 / 1219, x1: 918 / 1219, y0: 0.05 } : { x0: 0.1, x1: 0.9, y0: 0.1 });
+    let c = caixa(quadrosDe(forma, pose)[0], adulto ? { x0: 275 / 1219, x1: 918 / 1219, y0: 0.05 } : { x0: 0.1, x1: 0.9, y0: 0.1 });
     const alto = QUADRO_ALTO[formaDeTamanho(forma)];
     if (alto && temAnim(forma, alto.anim)) {   // 🐘 o topo do quadro alto, na escala do quadro normal (a base é a mesma)
       const ca = caixa(quadrosDe(forma, alto.anim)[alto.q - 1], null);
@@ -13111,7 +13117,7 @@ function ajustarLutadores() {
   // quanto um lutador cabe sozinho: o corpo na metade dele (com margem e o espaço do meio) e o topo do desenho dentro da arena
   const cabe = (p) => Math.min((W / 2 - m - gap / 2) / ((p.c.x1 - p.c.x0) * p.h1 * p.prop), (0.98 * H - p.chao) / (p.h1 * (1 - p.c.y0)));
   const L = [lutador('L', bt.forma), lutador('R', bt.t.pet)];
-  const u = lutador('L', BT_REF_MAIOR), corpo = (p) => p.h1 * sentadoNoQuadro(p.forma);
+  const u = lutador('L', BT_REF_MAIOR, 'parado_lado'), corpo = (p) => p.h1 * sentadoNoQuadro(p.forma);
   const s = Math.min(1, BT_MAIOR * corpo(u) * Math.min(1, cabe(u)) / Math.max(...L.map(corpo)));
   for (const p of L) p.h1 *= s;
   // fator comum: o topo do desenho dentro da arena e os dois corpos lado a lado, com margem e um espaço entre eles
@@ -13219,7 +13225,7 @@ function fecharBatalha(voltarLista = true) {
 }
 
 // sprites: lado L = pet do aluno; R = pet do treinador, espelhado
-function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
+function btTocar(lado, nome, { loop = true, ms = 160, depois, emocao = true } = {}) {
   if (!bt) return;
   clearTimeout(bt.anim[lado]);
   const pet = lado === 'L' ? bt.forma : bt.t.pet;
@@ -13228,9 +13234,10 @@ function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
   const img = $('bt-img' + lado), el = $('bt-' + lado);
   pararSequencia(img);
   img.classList.remove('quadro-alto');   // 🐘 PROMPT-225: fim do ataque do elefante
-  if (!loop && fs.length === 1 && EMOCOES.has(nomeReal)) ms = Math.max(ms, MS_EMOCAO);   // emoção de 1 quadro: 1,5 s
+  if (emocao && !loop && fs.length === 1 && EMOCOES.has(nomeReal)) ms = Math.max(ms, MS_EMOCAO);   // emoção de 1 quadro: 1,5 s
   el.style.transform = lado === 'R' && nomeReal !== 'andar_esquerda' ? 'scaleX(-1)' : '';
   img.classList.toggle('pet-voando', nomeReal === 'voando');
+  img.classList.toggle('bt-galope', nomeReal === 'correndo' && galopaNoDuelo(pet));   // 🦄 PROMPT-226: correndo no lugar, balançando
   let i = 0;
   const passo = () => {
     if (!bt) return;
@@ -13263,10 +13270,12 @@ function somNaSequencia(nome, forma, seq, de, ate, { fade = 200, deFrente = true
 }
 const btSom = (som) => { if (bt) (bt.sons ||= []).push(som); return som; };   // sons da batalha: param ao sair dela
 
-// o morcego espera voando no lugar (PROMPT-162); o unicórnio adulto, parado de lado (PROMPT-225: ele só fica parado ou corre);
-// os outros, andando parado
-const animParadoBt = (forma) => (temAnim(forma, 'voando') ? 'voando' : /^unicornio_adulto/.test(forma || '') && temAnim(forma, 'parado_lado') ? 'parado_lado' : 'andar_direita');
-const MS_PARADO_BT = { voando: 130, parado_lado: 320, andar_direita: 420 };
+// o morcego espera voando no lugar (PROMPT-162); o unicórnio adulto, correndo no lugar (PROMPT-226); os outros, andando parado
+// 🦄 PROMPT-226: no duelo o unicórnio adulto nunca fica parado: corre no lugar (correndo_1 → 4, ~170 ms) virado para o adversário,
+// esperando, entre as rodadas e quando apanha. Só não corre no ataque (chifre brilhando), na vitória (empina) e na derrota.
+const galopaNoDuelo = (forma) => /^unicornio_adulto/.test(forma || '') && temAnim(forma, 'correndo');
+const animParadoBt = (forma) => (temAnim(forma, 'voando') ? 'voando' : galopaNoDuelo(forma) ? 'correndo' : 'andar_direita');
+const MS_PARADO_BT = { voando: 130, correndo: 170, andar_direita: 420 };
 const btParado = (lado) => { if (!bt) return; const a = animParadoBt(btForma(lado)); btTocar(lado, a, { ms: MS_PARADO_BT[a] }); };
 const btForma = (lado) => (lado === 'L' ? bt.forma : bt.t.pet);
 const adultoNaBatalha = () => !!bt && ehFormaAdulta(bt.forma) && temAnim(bt.forma, 'rugido');
@@ -13329,9 +13338,10 @@ function btFogo(de, para, crit, especial) {
 // O lado L olha para a direita (ataque_direita); o R, para a esquerda (ataque), sem espelhar. Os quadros são mais altos (700):
 // a imagem ganha .quadro-alto (mesma escala, alinhada pela base). Resolve no golpe (quadro 5); bt.seqAtaque = o fim do 6º.
 const MS_ATAQUE_ELEFANTE = [260, 260, 180, 180, 300, 450], GOLPE_ELEFANTE = 5;
-const temAtaqueElefante = (forma) => temAnim(forma, 'ataque') && temAnim(forma, 'ataque_direita') && !!QUADRO_ALTO[formaDeTamanho(forma)];
+// 🐘 PROMPT-227: pela forma de base (elefante_adulto_{cor} → elefante_adulto): os quadros do ataque são só os do original
+const temAtaqueElefante = (forma) => { const b = formaDeTamanho(forma); return temAnim(b, 'ataque') && temAnim(b, 'ataque_direita') && !!QUADRO_ALTO[b]; };
 function btAtaqueElefante(de) {
-  const fs = quadrosDe(btForma(de), de === 'L' ? 'ataque_direita' : 'ataque'), img = $('bt-img' + de);
+  const fs = quadrosDe(formaDeTamanho(btForma(de)), de === 'L' ? 'ataque_direita' : 'ataque'), img = $('bt-img' + de);
   clearTimeout(bt.anim[de]);
   pararSequencia(img);
   $('bt-' + de).style.transform = '';
@@ -13362,7 +13372,7 @@ async function btAtaqueFeixe(de, para, crit, especial) {
   const forma = btForma(de), img = $('bt-img' + de);
   clearTimeout(bt.anim[de]);
   $('bt-' + de).style.transform = de === 'R' ? 'scaleX(-1)' : '';
-  img.classList.remove('pet-voando', 'quadro-alto');
+  img.classList.remove('pet-voando', 'quadro-alto', 'bt-galope');
   (bt.seqAtaque ||= {})[de] = tocarSequencia(img, forma, 'ataque_batalha', { deFrente: false });   // o turno espera o fim (btParado)
   let n = 0;
   await btEsperar(msAtePasso(forma, 'ataque_batalha', () => ++n === 2, { deFrente: false }));
@@ -13668,6 +13678,7 @@ async function btFechar() {
       bt.seq = 0;
       btBanner('ATAQUE ESPECIAL!', '#ffd700');
       if (adultoNaBatalha()) { btAbertura(); await btEsperar(1200); }   // adulto: ruge no lugar da cambalhota
+      else if (galopaNoDuelo(bt.forma)) await btEsperar(700);   // 🦄 PROMPT-226: continua correndo (sem a pose da cambalhota)
       else {
         btTocar('L', 'pulo_cambalhota', { loop: false, ms: 90 });
         await btEsperar(Math.max(700, quadrosDe(bt.forma, 'pulo_cambalhota').length * 90 + 120));
@@ -13703,7 +13714,8 @@ async function btFechar() {
       clearTimeout(bt.anim[o]);
       $('bt-' + o).style.transform = o === 'R' ? 'scaleX(-1)' : '';
       tocarSequencia($('bt-img' + o), btForma(o), 'apanhou', { deFrente: false }).then(fim => { if (fim && bt && !bt.fim) btParado(o); });
-    } else if (temAnim(btForma(o), 'bravo')) btTocar(o, 'bravo', { loop: false, ms: 700 });
+    } else if (temAtaqueElefante(btForma(o))) btTocar(o, 'bravo', { loop: false, ms: 400, emocao: false });   // 🐘 PROMPT-228: só o bravo_1, ~0,4 s (o tremor é o do btLevarDano)
+    else if (temAnim(btForma(o), 'bravo') && !galopaNoDuelo(btForma(o))) btTocar(o, 'bravo', { loop: false, ms: 700 });   // 🦄 o unicórnio treme correndo
     await btEsperar(650);
     const seq = bt?.seqAtaque?.[l];   // adulto: termina a sequência do ataque (2ª cuspida e o "ufa") antes de voltar ao normal
     if (seq) { bt.seqAtaque[l] = null; await seq; }
@@ -13722,12 +13734,21 @@ function btFim() {
   const venceu = hp.L > hp.R || (hp.L === hp.R && tempoTot.L <= tempoTot.R);
   const v = venceu ? 'L' : 'R', q = venceu ? 'R' : 'L';
   bt.fim = true;
-  if (v === 'L' && temSequencia(bt.forma, 'vitoria')) {   // dragão adulto: a comemoração `vitoria` e a fala arrogante (PROMPT-65)
+  for (const l of ['L', 'R']) $('bt-img' + l).classList.remove('bt-galope');   // 🦄 PROMPT-226: vitória e derrota sem o balanço da corrida
+  if (galopaNoDuelo(btForma(v)) && temSequencia(btForma(v), 'vitoria')) {   // 🦄 empina 3 vezes (PROMPT-225), dos dois lados
+    const img = $('bt-img' + v);
+    clearTimeout(bt.anim[v]);
+    $('bt-' + v).style.transform = v === 'R' ? 'scaleX(-1)' : '';
+    img.classList.remove('quadro-alto', 'pet-voando');
+    if (btReduz()) { pararSequencia(img); img.src = quadrosSeq(btForma(v), 'vitoria').at(-1); }
+    else { tocarSequencia(img, btForma(v), 'vitoria', { deFrente: false }); btPulinhos(v, 'animado'); }
+    if (v === 'L') falaVitoria(img, bt.pet, $('bt-L'));
+  } else if (v === 'L' && temSequencia(bt.forma, 'vitoria')) {   // dragão adulto: a comemoração `vitoria` e a fala arrogante (PROMPT-65)
     clearTimeout(bt.anim.L);
     $('bt-L').style.transform = '';
     $('bt-imgL').classList.remove('quadro-alto', 'pet-voando');
     if (btReduz()) { pararSequencia($('bt-imgL')); $('bt-imgL').src = quadrosSeq(bt.forma, 'vitoria').at(-1); }
-    else { tocarSequencia($('bt-imgL'), bt.forma, 'vitoria', { deFrente: false }); if (/^unicornio_adulto/.test(bt.forma)) btPulinhos('L', 'animado'); }
+    else tocarSequencia($('bt-imgL'), bt.forma, 'vitoria', { deFrente: false });
     falaVitoria($('bt-imgL'), bt.pet, $('bt-L'));
   } else if (v === 'L' && adultoNaBatalha()) {   // adulto: orgulhoso (ufa, se venceu com pouca vida) e depois o rugido sentado
     btTocar('L', hp.L <= bt.max.L * 0.25 ? 'ufa' : 'orgulhoso', { loop: false, ms: 1000, depois: () => btTocar('L', 'rugido_sentado', { ms: 600 }) });
@@ -14622,13 +14643,20 @@ function comemorarJogador() {
 }
 
 // Dragão adulto no duelo do ginásio (treinadores, líder, revanche): acertou = cospe fogo no adversário (sequência ataque_batalha)
+// 🐘 PROMPT-228: o elefante adulto faz os 6 quadros do ataque (ataque_direita: o adversário está à direita); o golpe é no 5º
 function ataqueArena() {
   if (!pgPet || semAdversario() || !temSequencia(pgPet.pet, 'ataque_batalha')) return false;
   const forma = pgPet.pet;
   pgPet.sequencia('ataque_batalha');
   if (!temAnim(forma, 'ataque_fogo')) {   // 🦇 o morcego: bate as asas rápido e o adversário treme, sem fogo
-    if (!semMovimento()) setTimeout(() => { if (!$('pergunta').hidden) $('perg-adv').animate([{ transform: 'translateX(-50%)' }, { transform: 'translateX(calc(-50% - 6px))' }, { transform: 'translateX(calc(-50% + 6px))' }, { transform: 'translateX(-50%)' }],
-      { duration: 320, easing: 'ease-in-out' }); }, 400);
+    const elefante = temAtaqueElefante(forma);
+    const golpe = elefante ? msAtePasso(forma, 'ataque_batalha', ([, q]) => q === GOLPE_ELEFANTE) : 400;
+    setTimeout(() => {
+      if ($('pergunta').hidden) return;
+      if (elefante) somAtaque(estado.pets.ativo);
+      if (!semMovimento()) $('perg-adv').animate([{ transform: 'translateX(-50%)' }, { transform: 'translateX(calc(-50% - 6px))' }, { transform: 'translateX(calc(-50% + 6px))' }, { transform: 'translateX(-50%)' }],
+        { duration: 320, easing: 'ease-in-out' });
+    }, golpe);
     return true;
   }
   pgSom?.parar(0); pgSom = somNaSequencia('dragao_fogo', forma, 'ataque_batalha', 'ataque_fogo', 'ufa', { fade: 200 });
@@ -14743,6 +14771,12 @@ function reagirArena(certo) {
   if (pgPet) {
     if (certo) pgPet.tocar(temAnim(pgPet.pet, 'animado') && Math.random() < 0.5 ? 'animado' : 'feliz');
     else if (pgPet.sequencia('apanhou')) tocarArquivo('dragao_bufando');   // dragão adulto: bravo e bufando
+    else if (temAtaqueElefante(pgPet.pet)) {   // 🐘 PROMPT-228: só o bravo_1, com um tremor rápido (~0,4 s), e volta ao normal
+      const p = pgPet;
+      p.tocar('bravo');
+      if (!semMovimento()) p.img.animate([{ translate: '0 0' }, { translate: '-5px 0' }, { translate: '5px 0' }, { translate: '-3px 0' }, { translate: '0 0' }], { duration: 400, easing: 'ease-in-out' });
+      setTimeout(() => { if (pgPet === p && p.anim === 'bravo') p.tocar(p.parado); }, 400);
+    }
     else if (temAnim(pgPet.pet, 'confuso')) pgPet.tocar('confuso');
     else { pgPet.tocar('triste_fome'); setTimeout(() => { if (pgPet?.anim === 'triste_fome') pgPet.tocar(pgPet.parado); }, 1400); }
   }

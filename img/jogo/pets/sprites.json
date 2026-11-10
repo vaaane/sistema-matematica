@@ -11,7 +11,7 @@
  "quadro_por_pet": {
   "tigre_adulto": { "tamanho_quadro": [1219, 566], "sentado_altura": 433 },
   "unicornio_adulto": { "tamanho_quadro": [1219, 566], "sentado_altura": 502 },
-  "elefante_adulto": { "tamanho_quadro": [1219, 566], "sentado_altura": 538 },
+  "elefante_adulto": { "tamanho_quadro": [1219, 566], "sentado_altura": 538, "anims_altas": { "ataque": 700, "ataque_direita": 700 } },
   "morcego": { "tamanho_quadro": [1400, 704] },
   "morcego_marrom": { "tamanho_quadro": [1400, 704] },
   "morcego_cinza": { "tamanho_quadro": [1400, 704] },
@@ -182,10 +182,7 @@
     "pets/elefante_adulto/direita/dormindo_2.webp"
    ],
    "bravo": [
-    "pets/elefante_adulto/bravo_1.webp",
-    "pets/elefante_adulto/direita/bravo_2.webp",
-    "pets/elefante_adulto/bravo_3.webp",
-    "pets/elefante_adulto/direita/bravo_4.webp"
+    "pets/elefante_adulto/bravo_1.webp"
    ],
    "comendo": [
     "pets/elefante_adulto/direita/comendo_1.webp",
@@ -3031,18 +3028,12 @@
     ["feliz", 2, 1100]
    ],
    "ataque_batalha": [
-    ["bravo", 1, 300],
-    ["bravo", 2, 250],
-    ["bravo", 3, 250],
-    ["bravo", 4, 250]
-   ],
-   "perdeu": [
-    ["bravo", 1, 600],
-    ["bravo", 2, 400],
-    ["bravo", 3, 400],
-    ["bravo", 4, 1200],
-    ["bravo", 3, 400],
-    ["bravo", 4, 1500]
+    ["ataque_direita", 1, 260],
+    ["ataque_direita", 2, 260],
+    ["ataque_direita", 3, 180],
+    ["ataque_direita", 4, 180],
+    ["ataque_direita", 5, 300],
+    ["ataque_direita", 6, 450]
    ]
   },
   "unicornio_adulto": {

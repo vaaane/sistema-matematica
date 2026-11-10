@@ -5354,3 +5354,10 @@ html.jr-deitado .jr-erro-pulou-balao { font-size: calc(12px * var(--letra, 1)); 
 /* ✨ efeitos na aba Visual do Meu Pet */
 .mp-efx-amostra { --e: 1; display: inline-flex; gap: 2px; align-items: center; margin-right: 2px; }
 .mp-chip.trancada .mp-efx-amostra { filter: grayscale(.6); }
+/* ── PROMPT-226: 🦄 no duelo o unicórnio adulto corre no lugar: só um balanço leve (3 px) para cima e para baixo ── */
+#jr-app .bt-corpo img.bt-galope { animation: bt-galope .34s ease-in-out infinite alternate; }
+@keyframes bt-galope { from { translate: 0 0; } to { translate: 0 -3px; } }
+@media (prefers-reduced-motion: reduce) { #jr-app .bt-corpo img.bt-galope { animation: none; } }
+/* ── PROMPT-228: 🐘 quadro alto (o ataque do elefante adulto, 700 em vez de 566) no ginásio e na revisão: a imagem tem largura
+   automática, então fica mais estreita; o scale (origem no pé, 50% 100%) volta à escala das outras poses, alinhada pela base ── */
+#jr-app img.jr-arena-pet.quadro-alto { scale: calc(700 / 566); }

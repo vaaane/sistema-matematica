@@ -15,7 +15,7 @@ let SPR = null;
 export async function carregarSprites() {
   if (!SPR) {
     const [j, cores] = await Promise.all([
-      fetch(BASE + 'pets/sprites.json').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),
+      fetch(BASE + 'pets/sprites.json?v=228').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228)
       fetch(BASE + 'pets/sprites-pets-cores.json').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
     ]);
     for (const [f, a] of Object.entries(cores?.pets || {})) if ((petDaCor(f) || adultoDaCor(f)) && !j.pets[f]) j.pets[f] = a;
@@ -162,8 +162,12 @@ export const emSequencia = (img) => !!img?.dataset?.seq;
 export function pararSequencia(img) {
   const s = SEQ.get(img);
   if (!s) return;
-  SEQ.delete(img); delete img.dataset.seq; clearTimeout(s.t); s.ok(false);
+  SEQ.delete(img); delete img.dataset.seq; clearTimeout(s.t); img.classList.remove('quadro-alto'); s.ok(false);
 }
+// 🐘 PROMPT-228: animações com quadro mais alto que o do pet (sprites.json → quadro_por_pet[forma].anims_altas: { anim: altura }),
+// como o ataque do elefante adulto (700 em vez de 566). Na sequência a imagem ganha .quadro-alto (o CSS de cada tela mantém a escala
+// e alinha pela base); a forma com cor usa a do pet de base.
+const animAlta = (forma, anim) => !!(SPR?.quadro_por_pet?.[forma]?.anims_altas || SPR?.quadro_por_pet?.[adultoDaCor(forma)]?.anims_altas)?.[anim];
 // Passos que vão ser tocados: os do sprites.json e, se o pet estava de frente e a sequência começa/termina de lado
 // (parado_lado, …), uma transição de 300 ms sentado de lado. Nunca a pose de frente no meio (o sentado_girando do adulto é
 // 1 quadro só: a pose de frente). tocarSequencia e msAtePasso usam esta mesma lista, então o tempo do fogo bate.
@@ -187,10 +191,11 @@ export function tocarSequencia(img, forma, nome, { deFrente = true } = {}) {
     let i = 0;
     const passo = () => {
       if (SEQ.get(img) !== s) return;
-      if (i >= passos.length) { SEQ.delete(img); delete img.dataset.seq; ok(true); return; }
+      if (i >= passos.length) { SEQ.delete(img); delete img.dataset.seq; img.classList.remove('quadro-alto'); ok(true); return; }
       const [anim, q, ms] = passos[i++], fs = quadrosDe(forma, anim);
       const src = fs[Math.min(Math.max(1, q), fs.length) - 1];
       if (src && img.getAttribute('src') !== src) img.src = src;   // (a batalha troca o src sem dataset)
+      img.classList.toggle('quadro-alto', animAlta(forma, anim));   // 🐘 PROMPT-228
       if (src) img.dataset.src = src;
       s.t = setTimeout(passo, ms);
     };
