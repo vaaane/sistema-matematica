@@ -8692,15 +8692,14 @@ function ligarEdicaoPraca() {
 
 // ============================================================
 //  🖼️ EXPOSIÇÃO VIRTUAL (PROMPT-EXPOSICAO-1) — dados/jogo/exposicao.json. Pavilhão na Praça → saguão (2208 × 768, 16 portas, câmera horizontal)
-//  → salas (2176 × 768, câmera na horizontal). Pavilhão e saguão: todos; cada sala: o grupo dela e a professora, ou todos
-//  (nas salas com grupo) com exposicao_config/visitas_abertas = true (fase pública; o botão vem na parte 2). Firebase (modo
-//  teste: *_teste): exposicao_config { visitas_abertas } e exposicao_salas/{n} { tema, musica, nome, itens (parte 2) };
+//  → salas (2176 × 768, câmera na horizontal). Pavilhão, saguão e salas com grupo: todos (os de fora do grupo
+//  só veem fotos e textos aprovados; decorar: o grupo e a professora). Firebase (modo
+//  teste: *_teste): exposicao_salas/{n} { tema, musica, nome, itens (parte 2) };
 //  sem o nó: tema_padrao, sem música, sem nome.
 //  Presença: o online.js de sempre, com local 'exposicao' e mapa 'saguao' | 'sala-{n}' (cada um vê só quem está no mesmo).
 //  O grupo de cada sala vem do JSON (parte 2: de exposicao_salas, com prioridade). Tudo falha em silêncio.
 // ============================================================
 let EXPO = null;
-let visitasAbertas = false;       // exposicao_config/visitas_abertas === true: todos entram nas salas com grupo
 const expoSalas = {};             // n → { tema, musica, nome } lidos ao vivo
 let expoOuvindo = false, pararOuvirExpo = () => {};
 let expoMusicaMudo = false;       // 🔈 silenciar só a música da sala
@@ -8714,7 +8713,7 @@ const privilegioExpo = () => ehProfessora() || (teste && !expoSoAluno);   // pro
 const expoGrupos = {};            // n → { turma, membros } lidos ao vivo (null: o nó não existe)
 const grupoSala = (n) => { const g = expoGrupos[n] !== undefined && expoGrupos[n] !== null ? expoGrupos[n] : EXPO?.salas?.[n]; return g?.membros?.length ? g : null; };
 const souDaSala = (n) => { const g = grupoSala(n); return !!g && g.turma === sessao.turma && (g.membros || []).includes(sessao.nome); };
-const podeEntrarSala = (n) => !!grupoSala(n) && (privilegioExpo() || souDaSala(n) || visitasAbertas);   // sala sem grupo: "Em breve"
+const podeEntrarSala = (n) => !!grupoSala(n);   // todos entram em todas as salas com grupo (sem grupo: "Em breve"); os de fora só veem o aprovado (visivelExpo)
 const podeDecorar = (n) => !!grupoSala(n) && (privilegioExpo() || souDaSala(n));   // ✏️ Decorar: o grupo e a professora
 const estadoSala = (n) => ({ tema: EXPO?.tema_padrao, musica: null, nome: null, ...(expoSalas[n] || {}) });
 // ❤️ curtidas (PROMPT-182): exposicao_curtidas/{n}/{uid} = true, uma por aluno e sala; a própria sala não; professora e contas
@@ -8745,11 +8744,6 @@ function iniciarExposicao(j) {
       }
       if (ehSaguao()) desenharPlacasExpo();
     }, (e) => console.warn('[jogo-revisao] exposicao_curtidas indisponível', e?.code || e));
-    onValue(ref(db, `${noExpo('exposicao_config')}/visitas_abertas`), (s) => {
-      visitasAbertas = s.exists() && s.val() === true;
-      if (ehSaguao()) desenharPlacasExpo();   // ao vivo: os 🔒 das portas (quem já está numa sala continua nela)
-    },
-      (e) => console.warn('[jogo-revisao] exposicao_config indisponível', e?.code || e));
   } catch (e) { console.warn('[jogo-revisao] exposicao_config indisponível', e?.code || e); }
 }
 
@@ -8852,7 +8846,7 @@ async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (ap
   $('cena-palco').style.visibility = '';
   atualizarBotaoPet();
   entrarNoMapaOnline('saguao', 'exposicao');
-  pararExpo();   // no saguão só vale visitas_abertas (ouvida desde o começo)
+  pararExpo();
   if (privilegioExpo()) ouvirPendentesExpo();   // ⏳ {n} para aprovar
 }
 // professora e modo teste, no saguão: quantos itens e nomes esperam aprovação (todas as salas, sem as fotos)

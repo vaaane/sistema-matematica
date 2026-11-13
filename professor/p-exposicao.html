@@ -111,16 +111,7 @@
           <div id="pend-casas"><div class="vazio">Carregando…</div></div></section>
       </div>
       <div class="painel" id="aba-salas" hidden>
-      <div class="cartao">
-        <h3>👁️ Visitas</h3>
-        <div class="visitas">
-          <span>Visitas abertas: <span class="estado" id="vis-estado">…</span></span>
-          <button class="btn-pri" id="vis-botao" disabled>…</button>
-          <span id="vis-conf" hidden><b>Ligar para todos?</b> Todos os alunos vão entrar em todas as salas com grupo.
-            <button class="btn-pri" id="vis-sim">Sim, ligar</button> <button class="btn-sec" id="vis-nao">Cancelar</button></span>
-        </div>
-        <p class="muted" style="font-size:13px;margin:8px 0 0">Desligado (padrão): cada sala só abre para os integrantes do grupo e para você. Ligado: fase pública.</p>
-      </div>
+      <p class="muted" style="font-size:13px;margin:0 0 12px">👁️ Todos os alunos entram em todas as salas com grupo. Fotos e textos só aparecem para quem é de fora do grupo depois que você aprova.</p>
       <div class="filtros">
         <button class="btn-sec" id="btn-atualizar">↻ Atualizar</button>
         <button class="btn-pri" id="btn-importar" hidden>📥 Importar grupos do JSON</button>
@@ -265,12 +256,6 @@ async function migrarStatus() {
 }
 
 function render() {
-  const on = config.visitas_abertas === true;
-  $("vis-estado").textContent = on ? "ligadas" : "desligadas";
-  $("vis-estado").classList.toggle("on", on);
-  $("vis-botao").textContent = on ? "Desligar visitas" : "Ligar visitas…";
-  $("vis-botao").disabled = false;
-  $("vis-conf").hidden = true;
   $("btn-importar").hidden = portas().some(n => salas[n]?.grupo) || !Object.keys(EXPO?.salas || {}).length;
   // quem está em qual sala (para o aviso de aluno repetido)
   const ondeEsta = {};
@@ -434,15 +419,6 @@ $("modo-teste").addEventListener("change", (e) => {
   carregar();
 });
 $("btn-atualizar").addEventListener("click", () => render());
-$("vis-botao").addEventListener("click", async () => {
-  if (config.visitas_abertas === true) {
-    if (await gravar(set(ref(db, no("exposicao_config") + "/visitas_abertas"), false), "Visitas desligadas.")) { config.visitas_abertas = false; render(); }
-  } else $("vis-conf").hidden = false;
-});
-$("vis-nao").addEventListener("click", () => { $("vis-conf").hidden = true; });
-$("vis-sim").addEventListener("click", async () => {
-  if (await gravar(set(ref(db, no("exposicao_config") + "/visitas_abertas"), true), "Visitas ligadas: todos entram nas salas com grupo.")) { config.visitas_abertas = true; render(); }
-});
 $("btn-importar").addEventListener("click", async () => {
   const patch = {};
   for (const [n, g] of Object.entries(EXPO.salas || {})) patch[`${n}/grupo`] = { turma: g.turma, membros: g.membros };
