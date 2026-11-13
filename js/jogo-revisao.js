@@ -5898,7 +5898,7 @@ let perguntaAberta = false;
 const focoAtivo = () => camFoco && performance.now() < camFoco.ate && cena?.tipo === 'mapa';
 const focoX = () => (focoAtivo() ? camFoco.x : jog.x);
 const focoY = () => (focoAtivo() ? camFoco.y : jog.y);
-// largura lógica da cena: 1376, ou mais na sala da Exposição (cena.w = 2176)
+// largura lógica da cena: 1376, ou mais na Exposição (cena.w: sala 2176, saguão 2208)
 const larguraCena = () => Number(cena?.w) || W;
 function ajustarCamera() {
   const vp = $('cena-vp');
@@ -8691,7 +8691,7 @@ function ligarEdicaoPraca() {
 }
 
 // ============================================================
-//  🖼️ EXPOSIÇÃO VIRTUAL (PROMPT-EXPOSICAO-1) — dados/jogo/exposicao.json. Pavilhão na Praça → saguão (1376 × 768, 10 portas)
+//  🖼️ EXPOSIÇÃO VIRTUAL (PROMPT-EXPOSICAO-1) — dados/jogo/exposicao.json. Pavilhão na Praça → saguão (2208 × 768, 16 portas, câmera horizontal)
 //  → salas (2176 × 768, câmera na horizontal). Pavilhão e saguão: todos; cada sala: o grupo dela e a professora, ou todos
 //  (nas salas com grupo) com exposicao_config/visitas_abertas = true (fase pública; o botão vem na parte 2). Firebase (modo
 //  teste: *_teste): exposicao_config { visitas_abertas } e exposicao_salas/{n} { tema, musica, nome, itens (parte 2) };
@@ -8831,12 +8831,14 @@ function saidaFaixa(f, entrada, naTrilha) {
 }
 async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (aparece na porta dela)
   if (!EXPO) return;
-  const S = EXPO.saguao;
+  const S = EXPO.saguao, LW = Number(S.tamanho?.w) || W;   // o saguão comprido (PROMPT-EXPOSICAO-16): câmera para os lados, como nas salas
   prepararCenaExpo('🖼️ Exposição', '⟵ Praça');
-  const [grade] = await Promise.all([carregarGrade(S.trilha).catch(() => gradeDeRetangulos([{ x0: 0, y0: 280, x1: W, y1: H }])), trocarFundo(`${IMG}/${S.imagem}`)]);
+  const [grade] = await Promise.all([
+    carregarGrade(S.trilha, Math.round(LW / CEL), GH).catch(() => { const g = new Uint8Array(Math.round(LW / CEL) * GH); g.gw = Math.round(LW / CEL); g.gh = GH; for (let cy = Math.floor(280 / CEL); cy < GH; cy++) g.fill(1, cy * g.gw, (cy + 1) * g.gw); return g; }),
+    trocarFundo(`${IMG}/${S.imagem}`, LW)]);
   const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y), grade);
   const sd = saidaFaixa(S.saida_praca, S.entrada, naTrilha);
-  cena = { tipo: 'mapa', n: 'saguao', salao: true, alturaPersonagem: Number(S.altura_personagem) || 120, cfg: { entrada: S.entrada, saidas: [sd.cfg] }, grade, portas: {}, naTrilha, saidas: [sd.saida] };
+  cena = { tipo: 'mapa', n: 'saguao', salao: true, w: LW, alturaPersonagem: Number(S.altura_personagem) || 120, cfg: { entrada: S.entrada, saidas: [sd.cfg] }, grade, portas: {}, naTrilha, saidas: [sd.saida] };
   cena.expoPortas = (S.portas || []).map(p => ({ ...p, trilha: naTrilha(...p.ponto) }));
   desenharPlacasExpo();
   destinoEspecial = null;

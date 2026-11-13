@@ -1,23 +1,30 @@
 {
-  "_nota": "Exposição Virtual (PROMPT-EXPOSICAO-1). Saguão: lógico 1376×768. Salas: lógico 2176×768 (câmera horizontal). Coordenadas em px lógicos. altura_personagem: altura do personagem no saguão e nas salas (como nos salões: laboratório, loja).",
+  "_nota": "Exposição Virtual (PROMPT-EXPOSICAO-1). Saguão: lógico 2208×768 (câmera horizontal). Salas: lógico 2176×768 (câmera horizontal). Coordenadas em px lógicos. altura_personagem: altura do personagem no saguão e nas salas (como nos salões: laboratório, loja).",
   "pavilhao": { "imagem": "praca/pavilhao-exposicao.webp", "x": 470, "y": 592, "largura": 230,
                 "bloqueio": { "x": [360, 580], "y": [500, 592] }, "ponto": [470, 606], "placa": [470, 494] },
   "saguao": {
     "imagem": "exposicao/saguao.webp", "trilha": "trilha-exposicao-saguao.png", "altura_personagem": 120,
-    "entrada": [690, 740], "saida_praca": { "y_min": 752, "x": [575, 805] },
+    "tamanho": { "w": 2208, "h": 768 },
+    "entrada": [1108, 740], "saida_praca": { "y_min": 752, "x": [992, 1220] },
     "portas": [
       { "n": 1,  "placa": [62, 318],   "ponto": [120, 540] },
       { "n": 2,  "placa": [175, 205],  "ponto": [210, 425] },
       { "n": 3,  "placa": [258, 118],  "ponto": [285, 310] },
-      { "n": 4,  "placa": [395, 80],   "ponto": [397, 262] },
-      { "n": 5,  "placa": [520, 80],   "ponto": [522, 262] },
-      { "n": 6,  "placa": [856, 80],   "ponto": [855, 262] },
-      { "n": 7,  "placa": [982, 80],   "ponto": [980, 262] },
-      { "n": 8,  "placa": [1118, 120], "ponto": [1085, 290] },
-      { "n": 9,  "placa": [1200, 203], "ponto": [1160, 400] },
-      { "n": 10, "placa": [1315, 318], "ponto": [1240, 520] }
+      { "n": 4,  "placa": [403, 80],   "ponto": [403, 262] },
+      { "n": 5,  "placa": [534, 80],   "ponto": [534, 262] },
+      { "n": 6,  "placa": [665, 80],   "ponto": [665, 262] },
+      { "n": 7,  "placa": [796, 80],   "ponto": [796, 262] },
+      { "n": 8,  "placa": [927, 80],   "ponto": [927, 262] },
+      { "n": 9,  "placa": [1279, 80],  "ponto": [1279, 262] },
+      { "n": 10, "placa": [1410, 80],  "ponto": [1410, 262] },
+      { "n": 11, "placa": [1541, 80],  "ponto": [1541, 262] },
+      { "n": 12, "placa": [1672, 80],  "ponto": [1672, 262] },
+      { "n": 13, "placa": [1803, 80],  "ponto": [1803, 262] },
+      { "n": 14, "placa": [1949, 120], "ponto": [1916, 290] },
+      { "n": 15, "placa": [2031, 203], "ponto": [1991, 400] },
+      { "n": 16, "placa": [2146, 318], "ponto": [2071, 520] }
     ],
-    "painel_central": { "x": [605, 770], "y": [55, 205] }
+    "painel_central": { "x": [1020, 1185], "y": [55, 205] }
   },
   "sala": {
     "tamanho": { "w": 2176, "h": 768 }, "trilha": "trilha-exposicao-sala.png", "altura_personagem": 120,
