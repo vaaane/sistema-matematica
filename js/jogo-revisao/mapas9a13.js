@@ -540,3 +540,337 @@ const M13 = {
 };
 
 export const MAPAS_9_13 = { 9: M9, 10: M10, 11: M11, 12: M12, 13: M13 };
+
+// ===================== ⭐ GINÁSIO DIFÍCIL (PROMPT-230) =====================
+// Faixa difícil (ver mapas1a4.js). Mapa 9: x dos dois lados, parênteses, decimais e respostas negativas; montar a equação
+// com um passo a mais. Mapa 10: regra de três com decimais, inversa sem ser "o dobro" e composta.
+const sx = (n) => (n < 0 ? `− ${num(-n)}` : `+ ${num(n)}`);   // "+ 5" / "− 5" depois de um termo
+const kx = (k) => (k === 1 ? 'x' : `${k}x`);
+function eqD(tipo) {
+  return () => {
+    for (;;) {
+      let x, e, cand, ex;
+      if (tipo === 'neg') {
+        const a = int(2, 9), b = int(1, 20); x = -int(1, 15); const c = a * x + b;
+        e = `${a}x + ${b} = ${num(c)}`; cand = [-x, (c + b) / a, c - b];
+        ex = `Passe o ${b} subtraindo: ${a}x = ${num(c)} − ${b} = ${num(c - b)}; Divida: x = ${num(c - b)} ÷ ${a} = ${num(x)}`;
+      } else if (tipo === 'dec') {
+        const a = pick([2, 4, 5]), b = int(1, 9) + 0.5; x = int(1, 12); const c = arred(a * x + b);
+        e = `${a}x + ${num(b)} = ${num(c)}`; cand = [(c + b) / a, c - b, x + 0.5];
+        ex = `Passe o ${num(b)} subtraindo: ${a}x = ${num(c)} − ${num(b)} = ${num(c - b)}; Divida: x = ${num(c - b)} ÷ ${a} = ${x}`;
+      } else if (tipo === 'frac') {
+        const a = int(2, 6), b = int(2, 15); x = a * int(2, 9); const c = x / a + b;
+        e = `x ÷ ${a} + ${b} = ${c}`; cand = [(c - b) / a, c * a - b, (c + b) * a];
+        ex = `Passe o ${b} subtraindo: x ÷ ${a} = ${c} − ${b} = ${c - b}; O ${a} está dividindo: passa multiplicando. x = ${c - b} × ${a} = ${x}`;
+      } else if (tipo === 'dois') {
+        const a = int(5, 12), c = int(2, a - 1), b = int(1, 20); x = int(-9, 15); if (!x) continue;
+        const d = a * x - b - c * x;
+        e = `${a}x − ${b} = ${kx(c)} ${sx(d)}`; cand = [(d + b) / (a + c), d + b, -x, x + 1];
+        ex = `x de um lado, números do outro: ${a}x − ${kx(c)} = ${num(d)} + ${b} → ${kx(a - c)} = ${num(d + b)} → x = ${num(d + b)} ÷ ${a - c} = ${num(x)}`;
+      } else if (tipo === 'paren') {
+        const a = int(2, 6), b = int(1, 9), c = int(1, 20); x = int(1, 15); const d = a * (x - b) + c;
+        e = `${a}(x − ${b}) + ${c} = ${num(d)}`; cand = [(d - c) / a - b, (d - c) / a, d / a + b - c];
+        ex = `Passe o ${c} subtraindo: ${a}(x − ${b}) = ${num(d - c)}; Divida por ${a}: x − ${b} = ${num((d - c) / a)}; x = ${num((d - c) / a)} + ${b} = ${x}`;
+      } else {   // 'ambos': a(x + b) = c(x − d)
+        const a = int(2, 4), c = a + int(1, 3), b = int(1, 6); x = int(2, 15);
+        if ((a * (x + b)) % c) continue;
+        const d = x - a * (x + b) / c; if (d <= 0) continue;
+        e = `${a}(x + ${b}) = ${c}(x − ${d})`; cand = [x + 1, -x, (a * b + c * d) / (c + a)];
+        ex = `Distribua: ${a}x + ${a * b} = ${c}x − ${c * d}; x de um lado: ${a * b} + ${c * d} = ${c}x − ${a}x → ${a * b + c * d} = ${kx(c - a)}; x = ${a * b + c * d} ÷ ${c - a} = ${x}`;
+      }
+      return Q(e, eqX(x), erradasNum(x, cand, { fmt: eqX, neg: true, inteiro: true }), X(ex));
+    }
+  };
+}
+function consecutivos() {
+  const x = int(5, 40), S = 3 * x + 3;
+  return Q(`A soma de três números consecutivos é ${S}. Qual é o maior deles?`, num(x + 2), erradasNum(x + 2, [x, x + 1, S / 3 + 2, x + 3]),
+    X(`x + (x + 1) + (x + 2) = ${S} → 3x + 3 = ${S} → 3x = ${S - 3} → x = ${x}; Os números: ${x}, ${x + 1} e ${x + 2}. O maior é ${x + 2}`));
+}
+function idades() {
+  const x = int(3, 15), m = int(2, 4), k = int(2, 8), S = x + k + m * x + k, nm = ['', '', 'dobro', 'triplo', 'quádruplo'][m];
+  return Q(`O pai tem o ${nm} da idade de Ana. Daqui a ${k} anos, a soma das idades dos dois será ${S}. Quantos anos Ana tem hoje?`, `${x} anos`,
+    erradasNum(x, [x + k, m * x, (S - k) / (m + 1), S / (m + 1)], { fmt: v => `${num(v)} anos` }),
+    X(`Hoje: Ana x, pai ${m}x; Daqui a ${k} anos: (x + ${k}) + (${m}x + ${k}) = ${S}; ${m + 1}x + ${2 * k} = ${S} → ${m + 1}x = ${S - 2 * k} → x = ${x}`));
+}
+const FRD = [
+  (k, t) => { const T = 3 * t - k; return [`"O triplo de um número menos ${k} é igual a ${T}"`, `3x − ${k} = ${T}`, [`3(x − ${k}) = ${T}`, `3x + ${k} = ${T}`, `x³ − ${k} = ${T}`]]; },
+  (k, t) => { const T = t + k; return [`"A metade de um número mais ${k} é igual a ${T}"`, `x ÷ 2 + ${k} = ${T}`, [`(x + ${k}) ÷ 2 = ${T}`, `2x + ${k} = ${T}`, `x ÷ 2 = ${T} + ${k}`]]; },
+  (k, t) => { const T = 2 * (k + t); return [`"O dobro da soma de um número com ${k} é igual a ${T}"`, `2(x + ${k}) = ${T}`, [`2x + ${k} = ${T}`, `x + 2 + ${k} = ${T}`, `2x + 2 = ${T}`]]; },   // T: dá um x inteiro e positivo
+  (k, t) => [`"Um número somado ao seu dobro é igual a ${3 * t}"`, `x + 2x = ${3 * t}`, [`x + 2 = ${3 * t}`, `2x = ${3 * t}`, `x² = ${3 * t}`]],
+  (k, t) => [`"O quádruplo de um número é igual a ele mais ${3 * t}"`, `4x = x + ${3 * t}`, [`4x + x = ${3 * t}`, `4 + x = ${3 * t}`, `4x = ${3 * t}`]],
+];
+const HISTD = [
+  (k, t) => [`Comprei ${k} cadernos de x reais e paguei com R$ 50. Recebi R$ ${t} de troco.`, `50 − ${k}x = ${t}`, [`${k}x − 50 = ${t}`, `50 − x = ${t}`, `${k}x = ${t} − 50`]],
+  (k, t) => [`Pedro tem x anos e a irmã tem ${k} anos a mais que ele. Juntos somam ${2 * t + k} anos.`, `x + (x + ${k}) = ${2 * t + k}`, [`x + ${k} = ${2 * t + k}`, `x + ${k}x = ${2 * t + k}`, `2x = ${2 * t + k} + ${k}`]],
+  (k, t) => [`Um retângulo tem lados x e x + ${k}. O perímetro é ${4 * t + 2 * k}.`, `2x + 2(x + ${k}) = ${4 * t + 2 * k}`, [`x + (x + ${k}) = ${4 * t + 2 * k}`, `x(x + ${k}) = ${4 * t + 2 * k}`, `4x + ${k} = ${4 * t + 2 * k}`]],
+  (k, t) => [`Tinha x reais, gastei a terça parte e sobraram ${2 * t}.`, `x − x ÷ 3 = ${2 * t}`, [`x ÷ 3 = ${2 * t}`, `x − 3 = ${2 * t}`, `3x − x = ${2 * t}`]],
+];
+const BALD = [
+  (k, t, b) => [`Numa balança, ${k} caixas de peso x e mais ${b} kg equilibram 1 caixa e ${t + b} kg.`, `${k}x + ${b} = x + ${t + b}`, [`${k}x + ${b} = ${t + b}`, `${k + 1}x + ${b} = ${t + b}`, `${k}x = x + ${t + b} + ${b}`]],
+  (k, t) => [`Numa balança, ${k} caixas de peso x equilibram 1 caixa e ${t} kg.`, `${k}x = x + ${t}`, [`${k}x = ${t}`, `${k}x + x = ${t}`, `${k} + x = ${t}`]],
+];
+const EQXD = X('Troque as palavras por sinais e monte cada parte: "o dobro da soma" é 2(x + …); "a terça parte" é x ÷ 3; "a mais" soma; o que está nos dois pratos da balança fica nos dois lados do =.');
+const deListaD = lista => () => { const k = int(2, 6), t = int(3, 20), b = int(1, 9); const [e, r, x] = pick(lista)(k, t, b); return Q(comPergunta(e), r, x, EQXD); };
+const M9D = {
+  A: {
+    treinador1: [eqD('neg'), eqD('dec'), eqD('frac')],
+    treinador2: [eqD('dois'), eqD('dois'), eqD('neg')],
+    treinador3: [eqD('paren'), eqD('dec'), eqD('dois')],
+    lider: [eqD('ambos'), eqD('paren'), consecutivos, eqD('frac'), idades],
+  },
+  B: {
+    treinador1: [deListaD(FRD), deListaD(FRD), deListaD(FRD)],
+    treinador2: [deListaD(HISTD), deListaD(HISTD), deListaD(HISTD)],
+    treinador3: [deListaD(BALD), deListaD(BALD), deListaD(FRD)],
+    lider: [deListaD(FRD), deListaD(HISTD), deListaD(BALD), eqRev[1], eqRev[2]],
+  },
+};
+// mapa 10
+function proporcaoD() {
+  const q1 = pick([0.5, 1.5, 2.5]), u = 2 * int(3, 12), T1 = arred(q1 * u), q2 = int(3, 9), v = q2 * u;
+  return Q(`${num(q1)} kg de queijo custam ${reais(T1)}. Quanto custam ${q2} kg?`, reais(v), erradasNum(v, [T1 * q2, T1 + q2, v + u, T1 * q2 / 2], { fmt: reais, inteiro: false }),
+    X(`Preço de 1 kg: ${reais(T1)} ÷ ${num(q1)} = ${reais(u)}; ${q2} kg: ${q2} × ${u} = ${reais(v)}`));
+}
+function receitaD() {
+  const a = int(2, 6), per = 25 * int(1, 6), g = per * a, b = int(3, 12); if (b === a) return receitaD();
+  const v = per * b;
+  return Q(`Uma receita para ${a} pessoas usa ${g} g de farinha. Quanto de farinha para ${b} pessoas?`, `${v} g`, erradasNum(v, [g * b, g + b, g / b * a], { fmt: x => `${num(x)} g` }),
+    X(`Para 1 pessoa: ${g} ÷ ${a} = ${per} g; Para ${b} pessoas: ${b} × ${per} = ${v} g`));
+}
+function inversaD() {
+  for (;;) {
+    const p = int(2, 6), p2 = int(3, 12), v = int(2, 12), W = p2 * v;
+    if (p2 === p || p2 === 2 * p || W % p) continue;
+    const d = W / p;
+    return Q(`${p} pedreiros levam ${d} dias para fazer um muro. Quantos dias ${p2} pedreiros levam?`, `${v} dias`, erradasNum(v, [d * p2 / p, d + p2 - p, d - (p2 - p)], { fmt: x => `${num(x)} dias` }),
+      X(`Inversa: mais pedreiros, menos dias; Trabalho todo: ${p} × ${d} = ${W} dias de 1 pedreiro; ${W} ÷ ${p2} = ${v} dias`));
+  }
+}
+function velocidadeInvD() {
+  for (;;) {
+    const s1 = 10 * int(4, 12), h1 = int(2, 6), dist = s1 * h1, s2 = 10 * int(4, 12), v = dist / s2;
+    if (s2 === s1 || Math.round(v * 10) !== v * 10 || v * 10 % 5) continue;   // tempo inteiro ou ",5"
+    return Q(`A ${s1} km/h, uma viagem leva ${h1} horas. Quanto tempo leva a ${s2} km/h?`, `${num(v)} h`, erradasNum(v, [h1 * s2 / s1, h1 + 1, h1 - 1, s2 / s1], { fmt: x => `${num(x)} h`, inteiro: false }),
+      X(`Inversa: mais rápido, menos tempo; Distância: ${s1} × ${h1} = ${dist} km; ${dist} ÷ ${s2} = ${num(v)} h`));
+  }
+}
+function compostaD() {
+  const per = int(5, 20), m = int(2, 4), h = int(2, 5), p = per * m * h; let m2 = int(2, 6), h2 = int(2, 6); if (m2 === m && h2 === h) h2 = h + 1;
+  const v = per * m2 * h2;
+  return Q(`${m} máquinas fazem ${p} peças em ${h} horas. Quantas peças ${m2} máquinas fazem em ${h2} horas?`, `${v} peças`, erradasNum(v, [p * m2 / m, p * h2 / h, p * m2 * h2, v + per], { fmt: x => `${num(x)} peças` }),
+    X(`1 máquina em 1 hora: ${p} ÷ ${m} ÷ ${h} = ${per} peças; ${m2} máquinas em ${h2} horas: ${per} × ${m2} × ${h2} = ${v} peças`));
+}
+function contaCompostaD() {
+  const per = int(5, 20), m = int(2, 4), h = int(2, 5), p = per * m * h, m2 = m + int(1, 3), h2 = int(2, 6);
+  return Q(`${m} máquinas fazem ${p} peças em ${h} horas. Qual conta dá as peças de ${m2} máquinas em ${h2} horas?`, `${p} ÷ ${m} ÷ ${h} × ${m2} × ${h2}`,
+    [`${p} × ${m2} × ${h2}`, `${p} ÷ ${m} × ${h2}`, `${p} × ${m} ÷ ${m2} × ${h} ÷ ${h2}`],
+    X(`Ache quanto 1 máquina faz em 1 hora (${p} ÷ ${m} ÷ ${h}) e multiplique pelas máquinas e pelas horas novas (× ${m2} × ${h2})`));
+}
+function contaVelD() {
+  const s1 = 10 * int(4, 9), h = int(2, 6), s2 = s1 + 10 * int(1, 4);
+  return Q(`A ${s1} km/h, uma viagem leva ${h} horas. Qual conta dá o tempo a ${s2} km/h?`, `${s1} × ${h} ÷ ${s2}`, [`${s2} × ${h} ÷ ${s1}`, `${h} × ${s2}`, `${s1} ÷ ${s2}`],
+    X(`Inversa: inverte uma coluna e multiplica cruzado: ${s2} · x = ${s1} · ${h} → x = ${s1} × ${h} ÷ ${s2}`));
+}
+const M10D = {
+  A: {
+    treinador1: [proporcaoD, receitaD, proporcaoD],
+    treinador2: [inversaD, velocidadeInvD, inversaD],
+    treinador3: [compostaD, proporcaoD, inversaD],
+    lider: [compostaD, velocidadeInvD, proporcaoD, inversaD, receitaD],
+  },
+  B: {
+    treinador1: [() => contaRev(0), () => contaRev(2), () => contaRev(0)],
+    treinador2: [() => contaRev(1), contaVelD, () => contaRev(1)],
+    treinador3: [contaCompostaD, contaVelD, () => contaRev(2)],
+    lider: [contaCompostaD, () => contaRev(0), () => contaRev(1), contaVelD, () => contaRev(2)],
+  },
+};
+// mapa 11: decimais, dois passos (perímetro → lado → outra unidade), ângulos de polígonos, área composta e trapézio
+const per2 = x => `${num(x)}°`;
+function perDecD() {
+  const a = arred(int(2, 12) + pick([0.5, 0.25, 0.75])), b = arred(int(1, 9) + pick([0, 0.5])), v = arred(2 * (a + b));
+  return Q(`Qual é o perímetro de um retângulo de ${num(a)} cm por ${num(b)} cm?`, cm(v), erradasNum(v, [a * b, a + b, 2 * a + b, v + 1], { fmt: cm, inteiro: false }), X(`${num(a)} + ${num(b)} + ${num(a)} + ${num(b)} = ${num(v)} cm`));
+}
+function ladoRegD() {
+  const [n, k] = pick([['triângulo equilátero', 3], ['quadrado', 4], ['pentágono regular', 5], ['hexágono regular', 6], ['octógono regular', 8]]), l = int(2, 9) * 10, P = arred(k * l / 100);
+  return Q(`Um ${n} tem perímetro de ${num(P)} m. Quanto mede cada lado, em centímetros?`, cm(l), erradasNum(l, [l / 10, P * 100, l * k / 10, l + 10], { fmt: cm }), X(`${num(P)} m = ${num(P * 100)} cm. Dividindo pelos ${k} lados: ${num(P * 100)} ÷ ${k} = ${l} cm`));
+}
+function isosceles() {
+  const t = coin(), X0 = 2 * int(10, 60);
+  if (t) { const v = (180 - X0) / 2; return Q(`Num triângulo isósceles, o ângulo diferente mede ${X0}°. Quanto mede cada um dos outros dois?`, per2(v), erradasNum(v, [180 - X0, X0, 90 - X0 / 2 + 10, (360 - X0) / 2], { fmt: per2 }), X(`Os 3 ângulos somam 180°. Sobram 180 − ${X0} = ${180 - X0}, divididos entre os dois iguais: ${180 - X0} ÷ 2 = ${v}°`)); }
+  const b = int(20, 80), v = 180 - 2 * b;
+  return Q(`Num triângulo isósceles, os dois ângulos iguais medem ${b}° cada. Quanto mede o terceiro?`, per2(v), erradasNum(v, [180 - b, 90 - b, 2 * b, v + 10], { fmt: per2 }), X(`180 − ${b} − ${b} = ${v}°`));
+}
+const POLS = [['triângulo', 3], ['quadrilátero', 4], ['pentágono', 5], ['hexágono', 6], ['octógono', 8], ['decágono', 10]];
+function somaAng() {
+  const [n, k] = pick(POLS.slice(2)), s = (k - 2) * 180;
+  if (coin()) return Q(`Quanto dá a soma dos ângulos internos de um ${n}?`, per2(s), erradasNum(s, [k * 180, (k - 1) * 180, 360, s / 2], { fmt: per2 }), X(`Do ${n} saem ${k - 2} triângulos a partir de um vértice: ${k - 2} × 180 = ${s}°`));
+  const v = s / k;
+  return Q(`Quanto mede cada ângulo interno de um ${n} regular?`, per2(v), erradasNum(v, [360 / k, s, 180 - v, v + 10], { fmt: per2 }), X(`A soma é (${k} − 2) × 180 = ${s}°. Repartindo entre ${k} ângulos iguais: ${s} ÷ ${k} = ${v}°`));
+}
+function unidD() {
+  return pick([
+    () => { const a = arred(int(101, 999) / 100); return Q(`${num(a)} km são quantos metros?`, m_(a * 1000), erradasNum(arred(a * 1000), [a * 100, a * 10, a * 10000], { fmt: m_ }), X(`1 km = 1000 m: ${num(a)} × 1000 = ${num(arred(a * 1000))} m`)); },
+    () => { const a = int(11, 99); return Q(`${a} mm são quantos centímetros?`, cm(a / 10), erradasNum(a / 10, [a * 10, a / 100, a], { fmt: cm, inteiro: false }), X(`10 mm = 1 cm: ${a} ÷ 10 = ${num(a / 10)} cm`)); },
+    () => { const k = int(1, 9), m = int(1, 9) * 50; return Q(`${k} km e ${m} m são quantos metros ao todo?`, m_(k * 1000 + m), erradasNum(k * 1000 + m, [k + m, k * 100 + m, k * 1000 + m * 10], { fmt: m_ }), X(`${k} km = ${k * 1000} m. Mais ${m}: ${k * 1000 + m} m`)); },
+    () => { const a = int(11, 999); return Q(`${a} cm são quantos metros?`, m_(a / 100), erradasNum(a / 100, [a / 10, a * 100, a / 1000], { fmt: m_, inteiro: false }), X(`100 cm = 1 m: ${a} ÷ 100 = ${num(a / 100)} m`)); },
+  ])();
+}
+function cercaD() {
+  const a = int(8, 30), b = int(5, a), v = int(2, 4), p = int(1, 3), P = 2 * (a + b), r = v * P - (v * p);
+  return Q(`Um terreno tem ${a} m por ${b} m. Vou cercar com ${v} voltas de arame, deixando um portão de ${p} m sem arame. Quantos metros de arame?`, m_(r), erradasNum(r, [v * P, P - p, v * (a + b) - p, v * P - p], { fmt: m_ }), X(`Perímetro: 2 × (${a} + ${b}) = ${P} m. Sem o portão: ${P} − ${p} = ${P - p} m. ${v} voltas: ${v} × ${P - p} = ${r} m`));
+}
+function areaComp() {
+  const a = int(6, 14), b = int(5, 12), c = int(2, a - 3), d = int(2, b - 3), v = a * b - c * d;
+  return Q(`Um terreno em forma de L é um retângulo de ${a} m por ${b} m sem um canto de ${c} m por ${d} m. Qual é a área?`, m2(v), erradasNum(v, [a * b, a * b + c * d, 2 * (a + b), (a - c) * (b - d)], { fmt: m2 }), X(`Retângulo inteiro: ${a} × ${b} = ${a * b}. Tira o canto: ${c} × ${d} = ${c * d}. ${a * b} − ${c * d} = ${v} m²`));
+}
+function trapezio() {
+  for (;;) {
+    const B = int(6, 16), b = int(2, B - 2), h = int(2, 10); if ((B + b) * h % 2) continue; const v = (B + b) * h / 2;
+    return Q(`Qual é a área de um trapézio de bases ${B} cm e ${b} cm e altura ${h} cm?`, cm2(v), erradasNum(v, [(B + b) * h, B * b * h / 2, B * h, (B + b + h)], { fmt: cm2 }), X(`Área do trapézio = (base maior + base menor) × altura ÷ 2: (${B} + ${b}) × ${h} ÷ 2 = ${v} cm²`));
+  }
+}
+function areaDecD() {
+  const a = arred(int(1, 9) + 0.5), b = int(2, 12);
+  if (coin()) { const v = arred(a * a); return Q(`Qual é a área de um quadrado de lado ${num(a)} m?`, m2(v), erradasNum(v, [4 * a, 2 * a, arred(Math.floor(a) ** 2), v + 1], { fmt: m2, inteiro: false }), X(`${num(a)} × ${num(a)} = ${num(v)} m²`)); }
+  const v = arred(a * b); return Q(`Qual é a área de um retângulo de ${num(a)} m por ${b} m?`, m2(v), erradasNum(v, [2 * (a + b), a + b, v + b, v * 10], { fmt: m2, inteiro: false }), X(`${num(a)} × ${b} = ${num(v)} m²`));
+}
+function piso() {
+  const a = int(3, 8), b = int(2, 6), p = pick([25, 30, 35, 40, 45, 50, 60]), v = a * b * p;
+  return Q(`O piso custa R$ ${p} o metro quadrado. Quanto custa o piso de uma sala de ${a} m por ${b} m?`, reais(v), erradasNum(v, [2 * (a + b) * p, (a + b) * p, a * b + p], { fmt: reais }), X(`Área: ${a} × ${b} = ${a * b} m². Custo: ${a * b} × ${p} = ${reais(v)}`));
+}
+function areaDoPerim() {
+  const l = int(3, 15), P = 4 * l, v = l * l;
+  return Q(`Um quadrado tem perímetro ${P} cm. Qual é a área?`, cm2(v), erradasNum(v, [P * P, P, (P / 2) ** 2, P / 2], { fmt: cm2 }), X(`Lado: ${P} ÷ 4 = ${l} cm. Área: ${l} × ${l} = ${v} cm²`));
+}
+function perimDaArea() {
+  const a = int(3, 12), b = int(2, 9), A = a * b, v = 2 * (a + b);
+  return Q(`Um retângulo tem área ${A} cm² e um lado de ${a} cm. Qual é o perímetro?`, cm(v), erradasNum(v, [A, a + b, 2 * a + b, A - a], { fmt: cm }), X(`O outro lado: ${A} ÷ ${a} = ${b} cm. Perímetro: ${a} + ${b} + ${a} + ${b} = ${v} cm`));
+}
+const M11D = {
+  A: {
+    treinador1: [perDecD, cercaD, perDecD],
+    treinador2: [ladoRegD, unidD, ladoRegD],
+    treinador3: [isosceles, somaAng, isosceles],
+    lider: [cercaD, somaAng, ladoRegD, isosceles, unidD],
+  },
+  B: {
+    treinador1: [areaDecD, areaDoPerim, areaDecD],
+    treinador2: [areaComp, trapezio, areaComp],
+    treinador3: [piso, perimDaArea, trapezio],
+    lider: [areaComp, piso, areaDoPerim, perimDaArea, trapezio],
+  },
+};
+
+// mapa 12: simétricos, distâncias, o vértice que falta, coordenadas com conta, caminhos de 3 partes e "de onde saí?"
+const opc = (x) => PL(x, { opcoes: true, mostra: 'resposta' });
+function simetrico() {
+  let x = pick([-1, 1]) * int(1, 7), y = pick([-1, 1]) * int(1, 7), t = int(0, 2); if (Math.abs(x) === Math.abs(y)) y = Math.sign(y) * (Math.abs(y) % 7 + 1);
+  const nome = ['ao eixo x', 'ao eixo y', 'à origem'][t];
+  const [rx, ry] = [[x, -y], [-x, y], [-x, -y]][t];
+  const err = erradasTexto(ponto(rx, ry), [ponto(x, -y), ponto(-x, y), ponto(-x, -y), ponto(y, x), ponto(-y, -x)].filter(p => p !== ponto(x, y)));
+  return Q(`Qual é o simétrico de ${ponto(x, y)} em relação ${nome}?`, ponto(rx, ry), err, opc(X(['Espelho no eixo x: o x fica, o y troca de sinal.', 'Espelho no eixo y: o y fica, o x troca de sinal.', 'Simétrico pela origem: os dois trocam de sinal.'][t])));
+}
+function distancia() {
+  for (;;) {
+    const hor = coin(), a = int(-8, 8), b = int(-8, 8), f = int(-6, 6); if (Math.abs(a - b) < 3 || (a >= 0 && b >= 0)) continue;
+    const p = hor ? [a, f] : [f, a], q = hor ? [b, f] : [f, b], v = Math.abs(a - b);
+    return Q(`Quantas casas há entre ${ponto(...p)} e ${ponto(...q)}?`, num(v), erradasNum(v, [Math.abs(a + b), Math.abs(a) + Math.abs(b) === v ? v + 2 : Math.abs(a) + Math.abs(b), v - 1, v + 1]), PL(X(`Muda só o ${hor ? 'x' : 'y'}: de ${num(a)} até ${num(b)} são ${v} casas (${num(Math.max(a, b))} − (${num(Math.min(a, b))}) = ${v})`), { partida: p, chegada: q, mostra: 'caminho' }));
+  }
+}
+function vertice() {
+  for (;;) {
+    const x1 = int(-6, 2), y1 = int(-6, 2), x2 = x1 + int(2, 7), y2 = y1 + int(2, 6);
+    const vs = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]], i = int(0, 3), r = vs[i], dados = vs.filter((_, j) => j !== i);
+    const err = erradasTexto(ponto(...r), [ponto(r[1], r[0]), ponto(r[0] === x1 ? x2 : x1, r[1]), ponto(r[0], r[1] === y1 ? y2 : y1), ponto(-r[0], r[1]), ponto(r[0] + 1, r[1])]);
+    if (err.length < 3) continue;
+    return Q(`Um retângulo tem vértices em ${dados.map(p => ponto(...p)).join(', ')}. Qual é o 4º vértice?`, ponto(...r), err, opc(X(`Os lados são retos: o 4º vértice usa o x de um vizinho e o y do outro. Fica ${ponto(...r)}`)));
+  }
+}
+function quadConta() {
+  const a = int(1, 9), b = int(1, 9), c = int(1, 9), d = int(1, 9), x = pick([a - b - 3, a + b, -a - b]), y = pick([c - d - 4, c + d, -c]);
+  if (!x || !y) return quadConta();
+  const ex = `${x < 0 ? '−' : ''}${Math.abs(x)}`, nome = x > 0 ? (y > 0 ? '1º quadrante' : '4º quadrante') : (y > 0 ? '2º quadrante' : '3º quadrante');
+  const tx = `${num(x + 5)} − 5`, ty = `${num(y - 3)} + 3`;
+  return Q(`Em qual quadrante fica o ponto (${tx}, ${ty})?`, nome, Object.keys(QUADS).filter(k => k !== nome), X(`Faça as contas primeiro: ${tx} = ${ex} e ${ty} = ${num(y)}. O ponto é ${ponto(x, y)}: ${nome}.`));
+}
+function andar3() {
+  for (;;) {
+    const x0 = int(-4, 4), y0 = int(-4, 4), a = int(2, 6), b = int(2, 7), c = int(1, 5), d1 = pick([1, -1]), d2 = pick([1, -1]);
+    const mov = [[d1, 0, a], [0, d2, b], [-d1, 0, c]], x = x0 + d1 * a - d1 * c, y = y0 + d2 * b;
+    if (a === c) continue;
+    const txt = `${a} para a ${d1 > 0 ? 'direita' : 'esquerda'}, ${b} para ${d2 > 0 ? 'cima' : 'baixo'} e ${c} para a ${d1 > 0 ? 'esquerda' : 'direita'}`;
+    return Q(`Saindo de ${ponto(x0, y0)}, ando ${txt}. Onde paro?`, ponto(x, y), erradasPonto(x, y), PL(X(`x: ${num(x0)} ${d1 > 0 ? '+' : '−'} ${a} ${d1 > 0 ? '−' : '+'} ${c} = ${num(x)}; y: ${num(y0)} ${d2 > 0 ? '+' : '−'} ${b} = ${num(y)}`), { partida: [x0, y0], mov, mostra: 'caminho' }));
+  }
+}
+function deOnde() {
+  for (;;) {
+    const x = int(-5, 5), y = int(-5, 5), dx = pick([-1, 1]) * int(2, 6), dy = pick([-1, 1]) * int(2, 6), x0 = x - dx, y0 = y - dy;
+    const err = erradasTexto(ponto(x0, y0), [ponto(x + dx, y + dy), ponto(x - dx, y + dy), ponto(x + dx, y - dy), ponto(y0, x0)]);
+    if (err.length < 3) continue;
+    return Q(`Andei ${dirTxt(dx, dy)} e parei em ${ponto(x, y)}. De onde saí?`, ponto(x0, y0), err, opc(X(`Faça o caminho de volta (ao contrário): x: ${num(x)} ${dx > 0 ? '−' : '+'} ${Math.abs(dx)} = ${num(x0)}; y: ${num(y)} ${dy > 0 ? '−' : '+'} ${Math.abs(dy)} = ${num(y0)}`)));
+  }
+}
+const M12D = {
+  A: {
+    treinador1: [simetrico, simetrico, simetrico],
+    treinador2: [distancia, quadConta, distancia],
+    treinador3: [vertice, quadConta, vertice],
+    lider: [simetrico, vertice, distancia, quadConta, simetrico],
+  },
+  B: {
+    treinador1: [andar3, andar3, andar3],
+    treinador2: [deOnde, deOnde, deOnde],
+    treinador3: [andar({ neg: true }), andar3, caminho],
+    lider: [andar3, deOnde, caminho, andar3, deOnde],
+  },
+};
+
+// mapa 13 A: mais números e números maiores, média com peso, a nota que falta em 4 provas, nova média e mediana de 8
+function mediaD() {
+  for (;;) {
+    const n = pick([5, 6, 8]), l = lista(n, 10, 99), s = somaL(l); if ((s * 2) % n) continue; const v = s / n;
+    return Q(`Qual é a média de ${eFinal(l)}?`, num(v), erradasNum(v, [s, medianaDe(l), Math.floor(v) + 1, v + 0.5, (Math.max(...l) + Math.min(...l)) / 2], { inteiro: ehInteiro(v) ? null : false }), X(`Soma: ${l.join(' + ')} = ${s}. Divide por ${n}: ${s} ÷ ${n} = ${num(v)}`));
+  }
+}
+function mediaPeso() {
+  for (;;) {
+    const a = int(3, 10), b = int(3, 10), pa = int(1, 3), pb = int(2, 4); if (pa === pb || a === b) continue;
+    const s = a * pa + b * pb, P = pa + pb, v = arred(s / P); if (!ehInteiro(v * 10)) continue;
+    return Q(`A prova 1 vale peso ${pa} e a prova 2 vale peso ${pb}. Tirei ${a} na prova 1 e ${b} na prova 2. Qual é a minha média?`, num(v), erradasNum(v, [(a + b) / 2, s, a * pa + b, arred(s / 2)], { inteiro: false }), X(`Média com peso: (${a} × ${pa} + ${b} × ${pb}) ÷ (${pa} + ${pb}) = ${s} ÷ ${P} = ${num(v)}`));
+  }
+}
+function notaFaltaD() {
+  for (;;) {
+    const m = pick([6, 6.5, 7, 7.5, 8]), l = [int(4, 10), int(4, 10), int(5, 10)], c = arred(4 * m - somaL(l)); if (c < 0 || c > 10) continue;
+    return Q(`A média de 4 provas foi ${num(m)}. Três notas foram ${eFinal(l)}. Qual foi a quarta?`, num(c), erradasNum(c, [4 * m, m, arred(3 * m - somaL(l)), c + 1], { inteiro: ehInteiro(c) ? null : false }), X(`A soma das 4 é 4 × ${num(m)} = ${num(4 * m)}. Falta ${num(4 * m)} − ${somaL(l)} = ${num(c)}`));
+  }
+}
+function novaMedia() {
+  for (;;) {
+    const n = int(3, 5), m = int(5, 12), k = int(1, 25), v = arred((n * m + k) / (n + 1)); if (!ehInteiro(v * 10) || v === m) continue;
+    return Q(`A média de ${n} números é ${m}. Se eu juntar o número ${k}, qual é a nova média?`, num(v), erradasNum(v, [(m + k) / 2, n * m + k, m, arred((n * m + k) / n)], { inteiro: ehInteiro(v) ? null : false }), X(`A soma dos ${n} é ${n} × ${m} = ${n * m}. Com o ${k}: ${n * m + k}, agora dividido por ${n + 1}: ${num(v)}`));
+  }
+}
+function mediana8() {
+  for (;;) {
+    const l = lista(8, 10, 60), s = [...l].sort((a, b) => a - b), v = (s[3] + s[4]) / 2; if (ehInteiro(v) && coin()) continue;
+    return Q(`Qual é a mediana de ${eFinal(l)}?`, num(v), erradasNum(v, [(l[3] + l[4]) / 2, s[3], s[4], arred(somaL(l) / 8)], { inteiro: ehInteiro(v) ? null : false }), X(`Em ordem: ${s.join(', ')}. São 8: a mediana é a média dos dois do meio, (${s[3]} + ${s[4]}) ÷ 2 = ${num(v)}`));
+  }
+}
+function mediaMenosMediana() {
+  for (;;) {
+    const l = lista(5, 1, 30), s = somaL(l); if (s % 5) continue; const me = s / 5, md = medianaDe(l), v = me - md;
+    return Q(`Na lista ${fmtL(l)}, quanto é a média menos a mediana?`, num(v), erradasNum(v, [md - me, me, md, me + md], { neg: true }), X(`Média: ${s} ÷ 5 = ${me}. Em ordem: ${[...l].sort((a, b) => a - b).join(', ')}, mediana ${md}. ${me} − ${md} = ${num(v)}`));
+  }
+}
+const M13D = {
+  A: {
+    treinador1: [mediaD, mediaPeso, mediaD],
+    treinador2: [notaFaltaD, novaMedia, notaFaltaD],
+    treinador3: [mediana8, mediaMenosMediana, mediana8],
+    lider: [mediaPeso, notaFaltaD, mediana8, novaMedia, mediaMenosMediana],
+  },
+};
+export const DIFICIL_9_13 = { 9: M9D, 10: M10D, 11: M11D, 12: M12D, 13: M13D };

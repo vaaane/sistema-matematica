@@ -279,3 +279,232 @@ const M4 = {
 M4.B.revanche[1] = () => { const b = int(2, 8) * 2; const v = 2.5 * b; return Q(`2,5 × ${b}`, num(v), erradasNum(v, [v * 10, v + 2.5, 2 * b], { inteiro: false }), X(`2 × ${b} = ${2 * b} e 0,5 × ${b} = ${num(b / 2)}. Somando: ${num(v)}`)); };
 
 export const MAPAS_1_4 = { 1: M1, 2: M2, 3: M3, 4: M4 };
+
+// ===================== ⭐ GINÁSIO DIFÍCIL (PROMPT-230) =====================
+// A faixa difícil dos mesmos geradores: números maiores, decimais e negativos onde faz sentido e um passo a mais.
+// gerarQuestoes(…, { dificil: true }) usa estas listas no lugar das normais (geradores.js). Sem a revanche (o Difícil não tem).
+// Mapa 13 B (tabelas) não tem lista difícil: usa as tabelas normais.
+const DECS = [0.5, 1.5, 2.5, 3.5, 0.25, 0.75];
+function trocoD() {
+  const [a, b] = sample(nomesItens, 2), q1 = int(2, 5), p1 = int(2, 8) + 0.5, q2 = int(2, 4), p2 = int(3, 12);
+  const gasto = arred(q1 * p1 + q2 * p2), T = gasto < 50 ? pick([50, 100]) : 100, v = arred(T - gasto);
+  return Q(`Comprei ${q1} ${a[0]} de ${reais(p1)} e ${q2} ${b[0]} de R$ ${p2}. Paguei com R$ ${T}. Qual foi o troco?`, reais(v),
+    erradasNum(v, [T - q1 * p1, T - q2 * p2, gasto, T - (q1 + q2) * p1], { fmt: reais, inteiro: false }), conta(`${T} − (${q1} × ${num(p1)} + ${q2} × ${p2})`, R$));
+}
+function parcelasD() {
+  const n = int(3, 8), k = int(15, 60), e = 10 * int(2, 10), P = e + n * k;
+  return Q(`Uma bicicleta custa R$ ${P}. Dei R$ ${e} de entrada e paguei o resto em ${n} parcelas iguais. Qual é o valor de cada parcela?`, reais(k),
+    erradasNum(k, [P / n, (P + e) / n, P - e, k + e / n], { fmt: reais, inteiro: true }), conta(`(${P} − ${e}) ÷ ${n}`, R$));
+}
+function salarioD() {
+  for (;;) {
+    const g = int(25, 60), c = int(5, 12), d = int(5, 12), x = int(20, 80), v = d * (g - c) - x;
+    if (v <= 0) continue;
+    return Q(`Ganhei R$ ${g} por dia durante ${d} dias. Gastei R$ ${c} por dia de lanche e, no fim, paguei uma conta de R$ ${x}. Quanto sobrou?`, reais(v),
+      erradasNum(v, [d * g - c - x, d * (g - c), d * g - x, d * (g + c) - x], { fmt: reais }), conta(`${d} × (${g} − ${c}) − ${x}`, R$));
+  }
+}
+const M1D = {
+  A: {
+    treinador1: [E('a + b × c − d', { a: [20, 150], b: [6, 15], c: [3, 12], d: [5, 40] }), E('a × b + c × d', { a: [6, 15], b: [4, 12], c: [3, 9], d: [5, 12] }), E('a − b × c + d', { a: [100, 300], b: [6, 12], c: [4, 9], d: [10, 60] })],
+    treinador2: [E('a − b ÷ c + d', { a: [50, 200], b: [24, 144], c: [3, 12], d: [5, 40] }), E('a ÷ b + c × d', { a: [60, 300], b: [3, 12], c: [4, 12], d: [3, 9] }), E('a ÷ b − c ÷ d', { a: [120, 480], b: [4, 12], c: [20, 90], d: [2, 6] })],
+    treinador3: [E('a × b − c ÷ d', { a: [8, 25], b: [4, 12], c: [20, 150], d: [2, 10] }), E('a − b × c + d ÷ e', { a: [100, 300], b: [3, 9], c: [4, 12], d: [12, 90], e: [2, 6] }), E('a + b × c', { a: [2, 20], b: DECS, c: [2, 12] }, { lista: ['b'], inteiro: false })],
+    lider: [E('a × b + c ÷ d − e', { a: [6, 15], b: [4, 12], c: [30, 150], d: [3, 10], e: [5, 40] }), E('a − b × c − d ÷ e', { a: [200, 500], b: [6, 12], c: [5, 12], d: [20, 120], e: [2, 8] }),
+      E('a × b − c × d', { a: DECS, b: [4, 20], c: [2, 9], d: DECS }, { lista: ['a', 'd'], inteiro: false }), E('a × b × c − d ÷ e', { a: [2, 6], b: [3, 9], c: [2, 5], d: [20, 100], e: [2, 5] }), E('a + b ÷ c × d', { a: [10, 90], b: [24, 120], c: [3, 8], d: [2, 6] })],
+  },
+  B: {
+    treinador1: [E('[a − (b + c)] × d', { a: [30, 90], b: [4, 15], c: [4, 15], d: [3, 9] }), E('a × [b + (c − d)] − e', { a: [3, 9], b: [10, 30], c: [15, 40], d: [2, 12], e: [5, 40] }), E('[(a + b) × c − d] ÷ e', { a: [5, 20], b: [5, 20], c: [2, 6], d: [2, 20], e: [2, 5] })],
+    treinador2: [E('{a − [b × (c + d)]} ÷ e', { a: [60, 200], b: [2, 6], c: [1, 5], d: [1, 5], e: [2, 5] }), E('a + [b × (c − d) − e]', { a: [10, 60], b: [3, 9], c: [8, 20], d: [1, 6], e: [2, 20] }), E('{[a + b] × c − d} ÷ e', { a: [5, 25], b: [5, 25], c: [2, 5], d: [5, 30], e: [2, 6] })],
+    treinador3: [trocoD, parcelasD, salarioD],
+    lider: [E('a × [b − (c − d)] + e', { a: [3, 9], b: [20, 50], c: [10, 25], d: [2, 9], e: [5, 40] }), trocoD, E('{a − [b × (c + d)]} ÷ e', { a: [60, 200], b: [2, 6], c: [1, 5], d: [1, 5], e: [2, 5] }), parcelasD, E('[a ÷ (b + c) + d] × e', { a: [40, 200], b: [2, 8], c: [2, 8], d: [3, 12], e: [2, 6] })],
+  },
+};
+// mapa 3: negativos maiores, decimais, três termos e o duplo negativo
+const DECN = [-0.5, -1.5, -2.5, -3.5, -7.5, -12.5];
+function maiorMenorD(menor = false) {
+  return () => {
+    const s = new Set(); while (s.size < 4) s.add(coin() ? -int(10, 99) : arred(-int(1, 30) - pick([0, 0.5, 0.25])));
+    const arr = [...s], r = menor ? Math.min(...arr) : Math.max(...arr), certo = num(r);
+    return Q(`Qual é ${menor ? 'menor' : 'maior'}?`, certo, arr.map(v => num(v)).filter(x => x !== certo), X(`Nos negativos, quanto mais longe do zero, menor. Ordem: ${[...arr].sort((a, b) => a - b).map(v => num(v)).join(' < ')}`));   // num(v), não .map(num): o índice viraria as casas decimais
+  };
+}
+function temperaturaD() {
+  const a = int(2, 15), b = int(5, 20), c = int(3, 25), v = -a + b - c;
+  return Q(`A temperatura era −${a} °C. Subiu ${b} graus e depois caiu ${c}. Quanto está agora?`, `${num(v)} °C`, erradasNum(v, [-a + b + c, a + b - c, -v, -a - b - c], { fmt: x => `${num(x)} °C`, neg: true }),
+    X(`Subir é somar e cair é subtrair: ${passos(`−${a} + ${b} − ${c}`)} °C`));
+}
+function saldoD() {
+  for (;;) {
+    const t = int(10, 40) + 0.5, g = int(15, 40), h = int(5, 30), v = arred(t - g - h);
+    if (v >= 0) continue;
+    return Q(`Tinha ${reais(t)} na conta. Gastei R$ ${g} e depois R$ ${h}. Qual é o saldo?`, reais(v), erradasNum(v, [-v, t - g + h, v - 1, t - g], { fmt: reais, neg: true, inteiro: false }),
+      X(`${passos(`${num(t)} − ${g} − ${h}`)}. Gastei mais do que tinha: o saldo é negativo.`));
+  }
+}
+function elevadorD() {
+  const a = int(1, 4), b = int(5, 12), c = int(3, 15), v = -a + b - c;
+  return Q(`Estou no andar −${a} (garagem). Subo ${b} andares e depois desço ${c}. Em que andar estou?`, num(v), erradasNum(v, [a + b - c, -a + b + c, -v], { neg: true }), X(`Subir é somar e descer é subtrair: ${passos(`−${a} + ${b} − ${c}`)}`));
+}
+const M3D = {
+  A: {
+    treinador1: [maiorMenorD(), maiorMenorD(true), maiorMenorD()],
+    treinador2: [N('a + b + c', { a: [-60, -10], b: [-40, 40], c: [-50, -5] }), P('a − b', { a: [-50, -10], b: [-50, -10] }), P('a − b + c', { a: [-90, -20], b: [-60, -5], c: [10, 80] })],
+    treinador3: [N('a + b', { a: DECN, b: [1, 20] }, { lista: ['a'], inteiro: false }), P('a − b − c', { a: [-40, 40], b: [-30, -5], c: [5, 40] }), P('a − (b − c)', { a: [-30, -5], b: [-20, -2], c: [3, 20] })],
+    lider: [temperaturaD, saldoD, elevadorD, P('a + b − c + d', { a: [-50, -10], b: [-30, -5], c: [-40, -5], d: [5, 60] }), N('a − b', { a: DECN, b: [2, 15] }, { lista: ['a'], inteiro: false })],
+  },
+  B: {
+    treinador1: [P('a × b × c', { a: [-9, -2], b: [-9, -2], c: [-6, -2] }), P('a × b', { a: [-25, -11], b: [-12, -3] }), P('a × b', { a: DECN, b: [-12, -2] }, { lista: ['a'], inteiro: false })],
+    treinador2: [P('a ÷ b', { a: [-300, -40], b: [-12, -3] }), P('a ÷ b × c', { a: [-120, -20], b: [2, 10], c: [-6, -2] }), P('(a × b) ÷ c', { a: [-12, -2], b: [3, 12], c: [-6, -2] })],
+    treinador3: [P('a × b + c × d', { a: [-9, -2], b: [2, 9], c: [-6, -2], d: [-6, -2] }), P('a ÷ b − c', { a: [-90, -10], b: [-9, -2], c: [-20, -2] }), P('a × (b + c)', { a: [-6, -2], b: [-12, -2], c: [1, 9] })],
+    lider: [P('a × b × c ÷ d', { a: [-6, -2], b: [2, 6], c: [-5, -2], d: [-4, -2] }), P('a × b − c ÷ d', { a: [-9, -2], b: [-9, -2], c: [-60, -10], d: [2, 6] }), P('a × b', { a: DECN, b: [-8, -2] }, { lista: ['a'], inteiro: false }),
+      P('(a + b) × c', { a: [-15, -3], b: [-15, -3], c: [-6, -2] }), P('a ÷ b + c × d', { a: [-80, -10], b: [-8, -2], c: [-6, -2], d: [2, 9] })],
+  },
+};
+// mapa 2: ×/÷ por 10, 100 e 1000 com mais casas decimais, duas operações seguidas e unidades com vírgula
+const n5 = x => num(x, 5);
+const casasD = (k, lado, v) => { const n = String(k).length - 1; return X(`${lado === 'direita' ? '×' : '÷'} ${k}: a vírgula anda ${n} ${n === 1 ? 'casa' : 'casas'} para a ${lado}. Resultado: ${n5(v)}`); };
+function vezesD(ks) {
+  return () => {
+    for (;;) {
+      const k = pick(ks), a = arred(int(101, 9999) / pick([100, 1000])); if (ehInteiro(a)) continue;
+      const v = arred(a * k);
+      return Q(`${n5(a)} × ${k}`, n5(v), erradasNum(v, [v * 10, v / 10, a * 10, v / 100], { fmt: n5, inteiro: false }), casasD(k, 'direita', v));
+    }
+  };
+}
+function divideD(ks) {
+  return () => {
+    for (;;) {
+      const k = pick(ks), a = coin() ? int(11, 9999) : arred(int(11, 9999) / 10); const v = arred(a / k); if (ehInteiro(v)) continue;
+      return Q(`${n5(a)} ÷ ${k}`, n5(v), erradasNum(v, [v * 10, v / 10, v * 100, a / 10], { fmt: n5, inteiro: false }), casasD(k, 'esquerda', v));
+    }
+  };
+}
+function cadeia() {
+  for (;;) {
+    const k1 = pick([10, 100, 1000]), o1 = pick(['×', '÷']), k2 = pick([10, 100, 1000]), o2 = pick(['×', '÷']);
+    if (o1 === o2 || k1 === k2) continue;
+    const a = arred(int(11, 999) / pick([1, 10])), m = arred(o1 === '×' ? a * k1 : a / k1), v = arred(o2 === '×' ? m * k2 : m / k2);
+    if (v < 0.001 || v > 100000) continue;
+    return Q(`${n5(a)} ${o1} ${k1} ${o2} ${k2}`, n5(v), erradasNum(v, [v * 10, v / 10, v * 100, v / 100], { fmt: n5, inteiro: false }),
+      X(`Uma de cada vez: ${n5(a)} ${o1} ${k1} = ${n5(m)}; depois ${n5(m)} ${o2} ${k2} = ${n5(v)}`));
+  }
+}
+const UNID_D = [['km', 'm', 1000], ['m', 'cm', 100], ['kg', 'g', 1000], ['L', 'mL', 1000], ['m', 'mm', 1000], ['cm', 'mm', 10]];
+function converteD(inverso = false) {
+  return () => {
+    const [g, p, k] = pick(UNID_D);
+    if (!inverso) { const a = arred(int(101, 999) / 100), v = arred(a * k); return Q(`${num(a)} ${g} são quantos ${p}?`, `${n5(v)} ${p}`, erradasNum(v, [v * 10, v / 10, a * 10], { fmt: x => `${n5(x)} ${p}`, inteiro: false }), X(`1 ${g} = ${k} ${p}. Então ${num(a)} × ${k} = ${n5(v)} ${p}`)); }
+    const a = int(11, 999), v = arred(a / k);
+    return Q(`${a} ${p} são quantos ${g}?`, `${n5(v)} ${g}`, erradasNum(v, [v * 10, v / 10, v * 100], { fmt: x => `${n5(x)} ${g}`, inteiro: false }), X(`1 ${g} = ${k} ${p}. Então ${a} ÷ ${k} = ${n5(v)} ${g}`));
+  };
+}
+function somaUnid() {
+  const [g, p, k] = pick([['kg', 'g', 1000], ['L', 'mL', 1000], ['m', 'cm', 100], ['km', 'm', 1000]]);
+  const a = arred(int(11, 49) / 10), b = int(1, k / 10 - 1) * 10, v = arred(a * k + b);
+  return Q(`${num(a)} ${g} + ${b} ${p}: quantos ${p} ao todo?`, `${n5(v)} ${p}`, erradasNum(v, [a + b, a * k, v / 10, a * 10 + b], { fmt: x => `${n5(x)} ${p}`, inteiro: false }), X(`Tudo em ${p}: ${num(a)} ${g} = ${n5(arred(a * k))} ${p}. Somando ${b}: ${n5(v)} ${p}`));
+}
+function pacotesD() {
+  const p = arred(int(101, 999) / 100), k = pick([10, 100, 1000]), v = arred(p * k);
+  return Q(`Um adesivo custa ${reais(p)}. Quanto custam ${k} adesivos?`, reais(v), erradasNum(v, [v * 10, v / 10, p * 10], { fmt: reais, inteiro: false }), X(`${num(p)} × ${k}: a vírgula anda ${String(k).length - 1} casas para a direita → ${reais(v)}`));
+}
+function repartirD() {
+  const k = pick([10, 100]), v = arred(int(101, 9999) / 100), T = arred(v * k);
+  return Q(`${reais(T)} foram divididos igualmente entre ${k} pessoas. Quanto cada uma recebeu?`, reais(v), erradasNum(v, [v * 10, v / 10, T], { fmt: reais, inteiro: false }), X(`${num(T)} ÷ ${k}: a vírgula anda ${String(k).length - 1} ${k === 10 ? 'casa' : 'casas'} para a esquerda → ${reais(v)}`));
+}
+const M2D = {
+  A: {
+    treinador1: [vezesD([10, 100]), vezesD([1000]), vezesD([100, 1000])],
+    treinador2: [divideD([10, 100]), divideD([1000]), divideD([100, 1000])],
+    treinador3: [cadeia, cadeia, vezesD([1000])],
+    lider: [cadeia, divideD([1000]), vezesD([100, 1000]), cadeia, divideD([100])],
+  },
+  B: {
+    treinador1: [converteD(), converteD(), converteD()],
+    treinador2: [converteD(true), converteD(true), converteD(true)],
+    treinador3: [somaUnid, pacotesD, repartirD],
+    lider: [somaUnid, converteD(true), pacotesD, converteD(), repartirD],
+  },
+};
+
+// mapa 4: denominadores diferentes, simplificar números maiores, fração de quantidade com um passo a mais, decimais com mais casas e × decimal
+function simplD() {
+  const [p, q] = pick([[2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [5, 6], [3, 7], [5, 8], [7, 9], [3, 8], [7, 12]]), k = pick([6, 7, 8, 9, 12]);
+  const parc = [2, 3, 4].filter(d => k % d === 0 && d < k).map(d => frac(p * k / d, q * k / d));   // parou no meio (equivalente, mas não até o fim)
+  return Q(`Simplifique até o fim: ${frac(p * k, q * k)}`, frac(p, q), erradasTexto(frac(p, q), [...parc.slice(-1), frac(q, p), frac(p, q + 1), frac(p + 1, q + 1), frac(p * k / k + 1, q)]), X(`Divida os dois por ${k}: ${p * k} ÷ ${k} = ${p} e ${q * k} ÷ ${k} = ${q}. Fica ${frac(p, q)}`));
+}
+function difDenD(sub = false) {
+  return () => {
+    for (let t = 0; ; t++) {
+      const b = pick([3, 4, 5, 6, 8, 9, 10, 12]), d = pick([3, 4, 5, 6, 8, 9, 10, 12]); if (b === d) continue;
+      const a = int(1, b - 1), c = int(1, d - 1), D = mmc(b, d); if (mdc(a, b) > 1 || mdc(c, d) > 1) continue; const n = sub ? a * D / b - c * D / d : a * D / b + c * D / d;
+      if (n <= 0 || D > 40) continue;
+      const [x, y] = simpl(n, D); const errs = erradasFrac(x, y, [[sub ? a - c : a + c, b + d], [sub ? a - c : a + c, D], [x + 1, y], [x, y + 1], [n + 1, D * 2]]);
+      if (errs.length < 3 && t < 100) continue;
+      const op = sub ? '−' : '+';
+      return Q(`${frac(a, b)} ${op} ${frac(c, d)}`, frac(x, y), errs, X(`Denominador comum ${D}: ${frac(a * D / b, D)} ${op} ${frac(c * D / d, D)} = ${frac(n, D)}${n !== x ? ` = ${frac(x, y)}` : ''}`));
+    }
+  };
+}
+function fracQtdD() {
+  const q = pick([3, 4, 5, 6, 8, 10, 12]), p = pick([2, 3, 5, 7, 9, 11].filter(x => x < q && mdc(x, q) === 1)), k = int(10, 60), N = q * k, v = p * k;
+  return Q(`Quanto é ${frac(p, q)} de ${N}?`, num(v), erradasNum(v, [N - v, k, v + k, N / p]), X(`${N} ÷ ${q} = ${k} e ${k} × ${p} = ${v}`));
+}
+function sobrouFrac() {
+  const q = pick([4, 5, 8, 10]), p = pick([1, 2, 3, 4, 5, 6, 7, 9].filter(x => x < q && mdc(x, q) === 1)), k = int(5, 40), T = q * k * 2, g = p * T / q, v = T - g;
+  return Q(`Recebi R$ ${T} e gastei ${frac(p, q)} desse dinheiro. Quanto sobrou?`, reais(v), erradasNum(v, [g, T - p, T / q], { fmt: reais }), X(`${frac(p, q)} de ${T}: ${T} ÷ ${q} × ${p} = ${g}. Sobrou ${T} − ${g} = ${v}`));
+}
+function multFracD() {
+  for (let t = 0; ; t++) {
+    const b = int(3, 9), a = int(2, b - 1), d = int(3, 9), c = int(2, d - 1), [n, m] = simpl(a * c, b * d);
+    if (n === a * c || mdc(a, b) > 1 || mdc(c, d) > 1) continue;   // um passo a mais: simplificar no fim
+    const errs = erradasFrac(n, m, [[a * c, b * d], [a + c, b + d], [a * d, b * c], [n + 1, m]]);
+    if (errs.length < 3 && t < 100) continue;
+    return Q(`${frac(a, b)} × ${frac(c, d)} (simplifique)`, frac(n, m), errs, X(`${a} × ${c} = ${a * c} e ${b} × ${d} = ${b * d}: ${frac(a * c, b * d)} = ${frac(n, m)}`));
+  }
+}
+function decTres() {
+  for (;;) {
+    const a = arred(int(101, 999) / 100), b = arred(int(11, 499) / 100), c = arred(int(1, 99) / 10), v = arred(a + b - c);
+    if (v <= 0) continue;
+    return Q(`${num(a)} + ${num(b)} − ${num(c)}`, num(v), erradasNum(v, [a + b + c, a - b - c, v * 10, v + 0.1, v - 0.01], { inteiro: false }), X(`Vírgula embaixo de vírgula, da esquerda para a direita: ${num(a)} + ${num(b)} = ${num(arred(a + b))}; − ${num(c)} = ${num(v)}`));
+  }
+}
+function decVezes() {
+  const a = arred(int(11, 49) / 10), b = arred(int(11, 39) / 10), v = arred(a * b);
+  return Q(`${num(a)} × ${num(b)}`, num(v), erradasNum(v, [v * 10, v / 10, a + b, Math.round(a) * Math.round(b)], { inteiro: false }), X(`Faça sem vírgula: ${Math.round(a * 10)} × ${Math.round(b * 10)} = ${Math.round(a * b * 100)}. São 2 casas depois da vírgula ao todo: ${num(v)}`));
+}
+function decDiv() {
+  const k = int(2, 9), v = arred(int(11, 99) / 10 + pick([0, 0.05])), a = arred(v * k); if (ehInteiro(v)) return decDiv();
+  return Q(`${num(a)} ÷ ${k}`, num(v), erradasNum(v, [v * 10, v / 10, v + 0.1, a - k], { inteiro: false }), X(`${num(a)} ÷ ${k} = ${num(v)} (confira: ${num(v)} × ${k} = ${num(a)})`));
+}
+const FD8 = [[1, 8, 0.125], [3, 8, 0.375], [5, 8, 0.625], [7, 8, 0.875], [1, 20, 0.05], [3, 20, 0.15], [7, 20, 0.35], [1, 25, 0.04], [6, 25, 0.24], [3, 40, 0.075], [2, 5, 0.4], [3, 4, 0.75]];
+function fracDecD() { const [p, q, d] = pick(FD8); return Q(`Quanto é ${frac(p, q)} em número decimal?`, num(d), erradasNum(d, [d * 10, d / 10, p / 10, arred(d + 0.1)], { inteiro: false }), X(`A fração é uma divisão: ${p} ÷ ${q} = ${num(d)}`)); }
+function decFracD() { const [p, q, d] = pick(FD8); return Q(`${num(d)} em fração irredutível`, frac(p, q), erradasFrac(p, q, [[q, p], [p, q * 10], [p + 1, q], [p, q + 1], [p * 10, q]]), X(`${num(d)} = ${frac(Math.round(d * 1000), 1000)}; simplificando até o fim: ${frac(p, q)}`)); }
+function comparaDecD() {   // 0,5 · 0,49 · 0,487 · 0,058: o número de casas engana
+  const a = int(2, 9), b = int(1, 9), c = int(1, 9), arr = [a / 10, (10 * (a - 1) + b) / 100, (100 * (a - 1) + 10 * c + b) / 1000, (10 * a + b) / 1000].map(arred);
+  const menor = coin(), r = menor ? Math.min(...arr) : Math.max(...arr);
+  return Q(menor ? 'Qual é o menor?' : 'Qual é o maior?', num(r), arr.filter(x => x !== r).map(x => num(x)), X(`Iguale as casas: ${arr.map(x => x.toFixed(3).replace('.', ',')).join('; ')}. O ${menor ? 'menor' : 'maior'} é ${num(r)}`));
+}
+function compraDec() {
+  for (;;) {
+    const q = int(2, 6), p = arred(int(1, 9) + pick([0.35, 0.45, 0.75, 0.9, 0.25])), T = pick([20, 50]), v = arred(T - q * p);
+    if (v <= 0) continue;
+    return Q(`Comprei ${q} cadernos de ${reais(p)}. Paguei com R$ ${T}. Qual o troco?`, reais(v), erradasNum(v, [q * p, T - p, v + 1, arred(T - q * Math.floor(p))], { fmt: reais, inteiro: false }), X(`${q} × ${num(p)} = ${num(arred(q * p))}. Troco: ${T} − ${num(arred(q * p))} = ${reais(v)}`));
+  }
+}
+const M4D = {
+  A: {
+    treinador1: [simplD, simplD, simplD],
+    treinador2: [difDenD(), difDenD(true), difDenD()],
+    treinador3: [fracQtdD, sobrouFrac, multFracD],
+    lider: [difDenD(true), divFrac, sobrouFrac, multFracD, difDenD()],
+  },
+  B: {
+    treinador1: [decTres, decTres, decTres],
+    treinador2: [decVezes, decDiv, decVezes],
+    treinador3: [fracDecD, decFracD, fracDecD],
+    lider: [comparaDecD, compraDec, decVezes, decFracD, decDiv],
+  },
+};
+export const DIFICIL_1_4 = { 1: M1D, 2: M2D, 3: M3D, 4: M4D };

@@ -1,4 +1,4 @@
-import { int, pick, shuffle, sample, coin, num, reais, arred, ehInteiro, erradasNum, erradasTexto, frac, erradasFrac, passos } from './base.js';
+import { int, pick, shuffle, sample, coin, num, reais, arred, ehInteiro, erradasNum, erradasTexto, frac, erradasFrac, passos, mdc } from './base.js';
 import { Q, X, expr } from './mapas1a4.js';
 
 // ===================== MAPA 5 =====================
@@ -161,8 +161,8 @@ const CTX = [
 ];
 function contaCtx() { const p = pick([5, 10, 20, 25, 40, 50]), N = 10 * int(2, 9); const [e, NN = N] = pick(CTX)(p, N); return Q(e, `${NN} × ${dec(p)}`, [`${NN} × ${p}`, ...sample([`${NN} − ${p}`, `${NN} + ${dec(p)}`, `${NN} ÷ ${p}`], 2)], X(pctX(p))); }
 const leConta = () => { const p = pick([10, 20, 25, 50]), N = 10 * int(2, 9); return Q(`A conta ${N} × ${dec(p)} calcula:`, `${p}% de ${N}`, [`${num(p / 10)}% de ${N}`, `${N} − ${p}`, `${p * 10}% de ${N}`], X(`${dec(p)} = ${p}/100 = ${p}%`)); };
-function contaFinal(tipo) {
-  const p = pick([10, 20, 25]), P = 10 * int(3, 20);
+function contaFinal(tipo, ps = [10, 20, 25]) {   // ps: as porcentagens (o Difícil, PROMPT-230, usa 12, 15 e 35)
+  const p = pick(ps), P = 10 * int(3, 20);
   if (tipo === 0) return Q(`Um produto de R$ ${P} tem ${p}% de desconto. Qual conta dá o preço final?`, `${P} − ${P} × ${dec(p)}`, [`${P} × ${dec(p)}`, `${P} − ${p}`, `${P} − ${P} × ${p}`], X(`${pctDecimal(p)}; O desconto é ${P} × ${dec(p)}; Preço final = preço − desconto = ${P} − ${P} × ${dec(p)}`));
   if (tipo === 1) return Q(`A mesada de R$ ${P} teve aumento de ${p}%. Qual conta dá a nova mesada?`, `${P} + ${P} × ${dec(p)}`, [`${P} × ${dec(p)}`, `${P} + ${p}`, `${P} + ${P} × ${p}`], X(`${pctDecimal(p)}; O aumento é ${P} × ${dec(p)}; Nova mesada = mesada + aumento = ${P} + ${P} × ${dec(p)}`));
   return Q(`Uma camiseta de R$ ${P} tem ${p}% de desconto. Qual conta dá direto o preço final?`, `${P} × ${dec(100 - p)}`, [`${P} × ${dec(p)}`, `${P} − ${p}`, `${P} × ${dec(100 + p)}`], X(`Com ${p}% de desconto, você paga 100% − ${p}% = ${100 - p}%; ${100 - p}% = ${100 - p}/100 = ${dec(100 - p)}; Preço final = ${P} × ${dec(100 - p)}`));
@@ -260,3 +260,257 @@ const M8 = {
 
 export const MAPAS_5_8 = { 5: M5, 6: M6, 7: M7, 8: M8 };
 export { SN };
+
+// ===================== ⭐ GINÁSIO DIFÍCIL (PROMPT-230) =====================
+// Faixa difícil (ver mapas1a4.js): porcentagens "quebradas" (12%, 15%, 35%…), valores de 3 algarismos e um passo a mais
+// (preço final, aumento, desconto em cima de desconto, achar o total).
+const PQ = [5, 12, 15, 30, 35, 40, 60, 70, 8];
+function pctD() {
+  const p = pick(PQ), N = 10 * int(12, 95), v = N * p / 100;
+  return Q(`Quanto é ${p}% de ${N}?`, num(v), erradasNum(v, [v * 10, v / 10, N - v, v + p, v * 2], { inteiro: false }), X(`${pctDecimal(p)}; ${pctVezes(p, N)}; ${naCalcTxt(p, N)}`));
+}
+function precoFinalD(aumento = false) {
+  return () => {
+    const p = pick([12, 15, 30, 35, 8]), P = 10 * int(8, 45), d = arred(P * p / 100), v = arred(aumento ? P + d : P - d);
+    const e = aumento ? `Um aluguel de R$ ${P} teve aumento de ${p}%. Qual é o novo valor?` : `Um celular de R$ ${P} tem ${p}% de desconto. Qual é o preço final?`;
+    return Q(e, reais(v), erradasNum(v, [d, aumento ? P - d : P + d, aumento ? P + p : P - p], { fmt: reais, inteiro: false }),
+      X(`${pctDecimal(p)}; ${aumento ? 'Aumento' : 'Desconto'} = ${P} × ${dec(p)} = ${num(d)}; ${aumento ? 'Novo valor' : 'Preço final'} = ${P} ${aumento ? '+' : '−'} ${num(d)} = ${reais(v)}; 💡 Direto: ${P} × ${dec(aumento ? 100 + p : 100 - p)} = ${num(v)}`));
+  };
+}
+function valorTotalD() {
+  const p = pick([5, 10, 20, 25, 50]), N = 20 * int(3, 40), v = N * p / 100;
+  return Q(`${p}% de um número é ${num(v)}. Que número é esse?`, num(N), erradasNum(N, [v * p / 100, v * 2, N / 2, N * 2, v + p], { inteiro: false }),
+    X(`${pctDecimal(p)}; ${dec(p)} × número = ${num(v)}; Número = ${num(v)} ÷ ${dec(p)} = ${num(N)}; 💡 Confere: ${num(N)} × ${dec(p)} = ${num(v)}`));
+}
+function descontoDuplo() {
+  const P = 100 * int(1, 6), [p, q] = [pick([10, 20, 50]), pick([10, 20])], m = arred(P * (1 - p / 100)), v = arred(m * (1 - q / 100));
+  return Q(`Um produto de R$ ${P} teve ${p}% de desconto. Depois, mais ${q}% de desconto sobre o novo preço. Qual é o preço final?`, reais(v),
+    erradasNum(v, [P * (1 - (p + q) / 100), P - p - q, m, P * q / 100], { fmt: reais, inteiro: false }),
+    X(`1º desconto: ${P} × ${dec(100 - p)} = ${num(m)}; 2º desconto (sobre ${num(m)}): ${num(m)} × ${dec(100 - q)} = ${num(v)}; Não é ${p + q}% de uma vez: o 2º desconto é sobre o preço novo.`));
+}
+function faltaramD() {
+  const p = pick([5, 15, 35, 45, 55, 65]), N = 20 * int(2, 15), f = N * p / 100;
+  return Q(`Numa escola de ${N} alunos, ${f} faltaram. Qual porcentagem faltou?`, `${p}%`, erradasNum(p, [f, 100 - p, p + 10, p - 5], { fmt: x => `${num(x)}%`, inteiro: false }),
+    X(`${f} ÷ ${N} = ${dec(p)}; ${dec(p)} = ${p}/100 = ${p}%`));
+}
+// 7 B: qual conta / decimal
+function pctDecD() {
+  const p = pick([7, 12, 12.5, 4.5, 150, 120, 3, 0.5, 2.5, 8, 175, 0.8, 35.5, 99]), d = arred(p / 100);
+  const f = x => num(x, 5);   // 0,0045 (com 3 casas viraria 0,004)
+  return Q(`${num(p)}% em número decimal:`, f(d), erradasNum(d, [d * 10, d / 10, p], { fmt: f, inteiro: false }), X(`${num(p)}% = ${num(p)}/100 = ${f(d)}`));
+}
+function contaDupla() {
+  const P = 10 * int(5, 30), p = pick([10, 20]), q = pick([10, 20, 30].filter(x => x !== p));   // iguais: a errada "× 1" ficaria estranha
+  return Q(`Um produto de R$ ${P} teve ${p}% de desconto e depois ${q}% de aumento. Qual conta dá o preço final?`, `${P} × ${dec(100 - p)} × ${dec(100 + q)}`,
+    [`${P} × ${dec(100 - p + q)}`, `${P} × ${dec(p)} × ${dec(q)}`, `${P} − ${p} + ${q}`],
+    X(`Desconto de ${p}%: paga ${100 - p}% = × ${dec(100 - p)}; Aumento de ${q}%: fica ${100 + q}% = × ${dec(100 + q)}; Juntos: ${P} × ${dec(100 - p)} × ${dec(100 + q)}`));
+}
+function contaTotalD() {
+  const p = pick([5, 10, 20, 25, 40]), v = 2 * int(3, 40);
+  return Q(`${p}% de um valor é ${v}. Qual conta dá o valor?`, `${v} ÷ ${dec(p)}`, [`${v} × ${dec(p)}`, `${v} × ${p}`, `${v} ÷ ${p}`],
+    X(`${pctDecimal(p)}; ${dec(p)} × valor = ${v}; Valor = ${v} ÷ ${dec(p)}`));
+}
+const PD = [12, 15, 35];
+const M7D = {
+  A: {
+    treinador1: [pctD, pctD, pctD],
+    treinador2: [precoFinalD(), precoFinalD(true), pctD],
+    treinador3: [faltaramD, valorTotalD, pctD],
+    lider: [precoFinalD(), valorTotalD, descontoDuplo, faltaramD, precoFinalD(true)],
+  },
+  B: {
+    treinador1: [pctDecD, pctDecD, pctDecD],
+    treinador2: [() => contaFinal(0, PD), () => contaFinal(1, PD), () => contaFinal(2, PD)],
+    treinador3: [contaDupla, contaTotalD, () => contaFinal(2, PD)],
+    lider: [pctDecD, contaDupla, contaTotalD, () => contaFinal(0, PD), () => contaFinal(1, PD)],
+  },
+};
+// mapa 5: bases maiores, decimais e frações ao quadrado, potências na expressão, mesma base e raízes maiores
+const QUAD_D = [13, 14, 15, 16, 17, 18, 19, 20, 25, 30].map(b => [b, 2]);
+const CUBO_D = [[6, 3], [7, 3], [8, 3], [9, 3], [3, 5], [2, 6], [2, 7], [2, 8], [2, 10], [4, 4], [5, 4]];
+function potDec() {
+  const b = pick([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 2.5]), n = b < 0.6 && coin() ? 3 : 2, v = arred(b ** n);
+  return Q(pw(b, n), num(v, 4), erradasNum(v, [b * n, v * 10, v / 10, b + n], { fmt: x => num(x, 4), inteiro: false }), X(`${pw(b, n)} = ${Array(n).fill(num(b)).join(' × ')} = ${num(v, 4)}. As casas depois da vírgula somam: ${n} × ${String(num(b)).split(',')[1]?.length || 0}`));
+}
+function potFrac() {
+  const q = int(2, 9), p = int(1, q - 1), n = q <= 5 && coin() ? 3 : 2;
+  if (mdc(p, q) > 1) return potFrac();
+  const a = p ** n, b = q ** n;
+  return Q(`(${frac(p, q)})${sup(n)}`, frac(a, b), erradasFrac(a, b, [[p * n, q * n], [p, b], [a, q], [p * n, q]]), X(`Eleva em cima e embaixo: ${p}${sup(n)} = ${a} e ${q}${sup(n)} = ${b}. Fica ${frac(a, b)}`));
+}
+function exprPot() {
+  for (;;) {
+    const [a, n] = pick([[2, 3], [3, 2], [2, 4], [4, 2], [5, 2], [3, 3], [10, 2]]), [b, m] = pick([[2, 2], [3, 2], [2, 3], [4, 2]]), c = int(2, 6), t = int(0, 2);
+    const A = a ** n, B = b ** m;
+    const [e, v, err, ex] = [
+      [`${a}${sup(n)} + ${b}${sup(m)} × ${c}`, A + B * c, [(A + B) * c, a * n + b * m * c, A + b * m * c], `${A} + ${B} × ${c} = ${A} + ${B * c}`],
+      [`${a}${sup(n)} − ${c} × ${b}${sup(m)}`, A - c * B, [(A - c) * B, a * n - c * b * m, A - c * b * m], `${A} − ${c} × ${B} = ${A} − ${c * B}`],
+      [`(${a} + ${c})² − ${b}${sup(m)}`, (a + c) ** 2 - B, [a * a + c * c - B, 2 * (a + c) - B, (a + c) ** 2 + B], `${a + c}² − ${B} = ${(a + c) ** 2} − ${B}`],
+    ][t];
+    if (v < 0) continue;
+    return Q(e, num(v), erradasNum(v, err), X(`Primeiro as potências, depois × e ÷, por último + e −: ${ex} = ${v}`));
+  }
+}
+function mesmaBase() {
+  const b = pick([2, 3, 5, 7, 10]), n = int(2, 6), m = int(3, 7), div = coin() && n !== m;
+  const [x, y] = div ? [Math.max(n, m) + 2, Math.min(n, m)] : [n, m], r = div ? x - y : x + y;
+  return Q(`${b}${sup(x)} ${div ? '÷' : '×'} ${b}${sup(y)} em uma potência só:`, `${b}${sup(r)}`, erradasTexto(`${b}${sup(r)}`, [`${b}${sup(div ? Math.round(x / y) || x + y : x * y)}`, `${b * b}${sup(r)}`, `${b}${sup(div ? x + y : Math.abs(x - y) || r + 1)}`, `${b}${sup(r + 1)}`]),
+    X(div ? `Mesma base na divisão: repete a base e subtrai os expoentes (${x} − ${y} = ${r}).` : `Mesma base na multiplicação: repete a base e soma os expoentes (${x} + ${y} = ${r}).`));
+}
+function potDePot() {
+  const b = pick([2, 3, 5, 10]), n = int(3, 5), m = int(2, 3), r = n * m;
+  return Q(`(${b}${sup(n)})${sup(m)} em uma potência só:`, `${b}${sup(r)}`, erradasTexto(`${b}${sup(r)}`, [`${b}${sup(n + m)}`, `${b * m}${sup(n)}`, `${b}${sup(n ** m)}`, `${b}${sup(r + 1)}`]), X(`Potência de potência: multiplica os expoentes (${n} × ${m} = ${r}).`));
+}
+const raizD = () => { const b = int(13, 30), n = b * b; return Q(`√${n}`, num(b), erradasNum(b, [n / 2, b + 1, b - 1, b + 10]), X(`Qual número vezes ele mesmo dá ${n}? ${b} × ${b} = ${n}, então √${n} = ${b}`)); };
+function raizDec() {
+  const t = int(0, 1);
+  if (t === 0) { const b = pick([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.1, 1.2]), n = arred(b * b); return Q(`√${num(n)}`, num(b), erradasNum(b, [n / 2, b * 10, b / 10, arred(b + 0.1)], { inteiro: false }), X(`${num(b)} × ${num(b)} = ${num(n)}, então √${num(n)} = ${num(b)}`)); }
+  const q = int(2, 12), p = int(1, q - 1); if (mdc(p, q) > 1) return raizDec();
+  return Q(`√(${frac(p * p, q * q)})`, frac(p, q), erradasFrac(p, q, [[p * p / 2, q * q / 2], [p, q * q], [p * p, q], [q, p], [p + 1, q], [p, q + 1]]), X(`Raiz em cima e embaixo: √${p * p} = ${p} e √${q * q} = ${q}. Fica ${frac(p, q)}`));
+}
+function raizExpr() {
+  for (;;) {
+    const r = int(5, 15), s = int(2, 9), [b, n] = pick([[2, 3], [3, 2], [2, 4], [4, 2], [5, 2]]), v = r * s - b ** n;
+    if (v < 0) continue;
+    return Q(`√${r * r} × ${s} − ${b}${sup(n)}`, num(v), erradasNum(v, [r * r * s - b ** n, r * s - b * n, r * (s - b ** n)]), X(`√${r * r} = ${r} e ${b}${sup(n)} = ${b ** n}. Então ${r} × ${s} − ${b ** n} = ${r * s} − ${b ** n} = ${v}`));
+  }
+}
+function negPotD() {
+  const b = -int(2, 5), n = int(2, 5), t = coin(), v = t ? b ** n : -((-b) ** n);
+  const e = t ? pw(b, n) : `−${-b}${sup(n)}`;
+  return Q(e, num(v), erradasNum(v, [-v, b * n, -b * n, (-b) ** (n - 1)], { neg: true }), X(t ? `${abre(b, n)}. Com parênteses o sinal entra na conta: expoente par dá positivo, ímpar dá negativo.` : `Sem parênteses, o expoente vale só para o ${-b}: −(${-b}${sup(n)}) = −${(-b) ** n}.`));
+}
+const M5D = {
+  A: {
+    treinador1: [pot(QUAD_D), pot(QUAD_D), pot(CUBO_D)],
+    treinador2: [potDec, potFrac, potDec],
+    treinador3: [exprPot, mesmaBase, potDePot],
+    lider: [exprPot, potFrac, mesmaBase, pot(CUBO_D), potDec],
+  },
+  B: {
+    treinador1: [raizD, raizD, raizD],
+    treinador2: [raizDec, raizDec, raizDec],
+    treinador3: [negPotD, negPotD, negPotD],
+    lider: [raizExpr, negPotD, raizDec, raizD, raizExpr],
+  },
+};
+
+// mapa 6: números de 3 algarismos (regras do 3, 4, 6 e 9), MMC e MDC em problemas, primos até 100
+const ehMultD = (ks) => () => {
+  const k = pick(ks); const n = coin() ? k * int(12, 111) : k * int(12, 111) + int(1, k - 1);
+  const regra = { 3: 'some os algarismos: se a soma é da tabuada do 3, é múltiplo', 4: 'olhe os dois últimos algarismos: se formam múltiplo de 4, é múltiplo', 6: 'tem que ser par e múltiplo de 3 ao mesmo tempo', 9: 'some os algarismos: se a soma é da tabuada do 9, é múltiplo' }[k];
+  return SN(n % k === 0, `${n} é múltiplo de ${k}?`, X(`Regra do ${k}: ${regra}. ${divTxt(n, k)}`));
+};
+function qualMultD() {
+  const k = pick([6, 7, 8, 9, 12, 15]), certo = k * int(9, 40), err = new Set();
+  while (err.size < 3) { const x = certo + pick([-4, -3, -2, -1, 1, 2, 3, 4, 5, 6]); if (x > 1 && x % k !== 0) err.add(x); }
+  return Q(`Qual é múltiplo de ${k}?`, num(certo), [...err].map(num), X(`${certo} ÷ ${k} = ${certo / k}, sem sobrar.`));
+}
+const mdcN = (a, b) => (b ? mdcN(b, a % b) : a);
+function mmcProb() {
+  const [a, b] = pick([[4, 6], [6, 8], [6, 9], [8, 12], [10, 15], [12, 18], [9, 12], [6, 10], [15, 20]]), m = a * b / mdcN(a, b);
+  const [txt, un] = pick([[`Um ônibus passa a cada ${a} minutos e outro a cada ${b} minutos. Saíram juntos agora. Daqui a quantos minutos saem juntos de novo?`, 'min'], [`Um pisca-pisca acende a cada ${a} segundos e outro a cada ${b} segundos. Acenderam juntos agora. Daqui a quantos segundos acendem juntos de novo?`, 's']]);
+  return Q(txt, `${m} ${un}`, erradasNum(m, [a * b, a + b, m * 2, mdcN(a, b)], { fmt: x => `${num(x)} ${un}` }), X(`É o MMC de ${a} e ${b}: múltiplos de ${a} (${[1, 2, 3, 4].map(i => a * i).join(', ')}…) e de ${b} (${[1, 2, 3].map(i => b * i).join(', ')}…). O primeiro em comum é ${m}.`));
+}
+function mmcConta() { const [a, b] = pick([[4, 6], [6, 8], [6, 9], [8, 12], [10, 15], [12, 18], [9, 12], [6, 10], [4, 10], [15, 20]]), m = a * b / mdcN(a, b); return Q(`Qual é o MMC de ${a} e ${b}?`, num(m), erradasNum(m, [a * b, mdcN(a, b), m * 2, a + b]), X(`O menor número que está na tabuada do ${a} e na do ${b}: ${m}`)); }
+function mdcProb() {
+  const [a, b] = pick([[24, 36], [18, 30], [20, 30], [16, 24], [12, 18], [30, 45], [28, 42], [36, 48]]), d = mdcN(a, b);
+  return Q(`Tenho fitas de ${a} cm e ${b} cm. Quero cortar as duas em pedaços iguais, do maior tamanho possível, sem sobrar. Quanto mede cada pedaço?`, `${d} cm`, erradasNum(d, [a * b / d, d / 2, b - a, d * 2], { fmt: x => `${num(x)} cm` }), X(`É o MDC de ${a} e ${b}: o maior número que divide os dois. ${a} ÷ ${d} = ${a / d} e ${b} ÷ ${d} = ${b / d}.`));
+}
+function mdcConta() { const [a, b] = pick([[24, 36], [18, 30], [20, 30], [16, 24], [12, 18], [30, 45], [28, 42], [36, 48], [40, 60]]), d = mdcN(a, b); return Q(`Qual é o MDC de ${a} e ${b}?`, num(d), erradasNum(d, [a * b / d, d / 2, d * 2, b - a]), X(`O maior divisor que ${a} e ${b} têm em comum: ${d}`)); }
+const PRIMOS = [53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 41, 43, 47, 37], COMPOSTOS = [51, 57, 87, 91, 93, 69, 77, 49, 39, 63, 81, 85, 95, 99];
+const fat = n => { for (let d = 2; d * d <= n; d++) if (n % d === 0) return `${n} = ${d} × ${n / d}`; return ''; };
+function qualPrimo() { const p = pick(PRIMOS), c = sample(COMPOSTOS, 3); return Q('Qual destes é primo?', num(p), c.map(num), X(`${p} só divide por 1 e por ele mesmo. Os outros dividem: ${c.map(fat).join('; ')}.`)); }
+function ehPrimo() { const n = coin() ? pick(PRIMOS) : pick(COMPOSTOS); return SN(PRIMOS.includes(n), `${n} é primo?`, X(PRIMOS.includes(n) ? `${n} não divide por 2, 3, 5 nem 7: é primo.` : `Não é: ${fat(n)}.`)); }
+const DIV_D = [36, 48, 60, 72, 84, 90, 96, 100, 120, 64];
+function qtdDiv() { const n = pick(DIV_D), ds = divsDe(n); return Q(`Quantos divisores tem ${n}?`, num(ds.length), erradasNum(ds.length, [ds.length - 2, ds.length + 2, ds.length - 1, n / 2]), X(`Divisores de ${n}: ${ds.join(', ')}. São ${ds.length}.`)); }
+function qualDivD() {
+  for (;;) {
+    const n = pick(DIV_D), ds = divsDe(n).filter(d => d > 6 && d < n), nd = [7, 8, 9, 11, 12, 14, 15, 16, 18, 24, 25].filter(d => n % d !== 0);
+    if (!ds.length || nd.length < 3) continue;
+    return Q(`Qual é divisor de ${n}?`, num(pick(ds)), sample(nd, 3).map(num), X(`Divisores de ${n}: ${divsDe(n).join(', ')}`));
+  }
+}
+const M6D = {
+  A: {
+    treinador1: [ehMultD([3, 9]), ehMultD([4]), ehMultD([3, 9])],
+    treinador2: [ehMultD([6]), qualMultD, ehMultD([4, 6])],
+    treinador3: [mmcConta, mmcProb, mmcConta],
+    lider: [qualMultD, mmcProb, ehMultD([9]), mmcConta, ehMultD([4, 6])],
+  },
+  B: {
+    treinador1: [qualDivD, qtdDiv, qualDivD],
+    treinador2: [mdcConta, mdcProb, mdcConta],
+    treinador3: [qualPrimo, ehPrimo, qualPrimo],
+    lider: [mdcProb, qtdDiv, qualPrimo, qualDivD, ehPrimo],
+  },
+};
+
+// mapa 8: frases com dois passos, valor com negativos e quadrados, distributiva e termos com sinal
+function fraseD() {
+  const k = int(3, 9);
+  return pick([
+    () => Q(`Qual expressão representa "o triplo de um número menos ${k}"?`, `3x − ${k}`, [`3(x − ${k})`, `x − 3 − ${k}`, `${k} − 3x`], X(`Primeiro o triplo (3x), depois menos ${k}: 3x − ${k}`)),
+    () => Q(`Qual expressão representa "o dobro da soma de um número com ${k}"?`, `2(x + ${k})`, [`2x + ${k}`, `x + 2 + ${k}`, `2x + 2`], X(`Primeiro a soma (x + ${k}), depois o dobro dela inteira: 2(x + ${k})`)),
+    () => Q(`Qual expressão representa "a metade de um número mais ${k}"?`, `x ÷ 2 + ${k}`, [`(x + ${k}) ÷ 2`, `2x + ${k}`, `x ÷ ${k} + 2`], X(`Primeiro a metade (x ÷ 2), depois mais ${k}: x ÷ 2 + ${k}`)),
+    () => Q(`Qual expressão representa "o quadrado de um número menos o dobro dele"?`, 'x² − 2x', ['2x − x²', 'x² − 2', '(x − 2)²'], X('Quadrado: x². Dobro: 2x. "Menos": x² − 2x')),
+    () => Q(`Qual expressão representa "a diferença entre um número e ${k}, vezes 3"?`, `3(x − ${k})`, [`3x − ${k}`, `x − 3 × ${k}`, `3(${k} − x)`], X(`A diferença inteira (x − ${k}) vezes 3: 3(x − ${k})`)),
+  ])();
+}
+function valorD() {
+  const t = int(0, 3), n = pick([-5, -4, -3, -2, -1, 2, 3, 4, 5]);
+  if (t === 0) { const a = int(2, 4), b = int(1, 6), v = a * n * n - b * n; return Q(`Qual é o valor de ${a}x² − ${b}x quando x = ${num(n)}?`, num(v), erradasNum(v, [a * 2 * n - b * n, -a * n * n - b * n, a * n * n + b * n], { neg: true }), X(`Troque x por ${n < 0 ? `(${num(n)})` : n}: ${a} × ${n * n} − ${b} × ${n < 0 ? `(${num(n)})` : n} = ${a * n * n} ${-b * n < 0 ? '−' : '+'} ${Math.abs(b * n)} = ${num(v)}`)); }
+  if (t === 1) { const c = int(1, 9), v = n * n - c; return Q(`Qual é o valor de x² − ${c} quando x = ${num(n)}?`, num(v), erradasNum(v, [-n * n - c, 2 * n - c, n * n + c], { neg: true }), X(`x² = ${n < 0 ? `(${num(n)})` : n} × ${n < 0 ? `(${num(n)})` : n} = ${n * n} (negativo ao quadrado dá positivo). ${n * n} − ${c} = ${num(v)}`)); }
+  if (t === 2) { const a = int(2, 6), p = pick([-4, -3, -2, 2, 3]), q = pick([-3, -2, -1, 1, 2, 4]), v = a * p + p * q; return Q(`Qual é o valor de ${a}a + ab quando a = ${num(p)} e b = ${num(q)}?`, num(v), erradasNum(v, [a * p - p * q, a + p + q, -v], { neg: true }), X(`${a} × (${num(p)}) + (${num(p)}) × (${num(q)}) = ${num(a * p)} ${p * q < 0 ? '−' : '+'} ${Math.abs(p * q)} = ${num(v)}`)); }
+  const a = int(2, 5), b = int(2, 9), c = int(2, 4), v = a * (n + b) - c * n;
+  return Q(`Qual é o valor de ${a}(x + ${b}) − ${c}x quando x = ${num(n)}?`, num(v), erradasNum(v, [a * n + b - c * n, a * (n + b) + c * n, a * (n - b) - c * n], { neg: true }), X(`${a} × (${num(n)} + ${b}) − ${c} × (${num(n)}) = ${a} × ${num(n + b)} ${-c * n < 0 ? '−' : '+'} ${Math.abs(c * n)} = ${num(v)}`));
+}
+const monoS = (k, l, prim = false) => { const a = Math.abs(k), m = a === 1 ? l : `${a}${l}`; return k < 0 ? (prim ? `−${m}` : ` − ${m}`) : (prim ? m : ` + ${m}`); };
+const exprS = (ka, kb, kc = null) => { let s = ''; if (ka) s += monoS(ka, 'x', true); if (kb) s += s ? monoS(kb, 'y') : monoS(kb, 'y', true); if (kc) s += s ? (kc < 0 ? ` − ${-kc}` : ` + ${kc}`) : num(kc); return s || '0'; };
+function simplNeg() {
+  for (;;) {
+    const a = int(2, 9), b = int(2, 9), c = int(-9, 9), d = int(1, 9); const r = a - b, s = c + d;
+    if (!r || !c || !s) continue;
+    const e = `${a}x${c < 0 ? ` − ${-c}` : ` + ${c}`} − ${b}x + ${d}`, R = exprS(r, 0, s);
+    return Q(`Simplifique ${e}`, R, erradasTexto(R, [exprS(a + b, 0, s), exprS(r, 0, c - d), exprS(-r, 0, s), exprS(r + s, 0), exprS(r, 0, s + 2)]), X(`Junte os x: ${a}x − ${b}x = ${exprS(r, 0)}. Junte os números: ${c} + ${d} = ${s}. Fica ${R}`));
+  }
+}
+function distrib() {
+  for (;;) {
+    const a = int(2, 6), b = int(1, 9), c = int(1, 5), neg = coin(), op = coin() ? '+' : '−';
+    const kx = neg ? -a : a, kc = (neg ? -a : a) * (op === '+' ? b : -b), rx = kx + c;
+    if (!rx) continue;
+    const e = `${neg ? '−' : ''}${a}(x ${op} ${b}) + ${c === 1 ? '' : c}x`, R = exprS(rx, 0, kc);
+    return Q(`Simplifique ${e}`, R, erradasTexto(R, [exprS(kx + c, 0, op === '+' ? b : -b), exprS(-kx + c, 0, kc), exprS(rx, 0, -kc), exprS(rx + 1, 0, kc), exprS(a + c, 0, a * b)]),
+      X(`Distribua: ${neg ? '−' : ''}${a} × x = ${exprS(kx, 0)} e ${neg ? '−' : ''}${a} × ${op === '+' ? '' : '(−'}${b}${op === '+' ? '' : ')'} = ${num(kc)}. Depois junte os x: ${exprS(kx, 0)} + ${c === 1 ? '' : c}x = ${exprS(rx, 0)}. Fica ${R}`));
+  }
+}
+function simplXY() {
+  for (;;) {
+    const a = int(2, 9), b = int(2, 9), c = int(1, 9), d = int(1, 9), sx = coin() ? 1 : -1, sy = coin() ? 1 : -1;
+    const rx = a + sx * c, ry = -b + sy * d; if (!rx || !ry) continue;
+    const e = `${a}x − ${b}y ${sx > 0 ? '+' : '−'} ${c === 1 ? '' : c}x ${sy > 0 ? '+' : '−'} ${d === 1 ? '' : d}y`, R = exprS(rx, ry);
+    return Q(`Simplifique ${e}`, R, erradasTexto(R, [exprS(rx, -ry), exprS(a - sx * c, ry), exprS(rx + ry, 0).replace(/x$/, 'xy'), exprS(rx, b + sy * d), exprS(rx + 1, ry)]),
+      X(`Junte os x: ${a} ${sx > 0 ? '+' : '−'} ${c} = ${rx}. Junte os y: −${b} ${sy > 0 ? '+' : '−'} ${d} = ${ry}. Fica ${R}`));
+  }
+}
+function perimExpr() {
+  const a = int(2, 5), b = int(1, 9), c = int(1, 4), d = int(1, 9);
+  const R = `${2 * (a + c)}x + ${2 * (b + d)}`;
+  return Q(`Um retângulo tem lados ${a}x + ${b} e ${c === 1 ? '' : c}x + ${d}. Qual é o perímetro?`, R, erradasTexto(R, [`${a + c}x + ${b + d}`, `${2 * (a + c)}x + ${b + d}`, `${2 * (a + c) + 2 * (b + d)}x`, `${a + c}x + ${2 * (b + d)}`]), X(`Perímetro = 2 × (um lado + o outro) = 2 × (${a + c}x + ${b + d}) = ${R}`));
+}
+const M8D = {
+  A: {
+    treinador1: [fraseD, fraseD, fraseD],
+    treinador2: [valorD, valorD, valorD],
+    treinador3: [valorD, fraseD, valorD],
+    lider: [fraseD, valorD, valorD, fraseD, valorD],
+  },
+  B: {
+    treinador1: [simplNeg, simplNeg, simplNeg],
+    treinador2: [distrib, distrib, distrib],
+    treinador3: [simplXY, simplXY, perimExpr],
+    lider: [distrib, simplXY, simplNeg, perimExpr, distrib],
+  },
+};
+export const DIFICIL_5_8 = { 5: M5D, 6: M6D, 7: M7D, 8: M8D };

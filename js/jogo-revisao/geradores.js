@@ -2,12 +2,18 @@
 // Uso: import { gerarQuestoes } from '/js/jogo-revisao/geradores.js';
 //      gerarQuestoes(7, 'B', 'treinador2')  →  [{ id, enunciado, resposta, erradas, explicacao?, dica, tabela? }, ...]
 //      explicacao: a conta resolvida desta pergunta (quando existe); dica: lembrete geral do ginásio.
-import { MAPAS_1_4 } from './mapas1a4.js';
-import { MAPAS_5_8 } from './mapas5a8.js';
-import { MAPAS_9_13, perguntasTabela } from './mapas9a13.js';
+import { MAPAS_1_4, DIFICIL_1_4 } from './mapas1a4.js';
+import { MAPAS_5_8, DIFICIL_5_8 } from './mapas5a8.js';
+import { MAPAS_9_13, DIFICIL_9_13, perguntasTabela } from './mapas9a13.js';
 export { usarSemente, usarAleatorio } from './base.js';
 
 const BANCO = { ...MAPAS_1_4, ...MAPAS_5_8, ...MAPAS_9_13 };
+// ⭐ faixa difícil (PROMPT-230): por ginásio, listas por personagem (sem revanche). Ginásio sem lista: as normais, com
+// { dificil: true } passado a cada gerador (quem souber, endurece; quem não souber, ignora).
+const DIFICIL = { ...DIFICIL_1_4, ...DIFICIL_5_8, ...DIFICIL_9_13 };
+export const temDificil = (mapa, lado) => !!DIFICIL[mapa]?.[lado];
+// as listas de tipos de um personagem: a difícil, se houver
+const listaDe = (mapa, lado, personagem, dificil) => (dificil && DIFICIL[mapa]?.[lado]?.[personagem]) || BANCO[mapa]?.[lado]?.[personagem];
 // Lembrete geral de cada ginásio (aparece quando o aluno erra, junto com a explicação).
 export const DICAS = {
   // PROMPT-196: mapas 1 a 4 com dicas curtas (máx. ~6 palavras); no cartão do erro, a dica do tipo de conta vem de aulas-como.js (dicaCurta)
@@ -50,21 +56,22 @@ const tipoDa = (fns, indice) => fns[indice % fns.length];
 // Os geradores não têm um tipo com nome; o formato é o mesmo para cada tipo de pergunta, com quaisquer números.
 export const assuntoDe = (enunciado) => String(enunciado || '').replace(/[−-]?\d+(?:[.,]\d+)*/g, '#').replace(/\s+/g, ' ').trim().slice(0, 80);
 
-export function gerarQuestoes(mapa, lado, personagem) {
+// opções: dificil (⭐ PROMPT-230: as listas difíceis), n (quantas; padrão: nPerguntas do personagem)
+export function gerarQuestoes(mapa, lado, personagem, { dificil = false, n = nPerguntas(personagem) } = {}) {
   const g = BANCO[mapa]?.[lado];
   if (!g) throw new Error(`Mapa ${mapa}${lado} não existe`);
-  const n = nPerguntas(personagem);
   let qs;
+  const arg = { dificil };
   if (g === 'tabelas') qs = perguntasTabela(personagem, n);
   else {
-    const fns = g[personagem]; if (!fns) throw new Error(`Personagem ${personagem} não existe em ${mapa}${lado}`);
+    const fns = listaDe(mapa, lado, personagem, dificil); if (!fns) throw new Error(`Personagem ${personagem} não existe em ${mapa}${lado}`);
     const vistos = new Set(); qs = [];
     for (let i = 0; i < n; i++) {
       // o tipo da posição; se ele só tem uma pergunta (fixa) já usada, o próximo tipo da lista que ainda dê pergunta nova
       let q, k, tipo = i % fns.length;
       for (let d = 0; d < fns.length; d++) {
         const j = (i + d) % fns.length;
-        for (let t = 0; t < 40; t++) { q = fns[j](); k = q.enunciado + '|' + q.resposta; if (!vistos.has(k)) break; }
+        for (let t = 0; t < 40; t++) { q = fns[j](arg); k = q.enunciado + '|' + q.resposta; if (!vistos.has(k)) break; }
         tipo = j;
         if (!vistos.has(k)) break;
       }
@@ -72,16 +79,16 @@ export function gerarQuestoes(mapa, lado, personagem) {
     }
   }
   const dica = DICAS[`${mapa}${lado}`];
-  return qs.map((q, i) => ({ id: `m${mapa}${lado}-${personagem}-${i + 1}`, ...q, dica }));
+  return qs.map((q, i) => ({ id: `m${mapa}${lado}-${dificil ? 'd-' : ''}${personagem}-${i + 1}`, ...q, dica }));   // ⭐ "-d-": o id do Difícil não entra no treino nem no painel
 }
 
 // Gera UMA pergunta nova do mesmo tipo da posição `indice` (0 a n − 1: treinadores 0 a 5, líder 0 a 7, revanche 0 a 4).
 // Use quando o aluno erra: a pergunta volta para o fim da fila com outros números.
 // Retorna null no Mapa 13 B (tabelas): nesse caso, repita a mesma pergunta.
-export function gerarUma(mapa, lado, personagem, indice) {
+export function gerarUma(mapa, lado, personagem, indice, { dificil = false } = {}) {
   const g = BANCO[mapa]?.[lado];
   if (!g || g === 'tabelas') return null;
-  const fns = g[personagem]; if (!fns?.length || !(indice >= 0)) return null;
+  const fns = listaDe(mapa, lado, personagem, dificil); if (!fns?.length || !(indice >= 0)) return null;
   const f = tipoDa(fns, indice);
-  return { id: `m${mapa}${lado}-${personagem}-${indice + 1}`, ...f(), dica: DICAS[`${mapa}${lado}`] };
+  return { id: `m${mapa}${lado}-${dificil ? 'd-' : ''}${personagem}-${indice + 1}`, ...f({ dificil }), dica: DICAS[`${mapa}${lado}`] };
 }

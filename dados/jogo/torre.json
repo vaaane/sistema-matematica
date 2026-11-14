@@ -1,0 +1,107 @@
+{
+ "_nota": "🏆 Torre dos Campeões (PROMPT-230). Coordenadas em 1376 × 768 (as imagens de img/jogo/torre/ são 2576 × 1438, a mesma proporção). local = onde a torre aparece: { \"mapa\": 13, \"x\": 0, \"y\": 0, \"altura\": 330 } (x, y = a porta, embaixo); null = em nenhum mapa ainda. saloes: elipse = [cx, cy, rx, ry] do chão onde se anda, extra = retângulos [x0, y0, x1, y1] a mais (o caminho até a escada), treinadores = os pés dos 4 (o 4º é o chefe), pontos = onde o aluno para na frente de cada um, escada = a subida para o próximo andar (null no salão 3), saida = a saída da torre, entrada = onde o aluno aparece. chefes: a imagem própria (img/jogo/personagens/{nome}.webp e bustos/{nome}.webp); enquanto o arquivo não existir, um líder de ginásio.",
+ "local": null,
+ "altura_personagem": 135,
+ "andares": [
+  { "nome": "Salão das Expressões", "mapas": [1, 2], "dificil": false, "salao": 1 },
+  { "nome": "Salão dos Negativos e Frações", "mapas": [3, 4], "dificil": false, "salao": 1 },
+  { "nome": "Salão das Potências", "mapas": [5, 6], "dificil": false, "salao": 1 },
+  { "nome": "Salão da Porcentagem", "mapas": [7, 8], "dificil": false, "salao": 1 },
+  { "nome": "Salão das Equações", "mapas": [9, 10], "dificil": false, "salao": 1 },
+  { "nome": "Salão da Geometria", "mapas": [11, 12, 13], "dificil": false, "salao": 1 },
+  { "nome": "Câmara Sombria I", "mapas": [1, 2, 3, 4], "dificil": true, "salao": 2 },
+  { "nome": "Câmara Sombria II", "mapas": [5, 6, 7, 8], "dificil": true, "salao": 2 },
+  { "nome": "Câmara Sombria III", "mapas": [9, 10, 11, 12, 13], "dificil": true, "salao": 2 },
+  { "nome": "Topo dos Campeões", "mapas": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dificil": true, "salao": 3 }
+ ],
+ "saloes": {
+  "1": {
+   "imagem": "salao_1.webp", "batalha": "batalha_1.webp",
+   "elipse": [690, 535, 455, 200], "extra": [[1060, 470, 1205, 585]],
+   "estrela": [687, 497],
+   "treinadores": [[420, 545], [530, 395], [850, 395], [960, 545]],
+   "pontos": [[505, 575], [570, 445], [810, 445], [875, 575]],
+   "escada": [1170, 525], "saida": [690, 735], "entrada": [690, 700],
+   "placa": [255, 470]
+  },
+  "2": {
+   "imagem": "salao_2.webp", "batalha": "batalha_2.webp",
+   "elipse": [690, 535, 455, 200], "extra": [[1060, 470, 1205, 585]],
+   "estrela": [687, 497],
+   "treinadores": [[420, 545], [530, 395], [850, 395], [960, 545]],
+   "pontos": [[505, 575], [570, 445], [810, 445], [875, 575]],
+   "escada": [1170, 525], "saida": [690, 735], "entrada": [690, 700],
+   "placa": [255, 470]
+  },
+  "3": {
+   "imagem": "salao_3.webp", "batalha": "batalha_3.webp",
+   "elipse": [690, 525, 440, 185], "extra": [[1050, 560, 1200, 660]],
+   "estrela": [687, 497],
+   "treinadores": [[420, 535], [540, 395], [840, 395], [960, 535]],
+   "pontos": [[505, 565], [580, 445], [800, 445], [875, 565]],
+   "escada": null, "saida": [1180, 650], "entrada": [1100, 620],
+   "placa": [190, 600]
+  }
+ },
+ "chefes": { "7": "torre_chefe7", "8": "torre_chefe8", "9": "torre_chefe9", "10": "torre_campeao" },
+ "moedas_treinador": 10,
+ "moedas_chefe": 20,
+ "bau_moedas": [50, 75, 100, 125, 150, 175, 200, 225, 250],
+ "bau_ouro_moedas": 500,
+ "moedas_premio_repetido": 100,
+ "premios": {
+  "_nota": "O que pode sair no baú (1 à escolha entre 3 sorteados, de categorias diferentes quando der, nunca algo que o aluno já tem). arco_iris: só o baú de ouro do andar 10. moveis: largura = como os de casinha.json; exclusivos (não estão na loja).",
+  "cores": [
+   { "id": "rubi", "nome": "Rubi", "cor": "#ff3b5c" },
+   { "id": "safira", "nome": "Safira", "cor": "#3d7bff" },
+   { "id": "esmeralda", "nome": "Esmeralda", "cor": "#22d37a" },
+   { "id": "ametista", "nome": "Ametista", "cor": "#b05cff" },
+   { "id": "ouro", "nome": "Ouro", "cor": "#ffc93c" }
+  ],
+  "estilos": [
+   { "id": "galaxia", "nome": "Galáxia", "emoji": "🌌" },
+   { "id": "holografico", "nome": "Holográfico", "emoji": "🌈" },
+   { "id": "neon", "nome": "Neon", "emoji": "💡" }
+  ],
+  "acabamentos": [
+   { "id": "galaxia", "nome": "Galáxia", "emoji": "🌌" },
+   { "id": "holografico", "nome": "Holográfico", "emoji": "🌈" },
+   { "id": "neon", "nome": "Neon", "emoji": "💡" },
+   { "id": "ouro", "nome": "Ouro com brilho", "emoji": "✨" }
+  ],
+  "temas": [
+   { "id": "castelo_real", "nome": "Castelo Real", "emoji": "👑", "imagem": "temas/castelo_real.webp" },
+   { "id": "nuvens", "nome": "Nuvens", "emoji": "☁️", "imagem": "temas/nuvens.webp" },
+   { "id": "neon", "nome": "Neon", "emoji": "🌃", "imagem": "temas/neon_base.webp", "camadas": [{ "mascara": "temas/neon_luz.png", "cor": "neon" }] },
+   { "id": "livre", "nome": "Tema Livre", "emoji": "🖌️", "imagem": "temas/livre_base.webp", "camadas": [{ "mascara": "temas/livre_parede.png", "cor": "parede" }, { "mascara": "temas/livre_chao.png", "cor": "chao" }], "ativo": false }
+  ],
+  "cores_neon": [
+   { "id": "rosa", "nome": "Rosa", "cor": "#ff3df2" }, { "id": "azul", "nome": "Azul", "cor": "#00d4ff" }, { "id": "verde", "nome": "Verde", "cor": "#39ff88" },
+   { "id": "roxo", "nome": "Roxo", "cor": "#9b5cff" }, { "id": "amarelo", "nome": "Amarelo", "cor": "#ffe14d" }, { "id": "vermelho", "nome": "Vermelho", "cor": "#ff3b3b" }, { "id": "branco", "nome": "Branco", "cor": "#ffffff" }
+  ],
+  "cores_livre": [
+   { "id": "creme", "nome": "Creme", "cor": "#f3e3c3" }, { "id": "azul", "nome": "Azul", "cor": "#8db8e8" }, { "id": "verde", "nome": "Verde", "cor": "#9bd49b" },
+   { "id": "rosa", "nome": "Rosa", "cor": "#f2a7c3" }, { "id": "lilas", "nome": "Lilás", "cor": "#c3a7f2" }, { "id": "cinza", "nome": "Cinza", "cor": "#a9acb8" }, { "id": "madeira", "nome": "Madeira", "cor": "#a8693c" }
+  ],
+  "moveis": [
+   { "id": "poltrona_gamer", "nome": "Poltrona gamer", "emoji": "🎮", "tipo": "chao", "largura": 130, "grupo": "Gamer" },
+   { "id": "sofa_gamer", "nome": "Sofá gamer", "emoji": "🎮", "tipo": "chao", "largura": 200, "grupo": "Gamer" },
+   { "id": "mesa_gamer", "nome": "Mesa gamer", "emoji": "🖥️", "tipo": "chao", "largura": 190, "grupo": "Gamer" },
+   { "id": "fliperama", "nome": "Fliperama", "emoji": "🕹️", "tipo": "chao", "largura": 150, "grupo": "Gamer" },
+   { "id": "letreiro_game", "nome": "Letreiro GAME", "emoji": "🔤", "tipo": "chao", "largura": 190, "grupo": "Gamer" },
+   { "id": "cama_nuvem", "nome": "Cama de nuvem", "emoji": "☁️", "tipo": "chao", "largura": 260, "grupo": "Nuvens" },
+   { "id": "sofa_nuvem", "nome": "Sofá de nuvem", "emoji": "☁️", "tipo": "chao", "largura": 200, "grupo": "Nuvens" },
+   { "id": "estante_nuvem", "nome": "Estante de nuvem", "emoji": "☁️", "tipo": "chao", "largura": 190, "grupo": "Nuvens" },
+   { "id": "luminaria_estrela", "nome": "Luminária de estrela", "emoji": "⭐", "tipo": "chao", "largura": 100, "grupo": "Nuvens" },
+   { "id": "tapete_arco_iris", "nome": "Tapete arco-íris", "emoji": "🌈", "tipo": "chao", "largura": 260, "grupo": "Nuvens" },
+   { "id": "trono", "nome": "Trono", "emoji": "👑", "tipo": "chao", "largura": 175, "grupo": "Real" },
+   { "id": "sofa_real", "nome": "Sofá real", "emoji": "👑", "tipo": "chao", "largura": 200, "grupo": "Real" },
+   { "id": "cama_dossel", "nome": "Cama de dossel", "emoji": "🛏️", "tipo": "chao", "largura": 280, "grupo": "Real" },
+   { "id": "mesa_banquete", "nome": "Mesa de banquete", "emoji": "🍗", "tipo": "chao", "largura": 240, "grupo": "Real" },
+   { "id": "armadura", "nome": "Armadura", "emoji": "🛡️", "tipo": "chao", "largura": 145, "grupo": "Real" },
+   { "id": "bau_real", "nome": "Baú real", "emoji": "💎", "tipo": "chao", "largura": 130, "grupo": "Real" },
+   { "id": "bau_madeira", "nome": "Baú de madeira", "emoji": "🧰", "tipo": "chao", "largura": 120, "grupo": "Real" }
+  ],
+  "trono_ouro": { "id": "trono_ouro", "nome": "Trono dourado", "emoji": "👑", "tipo": "chao", "largura": 185, "imagem_de": "trono", "acabamento_fixo": "ouro" }
+ }
+}

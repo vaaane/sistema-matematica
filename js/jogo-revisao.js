@@ -437,6 +437,7 @@ function estadoVazio() {
         treinador1: progressoVazio(), treinador2: progressoVazio(), treinador3: progressoVazio(),
         lider: progressoVazio(), revanche: progressoVazio(),
         insignia: false, dourada: false, dataInsignia: null,
+        dif: {}, estrela: false,   // ⭐ Ginásio difícil (PROMPT-230): treinadores vencidos no Difícil e a estrela (insignias/{chave}/estrela)
       };
     }
   }
@@ -476,13 +477,15 @@ async function carregarEstado() {
         if (x?.vencido) g[p] = { vencido: true, acertosPrimeira: x.acertos_primeira || 0, total: x.total || 0, data: x.data || null };
       }
       g.primeiraTentativa = Number(gs?.primeira_tentativa) || null;   // 1ª luta com o líder (PROMPT-97, painel "Travados")
-      g.zerado = !!gs?.zerado;   // 🧪 professora zerou este ginásio (PROMPT-173): o pet dele só volta vencendo o líder
+      g.zerado = !!gs?.zerado;
+      g.dif = gs?.dificil && typeof gs.dificil === 'object' ? { ...gs.dificil } : {};   // ⭐ PROMPT-230   // 🧪 professora zerou este ginásio (PROMPT-173): o pet dele só volta vencendo o líder
     }
     for (const [chave, ins] of Object.entries(v.insignias || {})) {
       const g = estado.ginasios[chave];
       if (!g || !ins) continue;
       g.insignia = true;
       g.dourada = !!ins.dourada;
+      g.estrela = !!ins.estrela;   // ⭐ venceu o líder no Difícil (PROMPT-230); não conta para a "Lenda" (essa é a dourada da revanche)
       g.dataInsignia = ins.data || null;
       g.insAcertos = Number(ins.acertos_primeira) || 0; g.insTotal = Number(ins.total) || 0;   // 🏆 placa de vencedores (PROMPT-113)
       // 🩹 insígnia sem o líder gravado (PROMPT-169): a insígnia vale como líder (e treinadores) vencidos; conserta o banco
@@ -494,6 +497,8 @@ async function carregarEstado() {
     estado.sequencia = v.sequencia || null;
     { const u = estado.sequencia?.ultimo_dia; conversa.voltou = !!u && u !== diaLocal() && (paraData(diaLocal()) - paraData(u)) / 86400000 >= 3; }
     estado.respostas = v.respostas || {};
+    estado.dificilAcertos = v.dificil_acertos && typeof v.dificil_acertos === 'object' ? { ...v.dificil_acertos } : {};   // ⭐ 1º acerto de cada pergunta do Difícil (moeda)
+    estado.trofeusOuro = v.trofeus_ouro && typeof v.trofeus_ouro === 'object' ? { ...v.trofeus_ouro } : {};   // 🏆 { mapa: data } troféu dourado já entregue
     estado.petPerguntaDia = v.pet_pergunta_dia || null;
     estado.album = v.album && typeof v.album === 'object' ? { ...v.album } : {};   // 📒 { chave: { data, dourada } } (PROMPT-98)
     estado.albumCompleto = v.album_completo || null;   // 🗨️ { data, n, ultimo } (PROMPT-96)
@@ -524,6 +529,7 @@ async function carregarEstado() {
     estado.pescaDia = v.pesca_dia || null;
     estado.presentesDia = v.presentes_dia || null;
     estado.presentesRecebidos = Number(v.presentes_recebidos) || 0;   // 🎁 só o número (PROMPT-103)
+    estado.torre = lerTorre(v.torre);   // 🏆 Torre dos Campeões (PROMPT-230)
     estado.casinha = lerCasinha(v.casinha);   // 🏠 { guardados, moveis, cama_gratis } (PROMPT-105)
     estado.pescaEspecies = v.pesca_especies && typeof v.pesca_especies === 'object' ? { ...v.pesca_especies } : null;   // 🐠 { peixe: vezes } (PROMPT-106)
     estado.desafiosDia = v.desafios_dia || null;
@@ -904,7 +910,8 @@ export async function iniciarJogo(sess) {
     festa: (t) => mostrarFestaMestre(t || 'mestre'), hall: () => abrirHallMestres(), estado: () => estado, geral: () => abrirMapaGeral(),
     batalhar: (id) => iniciarBatalha(id), pg: () => pg, meuPet: () => (abrirMeuPet(), mp), mp: () => mp, carinho: () => carinhoPet(),
     truque: (id) => fazerTruque(id), comer: (id) => darComida(id),
-    tamanho: (f) => ({ alt: +altPet(f).toFixed(2), dist: +distPet(f).toFixed(2), rel: +relDuelo(f).toFixed(3) }) };   // 🐘 PROMPT-213: conferir a tabela
+    tamanho: (f) => ({ alt: +altPet(f).toFixed(2), dist: +distPet(f).toFixed(2), rel: +relDuelo(f).toFixed(3) }),   // 🐘 PROMPT-213: conferir a tabela
+    torre: (a) => abrirTorre(a), bau: (a) => abrirBau(a), premiosTorre: () => abrirPremiosTorre(), quadroTorre: () => abrirQuadroTorre(), torreTrein: (i) => abrirPerguntaTorre(i), casinha: () => abrirCasinha(), temas: () => abrirTemasCasa() };   // 🏆 PROMPT-230
 
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
@@ -944,8 +951,11 @@ export async function iniciarJogo(sess) {
   } catch (e) { console.warn('[jogo-revisao] cavar/mato indisponíveis', e); }
   try { LOJA = await fetch(`${DADOS}/loja-interior.json`).then(r => { if (!r.ok) throw new Error('loja-interior.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] interior da loja indisponível', e); }
+  await carregarTorre();   // 🏆 PROMPT-230: Torre dos Campeões
   try {   // 🏠 Casinha (PROMPT-105); ?casinha=cheia (modo teste): 1 de cada móvel nos guardados, sem gastar e sem gravar
     CASA = await fetch(`${DADOS}/casinha.json`).then(r => { if (!r.ok) throw new Error('casinha.json'); return r.json(); });
+    acrescentarTrofeusOuro();   // 🏆 PROMPT-230: "Troféu dourado do mapa N", só ganhando no Difícil
+    acrescentarPremiosTorreNaCasa();   // 🏆 os móveis e os temas da torre
     if (teste && new URLSearchParams(location.search).get('casinha') === 'cheia' && estado.casinha) {
       casaSemGravar = true;
       for (const it of CASA.itens || []) estado.casinha.guardados[it.id] = Math.max(1, Number(estado.casinha.guardados[it.id]) || 0);
@@ -1680,9 +1690,9 @@ function atualizarFomeSeguidor() {
 }
 
 // +1 moeda na PRIMEIRA vez que o aluno acerta cada pergunta (id da pergunta); refazer não dá moeda (PROMPT-47)
-function ganharMoeda() {
+function ganharMoeda(base = 1) {   // base 2: ⭐ Ginásio difícil (PROMPT-230)
   if (!estado?.pets) return;
-  const n = comMult(1);
+  const n = comMult(base);
   estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
   const patch = { 'pets/moedas': estado.pets.moedas };
   registrarGanho('ginasio', n, patch);
@@ -1692,7 +1702,7 @@ function ganharMoeda() {
   el.classList.remove('pulsa'); void el.offsetWidth; el.classList.add('pulsa');
   const mais = document.createElement('span');
   mais.className = 'jr-moeda-mais';
-  mais.innerHTML = `+1 ${moedaHtml()}`;
+  mais.innerHTML = `+${n} ${moedaHtml()}`;
   el.appendChild(mais);
   setTimeout(() => mais.remove(), 1100);
 }
@@ -2395,7 +2405,7 @@ function aplicarTinta(img, tintaId, comSombra = false) {
   img.style.filter = t && !animada ? t.filtro + (comSombra ? ' drop-shadow(0 1px 1px rgba(0,0,0,.35))' : '') : '';
 }
 // Tinta de um pet meu em qualquer tela (mapa, Meu Pet, duelo do ginásio, batalha, coleção, pedidos, HUD)
-const aplicarVisualPet = (img, pet, comSombra = false) => aplicarTinta(img, tintaVisivel(pet), comSombra);
+const aplicarVisualPet = (img, pet, comSombra = false) => { aplicarTinta(img, tintaVisivel(pet), comSombra); if (pet && pet === estado?.pets?.ativo) aplicarEstiloPet(img); };   // 🌟 + o estilo da torre no pet ativo
 // 📐 o pet que anda no plano cartesiano (PROMPT-128): o pet ativo, com a tinta; sem pet, o marcador dourado
 definirPetPlano(() => {
   const pet = petsOk && estado?.pets?.ativo ? estado.pets.ativo : null;
@@ -2408,6 +2418,7 @@ function atualizarVisualPet() {
   aplicarVisualPet($('pet'), pet, true);
   aplicarVisualPet($('btn-pet').querySelector('img'), pet);
   if (mp) aplicarVisualPet($('mp-img'), pet);
+  aplicarAuraJogador();   // ✨ prêmio da torre (PROMPT-230)
 }
 
 // ── Efeitos: partículas desenhadas por código (CSS, sem imagem), atrás do pet — o meu e o dos colegas ──
@@ -2459,6 +2470,7 @@ function efeitosDoMapa() {
   const agora = performance.now(), pet = estado?.pets?.ativo, c = pet && cuidadosDe(pet);
   estrelinhasMestre(agora);
   if (seguidor && c && !$('pet').hidden) emitirEfeito(seguidor, c.efeito, nivelPet(pet) >= 3, agora);
+  fumacaDoPet(agora);   // 💨 prêmio da torre
   for (const cg of colegas.values()) if (!cg.el.hidden && cg.pet) emitirEfeito(cg.seg, cg.reg?.pet_efeito, Number(cg.reg?.pet_nivel) >= 3, agora);
 }
 
@@ -2665,7 +2677,7 @@ function renderLoja() {
       </div>`;
   };
   let html = '';
-  if (lojaAba === 'reformas') html = CASA ? temasCasa().map(cartaoTema).join('') : '<div class="lj-vazio">As reformas chegam logo!</div>';
+  if (lojaAba === 'reformas') html = CASA ? temasCasa().filter(t => !t.torre).map(cartaoTema).join('') : '<div class="lj-vazio">As reformas chegam logo!</div>';
   else if (lojaAba === 'comidas') {
     html = comidas().filter(c => c.venda_loja !== false).map(c => {
       const q = lojaQtd[c.id] || 1, fav = pet && ehFavorita(pet, c);
@@ -2696,7 +2708,7 @@ function renderLoja() {
         <button class="lj-comprar" data-vender="${esc(x.id)}">Vender 1</button>
       </div>`).join('') : '<div class="lj-vazio">Você não tem peixes na bolsa. Pesque 🎣 e venda aqui.</div>');
   } else if (lojaAba === 'moveis') {   // 🛋️ móveis da casinha (PROMPT-105): vão para os guardados; sem venda de volta
-    html = CASA ? (CASA.itens || []).map(it => {
+    html = CASA ? (CASA.itens || []).filter(it => !it.exclusivo).map(it => {   // exclusivo: só ganhando (🏆 troféu dourado, PROMPT-230)
       const tem = qtdCasa(it.id), lim = Number(it.limite) || 1, cheio = tem >= lim, v = precoCasa(it);
       return `<div class="lj-item lj-movel">
         <div class="lj-emoji"><img class="lj-movel-img" src="${imgMovel(it.id, it.fases ? String(it.fases) : it.vistas[0])}" alt="" draggable="false" loading="lazy"/></div>
@@ -2706,7 +2718,7 @@ function renderLoja() {
       </div>`;
     }).join('') : '<div class="lj-vazio">Os móveis chegam logo!</div>';
     if (CASA) html += cartoesQuadros(preco, botao);   // 🏅 quadro de insígnia e 🏆 Quadro dos Campeões (PROMPT-117)
-    if (CASA && !$('loja').classList.contains('so-moveis')) html += '<div class="lj-secao">🎨 Reformas</div>' + temasCasa().map(cartaoTema).join('');   // na Dona Cida: no fim da grade
+    if (CASA && !$('loja').classList.contains('so-moveis')) html += '<div class="lj-secao">🎨 Reformas</div>' + temasCasa().filter(t => !t.torre).map(cartaoTema).join('');   // na Dona Cida: no fim da grade
   } else if (lojaAba === 'tintas') {
     const src = pet ? quadrosDe(formaDe(pet), 'sentado_girando')[0] : '';
     html = blocoCoresPet(preco, botao) + tintas().filter(t => !t.exclusiva && !TINTA_VIROU_COR[t.id]).map(t => {   // Esmeralda e Cristal: só cavando; as que viraram cor saíram (PROMPT-170)
@@ -5039,6 +5051,7 @@ const urlQuadro = (dir, q, id = null, cores = null) =>
   urlSprite(id || meuPersonagem(), `${dir}-${q < 0 ? 'parado' : q % (QUADROS_PERSONAGEM[dir] || 1) + 1}`, id ? cores : minhasCores());
 
 function mostrarTela(id) {
+  $('torre-faixa')?.remove();   // 🏆 a faixa do andar (o salão da torre põe de novo)
   for (const t of document.querySelectorAll('.jr-tela')) t.hidden = t.id !== id;
 }
 
@@ -5130,7 +5143,7 @@ const RE_ID = /^m(\d+)([AB])-(treinador[123]|lider|revanche)-(\d+)$/;
 const DIAS_REVISAO_OK = 21;
 
 // chave da posição para o modo guiado: na revisão cada pergunta é de um tipo diferente
-const chavePosicao = (q) => semAdversario() ? q.id : q.indice;
+const chavePosicao = (q) => semAdversario() ? q.id : pg?.modo === 'torre' ? q.pos : q.indice;
 // Revisão da semana e 🎯 Treino do pet: a mesma tela, sem adversário (perguntas de vários ginásios)
 const semAdversario = () => pg?.modo === 'revisao' || pg?.modo === 'treino';
 
@@ -5842,7 +5855,7 @@ function desenharMarcadores() {
     const ins = est === 'concluido'
       ? `<span class="jr-marc-ins">${['A', 'B'].map(G => {
           const g = estado.ginasios[chaveGinasio(n, G)];
-          return `<img src="${IMG}/insignias/insignia-${chaveGinasio(n, G)}.webp" class="${g.dourada ? 'dourada' : ''}" alt=""/>`;
+          return `<i class="jr-marc-ins-i"><img src="${IMG}/insignias/insignia-${chaveGinasio(n, G)}.webp" class="${g.dourada ? 'dourada' : ''}" alt=""/>${g.estrela ? '<b class="ins-dificil" title="Venceu o Difícil">⭐</b>' : ''}</i>`;   // ⭐ PROMPT-230
         }).join('')}</span>` : '';
     return `<button class="jr-marcador ${est}" data-mapa="${n}" style="left:${r.x / W * 100}%;top:${r.y / H * 100}%"
               aria-label="Mapa ${n}: ${esc(r.nome)}${est === 'bloqueado' ? ' (bloqueado)' : ''}">
@@ -5898,12 +5911,20 @@ let perguntaAberta = false;
 const focoAtivo = () => camFoco && performance.now() < camFoco.ate && cena?.tipo === 'mapa';
 const focoX = () => (focoAtivo() ? camFoco.x : jog.x);
 const focoY = () => (focoAtivo() ? camFoco.y : jog.y);
-// largura lógica da cena: 1376, ou mais na Exposição (cena.w: sala 2176, saguão 2208)
+// largura e altura lógicas da cena: 1376 × 768, ou mais na Exposição (cena.w: sala 2176; cena.w × cena.h: o corredor, 852 × 2368)
 const larguraCena = () => Number(cena?.w) || W;
+const alturaCena = () => Number(cena?.h) || H;
 function ajustarCamera() {
   const vp = $('cena-vp');
-  const vw = vp.clientWidth, vh = vp.clientHeight, LW = larguraCena();
-  if (deitado()) {
+  const vw = vp.clientWidth, vh = vp.clientHeight, LW = larguraCena(), LH = alturaCena();
+  const fundoVp = LH > H ? '#2b1d14' : '';   // o corredor da Exposição (PROMPT-EXPOSICAO-17): as sobras dos lados em marrom-escuro
+  if (vp.style.background !== fundoVp) vp.style.background = fundoVp;
+  if (LH > H) {
+    // Cena mais alta que a tela (o corredor): o mesmo zoom dos outros cenários; segue o jogador para cima e para baixo
+    cam.s = vh / H;
+    cam.ty = clamp(vh * 0.55 - focoY() * cam.s, vh - LH * cam.s, 0);
+    cam.tx = LW * cam.s <= vw ? (vw - LW * cam.s) / 2 : clamp(vw / 2 - focoX() * cam.s, vw - LW * cam.s, 0);
+  } else if (deitado()) {
     // Celular/tablet (deitado ou girado): preenche a largura e segue o jogador nos dois eixos
     // (um pouco abaixo do centro, para o personagem não ficar atrás do HUD do topo)
     cam.s = Math.max(vw / LW, vh / H);
@@ -5970,7 +5991,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('amigo-presente').hidden || !$('cs-visitas-escolha').hidden;
+  perguntaAberta || !!torreModal || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('amigo-presente').hidden || !$('cs-visitas-escolha').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -6003,7 +6024,7 @@ function moverDireto(dt, vx, vy) {
     jog.x = clamp(jog.x + dx, cena.xMin, cena.xMax);
   } else {
     const g = cena.grade;
-    const livre = (x, y) => x >= 0 && y >= 0 && x < larguraCena() && y < H && andavel(g, Math.floor(x / CEL), Math.floor(y / CEL));
+    const livre = (x, y) => x >= 0 && y >= 0 && x < larguraCena() && y < alturaCena() && andavel(g, Math.floor(x / CEL), Math.floor(y / CEL));
     const preso = !livre(jog.x, jog.y);   // se começou fora da trilha, deixa sair
     const pode = (x, y) => preso || livre(x, y);
     const tenta = (ax, ay) => {
@@ -6130,6 +6151,7 @@ function loop(t) {
       atualizarMapa();
       if (cena.n === 'praca') atualizarPraca();
       else if (cena.n === 'loja') atualizarLoja();
+      else if (cena.n === 'torre') atualizarTorre();
       else if (cena.n === 'casinha') atualizarCasinha(dt);
       else if (cena.n === 'vila') atualizarVila(dt);
       atualizarCavar();
@@ -6205,11 +6227,12 @@ function passo(dt) {
 }
 
 let fundoPendente = null;
-async function trocarFundo(src, largura = W) {   // largura: só a sala da Exposição é mais larga (2176)
+async function trocarFundo(src, largura = W, altura = H) {   // largura/altura: só a Exposição foge do 1376 × 768 (sala 2176; corredor 852 × 2368)
   // espera o load (decode() pode ficar pendente com a aba em segundo plano)
   const f = $('cena-fundo');
-  const lw = largura === W ? '' : largura + 'px';
+  const lw = largura === W ? '' : largura + 'px', lh = altura === H ? '' : altura + 'px';
   if (f.style.width !== lw) f.style.width = $('cena-palco').style.width = lw;
+  if (f.style.height !== lh) f.style.height = $('cena-palco').style.height = lh;
   // se outra troca ainda esperava, libera ela (senão a transição ficaria presa para sempre)
   if (fundoPendente) fundoPendente();
   await new Promise((ok) => {
@@ -6230,6 +6253,7 @@ function sairDaCena() {
   else if (cena.n === 'casinha') sairDaCasinha();
   else if (cena.n === 'vila') { if (cena.vila && !cena.vila.minha) transicao(() => abrirVila({ casa: true })); else sairDaVila(); }   // na vila de outro: ⬅ Minha vila
   else if (cena.n === 'loja') sairDaLoja();
+  else if (cena.n === 'torre') sairDaTorre();
   else if (ehSaguao()) transicao(() => abrirPraca('exposicao'));
   else if (salaExpo()) { const k = salaExpo(); transicao(() => abrirSaguao(k)); }
   else transicao(abrirMapaGeral);
@@ -6430,6 +6454,7 @@ async function abrirMapa(n, onde) {
   montarCaixotes(n);
   montarQuadroEstudos(n);
   montarPortaLoja(n);
+  montarTorreNoMapa(n);   // 🏆 só com torre.json → local neste mapa
   montarCavar(n);
   fecharBalaoPorta();
 
@@ -6508,6 +6533,10 @@ function destinosDoMapa() {
   if (qe) lista.push({ id: 'predio-estudos', tipo: 'predio', alvo: 'estudos', x: qe.x, y: qe.y, trilha: qe.trilha, largura: qe.largura });
   const pl = cena.portaLoja;
   if (pl) lista.push({ id: 'predio-loja-mercado', tipo: 'predio', alvo: 'loja-mercado', x: pl.x, y: pl.y, trilha: pl.trilha });
+  const te = ehTorre() && cena.torre?.escada;   // 🏆 a escada para o próximo andar
+  if (te) lista.push({ id: 'predio-torre-escada', tipo: 'predio', alvo: 'torre-escada', x: te.x, y: te.y, trilha: te.trilha, largura: 80 });
+  const tp = cena.torrePorta;   // 🏆 a porta da torre num mapa (torre.json → local)
+  if (tp) lista.push({ id: 'predio-torre', tipo: 'predio', alvo: 'torre', x: tp.x, y: tp.y, trilha: tp.trilha, largura: 60 });
   return lista;
 }
 const espDe = (d) => (d.tipo === 'porta' ? { tipo: 'porta', lado: d.lado } : d.tipo === 'predio' ? { tipo: 'predio', alvo: d.alvo } : { tipo: 'saida', i: d.i });
@@ -6558,6 +6587,7 @@ function tocarNoMapa(e) {
   if (ehPraca()) { const alvo = alvoPracaEm(p); if (alvo) { irAlvoPraca(alvo); return; } }   // mural / fliperama
   if (cena.n === 'fliperama') { const a = alvoFliperamaEm(p); if (a) { irAlvoFliperama(a); return; } }    // máquinas e o Téo
   if (ehLoja()) { const c = cantoEm(p); if (c) { irAoCanto(c); return; } }
+  if (ehTorre() && tocarNaTorre(e, p)) return;   // 🏆 treinadores e o quadro dos campeões
   if (cena.n === 'laboratorio') {   // tocar no computador (tela ou mesa): anda até ele e abre
     const d = destinosDoMapa().find(x => x.tipo === 'predio' && Math.abs(p.x - x.x) < 70 && p.y > x.y - 80 && p.y < x.trilha[1] + 20);
     if (d) { irAoDestino(d); return; }
@@ -6592,7 +6622,7 @@ function destinoPertoDoToque(p) {
 }
 // Anda até a porta/saída e, ao chegar, entra
 function irAoDestino(d) {
-  if (d.tipo === 'porta' && estado.ginasios[chaveGinasio(cena.n, d.lado)]?.lider.vencido) { irAoGinasioVencido(d); return; }
+  if (d.tipo === 'porta' && (estado.ginasios[chaveGinasio(cena.n, d.lado)]?.lider.vencido || (ehProfessora() && ginasioLiberado(cena.n, d.lado)))) { irAoGinasioVencido(d); return; }   // ⭐ professora: escolhe o Difícil sem vencer
   const esp = espDe(d);
   destinoEspecial = esp;
   caminharNaTrilha(d.trilha[0], d.trilha[1], () => {
@@ -6610,8 +6640,10 @@ function irAoGinasioVencido(d) {
   const perguntar = () => {
     if (cena?.tipo !== 'mapa') return;
     const el = $('porta-balao');
-    el.innerHTML = `<b>${esc(cena.portas[d.lado]?.nome || '')}</b><span>Você já venceu! Quer treinar de novo?</span>
-      <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-porta="entrar">Entrar</button><button class="jr-btn jr-btn-sec" data-porta="nao">Agora não</button></div>`;
+    // ⭐ PROMPT-230: quem venceu o líder escolhe Normal ou Difícil
+    const g = estado.ginasios[chaveGinasio(cena.n, d.lado)], txt = g?.estrela ? 'Você já tem a ⭐ do Difícil! Quer jogar de novo?' : g?.lider.vencido ? 'Você já venceu! Agora encara o ⭐ Difícil?' : 'Normal ou ⭐ Difícil?';
+    el.innerHTML = `<b>${esc(cena.portas[d.lado]?.nome || '')}</b><span>${txt}</span>
+      <div class="jr-pessoa-botoes jr-porta-modos"><button class="jr-btn jr-btn-sec" data-porta="entrar">Normal</button><button class="jr-btn jr-btn-ouro" data-porta="dificil">⭐ Difícil</button><button class="jr-btn jr-btn-sec" data-porta="nao">Agora não</button></div>`;
     el.hidden = false;
     el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
     balaoPorta = { d, timer: setTimeout(fecharBalaoPorta, 9000) };
@@ -6649,19 +6681,21 @@ function acaoBalaoPorta(e) {
   const { d } = balaoPorta;
   fecharBalaoPorta();
   if (b.dataset.porta === 'entrar') entrarNoDestino({ tipo: 'porta', lado: d.lado });
+  else if (b.dataset.porta === 'dificil') entrarNoDestino({ tipo: 'porta', lado: d.lado, dificil: true });   // ⭐ PROMPT-230
 }
 
 function entrarNoDestino(esp) {
   destinoEspecial = null;
   const n = cena.n;
   if (esp.tipo === 'porta' && !ginasioLiberado(n, esp.lado)) { soltouDesdeTroca = false; avisarGinasioFechado(n, esp.lado); }
-  else if (esp.tipo === 'porta') transicao(() => entrarGinasio(n, esp.lado));
+  else if (esp.tipo === 'porta') transicao(() => entrarGinasio(n, esp.lado, { dificil: !!esp.dificil }));
   else if (esp.tipo === 'saida-gin') { const G = cena.G; transicao(() => abrirMapa(n, G)); }
   else if (esp.tipo === 'predio') entrarNoPredio(esp.alvo);
   else if (n === 'fliperama') transicao(() => abrirPraca('fliperama'));   // a porta do fliperama volta para a praça
   else if (n === 'laboratorio') transicao(() => abrirPraca('laboratorio'));
   else if (n === 'casinha') sairDaCasinha();                               // a porta da casinha: a vila (ou a placa / de onde veio)
   else if (n === 'vila') sairDaVila(true);                                 // descendo o caminho da vila: a Praça, na frente da placa
+  else if (n === 'torre') sairDaTorre();                                   // 🏆 a saída da torre
   else if (n === 'loja') sairDaLoja();                                     // a porta da loja volta para o mapa de onde veio
   else if (n === 'saguao') transicao(() => abrirPraca('exposicao'));      // 🖼️ a porta de vidro: a Praça, na frente do pavilhão
   else if (salaExpo()) { const k = salaExpo(); transicao(() => abrirSaguao(k)); }   // a sala: o saguão, na porta dela
@@ -6682,6 +6716,8 @@ function entrarNoPredio(alvo) {
   else if (alvo === 'estudos') { jog.dir = 'costas'; desenharJogador(); abrirEstudos(); }
   else if (alvo === 'exposicao' && EXPO) transicao(() => abrirSaguao());
   else if (alvo.startsWith('expo:')) entrarSalaExpo(Number(alvo.slice(5)));   // 🖼️ porta de uma sala
+  else if (alvo === 'torre-escada') subirTorre();   // 🏆 a escada do salão
+  else if (alvo === 'torre') entrarNaTorre();       // 🏆 a porta da torre num mapa
 }
 
 // Setas/joystick (PROMPT-80): portas e prédios têm uma ZONA na frente — ≈1,5 × a largura da porta (mín. 70 px), do ponto
@@ -6718,7 +6754,7 @@ function ladoForaDaPorta(x, y, longe = null) {   // longe: [x, y] do dono (o pet
   const e = escalaAtoresCena() / ESCALA_ATORES;
   for (let r = 16; r <= 200; r += 8) for (let k = 0; k < 16; k++) {
     const a = k * Math.PI / 8, px = x + Math.cos(a) * r * e, py = y + Math.sin(a) * r * e;
-    if (px < 0 || py < 0 || py >= H || !andavel(cena.grade, Math.floor(px / CEL), Math.floor(py / CEL))) continue;
+    if (px < 0 || py < 0 || py >= alturaCena() || !andavel(cena.grade, Math.floor(px / CEL), Math.floor(py / CEL))) continue;
     if (ocupaEntrada(px, py, ds) || (longe && dist(px, py, longe[0], longe[1]) < 26 * e)) continue;
     return [px, py];
   }
@@ -6742,7 +6778,8 @@ function dicaEntrar() {
 // e 60 px para dentro do mapa. Na zona, empurrar para a borda (a componente para a borda maior que a de lado) sai.
 // Antes só saía quem estava a 12 px do ponto da trilha: com as setas, quase nunca dava (e o aluno ficava andando na borda).
 function ladoSaida(d) {
-  if (d.y >= H - 80) return 'baixo';   // a porta do laboratório fica em y = 702
+  // a porta do laboratório fica em y = 702; a faixa da Exposição é sempre embaixo (no corredor, a porta de vidro em y = 2200, longe da borda)
+  if (d.faixa || d.y >= alturaCena() - 80) return 'baixo';
   if (d.x <= 40) return 'esq';
   if (d.x >= larguraCena() - 40) return 'dir';
   if (d.y <= 40) return 'cima';
@@ -6753,7 +6790,7 @@ function zonaSaida(d) {
   if (!lado) return null;
   const e = cena?.salao ? escalaAtoresCena() / ESCALA_ATORES : 1, [tx, ty] = d.trilha, fundo = 60 * e, L = larguraCena();
   const cx = d.faixa ? (d.faixa[0] + d.faixa[1]) / 2 : tx, meia = Math.max(45 * e, d.faixa ? (d.faixa[1] - d.faixa[0]) / 2 : 0);
-  if (lado === 'baixo') return { lado, x0: cx - meia, x1: cx + meia, y0: ty - fundo, y1: H };
+  if (lado === 'baixo') return { lado, x0: cx - meia, x1: cx + meia, y0: ty - fundo, y1: alturaCena() };
   if (lado === 'cima') return { lado, x0: cx - meia, x1: cx + meia, y0: 0, y1: ty + fundo };
   if (lado === 'esq') return { lado, x0: 0, x1: tx + fundo, y0: ty - meia, y1: ty + meia };
   return { lado, x0: tx - fundo, x1: L, y0: ty - meia, y1: ty + meia };
@@ -6867,14 +6904,16 @@ function posicionarNaTela(el, x, y) {
 // ============================================================
 //  3.3 INTERIOR DO GINÁSIO
 // ============================================================
-async function entrarGinasio(n, G) {
+async function entrarGinasio(n, G, { dificil = false } = {}) {
   sairPesca(false);
   const chave = chaveGinasio(n, G);
   const cfg = D.interiores.interiores[chave];
   const gin = D.questoes[n].ginasios[G];
+  dificil = dificil && (estado.ginasios[chave]?.lider.vencido || ehProfessora());   // ⭐ PROMPT-230: só quem venceu o líder
   cena = null;
   esconderBalao();
-  $('cena-titulo').textContent = gin.nome;
+  $('cena-titulo').textContent = dificil ? `⭐ ${gin.nome} · Difícil` : gin.nome;
+  $('tela-cena').classList.toggle('jr-gin-dificil', dificil);
   // no ginásio não há botão de sair: sai andando pela porta de entrada
   $('btn-cena-voltar').hidden = true;
   $('tela-cena').classList.add('jr-no-ginasio');
@@ -6889,7 +6928,7 @@ async function entrarGinasio(n, G) {
 
   const yTapete = cfg.entrada.y;
   cena = {
-    tipo: 'interior', n, G, chave, cfg, gin, yTapete,
+    tipo: 'interior', n, G, chave, cfg, gin, yTapete, dificil,
     xMin: cfg.tapete.x + 20, xMax: cfg.tapete.x + cfg.tapete.w - 20,
     xPorta: cfg.entrada.x,   // porta de entrada = saída do ginásio
   };
@@ -6938,7 +6977,11 @@ function irAoGinasioPendente() {
 }
 
 // Próximo desafio: o 1º não vencido na ordem; depois do líder, a revanche (se ainda não é dourada)
+// ⭐ no Difícil (PROMPT-230) o progresso é outro (g.dif) e não há revanche
+const noDificil = (g) => cena?.tipo === 'interior' && !!cena.dificil && estado.ginasios[cena.chave] === g;
+const venceuNoGin = (g, p) => (noDificil(g) ? !!g.dif?.[p] : g[p].vencido);
 function proximoDesafio(g) {
+  if (noDificil(g)) return PERSONAGENS.find(k => !g.dif?.[k]) || null;
   const p = PERSONAGENS.find(k => !g[k].vencido);
   if (p) return p;
   return g.dourada ? null : 'revanche';
@@ -6951,11 +6994,11 @@ function atualizarNpcs() {
   const livre = ehProfessora();   // 🔓 professora: qualquer treinador, o líder e a revanche, em qualquer ordem (a seta é só dica)
   for (const el of document.querySelectorAll('#cena-atores .jr-npc')) {
     const p = el.dataset.p, i = PERSONAGENS.indexOf(p);
-    el.classList.toggle('vencido', g[p].vencido);
+    el.classList.toggle('vencido', venceuNoGin(g, p));
     el.classList.toggle('proximo', p === prox);
-    el.classList.toggle('bloqueado', !livre && !g[p].vencido && iProx >= 0 && i > iProx);   // vem depois do próximo
+    el.classList.toggle('bloqueado', !livre && !venceuNoGin(g, p) && iProx >= 0 && i > iProx);   // vem depois do próximo
   }
-  $('btn-revanche').hidden = !g.lider.vencido && !livre;
+  $('btn-revanche').hidden = !!cena.dificil || (!g.lider.vencido && !livre);   // ⭐ o Difícil não tem revanche
   $('btn-revanche').classList.toggle('pulsa', prox === 'revanche');
   // setinha dourada acima do próximo personagem (mesmas coordenadas da imagem dos .jr-npc)
   let seta = document.querySelector('#cena-atores .jr-seta');
@@ -7034,9 +7077,9 @@ function desafiar(p) {
   const g = estado.ginasios[cena.chave];
   const idx = PERSONAGENS.indexOf(p);
   const livre = ehProfessora();   // 🔓 professora: enfrenta quem quiser, quantas vezes quiser (PROMPT-173)
-  if (!livre && idx > 0 && !g[PERSONAGENS[idx - 1]].vencido) { avisar('Vença o treinador anterior primeiro!', p); return; }
-  if (!livre && g[p].vencido) {
-    avisar(p === 'lider' ? 'Toque em “Revanche” para um novo desafio!' : 'Você já venceu este treinador!', p);
+  if (!livre && idx > 0 && !venceuNoGin(g, PERSONAGENS[idx - 1])) { avisar('Vença o treinador anterior primeiro!', p); return; }
+  if (!livre && venceuNoGin(g, p)) {
+    avisar(cena.dificil ? 'Você já venceu este treinador no Difícil!' : p === 'lider' ? 'Toque em “Revanche” para um novo desafio!' : 'Você já venceu este treinador!', p);
     return;
   }
   const chave = cena.chave;
@@ -8691,7 +8734,7 @@ function ligarEdicaoPraca() {
 }
 
 // ============================================================
-//  🖼️ EXPOSIÇÃO VIRTUAL (PROMPT-EXPOSICAO-1) — dados/jogo/exposicao.json. Pavilhão na Praça → saguão (2208 × 768, 16 portas, câmera horizontal)
+//  🖼️ EXPOSIÇÃO VIRTUAL (PROMPT-EXPOSICAO-1) — dados/jogo/exposicao.json. Pavilhão na Praça → saguão: o corredor (852 × 2368, 15 portas, câmera vertical)
 //  → salas (2176 × 768, câmera na horizontal). Pavilhão, saguão e salas com grupo: todos (os de fora do grupo
 //  só veem fotos e textos aprovados; decorar: o grupo e a professora). Firebase (modo
 //  teste: *_teste): exposicao_salas/{n} { tema, musica, nome, itens (parte 2) };
@@ -8818,28 +8861,29 @@ function prepararCenaExpo(titulo, voltar) {
   limparPessoas();
   sairDoMapaOnline();
 }
-// saída por uma faixa embaixo ({ y_min, x: [a, b] }): o ponto do meio, como a descida da vila
-function saidaFaixa(f, entrada, naTrilha) {
-  const sx = f?.x ? (f.x[0] + f.x[1]) / 2 : entrada[0], sy = Math.min(H - 4, (Number(f?.y_min) || 752) + 6);
+// saída por uma faixa embaixo ({ y_min, x: [a, b] }): o ponto do meio, como a descida da vila. alt: a altura da cena nova
+function saidaFaixa(f, entrada, naTrilha, alt = H) {
+  const sx = f?.x ? (f.x[0] + f.x[1]) / 2 : entrada[0], sy = Math.min(alt - 4, (Number(f?.y_min) || alt - 16) + 6);
   return { cfg: [sx, sy], saida: { x: sx, y: sy, trilha: naTrilha(sx, sy), faixa: f?.x ? [f.x[0], f.x[1]] : null } };
 }
 async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (aparece na porta dela)
   if (!EXPO) return;
-  const S = EXPO.saguao, LW = Number(S.tamanho?.w) || W;   // o saguão comprido (PROMPT-EXPOSICAO-16): câmera para os lados, como nas salas
+  // o corredor (PROMPT-EXPOSICAO-17): 852 × 2368, câmera para cima e para baixo
+  const S = EXPO.saguao, LW = Number(S.tamanho?.w) || W, LH = Number(S.tamanho?.h) || H, gw = Math.round(LW / CEL), gh = Math.round(LH / CEL);
   prepararCenaExpo('🖼️ Exposição', '⟵ Praça');
   const [grade] = await Promise.all([
-    carregarGrade(S.trilha, Math.round(LW / CEL), GH).catch(() => { const g = new Uint8Array(Math.round(LW / CEL) * GH); g.gw = Math.round(LW / CEL); g.gh = GH; for (let cy = Math.floor(280 / CEL); cy < GH; cy++) g.fill(1, cy * g.gw, (cy + 1) * g.gw); return g; }),
-    trocarFundo(`${IMG}/${S.imagem}`, LW)]);
+    carregarGrade(S.trilha, gw, gh).catch(() => { const g = new Uint8Array(gw * gh); g.gw = gw; g.gh = gh; g.fill(1, Math.floor(gh * 0.36) * gw); return g; }),
+    trocarFundo(`${IMG}/${S.imagem}`, LW, LH)]);
   const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y), grade);
-  const sd = saidaFaixa(S.saida_praca, S.entrada, naTrilha);
-  cena = { tipo: 'mapa', n: 'saguao', salao: true, w: LW, alturaPersonagem: Number(S.altura_personagem) || 120, cfg: { entrada: S.entrada, saidas: [sd.cfg] }, grade, portas: {}, naTrilha, saidas: [sd.saida] };
+  const sd = saidaFaixa(S.saida_praca, S.entrada, naTrilha, LH);
+  cena = { tipo: 'mapa', n: 'saguao', salao: true, w: LW, h: LH, alturaPersonagem: Number(S.altura_personagem) || 120, cfg: { entrada: S.entrada, saidas: [sd.cfg] }, grade, portas: {}, naTrilha, saidas: [sd.saida] };
   cena.expoPortas = (S.portas || []).map(p => ({ ...p, trilha: naTrilha(...p.ponto) }));
   desenharPlacasExpo();
   destinoEspecial = null;
   alvoMapa = null;
   pertoSaidaGin = false;
   const pd = deSala && cena.expoPortas.find(p => p.n === deSala);
-  if (pd) posicionarJogador(pd.trilha[0], pd.trilha[1], 'frente');
+  if (pd) posicionarJogador(pd.trilha[0], pd.trilha[1], viradoDaPorta(pd.n));
   else posicionarJogador(S.entrada[0], S.entrada[1], 'costas');
   soltouDesdeTroca = false;
   ajustarCamera();
@@ -8849,6 +8893,8 @@ async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (ap
   pararExpo();
   if (privilegioExpo()) ouvirPendentesExpo();   // ⏳ {n} para aprovar
 }
+// voltando de uma sala, virado para o corredor: ímpares na parede da esquerda, pares na da direita, a 15 no fundo
+const viradoDaPorta = (n) => (n >= 15 ? 'frente' : n % 2 ? 'direita' : 'esquerda');
 // professora e modo teste, no saguão: quantos itens e nomes esperam aprovação (todas as salas, sem as fotos)
 let expoPendN = 0, expoPendSalas = 0, expoPendCasas = 0;
 function ouvirPendentesExpo() {
@@ -8877,7 +8923,7 @@ function desenharPlacasExpo() {
   at.insertAdjacentHTML('beforeend', (cena.expoPortas || []).map(p => {
     const tranca = !podeEntrarSala(p.n), c = curtidasSala(p.n);
     return `<div class="expo-placa" style="left:${p.placa[0]}px;top:${p.placa[1]}px"><b>${p.n}</b>${tranca ? '<i>🔒</i>' : ''}` +
-      (grupoSala(p.n) || c ? `<em>❤️ ${c}${maisCurtida(p.n) ? ' 🏆' : ''}</em>` : '') + '</div>';
+      (grupoSala(p.n) || c ? `<em><span>❤️</span><span>${c}</span>${maisCurtida(p.n) ? '<span>🏆</span>' : ''}</em>` : '') + '</div>';
   }).join(''));
 }
 // toque na placa ou na porta: a porta cujo segmento placa → ponto passa mais perto do toque
@@ -10341,10 +10387,21 @@ function itemCasa(id) {
   const [n, G] = chave.replace('mapa', '').split('-');
   return { id, nome: D.questoes[n]?.ginasios?.[G]?.nome || chave, tipo: 'parede', largura: Number(q.largura) || 70, vistas: ['f'], quadrinho: chave };
 }
+// 🏆 PROMPT-230: "Troféu dourado do mapa N" (trofeu_ouro_N), um por mapa, ganho na 1ª vitória no Difícil daquele mapa.
+// Não está na loja (exclusivo); usa a prateleira de troféus dourada (trofeus_f_dourada) com o número do mapa. O acabamento ouro
+// com brilho entra na etapa D (Torre).
+function acrescentarTrofeusOuro() {
+  if (!CASA?.itens || CASA.itens.some(i => i.trofeu_mapa)) return;
+  const base = CASA.itens.find(i => i.id === 'trofeus') || {};
+  for (let n = 1; n <= NUM_MAPAS; n++) {
+    CASA.itens.push({ id: `trofeu_ouro_${n}`, nome: `Troféu dourado do mapa ${n}`, emoji: '🏆', preco: 0, tipo: 'parede', largura: Number(base.largura) || 170,
+      limite: 1, vistas: ['f'], imagem_de: 'trofeus', cor_fixa: 'dourada', exclusivo: true, trofeu_mapa: n, dica: 'Só para quem vence o ⭐ Difícil.' });
+  }
+}
 // cor (PROMPT-118): {id}_{vista}_{cor}.webp; sem cor (o padrão) a imagem normal. Se a da cor não existir: onerror → a normal
 const imgMovel = (id, vista, cor = '') => (ehQuadrinho(id) ? `${IMG}/casinha/${CASA.insignia_quadrinho.imagem}`
   : id === ID_CAMPEOES ? `${IMG}/casinha/${CASA.quadro_campeoes?.imagem || 'moveis/quadro_campeoes_f.webp'}`
-  : `${IMG}/casinha/moveis/${(CASA?.itens || []).find(i => i.id === id)?.imagem_de || id}_${vista}${cor ? '_' + cor : ''}.webp`);   // imagem_de: a moldura de outro (PROMPT-184)
+  : ((it) => `${IMG}/casinha/moveis/${it?.imagem_de || id}_${vista}${(cor || it?.cor_fixa) ? '_' + (cor || it.cor_fixa) : ''}.webp`)((CASA?.itens || []).find(i => i.id === id)));   // imagem_de: a moldura de outro (PROMPT-184); cor_fixa: o troféu dourado (PROMPT-230)
 const coresDe = (it) => (it?.cor && Array.isArray(CASA?.cores?.[it.cor]) ? CASA.cores[it.cor] : null);
 const corValida = (it, cor) => (cor && coresDe(it)?.some(c => c.id === cor) ? cor : '');
 // imagem de móvel com a volta para a normal se a da cor faltar
@@ -10409,6 +10466,7 @@ function lerCasinha(v) {
   const moveis = (Array.isArray(c.moveis) ? c.moveis : Object.values(c.moveis || {}))
     .filter(m => m && typeof m.id === 'string' && Number.isFinite(Number(m.x)) && Number.isFinite(Number(m.y)))
     .map(m => ({ id: m.id, x: Number(m.x), y: Number(m.y), vista: String(m.vista || ''), espelho: !!m.espelho, cor: typeof m.cor === 'string' ? m.cor : '', tam: Number(m.tam) || 1,
+      ...(typeof m.acab === 'string' && m.acab ? { acab: m.acab } : {}),   // 🎨 acabamento da torre (PROMPT-230)
       ...(typeof m.foto === 'string' && m.foto ? { foto: m.foto } : {}) }));   // 🖼️ quadro com foto (PROMPT-184)
   const guardados = {};
   for (const [id, n] of Object.entries(c.guardados || {})) if (Number(n) > 0) guardados[id] = Number(n);
@@ -10419,6 +10477,7 @@ function lerCasinha(v) {
     cor: typeof c.cor === 'string' ? c.cor : null, convites: { ...(c.convites || {}) },   // 🏘️ vila (PROMPT-109): cor do telhado, convites enviados
     vizinhos_vistos: { ...(c.vizinhos_vistos || {}) }, mudou: Number(c.mudou) || 0,
     tema: typeof c.tema === 'string' ? c.tema : null, temas: { ...(c.temas || {}) },
+    cores_tema: c.cores_tema && typeof c.cores_tema === 'object' ? JSON.parse(JSON.stringify(c.cores_tema)) : {},   // 🌃 a cor do neon / do tema livre
     visitas: c.visitas === 'todos' ? 'todos' : 'amigos' };   // 🚪 quem pode visitar (PROMPT-209): padrão só amigos   // 🎨 o tema aplicado e os comprados (PROMPT-112)   // 🌱 { fase, regas, ultimo_dia } · 🧸 dia do +1
 }
 const qtdCasa = (id) => Object.entries(estado.casinha?.guardados || {}).reduce((t, [k, n]) => t + (daChave(k).id === id ? Number(n) || 0 : 0), 0) +
@@ -10549,7 +10608,7 @@ function irParaCasa() {
 }
 const mapaComCasa = () => cena?.tipo === 'mapa' && (Number(cena.n) > 0 || cena.n === 'praca');   // mapas 1–13 e Praça
 const limparMovel = (m) => ({ id: m.id, x: Math.round(m.x), y: Math.round(m.y), vista: m.vista, espelho: !!m.espelho, ...(m.cor ? { cor: m.cor } : {}), ...(m.tam && m.tam !== 1 ? { tam: m.tam } : {}),
-  ...(m.foto ? { foto: m.foto } : {}) });   // 🎨 📏 vão também na cópia pública
+  ...(m.foto ? { foto: m.foto } : {}), ...(m.acab ? { acab: m.acab } : {}) });   // 🎨 📏 vão também na cópia pública
 // saiu da casinha (outra cena): o pet volta ao normal
 function fecharCasinha() {
   if (!cs) return;
@@ -10580,15 +10639,16 @@ function refazerGradeCasinha() {
 
 function desenharMoveis() {
   const atores = $('cena-atores');
-  for (const el of atores.querySelectorAll('.cs-movel, .cs-brilho, .cs-noite')) el.remove();
-  let html = '<div class="cs-noite" aria-hidden="true"></div>';
+  for (const el of atores.querySelectorAll('.cs-movel, .cs-brilho, .cs-noite, .cs-camada')) el.remove();
   const tema = temaDoDono(cs.visita);
+  let html = '<div class="cs-noite" aria-hidden="true"></div>' + htmlCamadasTema(tema, cs.visita);   // 🌃 neon: a luz na cor escolhida
   if (tema.janela_noite) html += `<i class="cs-brilho cs-janela cs-janela-${esc(tema.id)}" aria-hidden="true"></i>`;   // 🌙 Dark: lua · Espacial: planeta
   cs.moveis.forEach((m, i) => {
     if (m.id === 'vaso') m.vista = String(faseVaso());   // 🌱 a fase de agora (PROMPT-106)
     const it = itemCasa(m.id), [w, h] = tamMovel(m);
     const z = it.tipo === 'tapete' ? 1 : it.tipo === 'parede' ? 2 : Math.round(m.y);
-    html += `<div class="cs-movel cs-${esc(it.tipo)} cs-id-${esc(m.id)}${cs.sel === m ? ' sel' : ''}${it.campeoes && todasDouradas() ? ' cs-camp-brilho' : ''}" data-i="${i}" style="left:${m.x}px;top:${m.y}px;width:${w}px;height:${h}px;z-index:${z}">` +
+    const acab = acabamentoDe(m);
+    html += `<div class="cs-movel cs-${esc(it.tipo)} cs-id-${esc(m.id)}${acab ? ` jr-acab jr-acab-${esc(acab)}` : ''}${cs.sel === m ? ' sel' : ''}${it.campeoes && todasDouradas() ? ' cs-camp-brilho' : ''}" data-i="${i}" style="left:${m.x}px;top:${m.y}px;width:${w}px;height:${h}px;z-index:${z}">` +
       (it.campeoes ? imgCampeoes() : imgComCor(m.id, m.vista, m.cor, `${m.espelho ? ' class="espelho"' : ''} data-want="${imgMovel(m.id, m.vista, m.cor)}"`)) + `${extraMovel(m, it, w, h)}</div>`;
     // 🌙 à noite: abajur e varal de luzes acendem (brilho em CSS, acima da camada escura)
     if (m.id === 'abajur') html += `<i class="cs-brilho cs-brilho-abajur" style="left:${m.x}px;top:${m.y - h * 0.86}px;width:${w * 3.2}px;height:${w * 3.2}px"></i>`;
@@ -10726,6 +10786,7 @@ function trofeuCampeoes(w, h) {
 }
 function extraMovel(m, it, w = 80, h = 80) {
   if (it.campeoes) return trofeuCampeoes(w, h);
+  if (it.trofeu_mapa) return `<span class="cs-trofeu-ouro" style="font-size:${Math.max(8, w * 0.1).toFixed(1)}px">⭐ ${it.trofeu_mapa}</span>`;   // 🏆 PROMPT-230
   if (it.quadrinho) return imgInsigniaQuadro(it.quadrinho);
   if ((m.id === 'quadro_foto' || m.id === 'quadro_imagem') && Array.isArray(it.foto)) {
     const [x0, y0, x1, y1] = it.foto, area = `left:${x0}%;top:${y0}%;width:${x1 - x0}%;height:${y1 - y0}%`;
@@ -10747,6 +10808,9 @@ function posicionarMovel(m) {
     img.src = quer;
   }
   img.classList.toggle('espelho', !!m.espelho);
+  const acab = acabamentoDe(m);   // 🎨 acabamento da torre
+  for (const c of [...el.classList]) if (c.startsWith('jr-acab')) el.classList.remove(c);
+  if (acab) el.classList.add('jr-acab', `jr-acab-${acab}`);
 }
 
 // ── 🐾 O pet vai até um móvel (cama: dorme; estante, pote, caixa: PROMPT-106) e depois volta para perto do personagem ──
@@ -11293,7 +11357,7 @@ async function publicarCasinha() {
   if (casaSemGravar || !entraNoRanking()) return;
   const pet = petsOk && estado.pets?.ativo;
   const dados = { moveis: estado.casinha.moveis, pet: pet ? { pet, forma: formaDe(pet), tinta: tintaVisivel(pet) || null, nome: nomePet(pet) } : null,
-    nome: nomeRanking(), turma: sessao.turma || '', vaso: faseVaso(), cor: estado.casinha.cor || null, tema: temaDoDono().id, ts: Date.now(), fundo: fundoAtual()?.id || null,
+    nome: nomeRanking(), turma: sessao.turma || '', vaso: faseVaso(), cor: estado.casinha.cor || null, tema: temaDoDono().id, cores_tema: estado.casinha.cores_tema || null, ts: Date.now(), fundo: fundoAtual()?.id || null,
     ins: Object.fromEntries(insigniasGanhas().map(k => [k, { d: estado.ginasios[k].dourada ? 1 : 0, t: estado.ginasios[k].dataInsignia || 0 }])),   // PROMPT-107
     peixes: { ...(estado.pescaEspecies || {}) }, visitas: visitasCasa() };
   try {
@@ -11308,7 +11372,8 @@ async function publicarCasinha() {
 const temasCasa = () => (CASA?.temas?.length ? CASA.temas : [{ id: 'classico', nome: 'Clássico', emoji: '🏠', preco: 0, imagem: CASA?.quarto?.imagem || 'quarto.webp' }]);
 const temaCasa = (id) => temasCasa().find(t => t.id === id) || temasCasa()[0];
 const imgTema = (t) => `${IMG}/casinha/${t.imagem}`;
-const temTema = (id) => casaSemGravar || !(Number(temaCasa(id).preco) > 0) || !!estado.casinha?.temas?.[id];
+const temTema = (id) => (temaCasa(id).torre ? casaSemGravar || ehProfessora() || !!estado?.torre?.premios?.temas?.[id]   // 🏆 os da torre: só ganhando no baú
+  : casaSemGravar || !(Number(temaCasa(id).preco) > 0) || !!estado.casinha?.temas?.[id]);
 const meusTemas = () => temasCasa().filter(t => temTema(t.id));
 // o tema do quarto: na visita, o do dono (cópia pública); o meu, só se é meu mesmo
 const temaDoDono = (visita = null) => (visita ? temaCasa(visita.dados.tema) : temaCasa(temTema(estado.casinha?.tema) ? estado.casinha?.tema : null));
@@ -11348,7 +11413,7 @@ async function aplicarTema(id) {
 function abrirTemasCasa() {
   const atual = temaDoDono().id;
   $('cs-temas-lista').innerHTML = meusTemas().map(t => `<button class="cs-comida-item cs-tema-item${t.id === atual ? ' atual' : ''}" data-tema="${esc(t.id)}">
-      <span><img src="${imgTema(t)}" alt="" draggable="false" loading="lazy"/></span><b>${esc(t.emoji || '🎨')} ${esc(t.nome)}</b><small>${t.id === atual ? '✔ Agora' : 'Toque para usar'}</small></button>`).join('');
+      <span><img src="${imgTema(t)}" alt="" draggable="false" loading="lazy"/></span><b>${esc(t.emoji || '🎨')} ${esc(t.nome)}</b><small>${t.id === atual ? '✔ Agora' : 'Toque para usar'}</small></button>`).join('') + htmlCoresTema(temaDoDono());   // 🌃 PROMPT-230: a cor da luz do neon
   $('cs-temas').hidden = false;
 }
 
@@ -11364,7 +11429,8 @@ function renderFaixaCasa() {
   const itens = Object.keys(cs.guardados).filter(k => cs.guardados[k] > 0).map(k => ({ k, ...daChave(k) }))
     .map(g => ({ ...g, it: itemCasa(g.id) })).filter(g => g.it).sort((a, b) => ordem(a.id) - ordem(b.id) || a.k.localeCompare(b.k));
   const mini = ({ it, cor }) => (it.quadrinho ? `<span class="cs-mini-quadro"><img src="${imgMovel(it.id, 'f')}" alt="" draggable="false"/>${imgInsigniaQuadro(it.quadrinho)}</span>`
-    : it.campeoes ? miniCampeoes() : imgComCor(it.id, it.fases ? '1' : it.vistas[0], it.fases ? '' : cor));   // 🎨 com a cor do móvel
+    : it.campeoes ? miniCampeoes() : it.acabamento_fixo ? `<span class="jr-acab jr-acab-${esc(it.acabamento_fixo)}">${imgComCor(it.id, it.vistas[0], '')}</span>`   // 👑 o Trono dourado
+    : imgComCor(it.id, it.fases ? '1' : it.vistas[0], it.fases ? '' : cor));   // 🎨 com a cor do móvel
   $('cs-guardados').innerHTML = itens.length ? itens.map(g => `<button class="cs-guardado" data-guardado="${esc(g.k)}" title="${esc(g.it.nome)}">
       ${mini(g)}${cs.guardados[g.k] > 1 ? `<b>${cs.guardados[g.k]}</b>` : ''}<span>${esc(g.it.quadrinho ? '🏅 ' + g.it.nome : g.it.nome)}</span></button>`).join('')
     : '<p class="cs-vazio">Nada guardado. Compre móveis na loja da Dona Cida (aba 🛋️ Móveis) ou arraste os móveis pelo quarto.</p>';
@@ -11447,13 +11513,23 @@ function girarMovel() {
 }
 // 🎨 cor do móvel (PROMPT-118): bolinhas com as amostras do grupo (tecido / madeira); troca na hora, grátis; grava no ✔ Pronto
 function abrirCoresMovel() {
-  const m = cs?.sel, it = itemCasa(m?.id), cores = coresDe(it), el = $('cs-cores');
-  if (!cores) return;
+  const m = cs?.sel, it = itemCasa(m?.id), cores = coresDe(it) || [], el = $('cs-cores');
+  const acabs = it?.acabamento_fixo || it?.campeoes ? [] : acabamentosMeus();   // 🎨 os acabamentos da torre (PROMPT-230)
+  if (!cores.length && !acabs.length) return;
   if (!el.hidden) { el.hidden = true; return; }
   // amostra_padrao (PROMPT-125): a 1ª bolinha mostra a cor original do item (a cama: cobertor bege)
-  el.innerHTML = cores.map(c => (c.id === '' && it.amostra_padrao ? { ...c, nome: 'Bege', amostra: it.amostra_padrao } : c)).map(c => `<button class="cs-cor${(m.cor || '') === c.id ? ' sel' : ''}" data-cor="${esc(c.id)}" title="${esc(c.nome)}" aria-label="${esc(c.nome)}" style="--c:${esc(c.amostra)}"></button>`).join('');
+  el.innerHTML = cores.map(c => (c.id === '' && it.amostra_padrao ? { ...c, nome: 'Bege', amostra: it.amostra_padrao } : c)).map(c => `<button class="cs-cor${(m.cor || '') === c.id ? ' sel' : ''}" data-cor="${esc(c.id)}" title="${esc(c.nome)}" aria-label="${esc(c.nome)}" style="--c:${esc(c.amostra)}"></button>`).join('') +
+    (acabs.length ? `<span class="cs-acab-linha">${[{ id: '', nome: 'Sem acabamento', emoji: '✖' }, ...acabs].map(a => `<button class="cs-acab${(m.acab || '') === a.id ? ' sel' : ''}" data-acab="${esc(a.id)}" title="${esc(a.nome)}" aria-label="${esc(a.nome)}">${a.emoji}</button>`).join('')}</span>` : '');
   el.hidden = false;
   posicionarFerrCasa();
+}
+function trocarAcabMovel(id) {
+  const m = cs?.sel;
+  if (!m) return;
+  if (id) m.acab = id; else delete m.acab;
+  posicionarMovel(m);
+  for (const b of $('cs-cores').querySelectorAll('[data-acab]')) b.classList.toggle('sel', b.dataset.acab === (m.acab || ''));
+  tocar('clique');
 }
 function trocarCorMovel(cor) {
   const m = cs?.sel, it = itemCasa(m?.id);
@@ -11506,7 +11582,7 @@ function abrirFerrCasa() {
   const m = cs?.sel, el = $('cs-ferr');
   if (!m) return;
   el.querySelector('[data-cs="girar"]').hidden = ciclosVista(itemCasa(m.id), m).length < 2;
-  el.querySelector('[data-cs="cor"]').hidden = !coresDe(itemCasa(m.id));   // 🎨 só nos que têm cor (PROMPT-118)
+  el.querySelector('[data-cs="cor"]').hidden = !coresDe(itemCasa(m.id)) && !(acabamentosMeus().length && !itemCasa(m.id)?.acabamento_fixo && !itemCasa(m.id)?.campeoes);   // 🎨 cor (PROMPT-118) ou acabamento da torre
   el.querySelector('[data-cs="tam"]').hidden = itemCasa(m.id)?.tipo === 'parede';
   el.querySelector('[data-cs="imagem"]').hidden = m.id !== 'quadro_imagem';   // 📷 (PROMPT-184)
   el.querySelector('[data-cs="vender"]').hidden = !(precoVendaCasa(itemCasa(m.id)) > 0);   // 💰 só os que têm preço na loja (PROMPT-209)
@@ -11589,7 +11665,7 @@ function ligarCasinha() {
     const b = e.target.closest('[data-escolher]'); if (b) escolherInsigniaQuadro(b.dataset.escolher);
   });
   $('cs-tema').addEventListener('click', (e) => { e.stopPropagation(); if (cs && !cs.visita && !cs.arrumando) abrirTemasCasa(); });
-  $('cs-temas-lista').addEventListener('click', (e) => { const b = e.target.closest('[data-tema]'); if (!b) return; $('cs-temas').hidden = true; if (b.dataset.tema !== temaDoDono().id) { aplicarTema(b.dataset.tema); tocar('clique'); } });
+  $('cs-temas-lista').addEventListener('click', (e) => { const bc = e.target.closest('[data-tcor]'); if (bc) { trocarCorTema(bc.dataset.tcamada, bc.dataset.tcor); return; } const b = e.target.closest('[data-tema]'); if (!b) return; $('cs-temas').hidden = true; if (b.dataset.tema !== temaDoDono().id) { aplicarTema(b.dataset.tema); tocar('clique'); } });
   for (const id of ['cs-colecao', 'cs-aquario', 'cs-comida', 'cs-menu', 'cs-temas', 'venc']) $(id).addEventListener('click', (e) => {   // ✕ ou fora da caixa: fecha
     if (e.target === $(id) || e.target.closest(`[data-fechar="${id}"]`)) $(id).hidden = true;
   });
@@ -11603,6 +11679,8 @@ function ligarCasinha() {
     if (b?.dataset.cs === 'vender') { perguntarVenda(); return; }
     const bc = e.target.closest('[data-cor]');
     if (bc) { trocarCorMovel(bc.dataset.cor); return; }
+    const ba = e.target.closest('[data-acab]');   // 🎨 acabamento da torre
+    if (ba) { trocarAcabMovel(ba.dataset.acab); return; }
     const bt = e.target.closest('[data-cs-tam]');
     if (bt) { tamanhoMovel(Number(bt.dataset.csTam)); return; }
     if (b?.dataset.cs === 'cor') { $('cs-tam').hidden = true; abrirCoresMovel(); return; }
@@ -12306,6 +12384,750 @@ function ligarVila() {
     const b = e.target.closest('[data-convidar]');
     if (b) { $('vila-busca').hidden = true; convidarVizinho(b.dataset.convidar, b.dataset.nome, b.dataset.turma); }
   });
+}
+
+// ============================================================
+//  🏆 TORRE DOS CAMPEÕES (PROMPT-230) — dados/jogo/torre.json; imagens em img/jogo/torre/
+//  Entra quem venceu os 2 ginásios do mapa 13 (a professora, sempre). 10 andares × 4 treinadores: os 3 primeiros com 4 perguntas
+//  e o chefe com 5 (o Campeão do andar 10, 6). Sem tempo e sem o "Pular". Errou metade com um treinador (2 de 4, 3 de 5, 3 de 6):
+//  volta ao 1º treinador do mesmo andar. Moedas a cada treinador; baú a cada andar (o do 10 é o baú de ouro).
+//  jogo_revisao/{uid}/torre = { andar, treinador, andares_vencidos: { n: data }, premios: { auras, fumacas, estilos, moveis,
+//    acabamentos, temas: { id: data } }, aura_ativa, fumaca_ativa, estilo_ativo, bau_pendente: { andar, opcoes }, insignias: { andar5, campeao } }
+//  Quadro dos campeões (público): jogo_revisao_torre/{uid} = { nome, turma, andar, data } (modo teste: jogo_revisao_torre_teste)
+//  Onde fica: torre.json → local = { mapa, x, y } (null: em nenhum mapa ainda; a professora entra pelo modo dev: jogoRevisaoDev.torre())
+// ============================================================
+let TORRE = null;
+let torreOrigem = null;          // de onde entrou (para sair): { tipo: 'mapa', n } | null (mapa geral)
+const spritesTorreOk = {};       // nome → true quando img/jogo/personagens/{nome}.webp existe (os chefes 7 a 10)
+const N_ANDARES = 10;
+const ehTorre = () => cena?.n === 'torre';
+const baseTorre = () => (teste ? 'jogo_revisao_torre_teste' : 'jogo_revisao_torre');
+function lerTorre(t) {
+  t = t && typeof t === 'object' ? t : {};
+  const n = (v, a, b, d) => { v = Math.round(Number(v)); return Number.isFinite(v) ? Math.min(b, Math.max(a, v)) : d; };
+  const ob = (o) => (o && typeof o === 'object' ? { ...o } : {});
+  const premios = ob(t.premios);
+  for (const k of ['auras', 'fumacas', 'estilos', 'moveis', 'acabamentos', 'temas']) premios[k] = ob(premios[k]);
+  const s = (v) => (typeof v === 'string' && v ? v : null);
+  return { andar: n(t.andar, 1, N_ANDARES, 1), treinador: n(t.treinador, 0, 3, 0), vencidos: ob(t.andares_vencidos), premios,
+    aura: s(t.aura_ativa), fumaca: s(t.fumaca_ativa), estilo: s(t.estilo_ativo), insignias: ob(t.insignias),
+    bau: t.bau_pendente && typeof t.bau_pendente === 'object' && Array.isArray(t.bau_pendente.opcoes) ? { ...t.bau_pendente } : null };
+}
+const torreEst = () => (estado.torre ||= lerTorre(null));
+const venceuLider = (chave) => !!estado?.ginasios?.[chave]?.lider?.vencido;
+const torreLiberada = () => ehProfessora() || (venceuLider('mapa13-A') && venceuLider('mapa13-B'));
+const torreVisivel = () => ehProfessora() || venceuLider('mapa13-A') || venceuLider('mapa13-B');
+const andarCfg = (a) => TORRE?.andares?.[a - 1] || null;
+const salaoDe = (a) => TORRE?.saloes?.[String(andarCfg(a)?.salao || 1)] || null;
+const cfgPremios = () => TORRE?.premios || {};
+const corTorre = (id) => (id === 'arco_iris' ? { id, nome: 'Arco-íris', cor: '#ff3df2' } : (cfgPremios().cores || []).find(c => c.id === id) || null);
+
+async function carregarTorre() {
+  try { TORRE = await fetch(`${DADOS}/torre.json`).then(r => { if (!r.ok) throw new Error('torre.json'); return r.json(); }); }
+  catch (e) { console.warn('[jogo-revisao] torre indisponível', e); return; }
+  for (const nome of Object.values(TORRE.chefes || {})) {   // a imagem própria dos chefes: quando o arquivo chegar, ela entra sozinha
+    const im = new Image();
+    im.onload = () => { spritesTorreOk[nome] = true; };
+    im.src = `${IMG}/personagens/${nome}.webp`;
+  }
+  acrescentarPremiosTorreNaCasa();
+  injetarFiltrosEstilo();
+}
+
+// ── sorteio fixo por aluno e andar (os treinadores, os pets e os estilos não mudam a cada entrada) ──
+function rngTorre(semente) {
+  let h = 2166136261;
+  for (const c of String(semente)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+  return () => { h = (h + 0x6D2B79F5) | 0; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function poolTorre(lideres) {
+  const out = [], vistos = new Set();
+  for (let n = 1; n <= NUM_MAPAS; n++) for (const G of ['A', 'B']) {
+    const ps = D.questoes[n]?.ginasios?.[G]?.personagens;
+    if (!ps) continue;
+    for (const p of lideres ? ['lider'] : ['treinador1', 'treinador2', 'treinador3']) {
+      const x = ps[p];
+      if (x?.sprite && !vistos.has(x.sprite)) { vistos.add(x.sprite); out.push(x); }
+    }
+  }
+  return out;
+}
+const ESTILOS_PET = ['galaxia', 'holografico', 'neon'];
+function treinadoresDoAndar(a) {
+  const r = rngTorre(`${sessao?.uid}|torre|${a}`), cores = (cfgPremios().cores || []).map(c => c.id);
+  const tira = (arr) => arr.splice(Math.floor(r() * arr.length), 1)[0];
+  const trein = poolTorre(a === 10), lid = a === 10 ? trein : poolTorre(true);   // no topo todos são líderes (sem repetir)
+  const lista = [0, 1, 2].map(() => ({ ...(tira(trein.length ? trein : lid) || lid[0] || {}) }));
+  const chefe = { ...(tira(lid) || lid[0] || {}) };
+  const especial = TORRE.chefes?.[a];
+  if (especial && spritesTorreOk[especial]) chefe.sprite = especial;   // torre_chefe7…9 / torre_campeao (personagens/ e bustos/)
+  lista.push(chefe);
+  return lista.map((pers, i) => {
+    const ch = i === 3;
+    const t = { i, pers, chefe: ch, n: !ch ? 4 : a === 10 ? 6 : 5, nome: !ch ? `Treinador ${i + 1}` : a === 10 ? 'Campeão' : 'Chefe do andar' };
+    if (a >= 7) {   // andares 7 a 10: pets com brilho e o personagem com aura
+      const est = [...ESTILOS_PET].sort(() => r() - 0.5);
+      t.pet = PETS[Math.floor(r() * PETS.length)];
+      t.aura = a === 10 && ch ? 'arco_iris' : cores[Math.floor(r() * cores.length)];
+      if (a === 10) { t.estilo = ch ? 'holografico' : est[0]; t.fumaca = ch ? 'arco_iris' : cores[Math.floor(r() * cores.length)]; }   // o Campeão: o "Lenda"
+      else { t.estilo = est[0]; t.fumaca = ch ? cores[Math.floor(r() * cores.length)] : null; }   // 1 estilo; o chefe, 2 (estilo e fumaça)
+    }
+    return t;
+  });
+}
+
+// ── 🏰 a torre num mapa (torre.json → local): visível depois da 1ª vitória no mapa 13; trancada até vencer os 2 ──
+function montarTorreNoMapa(n) {
+  cena.torrePorta = null;
+  const L = TORRE?.local;
+  if (!L || L.mapa !== n || !torreVisivel()) return;
+  const alt = Number(L.altura) || 330;
+  cena.torrePorta = { x: L.x, y: L.y, trilha: centroCelula(celulaMaisProxima(cena.grade, L.x, L.y + 12)) };
+  $('cena-atores').insertAdjacentHTML('beforeend', `<img class="jr-ator jr-torre-predio" src="${IMG}/torre/torre.webp" style="left:${L.x}px;top:${L.y + alt * 0.04}px;height:${alt}px;z-index:${Math.round(L.y)}" alt="" draggable="false"/>` +
+    `<div class="jr-rotulo-porta jr-rotulo-praca" style="left:${L.x}px;top:${L.y - alt * 0.32}px"><span>🏆 Torre dos Campeões${torreLiberada() ? '' : ' 🔒'}</span></div>`);
+}
+function entrarNaTorre() {
+  if (!TORRE) return;
+  if (!torreLiberada()) { avisarEm('Vença todos os ginásios para entrar 🔒', jog.x, jog.y - altJogCena() - 10); tocar('erro'); return; }
+  torreOrigem = cena?.tipo === 'mapa' && typeof cena.n === 'number' ? { tipo: 'mapa', n: cena.n } : null;
+  transicao(() => abrirTorre());
+}
+function sairDaTorre() {
+  const o = torreOrigem;
+  $('torre-faixa')?.remove();
+  transicao(() => (o?.tipo === 'mapa' ? abrirMapa(o.n) : abrirMapaGeral()));
+}
+
+// ── o salão do andar ──
+// o chão onde se anda: a elipse em faixas de 16 px (+ os retângulos extra)
+function retangulosTorre(S) {
+  const [cx, cy, rx, ry] = S.elipse, out = [];
+  for (let y = cy - ry; y < cy + ry; y += 16) {
+    const m = y + 8, k = 1 - ((m - cy) / ry) ** 2;
+    if (k <= 0) continue;
+    const hw = rx * Math.sqrt(k);
+    out.push({ x0: cx - hw, x1: cx + hw, y0: y, y1: y + 16 });
+  }
+  for (const [x0, y0, x1, y1] of S.extra || []) out.push({ x0, y0, x1, y1 });
+  return out;
+}
+const andarVencido = (a) => a < torreEst().andar || (a === N_ANDARES && torreEst().andar === N_ANDARES && !!torreEst().vencidos[N_ANDARES] && torreEst().treinador === 0 && !cena?.torre?.jogando);
+// treinador i do andar mostrado já vencido (no andar atual: os antes de torre.treinador)
+function treinadorVencido(i) {
+  const T = cena?.torre, te = torreEst();
+  if (!T) return false;
+  if (T.andar < te.andar) return true;
+  if (T.andar > te.andar) return false;
+  return i < te.treinador;
+}
+const proximoTorre = () => { for (let i = 0; i < 4; i++) if (!treinadorVencido(i)) return i; return -1; };
+const andarLimpo = () => proximoTorre() < 0;
+
+async function abrirTorre(andar = torreEst().andar) {
+  if (!TORRE) return;
+  andar = Math.min(N_ANDARES, Math.max(1, Math.round(andar) || 1));
+  const A = andarCfg(andar), S = salaoDe(andar);
+  sairPesca(false);
+  cena = null;
+  esconderBalao();
+  fecharCartaoColega();
+  $('btn-revanche').hidden = true;
+  $('cena-aviso').hidden = true;
+  $('cena-atores').innerHTML = '';
+  $('cena-titulo').textContent = '🏆 Torre dos Campeões';
+  $('btn-cena-voltar').textContent = '⬅ Sair';
+  $('btn-cena-voltar').hidden = false;
+  $('tela-cena').classList.remove('jr-no-ginasio', 'jr-gin-dificil');
+  mostrarTela('tela-cena');
+  $('cena-palco').style.visibility = 'hidden';
+  limparPessoas();
+  sairDoMapaOnline();
+  enviarOnline({ mapa: 'torre', local: 'torre' });   // aqui dentro os colegas não veem você
+  await trocarFundo(`${IMG}/torre/${S.imagem}`);
+  const grade = gradeDeRetangulos(retangulosTorre(S));
+  const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y));
+  const [sx, sy] = S.saida;
+  cena = { tipo: 'mapa', n: 'torre', salao: true, alturaPersonagem: Number(TORRE.altura_personagem) || 135, cfg: { entrada: S.entrada, saidas: [S.saida] }, grade, portas: {}, naTrilha,
+    saidas: [{ x: sx, y: sy, trilha: naTrilha(sx, sy) }],
+    torre: { andar, A, S, trein: treinadoresDoAndar(andar), vistos: new Set(), escada: S.escada ? { x: S.escada[0], y: S.escada[1], trilha: naTrilha(...S.escada) } : null } };
+  destinoEspecial = null;
+  alvoMapa = null;
+  pertoSaidaGin = false;
+  montarTorre();
+  posicionarJogador(S.entrada[0], S.entrada[1], 'costas');
+  soltouDesdeTroca = false;
+  ajustarCamera();
+  $('cena-palco').style.visibility = '';
+  $('btn-reacao').hidden = true;
+  atualizarBotaoPet();
+  if (torreEst().bau && torreEst().bau.andar) setTimeout(() => { if (ehTorre() && !perguntaAberta) abrirBau(torreEst().bau.andar); }, 700);   // baú que ficou sem escolher
+}
+const urlPetTorre = (pet) => quadrosDe(pet, 'sentado_girando')[0] || '';
+const classeEstilo = (id) => (id ? ` jr-est jr-est-${id}` : '');
+function montarTorre() {
+  const T = cena.torre, alt = alturaSalao();
+  let html = T.trein.map((t, i) => {
+    const [x, y] = T.S.treinadores[i], h = alt * (t.chefe ? ALT_LIDER : ALT_TREINADOR) / ALT_JOGADOR, lado = x < T.S.estrela[0] ? -1 : 1;
+    return `<img class="jr-ator jr-npc jr-torre-t${t.aura ? ` jr-aura jr-aura-${t.aura}` : ''}" data-ti="${i}" src="${IMG}/personagens/${esc(t.pers.sprite || '')}.webp" style="left:${x}px;top:${y}px;height:${h.toFixed(1)}px;z-index:${Math.round(y)}" alt="" draggable="false"/>` +
+      (t.pet ? `<img class="jr-ator jr-torre-pet${classeEstilo(t.estilo)}" data-pi="${i}" src="${urlPetTorre(t.pet)}" style="left:${x + lado * h * 0.42}px;top:${y + 2}px;height:${(h * 0.4).toFixed(1)}px;z-index:${Math.round(y) + 1}" alt="" draggable="false"/>` : '');
+  }).join('');
+  const [ex, ey] = T.S.estrela;
+  html += `<div class="jr-torre-num" style="left:${ex}px;top:${ey}px" aria-hidden="true">${T.andar}</div>`;
+  const [px, py] = T.S.placa || [250, 470];
+  html += `<button class="jr-torre-placa" style="left:${px}px;top:${py}px" aria-label="Quadro dos campeões da torre">🏆 Campeões</button>`;
+  if (T.escada) html += `<div class="jr-rotulo-porta jr-rotulo-praca jr-torre-escada" style="left:${T.escada.x}px;top:${T.escada.y - 160}px" hidden><span>⬆ Andar ${T.andar + 1}</span></div>`;
+  $('cena-atores').insertAdjacentHTML('beforeend', html);
+  // a faixa com o nome do andar fica sempre visível (fora do palco, que anda com a câmera)
+  let fx = $('torre-faixa');
+  if (!fx) { fx = document.createElement('div'); fx.id = 'torre-faixa'; fx.className = 'jr-torre-faixa'; $('tela-cena').appendChild(fx); }
+  fx.innerHTML = `<b>ANDAR ${T.andar}</b> · ${esc(T.A?.nome || '')}${T.A?.dificil ? ' <i>⭐ difícil</i>' : ''}`;
+  atualizarTreinadoresTorre();
+}
+function atualizarTreinadoresTorre() {
+  if (!ehTorre()) return;
+  const prox = proximoTorre(), livre = ehProfessora();
+  for (const el of $('cena-atores').querySelectorAll('.jr-torre-t')) {
+    const i = Number(el.dataset.ti);
+    el.classList.toggle('vencido', treinadorVencido(i));
+    el.classList.toggle('proximo', i === prox);
+    el.classList.toggle('bloqueado', !livre && prox >= 0 && i > prox);
+  }
+  let seta = $('cena-atores').querySelector('.jr-seta');
+  if (prox < 0) { seta?.remove(); return; }
+  if (!seta) { seta = document.createElement('div'); seta.className = 'jr-seta'; seta.textContent = '▼'; seta.setAttribute('aria-hidden', 'true'); $('cena-atores').appendChild(seta); }
+  const [x, y] = cena.torre.S.treinadores[prox], h = alturaSalao() * (prox === 3 ? ALT_LIDER : ALT_TREINADOR) / ALT_JOGADOR;
+  seta.style.left = x + 'px'; seta.style.top = (y - h - 10) + 'px'; seta.style.zIndex = 900;
+}
+// a cada quadro no salão: a etiqueta da escada e a fumaça dos pets dos treinadores
+let fumTorreT = 0;
+function atualizarTorre() {
+  const T = cena.torre;
+  const et = $('cena-atores').querySelector('.jr-torre-escada');
+  if (et && T.escada) { const perto = dist(jog.x, jog.y, T.escada.x, T.escada.y) < 130; if (et.hidden === perto) et.hidden = !perto; }
+  const agora = performance.now();
+  if (semMovimento() || agora - fumTorreT < 450) return;
+  fumTorreT = agora;
+  for (const t of T.trein) if (t.fumaca) {
+    const el = $('cena-atores').querySelector(`.jr-torre-pet[data-pi="${t.i}"]`);
+    if (el) soltarFumaca({ x: parseFloat(el.style.left), y: parseFloat(el.style.top), altura: parseFloat(el.style.height) }, t.fumaca);
+  }
+}
+// tocar no salão: um treinador, a placa dos campeões (a escada e a saída são destinos normais)
+function tocarNaTorre(e, p) {
+  if (e.target.closest?.('.jr-torre-placa')) { abrirQuadroTorre(); return true; }
+  const alvo = e.target.closest?.('.jr-torre-t, .jr-torre-pet');
+  let i = alvo ? Number(alvo.dataset.ti ?? alvo.dataset.pi) : -1;
+  if (i < 0) {   // perto dos pés de um treinador
+    const alt = alturaSalao();
+    i = cena.torre.S.treinadores.findIndex(([x, y]) => Math.abs(p.x - x) < 45 && p.y < y + 12 && p.y > y - alt * 1.2);
+  }
+  if (i < 0) return false;
+  irAoTreinadorTorre(i);
+  return true;
+}
+function irAoTreinadorTorre(i) {
+  const T = cena.torre, livre = ehProfessora(), [x, y] = T.S.treinadores[i], alt = alturaSalao();
+  const aviso = (txt) => avisarEm(txt, x, y - alt * 1.25);
+  if (!livre && treinadorVencido(i)) { aviso('Você já venceu este treinador!'); return; }
+  if (!livre && i > proximoTorre()) { aviso('Vença o treinador anterior primeiro!'); return; }
+  const [px, py] = T.S.pontos[i];
+  destinoEspecial = null;
+  caminharNaTrilha(px, py, () => {
+    if (!ehTorre() || cena.torre !== T) return;
+    jog.dir = Math.abs(x - px) > Math.abs(y - py) ? (x < px ? 'esquerda' : 'direita') : (y < py ? 'costas' : 'frente');
+    desenharJogador();
+    abrirPerguntaTorre(i);
+  });
+}
+function subirTorre() {
+  const T = cena?.torre;
+  if (!T) return;
+  if (!T.escada) { sairDaTorre(); return; }
+  if (!andarLimpo() && !ehProfessora()) { avisarEm('Vença os 4 treinadores para subir! 🔒', T.escada.x, T.escada.y - 150); tocar('erro'); return; }
+  const prox = Math.min(N_ANDARES, T.andar + 1);
+  transicao(() => abrirTorre(prox));
+}
+
+// ── a batalha na torre (a mesma tela do ginásio, com o fundo da torre) ──
+const MAPAS_LADOS = (mapas) => mapas.flatMap(m => (m === 13 ? ['A'] : ['A', 'B']).map(l => [m, l]));   // 13 B são tabelas: fica de fora
+function perguntasTorre(T, t) {
+  const pares = MAPAS_LADOS(T.A.mapas), dif = !!T.A.dificil, out = [];
+  const ordem = [...pares].sort(() => Math.random() - 0.5);
+  for (let k = 0; out.length < t.n && k < t.n * 12; k++) {
+    const [mapa, lado] = ordem[k % ordem.length];
+    const personagem = t.chefe ? 'lider' : pick3(['treinador1', 'treinador2', 'treinador3']), indice = Math.floor(Math.random() * 8);
+    const q = gerarUma(mapa, lado, personagem, indice, { dificil: dif });
+    if (!q || T.vistos.has(q.enunciado)) continue;   // não repete a mesma questão no mesmo andar
+    T.vistos.add(q.enunciado);
+    out.push({ ...q, id: `torre${T.andar}-${q.id}`, mapa, lado, personagem, indice, dif, pos: out.length });
+  }
+  return out;
+}
+const pick3 = (a) => a[Math.floor(Math.random() * a.length)];
+const FALAS_TORRE = ['Só sobe quem acerta. Vamos lá!', 'Chegou até aqui? Quero ver!', 'Na torre não tem moleza!', 'Pense com calma e responda!', 'Mostre o que aprendeu nos ginásios!'];
+const FALAS_TORRE_VENCIDO = ['Você é forte! Siga em frente.', 'Mandou bem! O próximo te espera.', 'Uau, que cabeça boa!', 'Pode passar, campeão!'];
+function abrirPerguntaTorre(i) {
+  const T = cena.torre, t = T.trein[i];
+  const qs = perguntasTorre(T, t);
+  if (!qs.length) { avisoTopo('Não consegui montar as perguntas. Tente de novo.'); return; }
+  // as falas são da torre (as do ginásio falam do assunto do ginásio)
+  const A = T.A, chefeFala = T.andar === N_ANDARES ? 'Eu sou o Campeão. Mostre que merece o topo! 🏆' : A.dificil ? 'Bem-vindo à Câmara Sombria. Aqui as contas são difíceis!' : `Sou o chefe do ${A.nome}. Prepare-se!`;
+  const pers = { sprite: t.pers.sprite, fala: pick3(FALAS_TORRE), falas: { abertura: chefeFala }, fala_vencido: pick3(FALAS_TORRE_VENCIDO) };
+  pers.falas.derrota = t.pers.falas?.derrota || 'Volte quando estiver pronto!';
+  pg = {
+    modo: 'torre', dificil: true, torre: { andar: T.andar, i, t }, p: t.chefe ? 'lider' : `treinador${i + 1}`, pers,
+    fila: qs, total: qs.length, acertos: 0, errouIds: new Set(), errosPorIndice: {}, errosT: 0, limite: Math.ceil(qs.length / 2),
+    travado: false, fim: false,
+  };
+  cena.torre.jogando = true;
+  perguntaAberta = true;
+  soltarJoystick();
+  $('tela-cena').classList.add('jr-com-pergunta');
+  $('perg-busto').src = `${IMG}/bustos/${pers.sprite}.webp`;
+  $('perg-confirma').querySelector('p').textContent = 'Fugir da batalha? Você vai recomeçar este treinador.';
+  $('perg-caixa').classList.remove('dificil');
+  falar(t.chefe ? pers.falas.abertura : pers.fala);
+  $('perg-desistir').hidden = false;
+  $('perg-confirma').hidden = true;
+  $('pergunta').hidden = false;
+  montarArena();
+  atualizarMoedasPergunta();
+  renderPergunta();
+  $('pergunta').querySelector('.jr-perg-caixa').scrollTop = 0;
+}
+// o fundo, a placa e o pet do treinador (andares 7 a 10) na arena — chamado pelo montarArena
+function arenaTorre() {
+  const el = $('pergunta'), torre = pg?.modo === 'torre';
+  el.classList.toggle('jr-perg-torre', torre);
+  $('perg-arena').querySelector('.jr-arena-advpet')?.remove();
+  $('perg-arena').querySelector('.jr-perg-faixa-torre')?.remove();
+  $('perg-adv').classList.remove('jr-aura', ...[...$('perg-adv').classList].filter(c => c.startsWith('jr-aura-')));
+  if (!torre) { el.style.removeProperty('--torre-bg'); return; }
+  const { andar, t } = pg.torre, S = salaoDe(andar), A = andarCfg(andar);
+  el.style.setProperty('--torre-bg', `url("${IMG}/torre/${S.batalha}")`);
+  $('perg-adv-nome').textContent = `Andar ${andar} · ${t.nome}`;
+  $('perg-arena').insertAdjacentHTML('afterbegin', `<div class="jr-perg-faixa-torre"><b>ANDAR ${andar}</b> · ${esc(A?.nome || '')}</div>`);
+  if (t.aura) $('perg-adv').classList.add('jr-aura', `jr-aura-${t.aura}`);
+  if (t.pet) $('perg-adv').insertAdjacentHTML('afterend', `<img class="jr-arena-advpet${classeEstilo(t.estilo)}" src="${urlPetTorre(t.pet)}" alt="" draggable="false"/>`);
+}
+// errou: a pergunta volta com outros números; errou metade com este treinador → volta ao 1º do andar
+function errarNaTorre(q, btn, certa) {
+  pg.errosT++;
+  pg.fila.shift();
+  if (pg.errosT >= pg.limite) {
+    falar('Errou metade! Você volta para o 1º treinador do andar. 💪');
+    pg.aoContinuar = voltarAoPrimeiroTorre;
+    mostrarCartaoErro(q, btn.dataset.v, certa, false);
+    return;
+  }
+  const nova = gerarUma(q.mapa, q.lado, q.personagem, q.indice, { dificil: q.dif });
+  pg.fila.push(nova ? { ...nova, id: `torre${pg.torre.andar}-${nova.id}`, mapa: q.mapa, lado: q.lado, personagem: q.personagem, indice: q.indice, dif: q.dif, pos: q.pos } : q);
+  const falta = pg.limite - pg.errosT;
+  falar(falta === 1 ? 'Cuidado: mais um erro e você volta ao 1º treinador!' : `Cuidado: mais ${falta} erros e você volta ao 1º treinador!`);
+  pg.aoContinuar = renderPergunta;
+  mostrarCartaoErro(q, btn.dataset.v, certa, !!nova);
+}
+function voltarAoPrimeiroTorre() {
+  const te = torreEst(), andar = pg?.torre?.andar;
+  fecharPergunta();
+  if (cena?.torre) cena.torre.jogando = false;
+  if (andar === te.andar && te.treinador !== 0) { te.treinador = 0; gravar({ 'torre/treinador': 0 }); }
+  atualizarTreinadoresTorre();
+  avisoPet('Você volta para o 1º treinador do andar. Respire e tente de novo! 💪', true);
+}
+function vencerTorre() {
+  const { andar, i, t } = pg.torre, te = torreEst(), agora = Date.now();
+  pg.fim = true;
+  const acertosPrimeira = pg.total - pg.errouIds.size, patch = {};
+  const moedas = comMult(t.chefe ? Number(TORRE.moedas_chefe) || 20 : Number(TORRE.moedas_treinador) || 10);
+  estado.pets.moedas = (Number(estado.pets.moedas) || 0) + moedas;
+  patch['pets/moedas'] = estado.pets.moedas;
+  registrarGanho('torre', moedas, patch);
+  let andarNovo = false;
+  if (andar === te.andar && i >= te.treinador) {   // progresso (a professora jogando fora de ordem não mexe nele)
+    if (!t.chefe) { te.treinador = i + 1; patch['torre/treinador'] = te.treinador; }
+    else {
+      andarNovo = !te.vencidos[andar];
+      te.vencidos[andar] = te.vencidos[andar] || agora; patch[`torre/andares_vencidos/${andar}`] = te.vencidos[andar];
+      te.treinador = 0; patch['torre/treinador'] = 0;
+      if (andar < N_ANDARES) { te.andar = andar + 1; patch['torre/andar'] = te.andar; }
+      if (andar === 5 && !te.insignias.andar5) { te.insignias.andar5 = agora; patch['torre/insignias/andar5'] = agora; }
+      if (andar === N_ANDARES && !te.insignias.campeao) { te.insignias.campeao = agora; patch['torre/insignias/campeao'] = agora; }
+    }
+  }
+  gravar(patch);
+  if (t.chefe && andarNovo) publicarCampeaoTorre(andar);
+  registrarDiaJogado();
+  tocar('vitoria');
+  petAnimadoAte = Date.now() + 5 * 60e3;
+  falar(t.chefe ? (andar === N_ANDARES ? 'Você é o Campeão da Torre! 🏆' : `Andar ${andar} vencido! A escada está liberada.`) : pg.pers.fala_vencido);
+  $('perg-contador').innerHTML = `Acertou ${acertosPrimeira} de ${pg.total} de primeira · +${moedas} ${moedaHtml()}`;
+  $('perg-contador').hidden = false;
+  desenharBolinhas();
+  $('perg-enunciado').hidden = true;
+  $('perg-alternativas').hidden = true;
+  $('perg-explica').hidden = true; $('perg-guiado').hidden = true; $('perg-corpo').classList.remove('guiado');
+  $('perg-tabela').innerHTML = '';
+  $('perg-desistir').hidden = true;
+  $('perg-ajuda').hidden = true;
+  $('perg-continuar').textContent = t.chefe ? '🎁 Abrir o baú' : 'Continuar';
+  $('perg-continuar').hidden = false;
+  pg.aoContinuar = () => {
+    fecharPergunta();
+    if (cena?.torre) cena.torre.jogando = false;
+    atualizarTreinadoresTorre();
+    reagirSeguidor('comemora', 'feliz');
+    if (t.chefe) abrirBau(andar);
+    else if (t.estilo || t.fumaca) setTimeout(() => avisoPet('Gostou do brilho? Ele pode sair no baú! ✨', true), 500);
+  };
+}
+// 📋 quadro dos campeões: o andar mais alto vencido de cada aluno (primeiro nome e turma). Professora e contas de teste ficam de fora.
+async function publicarCampeaoTorre(andar) {
+  if (ehProfessora() || (!teste && contaEscondida(sessao?.uid, sessao?.nome))) return;   // modo teste: vai para o quadro de teste
+  try {
+    const r = ref(db, `${baseTorre()}/${sessao.uid}`), s = await get(r), antes = s.exists() ? Number(s.val()?.andar) || 0 : 0;
+    if (andar <= antes) return;
+    await set(r, { nome: String(sessao.nome || '').split(' ')[0], turma: sessao.turma || '', andar, data: Date.now() });
+  } catch (e) { console.warn('[jogo-revisao] quadro da torre indisponível', e?.code || e); }
+}
+async function abrirQuadroTorre() {
+  const m = modalTorre('torre-quadro', '🏆 Campeões da Torre', '<div class="jr-torre-carregando">Carregando…</div>');
+  try {
+    const s = await get(ref(db, baseTorre()));
+    const lista = Object.entries(s.exists() ? s.val() || {} : {}).map(([uid, v]) => ({ uid, ...v }))
+      .filter(v => v && Number(v.andar) > 0 && v.uid !== UID_PROFESSORA && (teste || !contaEscondida(v.uid, v.nome)))
+      .sort((a, b) => b.andar - a.andar || a.data - b.data).slice(0, 30);
+    m.querySelector('.jr-torre-corpo').innerHTML = lista.length ? `<ol class="jr-torre-lista">${lista.map((v, k) =>
+      `<li${v.uid === sessao?.uid ? ' class="eu"' : ''}><span class="pos">${k < 3 ? ['🥇', '🥈', '🥉'][k] : k + 1 + 'º'}</span><b>${esc(v.nome || '?')}</b> <small>${esc(v.turma || '')}</small>
+        <span class="andar">${Number(v.andar) === N_ANDARES ? '🏆 Topo' : `Andar ${Number(v.andar)}`}</span><small class="data">${new Date(Number(v.data) || 0).toLocaleDateString('pt-BR')}</small></li>`).join('')}</ol>`
+      : '<p class="jr-torre-vazio">Ninguém venceu um andar ainda. Seja o primeiro!</p>';
+  } catch (e) {
+    console.warn('[jogo-revisao] quadro da torre indisponível', e?.code || e);
+    m.querySelector('.jr-torre-corpo').innerHTML = '<p class="jr-torre-vazio">O quadro não abriu agora. Tente mais tarde.</p>';
+  }
+}
+// janela simples da torre (quadro, baú, prêmios): fecha no ✕ ou fora da caixa
+let torreModal = null;
+function modalTorre(id, titulo, corpo, { fechavel = true, classe = '' } = {}) {
+  fecharModalTorre();
+  const m = document.createElement('div');
+  m.id = id; m.className = `jr-torre-modal ${classe}`;
+  m.setAttribute('role', 'dialog'); m.setAttribute('aria-label', titulo.replace(/<[^>]+>/g, ''));
+  m.innerHTML = `<div class="jr-torre-caixa">${fechavel ? '<button class="jr-torre-x" aria-label="Fechar">✕</button>' : ''}<h2>${titulo}</h2><div class="jr-torre-corpo">${corpo}</div></div>`;
+  m.addEventListener('click', (e) => { if (fechavel && (e.target === m || e.target.closest('.jr-torre-x'))) fecharModalTorre(); });
+  $('jr-app').appendChild(m);
+  torreModal = m;
+  return m;
+}
+function fecharModalTorre() { torreModal?.remove(); torreModal = null; }
+
+// ============================================================
+//  🎁 BAÚ DA TORRE: moedas sempre (50 no andar 1, +25 por andar, até 250 no 9) e 1 prêmio à escolha entre 3 sorteados (de
+//  categorias diferentes quando der, nunca algo que ele já tem). O sorteio fica guardado (torre/bau_pendente) até escolher.
+//  Andar 10: o baú de ouro — 500 moedas e os 3 exclusivos juntos (aura e fumaça arco-íris e o Trono dourado).
+// ============================================================
+const CATS_TORRE = ['aura', 'fumaca', 'estilo', 'movel', 'acabamento', 'tema'];
+const NOME_CAT = { aura: '✨ Aura do personagem', fumaca: '💨 Fumaça do pet', estilo: '🌟 Estilo do pet', movel: '🪑 Móvel', acabamento: '🎨 Acabamento de móvel', tema: '🏠 Tema da casa' };
+const CHAVE_CAT = { aura: 'auras', fumaca: 'fumacas', estilo: 'estilos', movel: 'moveis', acabamento: 'acabamentos', tema: 'temas' };
+function itensDaCategoria(cat) {
+  const P = cfgPremios();
+  if (cat === 'aura' || cat === 'fumaca') return (P.cores || []).map(c => c.id);
+  if (cat === 'estilo') return (P.estilos || []).map(e => e.id);
+  if (cat === 'acabamento') return (P.acabamentos || []).map(e => e.id);
+  if (cat === 'movel') return (P.moveis || []).map(e => e.id);
+  if (cat === 'tema') return (P.temas || []).filter(t => t.ativo !== false).map(t => t.id);
+  return [];
+}
+const temPremio = (cat, id) => !!torreEst().premios[CHAVE_CAT[cat]]?.[id];
+function sortearBau() {
+  const disp = CATS_TORRE.map(cat => [cat, itensDaCategoria(cat).filter(id => !temPremio(cat, id))]).filter(([, l]) => l.length);
+  const out = [], cats = [...disp].sort(() => Math.random() - 0.5);
+  for (const [cat, l] of cats) { if (out.length === 3) break; out.push({ cat, id: l[Math.floor(Math.random() * l.length)] }); }
+  // menos de 3 categorias: completa com outro item de uma categoria que ainda tenha (sem repetir)
+  for (const [cat, l] of cats) for (const id of [...l].sort(() => Math.random() - 0.5)) {
+    if (out.length >= 3) break;
+    if (!out.some(o => o.cat === cat && o.id === id)) out.push({ cat, id });
+  }
+  return out;
+}
+function infoPremio(o) {
+  const P = cfgPremios();
+  if (o.cat === 'aura' || o.cat === 'fumaca') { const c = corTorre(o.id); return { nome: `${o.cat === 'aura' ? 'Aura' : 'Fumaça'} ${c?.nome || o.id}`, icone: `<i class="jr-bau-bolinha jr-cor-${esc(o.id)}" style="--c:${c?.cor || '#fff'}"></i>` }; }
+  if (o.cat === 'estilo') { const e = (P.estilos || []).find(x => x.id === o.id); return { nome: `Estilo ${e?.nome || o.id}`, icone: `<span class="jr-bau-emoji">${e?.emoji || '🌟'}</span>` }; }
+  if (o.cat === 'acabamento') { const e = (P.acabamentos || []).find(x => x.id === o.id); return { nome: `Acabamento ${e?.nome || o.id}`, icone: `<span class="jr-bau-emoji">${e?.emoji || '🎨'}</span>` }; }
+  if (o.cat === 'movel') { const e = (P.moveis || []).find(x => x.id === o.id) || (o.id === 'trono_ouro' ? P.trono_ouro : null); return { nome: e?.nome || o.id, icone: `<img src="${IMG}/casinha/moveis/${esc(e?.imagem_de || o.id)}_d.webp" alt="" draggable="false"${o.id === 'trono_ouro' ? ' class="jr-est jr-est-ouro"' : ''}/>` }; }
+  if (o.cat === 'tema') { const e = (P.temas || []).find(x => x.id === o.id); return { nome: `Tema ${e?.nome || o.id}`, icone: `<img src="${IMG}/casinha/${esc(e?.imagem || '')}" alt="" draggable="false"/>` }; }
+  return { nome: o.id, icone: '🎁' };
+}
+// entrega um prêmio (patch: o que gravar); devolve false se ele já tinha (vira moedas)
+function darPremio(o, patch) {
+  const te = torreEst(), k = CHAVE_CAT[o.cat], agora = Date.now();
+  if (te.premios[k]?.[o.id]) return false;
+  te.premios[k][o.id] = agora; patch[`torre/premios/${k}/${o.id}`] = agora;
+  if (o.cat === 'movel' && estado.casinha) {   // vai para os guardados da casinha
+    const gd = estado.casinha.guardados; gd[o.id] = (Number(gd[o.id]) || 0) + 1; patch[`casinha/guardados/${o.id}`] = gd[o.id];
+  }
+  if (o.cat === 'aura' && !te.aura) { te.aura = o.id; patch['torre/aura_ativa'] = o.id; }        // o 1º já vem ligado
+  if (o.cat === 'fumaca' && !te.fumaca) { te.fumaca = o.id; patch['torre/fumaca_ativa'] = o.id; }
+  if (o.cat === 'estilo' && !te.estilo) { te.estilo = o.id; patch['torre/estilo_ativo'] = o.id; }
+  return true;
+}
+function moedasBau(n, patch) {
+  n = comMult(n);
+  estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
+  patch['pets/moedas'] = estado.pets.moedas;
+  registrarGanho('torre', n, patch);
+  return n;
+}
+function abrirBau(andar) {
+  const te = torreEst(), ouro = andar === N_ANDARES, patch = {};
+  let moedas = 0;
+  if (!te.bau || te.bau.andar !== andar) {   // baú novo: moedas agora; as opções ficam guardadas até escolher
+    moedas = moedasBau(ouro ? Number(TORRE.bau_ouro_moedas) || 500 : (TORRE.bau_moedas || [])[andar - 1] || 50 + 25 * (andar - 1), patch);
+    const opcoes = ouro ? [{ cat: 'aura', id: 'arco_iris' }, { cat: 'fumaca', id: 'arco_iris' }, { cat: 'movel', id: 'trono_ouro' }] : sortearBau();
+    te.bau = { andar, opcoes, moedas };
+    patch['torre/bau_pendente'] = te.bau;
+    gravar(patch);
+  }
+  const b = te.bau;
+  const m = modalTorre('torre-bau', ouro ? '🏆 Baú de ouro' : `🎁 Baú do andar ${andar}`, `
+    <div class="jr-bau-palco${ouro ? ' ouro' : ''}"><div class="jr-bau-luz"></div><img class="jr-bau-img" src="${IMG}/torre/bau.webp" alt="" draggable="false"/><div class="jr-bau-moedas"></div></div>
+    <p class="jr-bau-msg">${b.moedas ? `+${b.moedas} ${moedaHtml()}` : ''}</p>
+    <div class="jr-bau-opcoes" hidden></div>
+    <button class="jr-btn jr-bau-ok" hidden>Continuar</button>`, { fechavel: false, classe: 'jr-bau' });
+  const palco = m.querySelector('.jr-bau-palco'), ops = m.querySelector('.jr-bau-opcoes'), msg = m.querySelector('.jr-bau-msg'), ok = m.querySelector('.jr-bau-ok');
+  tocar('clique');
+  const abrir = () => {
+    palco.classList.add('aberto');
+    tocar('vitoria');
+    const mo = palco.querySelector('.jr-bau-moedas');
+    if (!semMovimento()) for (let k = 0; k < 14; k++) {
+      const s = document.createElement('span'); s.innerHTML = moedaHtml();
+      s.style.setProperty('--dx', ((Math.random() - 0.5) * 220).toFixed(0) + 'px');
+      s.style.setProperty('--dy', (-60 - Math.random() * 120).toFixed(0) + 'px');
+      s.style.animationDelay = (k * 0.05).toFixed(2) + 's';
+      mo.appendChild(s);
+    }
+    if (ouro) {   // os 3 juntos
+      const p2 = {}, ganhos = [];
+      for (const o of b.opcoes) { if (darPremio(o, p2)) ganhos.push(infoPremio(o).nome); else moedasBau(Number(TORRE.moedas_premio_repetido) || 100, p2); }
+      p2['torre/bau_pendente'] = null; te.bau = null;
+      gravar(p2);
+      ops.innerHTML = b.opcoes.map(o => { const f = infoPremio(o); return `<div class="jr-bau-op ganho">${f.icone}<b>${esc(f.nome)}</b></div>`; }).join('');
+      ops.hidden = false;
+      msg.innerHTML += `<br>${ganhos.length ? 'Os 3 exclusivos do Campeão!' : 'Você já tinha os 3: virou moedas!'}`;
+      ok.hidden = false;
+      if (ganhos.length) aplicarVisuaisTorre();
+      return;
+    }
+    if (!b.opcoes.length) {   // já tem tudo: o prêmio vira moedas
+      const p2 = {}, n = moedasBau(Number(TORRE.moedas_premio_repetido) || 100, p2);
+      p2['torre/bau_pendente'] = null; te.bau = null; gravar(p2);
+      msg.innerHTML += `<br>Você já tem todos os prêmios da torre: +${n} ${moedaHtml()}`;
+      ok.hidden = false;
+      return;
+    }
+    ops.innerHTML = '<p class="jr-bau-escolha">Escolha 1 prêmio:</p>' + b.opcoes.map((o, k) => { const f = infoPremio(o);
+      return `<button class="jr-bau-op" data-k="${k}">${f.icone}<b>${esc(f.nome)}</b><small>${NOME_CAT[o.cat] || ''}</small></button>`; }).join('');
+    ops.hidden = false;
+  };
+  setTimeout(abrir, semMovimento() ? 200 : 1300);   // treme ~1,2 s e abre
+  ops.addEventListener('click', (e) => {
+    const bt = e.target.closest('[data-k]');
+    if (!bt || !te.bau) return;
+    const o = te.bau.opcoes[Number(bt.dataset.k)], p2 = {};
+    const novo = darPremio(o, p2);
+    if (!novo) moedasBau(Number(TORRE.moedas_premio_repetido) || 100, p2);
+    p2['torre/bau_pendente'] = null; te.bau = null;
+    gravar(p2);
+    tocar('vitoria');
+    for (const x of ops.querySelectorAll('.jr-bau-op')) { x.disabled = true; x.classList.toggle('ganho', x === bt); x.classList.toggle('apagado', x !== bt); }
+    const f = infoPremio(o);
+    msg.innerHTML = `${esc(f.nome)}: é seu! ${o.cat === 'movel' ? 'Está nos guardados da 🏠 Casinha.' : o.cat === 'acabamento' ? 'Use no 🎨 de qualquer móvel da Casinha.' : o.cat === 'tema' ? 'Use nas reformas da 🏠 Casinha.' : 'Troque em 🎁 Prêmios da Torre.'}`;
+    ok.hidden = false;
+    aplicarVisuaisTorre();
+    if (o.cat === 'movel' || o.cat === 'acabamento' || o.cat === 'tema') acrescentarPremiosTorreNaCasa();
+  });
+  ok.addEventListener('click', () => {
+    fecharModalTorre();
+    if (andar === N_ANDARES && ehTorre()) avisoPet('🏆 Você é o Campeão da Torre! A insígnia está no seu estojo.', true);
+    else if (andar === 5) avisoPet('🏅 Insígnia do Andar 5 no seu estojo!', true);
+  });
+}
+
+// ============================================================
+//  ✨ AURA, 💨 FUMAÇA E 🌟 ESTILO (prêmios da torre) e 🎨 os acabamentos dos móveis — tudo por código
+//  Aura: luz em volta do personagem (#jogador). Fumaça: poucas partículas transparentes subindo devagar em volta do pet.
+//  Estilo (pet) e acabamento (móvel): filtros SVG (feTurbulence / feImage) com a própria imagem como máscara (SourceAlpha),
+//  então valem para qualquer quadro do pet e qualquer móvel. Animação em passos (calcMode discrete) para não pesar no celular.
+// ============================================================
+function injetarFiltrosEstilo() {
+  if (document.getElementById('jr-filtros-estilo')) return;
+  const passos = (n, a, b) => Array.from({ length: n + 1 }, (_, k) => (a + (b - a) * k / n).toFixed(3)).join(';');
+  const arco = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" preserveAspectRatio="none"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2=".5">${
+    ['#ff7eb3', '#ffd36e', '#9dff8a', '#6ee7ff', '#a98bff', '#ff7eb3', '#ffd36e', '#9dff8a', '#6ee7ff', '#a98bff', '#ff7eb3'].map((c, i, a) => `<stop offset="${(i / (a.length - 1)).toFixed(3)}" stop-color="${c}"/>`).join('')}</linearGradient></defs><rect width="200" height="100" fill="url(#g)"/></svg>`);
+  const faixa = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" preserveAspectRatio="none"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2=".35"><stop offset=".4" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><rect width="100" height="100" fill="url(#g)"/></svg>');
+  const svg = `<svg id="jr-filtros-estilo" width="0" height="0" style="position:absolute;width:0;height:0" aria-hidden="true" focusable="false"><defs>
+  <filter id="jr-f-galaxia" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="saturate" values="0" result="cinza"/>
+    <feComponentTransfer in="cinza" result="claro"><feFuncR type="linear" slope="1.1" intercept=".18"/><feFuncG type="linear" slope="1.1" intercept=".18"/><feFuncB type="linear" slope="1.1" intercept=".18"/></feComponentTransfer>
+    <feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="7" result="nuvem"/>
+    <feColorMatrix in="nuvem" type="matrix" values=".9 0 0 0 .18  .15 .2 0 0 .02  .3 .6 .4 0 .45  0 0 0 0 1" result="nebulosa"/>
+    <feBlend in="nebulosa" in2="claro" mode="multiply" result="base"/>
+    <feTurbulence type="turbulence" baseFrequency=".75" numOctaves="1" seed="1" result="ruido"><animate attributeName="seed" values="1;2;3;4;5" dur="3s" calcMode="discrete" repeatCount="indefinite"/></feTurbulence>
+    <feColorMatrix in="ruido" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  2.2 0 0 0 -.25" result="r2"/>
+    <feComponentTransfer in="r2" result="estrelas"><feFuncA type="discrete" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1"/></feComponentTransfer>
+    <feMerge result="ceu"><feMergeNode in="base"/><feMergeNode in="estrelas"/></feMerge>
+    <feComposite in="ceu" in2="SourceAlpha" operator="in"/>
+  </filter>
+  <filter id="jr-f-holografico" x="0" y="0" width="1" height="1" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+    <feImage href="${arco}" x="-1" y="0" width="2" height="1" preserveAspectRatio="none" result="arco"><animate attributeName="x" values="${passos(24, -1, 0)}" dur="6s" calcMode="discrete" repeatCount="indefinite"/></feImage>
+    <feColorMatrix in="SourceGraphic" type="saturate" values=".15" result="cinza"/>
+    <feComponentTransfer in="cinza" result="claro"><feFuncR type="linear" slope=".55" intercept=".5"/><feFuncG type="linear" slope=".55" intercept=".5"/><feFuncB type="linear" slope=".55" intercept=".5"/></feComponentTransfer>
+    <feBlend in="arco" in2="claro" mode="multiply" result="holo"/>
+    <feComposite in="holo" in2="SourceAlpha" operator="in"/>
+  </filter>
+  <filter id="jr-f-neon" x="-.2" y="-.2" width="1.4" height="1.4" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="lum"/>
+    <feComponentTransfer in="lum" result="linhas"><feFuncA type="table" tableValues="1 .75 .1 0 0 0"/></feComponentTransfer>
+    <feComposite in="linhas" in2="SourceAlpha" operator="in" result="linhasD"/>
+    <feMorphology in="SourceAlpha" operator="dilate" radius="1.4" result="gordo"/>
+    <feComposite in="gordo" in2="SourceAlpha" operator="out" result="borda"/>
+    <feMerge result="tracos"><feMergeNode in="borda"/><feMergeNode in="linhasD"/></feMerge>
+    <feFlood flood-color="#00e5ff" result="cor"><animate attributeName="flood-color" values="#00e5ff;#00e5ff;#4df0ff;#ff3df2;#ff3df2;#ff6af5;#00e5ff" dur="12s" calcMode="discrete" repeatCount="indefinite"/></feFlood>
+    <feComposite in="cor" in2="tracos" operator="in" result="tracoCor"/>
+    <feGaussianBlur in="tracoCor" stdDeviation="2.4" result="glow"><animate attributeName="stdDeviation" values="2.4;3.4;4.2;3.4" dur="3s" calcMode="discrete" repeatCount="indefinite"/></feGaussianBlur>
+    <feFlood flood-color="#12132a" result="escuro"/>
+    <feComposite in="escuro" in2="SourceAlpha" operator="in" result="corpo"/>
+    <feMerge><feMergeNode in="glow"/><feMergeNode in="glow"/><feMergeNode in="corpo"/><feMergeNode in="tracoCor"/></feMerge>
+  </filter>
+  <filter id="jr-f-ouro" x="-.12" y="-.12" width="1.24" height="1.24" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="matrix" values=".55 .5 .2 0 .1  .42 .42 .14 0 .05  .1 .14 .05 0 0  0 0 0 1 0" result="dourado"/>
+    <feImage href="${faixa}" x="-1" y="0" width="1" height="1" preserveAspectRatio="none" result="faixa"><animate attributeName="x" values="${passos(12, -1, 1.2)};1.2;1.2;1.2;1.2;1.2;1.2;1.2;1.2;1.2;1.2;1.2;1.2" dur="5s" calcMode="discrete" repeatCount="indefinite"/></feImage>
+    <feComposite in="faixa" in2="SourceAlpha" operator="in" result="reflexo"/>
+    <feFlood flood-color="#ffd54a" result="luzCor"/>
+    <feComposite in="luzCor" in2="SourceAlpha" operator="in" result="luz"/>
+    <feGaussianBlur in="luz" stdDeviation=".035" result="aura"/>
+    <feComponentTransfer in="aura" result="aura2"><feFuncA type="linear" slope=".8"><animate attributeName="slope" values=".55;.7;.85;1;.85;.7" dur="3s" calcMode="discrete" repeatCount="indefinite"/></feFuncA></feComponentTransfer>
+    <feMerge><feMergeNode in="aura2"/><feMergeNode in="dourado"/><feMergeNode in="reflexo"/></feMerge>
+  </filter>
+  </defs></svg>`;
+  document.body.insertAdjacentHTML('beforeend', svg);
+}
+// aura no personagem e estilo no pet ativo (o mapa, o Meu Pet, a arena): chamado ao mudar e ao abrir as telas
+function aplicarAuraJogador() {
+  const te = estado?.torre, el = $('jogador');
+  if (!el) return;
+  for (const c of [...el.classList]) if (c.startsWith('jr-aura')) el.classList.remove(c);
+  if (te?.aura && te.premios.auras[te.aura]) el.classList.add('jr-aura', `jr-aura-${te.aura}`);
+}
+function aplicarVisuaisTorre() {
+  atualizarVisualPet();   // o estilo do pet e a aura do personagem
+  if (pg && !$('pergunta').hidden) aplicarVisualPet($('perg-pet'), estado.pets?.ativo, true);
+}
+const estiloAtivo = () => { const te = estado?.torre; return te?.estilo && te.premios.estilos[te.estilo] ? te.estilo : null; };
+function aplicarEstiloPet(img) {
+  if (!img?.classList) return;
+  for (const c of [...img.classList]) if (c.startsWith('jr-est')) img.classList.remove(c);
+  const e = estiloAtivo();
+  if (e) img.classList.add('jr-est', `jr-est-${e}`);
+}
+// 💨 fumaça: uma nuvenzinha a cada ~0,45 s (andando ou parado), no máximo 7 por pet ao mesmo tempo
+const FUMACA_MAX = 7;
+let fumacaT = 0, fumacaN = 0;
+function soltarFumaca(seg, corId) {
+  if (fumacaN >= FUMACA_MAX * 3) return;
+  const s = document.createElement('i'), alt = seg.altura || 40, sorte = (a) => (Math.random() - 0.5) * a;
+  s.className = `jr-fumaca${corId === 'arco_iris' ? ' arco' : ''}`;
+  const c = corTorre(corId);
+  Object.assign(s.style, { left: seg.x + sorte(alt * 0.9) + 'px', top: seg.y - alt * (0.15 + Math.random() * 0.45) + 'px', zIndex: Math.round(seg.y) - 2,
+    width: alt * 0.45 + 'px', height: alt * 0.45 + 'px' });
+  s.style.setProperty('--c', c?.cor || '#fff');
+  s.style.setProperty('--dx', sorte(alt * 0.4).toFixed(1) + 'px');
+  fumacaN++;
+  let foi = false;
+  const tirar = () => { if (foi) return; foi = true; fumacaN--; s.remove(); };
+  s.addEventListener('animationend', tirar);
+  setTimeout(tirar, 3200);
+  $('cena-atores').appendChild(s);
+}
+function fumacaDoPet(agora) {
+  const te = estado?.torre, cor = te?.fumaca && te.premios.fumacas[te.fumaca] ? te.fumaca : null;
+  if (!cor || !seguidor?.pet || $('pet').hidden || semMovimento() || agora - fumacaT < 450) return;
+  fumacaT = agora;
+  soltarFumaca({ x: seguidor.x, y: seguidor.y, altura: seguidor.altura }, cor);
+}
+
+// 🎁 Prêmios da Torre: escolher (ou tirar) a aura, a fumaça e o estilo
+function abrirPremiosTorre() {
+  const te = torreEst(), P = cfgPremios();
+  const linha = (cat, ativo, lista) => {
+    const tem = lista.filter(o => temPremio(cat, o.id));
+    return `<section class="jr-pt-sec"><h3>${NOME_CAT[cat]}</h3>${tem.length ? `<div class="jr-pt-chips">
+      <button class="jr-pt-chip${!ativo ? ' sel' : ''}" data-pt="${cat}" data-id="">Nenhuma</button>${tem.map(o => `<button class="jr-pt-chip${ativo === o.id ? ' sel' : ''}" data-pt="${cat}" data-id="${esc(o.id)}">${o.icone || ''}${esc(o.nome)}</button>`).join('')}</div>`
+      : '<p class="jr-pt-vazio">Ainda não ganhou. Pode sair no baú da torre!</p>'}</section>`;
+  };
+  const cores = [...(P.cores || []), { id: 'arco_iris', nome: 'Arco-íris', cor: '#ff3df2' }].map(c => ({ id: c.id, nome: c.nome, icone: `<i class="jr-bau-bolinha jr-cor-${esc(c.id)}" style="--c:${c.cor}"></i>` }));
+  const estilos = (P.estilos || []).map(e => ({ id: e.id, nome: e.nome, icone: `<span>${e.emoji}</span>` }));
+  const ins = [te.insignias.andar5 ? '🏅 Andar 5 da Torre' : '', te.insignias.campeao ? '🏆 Campeão da Torre' : ''].filter(Boolean);
+  const m = modalTorre('torre-premios', '🎁 Prêmios da Torre', (ins.length ? `<p class="jr-pt-ins">${ins.join(' · ')}</p>` : '') +
+    linha('aura', te.aura, cores) + linha('fumaca', te.fumaca, cores) + linha('estilo', te.estilo, estilos) +
+    '<p class="jr-pt-nota">Os móveis, os acabamentos e os temas ficam na 🏠 Casinha.</p>');
+  m.querySelector('.jr-torre-corpo').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-pt]');
+    if (!b) return;
+    const cat = b.dataset.pt, id = b.dataset.id || null, campo = { aura: 'aura', fumaca: 'fumaca', estilo: 'estilo' }[cat];
+    te[campo] = id;
+    gravar({ [`torre/${campo}_ativa`.replace('estilo_ativa', 'estilo_ativo')]: id });
+    for (const x of b.parentElement.children) x.classList.toggle('sel', x === b);
+    aplicarVisuaisTorre();
+    tocar('clique');
+  });
+}
+const temPremiosTorre = () => { const p = estado?.torre?.premios; return !!p && ['auras', 'fumacas', 'estilos'].some(k => Object.keys(p[k] || {}).length) || !!estado?.torre?.insignias?.andar5; };
+
+// 🏠 os móveis exclusivos da torre, o Trono dourado e os temas entram no catálogo da casinha (não na loja)
+function acrescentarPremiosTorreNaCasa() {
+  if (!CASA?.itens || !TORRE) return;
+  const P = cfgPremios();
+  for (const mv of [...(P.moveis || []), ...(P.trono_ouro ? [P.trono_ouro] : [])]) {
+    if (CASA.itens.some(i => i.id === mv.id)) continue;
+    CASA.itens.push({ preco: 0, limite: 1, vistas: ['d', 'f', 'l'], ...mv, exclusivo: true, torre: true, dica: mv.acabamento_fixo ? 'Só para o Campeão da Torre.' : 'Prêmio da Torre dos Campeões.' });
+  }
+  if (Array.isArray(CASA.temas)) for (const t of P.temas || []) {
+    if (t.ativo === false || CASA.temas.some(x => x.id === t.id)) continue;
+    CASA.temas.push({ preco: 0, ...t, torre: true });
+  }
+}
+const acabamentoDe = (m) => { const it = itemCasa(m?.id); return it?.acabamento_fixo || (m?.acab && estado?.torre?.premios?.acabamentos?.[m.acab] ? m.acab : ''); };
+const acabamentosMeus = () => (cfgPremios().acabamentos || []).filter(a => casaSemGravar || estado?.torre?.premios?.acabamentos?.[a.id]);
+// temas com camadas (neon, livre): a cor de cada camada (casinha/cores_tema/{tema}/{camada})
+const corDaCamada = (tema, camada, visita = null) => {
+  const lista = camada === 'neon' ? cfgPremios().cores_neon : cfgPremios().cores_livre, salvo = (visita ? visita.dados.cores_tema : estado?.casinha?.cores_tema)?.[tema]?.[camada];
+  return (lista || []).find(c => c.id === salvo)?.cor || (lista || [])[camada === 'chao' ? 6 : 0]?.cor || '#ff3df2';
+};
+// a escolha da cor de cada camada (na lista de temas da casinha)
+function htmlCoresTema(tema) {
+  return (tema?.camadas || []).map(c => {
+    const lista = c.cor === 'neon' ? cfgPremios().cores_neon : cfgPremios().cores_livre, atual = corDaCamada(tema.id, c.cor);
+    return `<div class="cs-tema-cores"><b>${c.cor === 'neon' ? '💡 Cor do neon' : c.cor === 'chao' ? '🟫 Cor do chão' : '🧱 Cor da parede'}</b>${(lista || []).map(x =>
+      `<button class="cs-tema-cor${x.cor === atual ? ' sel' : ''}" data-tcamada="${esc(c.cor)}" data-tcor="${esc(x.id)}" title="${esc(x.nome)}" aria-label="${esc(x.nome)}" style="--c:${x.cor}"></button>`).join('')}</div>`;
+  }).join('');
+}
+function trocarCorTema(camada, cor) {
+  const c = estado.casinha, tema = temaDoDono();
+  if (!c || !tema.camadas) return;
+  ((c.cores_tema ||= {})[tema.id] ||= {})[camada] = cor;
+  if (!casaSemGravar) {
+    gravar({ [`casinha/cores_tema/${tema.id}/${camada}`]: cor });
+    if (c.publicada) update(ref(db, `${basePraca()}/casinhas/${sessao.uid}`), { cores_tema: c.cores_tema }).catch(e => console.warn('[jogo-revisao] cor do tema na cópia pública', e?.code || e));
+  }
+  for (const b of $('cs-temas-lista').querySelectorAll(`[data-tcamada="${camada}"]`)) b.classList.toggle('sel', b.dataset.tcor === cor);
+  if (ehCasinha() && cs && !cs.visita) desenharMoveis();
+  tocar('clique');
+}
+function htmlCamadasTema(tema, visita = null) {
+  return (tema.camadas || []).map(c => `<i class="cs-camada cs-camada-${esc(c.cor)}" style="--c:${corDaCamada(tema.id, c.cor, visita)};--m:url('${IMG}/casinha/${esc(c.mascara)}')" aria-hidden="true"></i>`).join('');
 }
 
 // ============================================================
@@ -14384,7 +15206,7 @@ const iconeEstojo = () => $($('tela-cena').hidden ? 'btn-insignias' : 'btn-insig
 // ── Insígnia nova: aparece grande no centro e voa até o ícone do estojo ──
 let animInsignia = null;
 
-function mostrarInsigniaGanha(chave, dourada) {
+function mostrarInsigniaGanha(chave, dourada, estrela = false) {   // estrela: ⭐ do Difícil (PROMPT-230)
   const [mapaStr, G] = chave.replace('mapa', '').split('-');
   const gin = D.questoes[Number(mapaStr)].ginasios[G];
   const box = $('insignia-ganha');
@@ -14392,8 +15214,9 @@ function mostrarInsigniaGanha(chave, dourada) {
   img.getAnimations().forEach(a => a.cancel());
   img.src = `${IMG}/insignias/insignia-${chave}.webp`;
   img.className = dourada ? 'dourada' : '';
-  $('ig-titulo').textContent = dourada ? 'Insígnia dourada!' : `Insígnia: ${gin.nome}!`;
-  box.classList.toggle('dourada', !!dourada);
+  $('ig-titulo').textContent = estrela ? `⭐ Estrela do Difícil: ${gin.nome}!` : dourada ? 'Insígnia dourada!' : `Insígnia: ${gin.nome}!`;
+  box.classList.toggle('dourada', !!dourada || estrela);
+  box.classList.toggle('estrela', estrela);
   box.classList.remove('voando');
   box.hidden = false;
   tocar(dourada ? 'dourada' : 'insignia');
@@ -14552,7 +15375,7 @@ function pedirAjuda() {
 function registrarAjuda(q, tipo) {
   if (pg.ajudaEm?.[q.id] === 'eliminou') return;
   (pg.ajudaEm ||= {})[q.id] = tipo;
-  gravar({ [`respostas/${q.id}/ajuda`]: tipo });
+  if (!pg.dificil) gravar({ [`respostas/${q.id}/ajuda`]: tipo });   // ⭐ o Difícil não entra no painel
 }
 
 function montarArena() {
@@ -14590,7 +15413,8 @@ function montarArena() {
     adv.onload = () => { if (adv.naturalHeight) arena.style.setProperty('--adv-meia', (32.5 * adv.naturalWidth / adv.naturalHeight).toFixed(2) + 'cqh'); };
     adv.src = `${IMG}/personagens/${pg.pers.sprite}.webp`;
   }
-  $('perg-adv-nome').textContent = pg.modo === 'treino' ? `🎯 Treino com ${pet ? nomePet(pet) : 'seu pet'}` : rev ? 'Revisão da semana' : `${NOME_DESAFIO[pg.p] || ''} · ${D.questoes[pg.mapa].ginasios[pg.G].nome}`;
+  $('perg-adv-nome').textContent = pg.modo === 'treino' ? `🎯 Treino com ${pet ? nomePet(pet) : 'seu pet'}` : rev ? 'Revisão da semana' : pg.modo === 'torre' ? '' : `${NOME_DESAFIO[pg.p] || ''} · ${D.questoes[pg.mapa].ginasios[pg.G].nome}`;
+  arenaTorre();   // 🏆 fundo, faixa do andar e o pet do treinador
 }
 
 const posDe = (q) => q.pos ?? q.indice;
@@ -14788,9 +15612,10 @@ function abrirPergunta(chave, p) {
   const mapa = Number(mapaStr);
   const pers = D.questoes[mapa].ginasios[G].personagens[p];
   // Perguntas novas, com números sorteados, a cada tentativa (o campo `questoes` do JSON não é mais lido)
-  const qs = gerarQuestoes(mapa, G, p).map(({ tipoIndice, ...q }, indice) => ({ ...q, indice: tipoIndice ?? indice }));   // PROMPT-209: 6 / 8 / 5 perguntas
+  const dificil = !!(cena?.tipo === 'interior' && cena.dificil && p !== 'revanche');   // ⭐ PROMPT-230
+  const qs = gerarQuestoes(mapa, G, p, { dificil }).map(({ tipoIndice, ...q }, indice) => ({ ...q, indice: tipoIndice ?? indice }));   // PROMPT-209: 6 / 8 / 5 perguntas
   pg = {
-    chave, mapa, G, p, pers,
+    chave, mapa, G, p, pers, dificil, errosD: 0,
     fila: qs,
     total: qs.length,
     acertos: 0,
@@ -14800,7 +15625,7 @@ function abrirPergunta(chave, p) {
     fim: false,
   };
   perguntaAberta = true;
-  if (p === 'lider') {   // painel "Travados" (PROMPT-97): +1 luta com o líder; a 1ª vez fica marcada (quem já tinha histórico começa a contar agora)
+  if (p === 'lider' && !dificil) {   // painel "Travados" (PROMPT-97): +1 luta com o líder; a 1ª vez fica marcada (quem já tinha histórico começa a contar agora)
     const g = estado.ginasios[chave], patch = { [`ginasios/${chave}/tentativas_lider`]: increment(1) };
     if (g && !g.primeiraTentativa) { g.primeiraTentativa = Date.now(); patch[`ginasios/${chave}/primeira_tentativa`] = g.primeiraTentativa; }
     gravar(patch);
@@ -14809,6 +15634,7 @@ function abrirPergunta(chave, p) {
   $('tela-cena').classList.add('jr-com-pergunta');   // esconde o joystick (ver CSS)
   $('perg-busto').src = `${IMG}/bustos/${pers.sprite}.webp`;
   $('perg-confirma').querySelector('p').textContent = 'Fugir da batalha? Você vai recomeçar este treinador.';
+  $('perg-caixa').classList.toggle('dificil', dificil);   // ⭐ a placa da batalha mostra "Difícil" (CSS)
   falar(p === 'lider' ? pers.falas.abertura : pers.fala);
   $('perg-desistir').hidden = false;
   $('perg-confirma').hidden = true;
@@ -15239,7 +16065,7 @@ function marcarPaginaResumo(chave, n, st) {
 const PULOS_ERRO = 3;
 function mostrarPular() {
   const bp = $('erro-pular'), acabou = (estado?.pulosErro || 0) >= PULOS_ERRO;
-  bp.hidden = pg?.modo === 'treino';   // só no ginásio (e na revisão, que é a mesma tela)
+  bp.hidden = pg?.modo === 'treino' || !!pg?.dificil;   // só no ginásio (e na revisão, que é a mesma tela); ⭐ no Difícil, a explicação vai até o fim
   bp.classList.toggle('off', acabou);
   bp.setAttribute('aria-disabled', String(acabou));
 }
@@ -15319,7 +16145,7 @@ function usarDicaPergunta() {
   alvo.disabled = true;
   alvo.classList.add('eliminada');
   pg.dicaItemEm = q.id;
-  gravar({ [`respostas/${q.id}/usou`]: 'dica_pet' });
+  if (!pg.dificil) gravar({ [`respostas/${q.id}/usou`]: 'dica_pet' });
   poseAjuda();
   falaAjuda(`Acho que ${alvo.dataset.v} não é. 💡`);
   tocar('clique');
@@ -15376,10 +16202,13 @@ function responder(btn) {
     const treino = pg.modo === 'treino';
     if (!semAdversario()) missaoProgresso('acertar_ginasio');
     if (!treino && (Number(estado.respostas?.[q.id]?.erros) || 0) > 0) missaoProgresso('revisar_erro');   // já tinha errado esta pergunta
-    const primeiroAcerto = !estado.respostas?.[q.id]?.acertou;   // moeda só na 1ª vez (antes de marcar acertou)
+    // ⭐ Difícil (PROMPT-230): o 1º acerto fica em dificil_acertos (não em respostas/, que é do treino e do painel)
+    const naTorre = pg.modo === 'torre';   // 🏆 na torre as moedas vêm por treinador vencido (a experiência conta)
+    const primeiroAcerto = naTorre ? true : pg.dificil ? !estado.dificilAcertos?.[q.id] : !estado.respostas?.[q.id]?.acertou;   // moeda só na 1ª vez (antes de marcar acertou)
     const agora = Date.now();
-    const registra = !treino || RE_ID.test(q.id);   // conta de batalha (treino): não vai para respostas/
+    const registra = !pg.dificil && (!treino || RE_ID.test(q.id));   // conta de batalha (treino): não vai para respostas/
     const patch = registra ? { [`respostas/${q.id}/acertou`]: true, [`respostas/${q.id}/ultima`]: agora } : {};
+    if (pg.dificil && primeiroAcerto && !naTorre) { (estado.dificilAcertos ||= {})[q.id] = agora; patch[`dificil_acertos/${q.id}`] = agora; }
     // revisão: acertou de primeira → sai da lista de revisão por 3 semanas
     if (pg.modo === 'revisao' && !pg.errouIds.has(q.id)) patch[`respostas/${q.id}/revisao_ok`] = agora;
     if (treino) acertouNoTreino(q, patch);
@@ -15390,7 +16219,7 @@ function responder(btn) {
     comemorarJogador();
     pg.fila.shift();
     pg.acertos++;
-    if (primeiroAcerto && !treino) { ganharMoeda(); ganharXPJogo(XP_JOGO.pergunta, 'pergunta'); }   // treino: sem moedas (o prêmio é lealdade)
+    if (primeiroAcerto && !treino) { if (!naTorre) ganharMoeda(pg.dificil ? 2 : 1); ganharXPJogo(XP_JOGO.pergunta, 'pergunta'); }   // ⭐ o Difícil dá o dobro   // treino: sem moedas (o prêmio é lealdade)
     falar(sortear(D.falas.acerto));
     // 📐 com plano: espera a animação da resposta (no mínimo 1,1 s, no máximo ~3 s)
     const pgAgora = pg, segue = () => { if (!pg || pg !== pgAgora) return; pg.fila.length ? renderPergunta() : vencer(); };
@@ -15411,6 +16240,8 @@ function errarPergunta(btn, q, certa, botoes) {
   pg.status[posDe(q)] = 'errada';
   reagirArena(false);
   desenharBolinhas();
+  if (pg.modo === 'torre') { errarNaTorre(q, btn, certa); return; }   // 🏆 errou metade: volta ao 1º treinador do andar
+  if (pg.dificil) { errarNoDificil(q, btn, certa); return; }   // ⭐ PROMPT-230: 2 erros recomeçam o treinador
   if (pg.modo !== 'treino' || RE_ID.test(q.id)) {
     gravar({ [`respostas/${q.id}/ultima`]: Date.now(), [`respostas/${q.id}/assunto`]: assuntoDe(q.enunciado) }, q.id);   // erros += 1; assunto: o formato da conta (painel "Travados")
     lembrarResposta(q.id, { ultima: Date.now() }, 1);
@@ -15427,8 +16258,82 @@ function errarPergunta(btn, q, certa, botoes) {
   mostrarCartaoErro(q, btn.dataset.v, certa, !!nova);   // explicação da pergunta que o aluno ERROU, não da nova
 }
 
+// ⭐ Ginásio difícil (PROMPT-230): sem respostas/ nem caixinha do treino. 1º erro: a pergunta volta com outros números;
+// 2º erro com o mesmo treinador: depois do cartão do erro, o treinador recomeça (perguntas novas, bolinhas zeradas)
+function errarNoDificil(q, btn, certa) {
+  pg.errosD++;
+  pg.fila.shift();
+  if (pg.errosD >= 2) {
+    falar('Dois erros! Vamos recomeçar do início. 💪');
+    pg.aoContinuar = recomecarNoDificil;
+    mostrarCartaoErro(q, btn.dataset.v, certa, false);
+    return;
+  }
+  const nova = gerarUma(pg.mapa, pg.G, pg.p, q.indice, { dificil: true });
+  pg.fila.push(nova ? { ...nova, indice: q.indice, pos: q.pos } : q);
+  falar('Cuidado: mais um erro e você recomeça! ⭐');
+  pg.aoContinuar = renderPergunta;
+  mostrarCartaoErro(q, btn.dataset.v, certa, !!nova);
+}
+function recomecarNoDificil() {
+  if (!pg?.dificil) return;
+  const qs = gerarQuestoes(pg.mapa, pg.G, pg.p, { dificil: true }).map(({ tipoIndice, ...q }, indice) => ({ ...q, indice: tipoIndice ?? indice }));
+  Object.assign(pg, { fila: qs, total: qs.length, acertos: 0, errouIds: new Set(), errosPorIndice: {}, errosD: 0, status: {} });
+  falar(pg.pers.fala || 'De novo!');
+  renderPergunta();
+}
+
+// Venceu um personagem no Difícil: fica em ginasios/{chave}/dificil/{p}. O líder dá a ⭐ (insignias/{chave}/estrela) com o
+// dobro das moedas da insígnia e, na 1ª vitória no Difícil de cada mapa, o "Troféu dourado do mapa N" nos guardados da casinha.
+// Depois do líder o progresso do Difícil zera (dá para jogar de novo; a estrela, as moedas e o troféu são uma vez só).
+function vencerDificil() {
+  const { chave, mapa, p, pers, total } = pg;
+  pg.fim = true;
+  const g = estado.ginasios[chave], acertosPrimeira = total - pg.errouIds.size, agora = Date.now();
+  const patch = {};
+  let novaEstrela = false, trofeu = null;
+  if (p === 'lider') {
+    g.dif = {}; patch[`ginasios/${chave}/dificil`] = null;
+    if (!g.estrela) {
+      novaEstrela = true; g.estrela = true;
+      patch[`insignias/${chave}/estrela`] = true; patch[`insignias/${chave}/estrela_data`] = agora;
+    }
+    if (!estado.trofeusOuro?.[mapa] && estado.casinha) {
+      trofeu = mapa;
+      (estado.trofeusOuro ||= {})[mapa] = agora; patch[`trofeus_ouro/${mapa}`] = agora;
+      const id = `trofeu_ouro_${mapa}`, gd = estado.casinha.guardados;
+      gd[id] = (Number(gd[id]) || 0) + 1; patch[`casinha/guardados/${id}`] = gd[id];
+    }
+  } else { (g.dif ||= {})[p] = true; patch[`ginasios/${chave}/dificil/${p}`] = true; }
+  gravar(patch);
+  if (novaEstrela) moedasDaInsignia('estrela');
+  registrarDiaJogado();
+  tocar('vitoria');
+  petAnimadoAte = Date.now() + 5 * 60e3;
+  falar(p === 'lider' ? (novaEstrela ? 'Incrível! Você venceu o Difícil e ganhou a ⭐!' : 'Venceu o Difícil de novo! ⭐') : (pers.fala_vencido || sortear(D.falas.treinador_vencido)));
+  $('perg-contador').textContent = `Acertou ${acertosPrimeira} de ${total} de primeira`;
+  $('perg-contador').hidden = false;
+  desenharBolinhas();
+  $('perg-enunciado').hidden = true;
+  $('perg-alternativas').hidden = true;
+  $('perg-explica').hidden = true; $('perg-guiado').hidden = true; $('perg-corpo').classList.remove('guiado');
+  $('perg-tabela').innerHTML = '';
+  $('perg-desistir').hidden = true;
+  $('perg-ajuda').hidden = true;
+  $('perg-continuar').textContent = 'Continuar';
+  $('perg-continuar').hidden = false;
+  pg.aoContinuar = () => {
+    fecharPergunta();
+    if (novaEstrela) mostrarInsigniaGanha(chave, false, true);
+    else reagirSeguidor('comemora', 'feliz');
+    if (trofeu) setTimeout(() => avisoPet(`🏆 Troféu dourado do mapa ${trofeu}! Está nos guardados da sua casinha.`, true), novaEstrela ? 3200 : 600);
+  };
+}
+
 function vencer() {
   if (pg.modo === 'revisao') { concluirRevisao(); return; }
+  if (pg.modo === 'torre') { vencerTorre(); return; }   // 🏆 PROMPT-230
+  if (pg.dificil) { vencerDificil(); return; }   // ⭐ PROMPT-230
   if (pg.modo === 'treino') { concluirTreino(); return; }
   const { chave, p, pers, total } = pg;
   pg.fim = true;
@@ -15565,7 +16470,7 @@ function abrirEstojo() {
       if (g.dourada) douradas++;
       const st = g.dourada ? 'dourada' : g.insignia ? 'ganha' : 'bloqueada';
       return `<button class="insignia ${st}" data-chave="${chave}" aria-label="Insígnia ${esc(q.ginasios[G].nome)}">
-          <img src="${IMG}/insignias/insignia-${chave}.webp" alt="" loading="lazy" draggable="false"/>${st === 'dourada' ? '<span class="ins-estrela">★</span>' : ''}</button>`;
+          <img src="${IMG}/insignias/insignia-${chave}.webp" alt="" loading="lazy" draggable="false"/>${st === 'dourada' ? '<span class="ins-estrela">★</span>' : ''}${g.estrela ? '<span class="ins-dificil" title="Venceu o Difícil">⭐</span>' : ''}</button>`;   // ⭐ PROMPT-230: o Difícil, no outro canto
     }).join('');
     html.push(`<div class="ins-cap">
       <div class="ins-cap-tag"><span>${reg?.emoji || '🗺️'}</span>${esc(q.nome)}</div>
@@ -15573,6 +16478,9 @@ function abrirEstojo() {
     </div>`);
   }
   $('estojo-bandejas').innerHTML = html.join('');
+  $('btn-premios-torre').hidden = !(ehProfessora() || temPremiosTorre());   // 🏆 aura, fumaça e estilo da torre (PROMPT-230)
+  { const ti = estado.torre?.insignias || {}, h = [ti.andar5 && '🏅 Andar 5 da Torre', ti.campeao && '🏆 Campeão da Torre'].filter(Boolean);
+    $('btn-premios-torre').title = h.join(' · '); }
   $('estojo-resumo').textContent = `${conquistadas} de 26 · ${douradas} dourada${douradas === 1 ? '' : 's'}`;
   $('estojo-barra').style.width = (conquistadas / 26 * 100) + '%';
   const xj = estado.xpJogo || { total: 0 }, hoje = xj.dia?.data === diaLocal() ? Number(xj.dia.n) || 0 : 0, fmt = (n) => n.toLocaleString('pt-BR');
@@ -16108,6 +17016,7 @@ const FONTES_MOEDA = {
   aovivo: { nome: 'Tabuada ao vivo' },
   missao: { nome: 'Missões do dia' },
   programe: { nome: 'Programe o pet' },
+  torre: { nome: '🏆 Torre dos Campeões' },
   bonus: { nome: '🎁 Bônus (moedas valendo mais)' },
 };
 
@@ -16125,14 +17034,14 @@ function registrarGanho(fonte, n, patch) {
 }
 
 // Insígnia nova: +10; dourada: +15 (uma vez cada; quem já tinha antes desta regra não recebe retroativo)
-function moedasDaInsignia(tipo) {
-  const n = comMult(tipo === 'dourada' ? cfgLoja().moedas_dourada ?? 15 : cfgLoja().moedas_insignia ?? 10);
+function moedasDaInsignia(tipo) {   // tipo 'estrela': ⭐ Ginásio difícil (PROMPT-230), o dobro da insígnia
+  const n = comMult(tipo === 'dourada' ? cfgLoja().moedas_dourada ?? 15 : tipo === 'estrela' ? 2 * (cfgLoja().moedas_insignia ?? 10) : cfgLoja().moedas_insignia ?? 10);
   if (!n || !estado?.pets) return;
   estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
   const patch = { 'pets/moedas': estado.pets.moedas };
   registrarGanho('insignia', n, patch);
   gravar(patch);
-  setTimeout(() => avisoPet(`${tipo === 'dourada' ? '🌟 Insígnia dourada' : '🏅 Insígnia nova'}! +${n} 🪙`, true), 1200);
+  setTimeout(() => avisoPet(`${tipo === 'dourada' ? '🌟 Insígnia dourada' : tipo === 'estrela' ? '⭐ Estrela do Difícil' : '🏅 Insígnia nova'}! +${n} 🪙`, true), 1200);
 }
 
 function abrirMoedasHoje() {
@@ -17387,6 +18296,7 @@ function ligarEventos() {
 
   $('pet-opcoes').addEventListener('click', (e) => { const b = e.target.closest('[data-pet]'); if (b) escolherPet(b.dataset.pet); });
   $('btn-trocar-pet').addEventListener('click', () => { $('estojo').hidden = true; abrirColecao(); });
+  $('btn-premios-torre')?.addEventListener('click', () => { $('estojo').hidden = true; abrirPremiosTorre(); });   // 🏆 PROMPT-230
   $('pers-grade').addEventListener('click', (e) => { const b = e.target.closest('[data-pers]'); if (b) selecionarPersonagem(b.dataset.pers); });
   $('pers-cores').addEventListener('click', (e) => {
     if (e.target.closest('[data-pers-comprar]')) { comprarCorPers(); return; }
