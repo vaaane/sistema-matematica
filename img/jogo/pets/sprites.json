@@ -764,15 +764,14 @@
    ],
    "andar_direita": [
     "pets/tigre_adulto/andar_direita_1.webp",
-    "pets/tigre_adulto/andar_direita_2.webp",
-    "pets/tigre_adulto/andar_direita_3.webp"
+    "pets/tigre_adulto/andar_direita_2.webp"
    ],
    "andar_esquerda": [
     "pets/tigre_adulto/andar_esquerda_1.webp",
-    "pets/tigre_adulto/andar_esquerda_2.webp",
-    "pets/tigre_adulto/andar_esquerda_3.webp"
+    "pets/tigre_adulto/andar_esquerda_2.webp"
    ],
    "andar_frente": [
+    "pets/tigre_adulto/andar_frente_1.webp",
     "pets/tigre_adulto/andar_frente_1.webp"
    ],
    "animado": [

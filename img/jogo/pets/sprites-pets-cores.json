@@ -3488,15 +3488,14 @@
    ],
    "andar_direita": [
     "pets/tigre_adulto_marrom/andar_direita_1.webp",
-    "pets/tigre_adulto_marrom/andar_direita_2.webp",
-    "pets/tigre_adulto_marrom/andar_direita_3.webp"
+    "pets/tigre_adulto_marrom/andar_direita_2.webp"
    ],
    "andar_esquerda": [
     "pets/tigre_adulto_marrom/andar_esquerda_1.webp",
-    "pets/tigre_adulto_marrom/andar_esquerda_2.webp",
-    "pets/tigre_adulto_marrom/andar_esquerda_3.webp"
+    "pets/tigre_adulto_marrom/andar_esquerda_2.webp"
    ],
    "andar_frente": [
+    "pets/tigre_adulto_marrom/andar_frente_1.webp",
     "pets/tigre_adulto_marrom/andar_frente_1.webp"
    ],
    "animado": [
@@ -3602,15 +3601,14 @@
    ],
    "andar_direita": [
     "pets/tigre_adulto_cinza/andar_direita_1.webp",
-    "pets/tigre_adulto_cinza/andar_direita_2.webp",
-    "pets/tigre_adulto_cinza/andar_direita_3.webp"
+    "pets/tigre_adulto_cinza/andar_direita_2.webp"
    ],
    "andar_esquerda": [
     "pets/tigre_adulto_cinza/andar_esquerda_1.webp",
-    "pets/tigre_adulto_cinza/andar_esquerda_2.webp",
-    "pets/tigre_adulto_cinza/andar_esquerda_3.webp"
+    "pets/tigre_adulto_cinza/andar_esquerda_2.webp"
    ],
    "andar_frente": [
+    "pets/tigre_adulto_cinza/andar_frente_1.webp",
     "pets/tigre_adulto_cinza/andar_frente_1.webp"
    ],
    "animado": [
@@ -3716,15 +3714,14 @@
    ],
    "andar_direita": [
     "pets/tigre_adulto_branco/andar_direita_1.webp",
-    "pets/tigre_adulto_branco/andar_direita_2.webp",
-    "pets/tigre_adulto_branco/andar_direita_3.webp"
+    "pets/tigre_adulto_branco/andar_direita_2.webp"
    ],
    "andar_esquerda": [
     "pets/tigre_adulto_branco/andar_esquerda_1.webp",
-    "pets/tigre_adulto_branco/andar_esquerda_2.webp",
-    "pets/tigre_adulto_branco/andar_esquerda_3.webp"
+    "pets/tigre_adulto_branco/andar_esquerda_2.webp"
    ],
    "andar_frente": [
+    "pets/tigre_adulto_branco/andar_frente_1.webp",
     "pets/tigre_adulto_branco/andar_frente_1.webp"
    ],
    "animado": [
@@ -3830,15 +3827,14 @@
    ],
    "andar_direita": [
     "pets/tigre_adulto_roxo/andar_direita_1.webp",
-    "pets/tigre_adulto_roxo/andar_direita_2.webp",
-    "pets/tigre_adulto_roxo/andar_direita_3.webp"
+    "pets/tigre_adulto_roxo/andar_direita_2.webp"
    ],
    "andar_esquerda": [
     "pets/tigre_adulto_roxo/andar_esquerda_1.webp",
-    "pets/tigre_adulto_roxo/andar_esquerda_2.webp",
-    "pets/tigre_adulto_roxo/andar_esquerda_3.webp"
+    "pets/tigre_adulto_roxo/andar_esquerda_2.webp"
    ],
    "andar_frente": [
+    "pets/tigre_adulto_roxo/andar_frente_1.webp",
     "pets/tigre_adulto_roxo/andar_frente_1.webp"
    ],
    "animado": [
@@ -3944,15 +3940,14 @@
    ],
    "andar_direita": [
     "pets/tigre_adulto_azul/andar_direita_1.webp",
-    "pets/tigre_adulto_azul/andar_direita_2.webp",
-    "pets/tigre_adulto_azul/andar_direita_3.webp"
+    "pets/tigre_adulto_azul/andar_direita_2.webp"
    ],
    "andar_esquerda": [
     "pets/tigre_adulto_azul/andar_esquerda_1.webp",
-    "pets/tigre_adulto_azul/andar_esquerda_2.webp",
-    "pets/tigre_adulto_azul/andar_esquerda_3.webp"
+    "pets/tigre_adulto_azul/andar_esquerda_2.webp"
    ],
    "andar_frente": [
+    "pets/tigre_adulto_azul/andar_frente_1.webp",
     "pets/tigre_adulto_azul/andar_frente_1.webp"
    ],
    "animado": [
@@ -4058,15 +4053,14 @@
    ],
    "andar_direita": [
     "pets/tigre_adulto_rosa/andar_direita_1.webp",
-    "pets/tigre_adulto_rosa/andar_direita_2.webp",
-    "pets/tigre_adulto_rosa/andar_direita_3.webp"
+    "pets/tigre_adulto_rosa/andar_direita_2.webp"
    ],
    "andar_esquerda": [
     "pets/tigre_adulto_rosa/andar_esquerda_1.webp",
-    "pets/tigre_adulto_rosa/andar_esquerda_2.webp",
-    "pets/tigre_adulto_rosa/andar_esquerda_3.webp"
+    "pets/tigre_adulto_rosa/andar_esquerda_2.webp"
    ],
    "andar_frente": [
+    "pets/tigre_adulto_rosa/andar_frente_1.webp",
     "pets/tigre_adulto_rosa/andar_frente_1.webp"
    ],
    "animado": [
@@ -4172,15 +4166,14 @@
    ],
    "andar_direita": [
     "pets/tigre_adulto_verde/andar_direita_1.webp",
-    "pets/tigre_adulto_verde/andar_direita_2.webp",
-    "pets/tigre_adulto_verde/andar_direita_3.webp"
+    "pets/tigre_adulto_verde/andar_direita_2.webp"
    ],
    "andar_esquerda": [
     "pets/tigre_adulto_verde/andar_esquerda_1.webp",
-    "pets/tigre_adulto_verde/andar_esquerda_2.webp",
-    "pets/tigre_adulto_verde/andar_esquerda_3.webp"
+    "pets/tigre_adulto_verde/andar_esquerda_2.webp"
    ],
    "andar_frente": [
+    "pets/tigre_adulto_verde/andar_frente_1.webp",
     "pets/tigre_adulto_verde/andar_frente_1.webp"
    ],
    "animado": [
@@ -4286,15 +4279,14 @@
    ],
    "andar_direita": [
     "pets/tigre_adulto_dourado/andar_direita_1.webp",
-    "pets/tigre_adulto_dourado/andar_direita_2.webp",
-    "pets/tigre_adulto_dourado/andar_direita_3.webp"
+    "pets/tigre_adulto_dourado/andar_direita_2.webp"
    ],
    "andar_esquerda": [
     "pets/tigre_adulto_dourado/andar_esquerda_1.webp",
-    "pets/tigre_adulto_dourado/andar_esquerda_2.webp",
-    "pets/tigre_adulto_dourado/andar_esquerda_3.webp"
+    "pets/tigre_adulto_dourado/andar_esquerda_2.webp"
    ],
    "andar_frente": [
+    "pets/tigre_adulto_dourado/andar_frente_1.webp",
     "pets/tigre_adulto_dourado/andar_frente_1.webp"
    ],
    "animado": [
@@ -4400,15 +4392,14 @@
    ],
    "andar_direita": [
     "pets/tigre_adulto_preto/andar_direita_1.webp",
-    "pets/tigre_adulto_preto/andar_direita_2.webp",
-    "pets/tigre_adulto_preto/andar_direita_3.webp"
+    "pets/tigre_adulto_preto/andar_direita_2.webp"
    ],
    "andar_esquerda": [
     "pets/tigre_adulto_preto/andar_esquerda_1.webp",
-    "pets/tigre_adulto_preto/andar_esquerda_2.webp",
-    "pets/tigre_adulto_preto/andar_esquerda_3.webp"
+    "pets/tigre_adulto_preto/andar_esquerda_2.webp"
    ],
    "andar_frente": [
+    "pets/tigre_adulto_preto/andar_frente_1.webp",
     "pets/tigre_adulto_preto/andar_frente_1.webp"
    ],
    "animado": [

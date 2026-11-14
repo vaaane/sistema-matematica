@@ -4048,9 +4048,10 @@ html.jr-deitado .mp-bolsa-ic { width: 30px; height: 30px; }
    🐾 PROMPT-177: Meu Pet limpo — o pet e os truques à esquerda; à direita o topo, "Meus pets" + Cuidar / Visual e a aba
    ============================================================ */
 .jr-mp-esq { flex-basis: 40%; gap: 5px; }
-/* o cartão corta o que passa das bordas (as asas do dragão adulto) */
-#jr-app .jr-mp-palco, #jr-app .jr-mp-palco.largo { overflow: hidden; z-index: auto; }
-#jr-app .jr-mp-caixa:has(.jr-mp-palco.largo) { overflow: hidden; }
+/* ✂️ PROMPT-232: o pet aparece inteiro, mesmo saindo do palco e cobrindo um texto por um instante (antes, PROMPT-177, o cartão
+   cortava as asas do dragão adulto e o tigre em algumas ações). O palco fica acima da coluna do texto; os painéis (.mp-sub, z 10) por cima */
+#jr-app .jr-mp-palco, #jr-app .jr-mp-palco.largo { overflow: visible; z-index: 2; }
+#jr-app .jr-mp-caixa, #jr-app .jr-mp-caixa:has(.jr-mp-palco.largo) { overflow: visible; }
 .jr-mp-palco .mp-pos { position: absolute; left: 0; right: 0; bottom: 4px; z-index: 3; min-height: 0; pointer-events: none; font-size: 11.5px; text-shadow: 0 1px 2px #000; }
 .jr-mp-palco .mp-pos:empty { display: none; }
 .jr-mp-esq > .mp-tq-fila { padding-bottom: 2px; }
@@ -5362,6 +5363,9 @@ html.jr-deitado .jr-erro-pulou-balao { font-size: calc(12px * var(--letra, 1)); 
 .mp-chip.trancada .mp-efx-amostra { filter: grayscale(.6); }
 /* ── PROMPT-226: 🦄 no duelo o unicórnio adulto corre no lugar: só um balanço leve (3 px) para cima e para baixo ── */
 #jr-app .bt-corpo img.bt-galope { animation: bt-galope .34s ease-in-out infinite alternate; }
+/* 🦄 PROMPT-232: os quadros correndo do unicórnio adulto foram desenhados ~11% maiores que o parado e o ataque (medido pela área
+   do desenho): na batalha eles saem a 0,9, com o pé no lugar, e o unicórnio fica do mesmo tamanho a luta inteira */
+#jr-app .bt-corpo img.bt-galope { scale: .9; transform-origin: 50% 100%; }
 @keyframes bt-galope { from { translate: 0 0; } to { translate: 0 -3px; } }
 @media (prefers-reduced-motion: reduce) { #jr-app .bt-corpo img.bt-galope { animation: none; } }
 /* ── PROMPT-228: 🐘 quadro alto (o ataque do elefante adulto, 700 em vez de 566) no ginásio e na revisão: a imagem tem largura
@@ -5511,3 +5515,203 @@ html.jr-deitado .jr-estojo .ins-dificil { width: 24px; height: 24px; font-size: 
 .cs-tema-cores b { flex-basis: 100%; text-align: center; font: 700 15px 'Rajdhani', sans-serif; color: #ffe9a8; }
 .cs-tema-cor { width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(255,255,255,.3); background: var(--c); box-shadow: 0 0 8px var(--c); cursor: pointer; padding: 0; }
 .cs-tema-cor.sel { border-color: #fff; transform: scale(1.12); }
+
+/* ============================================================
+   🔠 PROMPT-231: letra mínima nos ginásios, nas aulas e nos quadros — 17 px no celular, 18 px no computador
+   (--jr-min). Os números grandes do quadro já passam disso; aqui sobem as notas, as regras, os rótulos e a tabuada.
+   As miniaturas do histórico (coluna da esquerda do quadro) são cópias reduzidas e ficam de fora.
+   ============================================================ */
+#jr-app { --jr-min: 18px; }
+@media (max-width: 768px) { #jr-app { --jr-min: 17px; } }
+html.jr-deitado #jr-app { --jr-min: 17px; }
+
+/* expoentes e índices: legíveis e um pouco mais longe da base */
+#jr-app sup, #jr-app sub { font-size: max(.75em, 14px); font-weight: 700; line-height: 0; }
+#jr-app sup { vertical-align: .62em; margin-left: .06em; }
+#jr-app sub { vertical-align: -.32em; }
+#jr-app .qd-pot .pe { font-size: max(.75em, 14px); font-weight: 700; margin-top: -.3em; margin-left: .08em; }
+#jr-app .qd-badge, #jr-app .qd-cnt, #jr-app .qd-seta-rot, #jr-app .qd-tabela .cnt-t { font-size: max(.42em, 14px); }
+
+/* perguntas e alternativas */
+#jr-app .jr-perg-enunciado.longo { font-size: max(var(--jr-min), calc(clamp(15px, 2.6vmin, 18px) * var(--letra, 1))); }
+#jr-app .jr-alt { font-size: max(var(--jr-min), calc(16px * var(--letra, 1))); }
+#jr-app .jr-alternativas.numeros .jr-alt { font-size: max(var(--jr-min), calc(clamp(17px, 3.2vmin, 24px) * var(--letra, 1))); }
+
+/* cartão do erro */
+#jr-app .jr-erro-resp small, #jr-app .jr-erro-tit, #jr-app .jr-erro-dica, #jr-app .jr-erro-balao, #jr-app .jr-erro-volta,
+#jr-app .jr-erro-passos, html.jr-deitado #jr-app .jr-erro-passos, html.jr-deitado #jr-app .jr-erro-dica, html.jr-deitado #jr-app .jr-erro-balao {
+  font-size: max(var(--jr-min), calc(13px * var(--letra, 1))); }
+#jr-app .jr-erro-enun, html.jr-deitado #jr-app .jr-erro-enun { font-size: max(var(--jr-min), calc(18px * var(--letra, 1))); }
+
+/* aulas e Relembre */
+#jr-app .aula-balao, html.jr-deitado #jr-app .aula-balao, #jr-app .jr-rel-regra, html.jr-deitado #jr-app .jr-rel-regra, #jr-app .jr-rel-exemplo,
+#jr-app .jr-rel-dica, #jr-app .jr-rel-balao, #jr-app .jr-rel-fala, html.jr-deitado #jr-app .jr-rel-fala, #jr-app .jr-rel-legenda {
+  font-size: max(var(--jr-min), calc(13px * var(--letra, 1))); }
+@media (max-width: 480px) { #jr-app .jr-rel-regra { font-size: max(var(--jr-min), calc(16px * var(--letra, 1))); } }
+
+/* lousa (lousa.js): os textos; os números grandes continuam no tamanho deles */
+#jr-app .lz-enun { font-size: max(var(--jr-min), calc(clamp(14px, 2.6vmin, 20px) * var(--lz-k, 1) * var(--lz-base, 1))); }
+#jr-app .lz-rotulo { font-size: max(var(--jr-min), clamp(14px, 2.6vmin, 20px)); }
+#jr-app .lz-col-tit { font-size: max(var(--jr-min), calc(clamp(14px, 2.6vmin, 20px) * var(--lz-k, 1) * var(--lz-base, 1))); }
+#jr-app .lz-col-rot { font-size: max(var(--jr-min), calc(clamp(12px, 2.2vmin, 16px) * var(--lz-k, 1) * var(--lz-base, 1))); }
+#jr-app .lz-blk-tit { font-size: max(var(--jr-min), calc(clamp(13px, 2.6vmin, 18px) * max(.8, var(--lz-k, 1)))); }
+#jr-app .lz-palavras { font-size: max(var(--jr-min), calc(clamp(15px, 3vmin, 21px) * var(--lz-k, 1) * var(--lz-base, 1))); }
+#jr-app .lz-fr-exp { font-size: max(var(--jr-min), calc(clamp(13px, 2.4vmin, 18px) * var(--lz-k, 1) * var(--lz-base, 1))); }
+#jr-app .lz-reta-tick { font-size: max(var(--jr-min), clamp(13px, 2.4vmin, 18px)); }
+#jr-app .lz-reta-bola b { font-size: max(var(--jr-min), 14px); }
+#jr-app .lz-reta-conta { font-size: max(var(--jr-min), 13px); }
+#jr-app .lz-perim .lado { font-size: max(var(--jr-min), calc(clamp(16px, 3.2vmin, 24px) * var(--lz-k, 1))); }
+#jr-app .lz-col .lz-tabela { font-size: max(var(--jr-min), calc(clamp(14px, 2.6vmin, 20px) * var(--lz-k, 1) * var(--lz-base, 1))); }
+#jr-app .lz-col .lz-esc-d { font-size: max(var(--jr-min), calc(clamp(10px, 2vmin, 14px) * var(--lz-k, 1) * var(--lz-base, 1))); }
+#jr-app .lz-escrito, html.jr-deitado #jr-app .lz-escrito { font-size: max(var(--jr-min), calc(clamp(15px, 3.1vmin, 21px) * max(.8, var(--lz-k, 1)))); }
+#jr-app .lz-tabuadinha { font-size: max(var(--jr-min), .5em); }
+#jr-app .lz-div-tab { font-size: max(var(--jr-min), .44em); }
+#jr-app .lz-col .lz-linha:not(:last-child):not(.lz-enun) { font-size: max(var(--jr-min), calc(clamp(15px, 2.8vmin, 24px) * var(--lz-k, 1) * var(--lz-base, 1))); }
+
+/* quadro (quadro.js) */
+#jr-app .qd-nota.passo, #jr-app .qd-nota.detalhe, #jr-app .qd.compacto .qd-nota.passo { font-size: max(.44em, 2.4cqw, var(--jr-min)); }
+#jr-app .qd-nota.regra, #jr-app .qd.compacto .qd-nota.regra { font-size: max(2.5cqw, var(--jr-min)); }
+#jr-app .qd-nota.etq-sub { font-size: max(2.2cqw, var(--jr-min)); white-space: normal; text-align: center; line-height: 1.15; }
+#jr-app .qd-etq b { font-size: max(2.3cqw, var(--jr-min)); }
+#jr-app .qd-pergtop { font-size: max(3.1cqw, var(--jr-min)); }
+#jr-app .qd-hnota { font-size: max(2cqw, var(--jr-min)); }
+#jr-app .qd-resp, #jr-app .qd.compacto .qd-resp { font-size: max(3.6cqw, var(--jr-min)); }
+#jr-app .qd-lado, #jr-app .qd.compacto .qd-lado, #jr-app .qd.lado-largo .qd-lado { font-size: max(2.2cqw, var(--jr-min)); }
+#jr-app .qd-tabela, #jr-app .qd-tabela.larga, #jr-app .qd-ttit, #jr-app .qd-barra-l .bf, #jr-app .qd-barra-l .bt, #jr-app .qd-choco i .k, #jr-app .qd-bolas .grupo .gq,
+#jr-app .qd-vis .bt2, #jr-app .qd-pilhas .prot, #jr-app .qd-tally, #jr-app .qd-tally .tq, #jr-app .qd-tally .paus, #jr-app .qd-galeria .gal-nome,
+#jr-app .qd-galeria .gal-info, #jr-app .qd-casas-leg { font-size: max(2.2cqw, var(--jr-min)); }
+#jr-app .qd-galeria .gal-info { max-width: 22cqw; }
+/* (varredura das aulas) rótulos que ainda ficavam abaixo do mínimo: a ordem das operações, cabeçalhos das casas e da regra de três,
+   as palavras da tradução e os rótulos das listas. Os números das contas continuam encolhendo com o cartão (caberCard) */
+#jr-app .qd-ordem-i { font-size: max(var(--jr-min), 1em); }
+#jr-app .qd-casas .cab { font-size: max(var(--jr-min), .55em, 2cqw); }
+#jr-app .qd-r3 .r3-cab { font-size: max(var(--jr-min), .5em, 2cqw); }
+#jr-app .qd-trad .w { font-size: max(var(--jr-min), .4em, 2.2cqw); }
+#jr-app .qd-trad .seta { font-size: max(var(--jr-min), .5em, 2cqw); }
+#jr-app .qd-lista3 .pq { font-size: max(var(--jr-min), .8em, 2.2cqw); }
+#jr-app .qd-xpr.treino .tr-f { font-size: max(var(--jr-min), 1em, 2.2cqw); }
+
+/* ✖️ tabuada na lateral do quadro (item 4): nunca passa da linha pontilhada. encaixarLado (quadro.js) aperta o espaço,
+   depois quebra em 2 colunas e, por último, diminui só a tabuada (nunca abaixo do mínimo) */
+#jr-app .qd-lado { overflow: hidden; }
+#jr-app .qd-lado.apertado { gap: 0; line-height: 1.05; }
+#jr-app .qd-lado.apertado .qd-tab { padding-top: 0; padding-bottom: 0; }
+#jr-app .qd-lado.duas-col { display: grid; grid-auto-flow: column; grid-template-rows: repeat(var(--tab-lin, 5), auto); align-content: center; column-gap: 1cqw; }
+#jr-app .qd-lado.duas-col .qd-tab { gap: .3cqw; padding-left: .3cqw; padding-right: .3cqw; }
+#jr-app .qd-lado.menor { font-size: max(var(--jr-min), calc(2.2cqw * var(--tab-k, 1))); }
+
+/* 📱 celular deitado: o título e os botões numa coluna ao lado, para o quadro ficar o maior possível */
+html.jr-deitado #aula.aula-quadro { padding: 4px; }
+html.jr-deitado #aula.aula-quadro .aula-caixa { display: grid; grid-template-columns: 136px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
+  max-width: none; height: 100%; padding: 6px 8px; gap: 6px 8px; }
+html.jr-deitado #aula.aula-quadro .aula-topo { grid-column: 1; grid-row: 1; flex-wrap: wrap; gap: 4px 6px; position: relative; padding-right: 30px; }
+html.jr-deitado #aula.aula-quadro .aula-topo img { width: 30px; height: 30px; }
+html.jr-deitado #aula.aula-quadro .aula-topo .jr-rel-cab b { font-size: 18px; }
+html.jr-deitado #aula.aula-quadro .aula-topo .bt-lista-x { position: absolute; right: 0; top: 0; }
+html.jr-deitado #aula.aula-quadro .aula-corpo { grid-column: 2; grid-row: 1 / span 2; }
+html.jr-deitado #aula.aula-quadro .aula-nav { grid-column: 1; grid-row: 2; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 6px; }
+html.jr-deitado #aula.aula-quadro .aula-nav .jr-rel-check { flex: 1 1 100%; }
+html.jr-deitado #aula.aula-quadro .aula-nav #aula-ok { flex: 1 1 100%; }
+
+/* ⛲ PROMPT-231: a fonte da Praça (montarFonte) — a imagem por cima da pintada e a água animada por CSS (leve: 8 elementos) */
+.jr-fonte { position: absolute; transform: translate(-50%, -100%); pointer-events: none; user-select: none; }
+.jr-fonte img { display: block; width: 100%; height: auto; }
+.jr-fonte i { position: absolute; pointer-events: none; }
+/* o brilho passando devagar na água da bacia (recortado na elipse da água) */
+.jr-fonte .brilho { left: 13%; top: 37%; width: 74%; height: 26%; clip-path: ellipse(50% 50% at 50% 50%); overflow: hidden;
+  background: linear-gradient(105deg, transparent 0 38%, rgba(255,255,255,.45) 46%, rgba(255,255,255,.12) 52%, transparent 60% 100%) no-repeat;
+  background-size: 260% 100%; animation: jrFonteBrilho 5.5s linear infinite; mix-blend-mode: screen; }
+@keyframes jrFonteBrilho { from { background-position: 130% 0; } to { background-position: -130% 0; } }
+/* as gotinhas: sobem um pouco e caem de volta nos jatos */
+.jr-fonte .gota { width: 3.2%; aspect-ratio: 1; margin: -1.6% 0 0 -1.6%; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: #cfeeff; box-shadow: 0 0 2px rgba(255,255,255,.8); opacity: 0; animation: jrFonteGota 2.6s ease-in-out infinite; }
+@keyframes jrFonteGota { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: .95; } 45% { transform: translate(var(--dx, 3px), -9px); }
+  85% { opacity: .9; } 100% { opacity: 0; transform: translate(calc(var(--dx, 3px) * 2), 6px); } }
+.jr-fonte .gota:nth-of-type(odd) { --dx: -3px; }
+/* as ondinhas: anéis achatados abrindo e sumindo na bacia */
+.jr-fonte .onda { width: 14%; height: 5%; margin: -2.5% 0 0 -7%; border-radius: 50%; border: 1.5px solid rgba(235,248,255,.85);
+  opacity: 0; transform: scale(.3); animation: jrFonteOnda 3.3s ease-out infinite; }
+@keyframes jrFonteOnda { 0% { opacity: .9; transform: scale(.3); } 100% { opacity: 0; transform: scale(1.5); } }
+@media (prefers-reduced-motion: reduce) { .jr-fonte i { animation: none !important; opacity: 0 !important; } }
+
+/* ============================================================
+   💬 PROMPT-232: balões de fala dos pets — o texto nunca sai do balão; estilos da loja (classe jr-balao-{id} no #jr-app)
+   Balões dos pets: mapa e casinha (.jr-pet-fala, a pergunta .jr-pet-pergunta), Meu Pet (.jr-mp-balao), duelo
+   (.jr-pet-fala-arena, .jr-fala-vitoria), aula (.aula-balao), cartão do erro (.jr-erro-balao) e Relembre (.jr-rel-balao).
+   caberBalaoPet (js) diminui a letra até 15 px quando o balão fica alto demais; abaixo disso ele cresce para baixo.
+   ============================================================ */
+.jr-pet-fala, .jr-mp-balao, .jr-pet-fala-arena, .jr-fala-vitoria, .aula-balao, .jr-erro-balao, .jr-rel-balao {
+  overflow-wrap: anywhere; word-break: normal; white-space: normal; hyphens: manual; box-sizing: border-box; }
+.jr-pet-fala { max-width: min(340px, 86%); font-size: calc(16px * var(--letra, 1)); }
+.jr-pet-fala.largo, .jr-pet-pergunta { max-width: min(340px, 86%); }
+.jr-pet-pergunta { font-size: calc(16px * var(--letra, 1)); }
+.jr-pet-pergunta .pp-conta { white-space: normal; }   /* era nowrap: a conta inteira numa linha passava da borda */
+.jr-pet-pergunta .pp-botoes { flex-wrap: wrap; }
+.jr-pet-pergunta .pp-botoes button { min-height: 44px; min-width: 56px; max-width: 100%; font-size: 16px; overflow-wrap: anywhere; }
+.jr-pet-fala::after { left: var(--bico-x, 50%); }   /* o balão desliza para dentro da tela; o bico continua no pet */
+.jr-pet-fala-arena { font-size: calc(15px * var(--letra, 1)); }
+.jr-fala-vitoria { max-width: min(300px, 86vw); font-size: 15px; }
+.jr-mp-info > .jr-mp-balao { font-size: 16px; }
+html.jr-deitado .jr-mp-info > .jr-mp-balao { font-size: 15px; }
+
+/* ── estilos (o Clássico é o de antes). As amostras da loja e do Meu Pet usam .jr-bal-amostra.{id} ── */
+.jr-bal-amostra { display: inline-block; position: relative; padding: 3px 9px; border-radius: 10px; background: #fff; color: #1a1d2e; font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 700; line-height: 1.25; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+.mp-chip-balao .jr-bal-amostra { margin-right: 2px; font-size: 11px; padding: 2px 6px; }
+.lj-balao .lj-emoji .jr-bal-amostra { font-size: 15px; padding: 6px 12px; }
+
+/* fundo e letra de cada estilo */
+#jr-app.jr-balao-quadrinho :is(.jr-pet-fala, .jr-mp-balao, .jr-pet-fala-arena, .jr-fala-vitoria, .aula-balao, .jr-erro-balao, .jr-rel-balao), .jr-bal-amostra.quadrinho {
+  --bal-bico: #111; background: #fff; color: #111; border: 3px solid #111; border-radius: 6px; box-shadow: 5px 5px 0 #ff7b2e, 0 0 0 1.5px rgba(255,255,255,.55);   /* sombra laranja: aparece no mapa e no fundo escuro */
+  font-family: 'Comic Neue', 'Comic Sans MS', 'Inter', sans-serif; font-weight: 700; letter-spacing: .01em; }
+#jr-app.jr-balao-nuvem :is(.jr-pet-fala, .jr-mp-balao, .jr-pet-fala-arena, .jr-fala-vitoria, .aula-balao, .jr-erro-balao, .jr-rel-balao), .jr-bal-amostra.nuvem {
+  --bal-bico: #fff; background: #e3f3ff; color: #12304d; border: 2px solid #fff; border-radius: 26px;
+  outline: 7px dotted #fff; outline-offset: -2px; box-shadow: 0 6px 16px rgba(0,0,0,.35); }   /* os pontinhos do contorno fazem a borda de nuvem */
+#jr-app.jr-balao-doce :is(.jr-pet-fala, .jr-mp-balao, .jr-pet-fala-arena, .jr-fala-vitoria, .aula-balao, .jr-erro-balao, .jr-rel-balao), .jr-bal-amostra.doce {
+  --bal-bico: #ff9cc8; color: #5a1638; border: 2px solid #ff9cc8; border-radius: 20px;
+  background: radial-gradient(circle, rgba(255,255,255,.85) 2.2px, transparent 2.6px) 0 0 / 14px 14px, radial-gradient(circle, rgba(255,255,255,.85) 2.2px, transparent 2.6px) 7px 7px / 14px 14px, #ffd3e6; }
+#jr-app.jr-balao-pergaminho :is(.jr-pet-fala, .jr-mp-balao, .jr-pet-fala-arena, .jr-fala-vitoria, .aula-balao, .jr-erro-balao, .jr-rel-balao), .jr-bal-amostra.pergaminho {
+  --bal-bico: #c9a46a; color: #3b2510; border: 2px solid #9a7440; border-radius: 4px;
+  background: radial-gradient(circle at 0 0, #b88c4e 0 7px, #d9bb84 8px 10px, transparent 11px), radial-gradient(circle at 100% 0, #b88c4e 0 7px, #d9bb84 8px 10px, transparent 11px),
+    radial-gradient(circle at 0 100%, #b88c4e 0 7px, #d9bb84 8px 10px, transparent 11px), radial-gradient(circle at 100% 100%, #b88c4e 0 7px, #d9bb84 8px 10px, transparent 11px),
+    linear-gradient(180deg, #f7e7c1, #efd8a4);
+  box-shadow: inset 0 0 14px rgba(120,80,30,.45), 0 4px 12px rgba(0,0,0,.4); }
+#jr-app.jr-balao-neon :is(.jr-pet-fala, .jr-mp-balao, .jr-pet-fala-arena, .jr-fala-vitoria, .aula-balao, .jr-erro-balao, .jr-rel-balao), .jr-bal-amostra.neon {
+  --bal-bico: var(--neon, #3ee8ff); background: #0b0d1a; color: #fff; border: 2px solid var(--neon, #3ee8ff); border-radius: 12px;
+  text-shadow: 0 0 6px var(--neon, #3ee8ff), 0 0 2px var(--neon, #3ee8ff);
+  box-shadow: 0 0 10px var(--neon, #3ee8ff), 0 0 22px color-mix(in srgb, var(--neon, #3ee8ff) 45%, transparent), inset 0 0 10px color-mix(in srgb, var(--neon, #3ee8ff) 35%, transparent); }
+#jr-app.jr-balao-galaxia :is(.jr-pet-fala, .jr-mp-balao, .jr-pet-fala-arena, .jr-fala-vitoria, .aula-balao, .jr-erro-balao, .jr-rel-balao), .jr-bal-amostra.galaxia {
+  --bal-bico: #1b1f5c; color: #fff; border: 1px solid rgba(170,180,255,.55); border-radius: 14px; text-shadow: 0 1px 2px rgba(0,0,0,.6);
+  background: radial-gradient(1.4px 1.4px at 12% 22%, #fff 99%, transparent), radial-gradient(1.3px 1.3px at 33% 40%, #fff 99%, transparent),
+    radial-gradient(1px 1px at 52% 66%, #fff 99%, transparent), radial-gradient(1.5px 1.5px at 70% 52%, #e8e0ff 99%, transparent),
+    radial-gradient(1.1px 1.1px at 92% 15%, #fff 99%, transparent), radial-gradient(1.2px 1.2px at 6% 85%, #fff 99%, transparent),
+    radial-gradient(1px 1px at 47% 30%, #cfe0ff 99%, transparent), radial-gradient(1.3px 1.3px at 18% 50%, #fff 99%, transparent), radial-gradient(1.2px 1.2px at 78% 30%, #fff 99%, transparent),
+    radial-gradient(1px 1px at 40% 80%, #cfe0ff 99%, transparent), radial-gradient(1.6px 1.6px at 88% 75%, #fff 99%, transparent),
+    radial-gradient(1px 1px at 60% 12%, #ffe9ff 99%, transparent), radial-gradient(1.2px 1.2px at 25% 60%, #fff 99%, transparent),
+    radial-gradient(ellipse at 30% 20%, #3a2a8a 0%, transparent 60%), radial-gradient(ellipse at 80% 90%, #5a1f7a 0%, transparent 55%), linear-gradient(160deg, #141a52, #0b0f30);
+  animation: jrBalGalaxia 2.4s ease-in-out infinite alternate; }
+@keyframes jrBalGalaxia { from { filter: brightness(1); } to { filter: brightness(1.12); } }
+#jr-app.jr-balao-ouro :is(.jr-pet-fala, .jr-mp-balao, .jr-pet-fala-arena, .jr-fala-vitoria, .aula-balao, .jr-erro-balao, .jr-rel-balao), .jr-bal-amostra.ouro {
+  --bal-bico: #e8b93a; color: #3a2400; border: 2px solid #b8860b; border-radius: 12px;
+  background: linear-gradient(110deg, transparent 38%, rgba(255,255,255,.75) 48%, transparent 58%) 0 0 / 260% 100% no-repeat, linear-gradient(180deg, #fff1b8, #f2c94c 55%, #d9a520);
+  box-shadow: 0 0 12px rgba(255,200,60,.55), 0 4px 12px rgba(0,0,0,.4); animation: jrBalOuro 3.2s linear infinite; }
+@keyframes jrBalOuro { from { background-position: 130% 0, 0 0; } to { background-position: -130% 0, 0 0; } }
+
+/* o biquinho na cor do estilo (os balões com bico para baixo; o do Meu Pet e o do erro apontam para a esquerda) */
+#jr-app[class*="jr-balao-"] :is(.jr-pet-fala, .jr-mp-balao, .jr-pet-fala-arena, .jr-fala-vitoria, .aula-balao, .jr-rel-balao)::after { border-top-color: var(--bal-bico); }
+#jr-app[class*="jr-balao-"] .jr-mp-info > .jr-mp-balao::after { border-top-color: transparent; border-right-color: var(--bal-bico); }
+#jr-app[class*="jr-balao-"] .jr-erro-balao::before { border-right-color: var(--bal-bico); }
+
+/* as perguntas dos pets continuam fáceis de ler: os botões com fundo claro e letra escura em qualquer estilo */
+#jr-app[class*="jr-balao-"] .jr-pet-pergunta .pp-botoes button { background: #f1edff; color: #1a1d2e; border-color: #7c5cfc; text-shadow: none; font-family: 'Inter', sans-serif; }
+#jr-app[class*="jr-balao-"] .jr-pet-pergunta .pp-botoes button.certa { background: #d9ffe9; border-color: #00b35c; }
+#jr-app[class*="jr-balao-"] .jr-pet-pergunta .pp-botoes button.errada { background: #ffe0e4; border-color: #e0364a; }
+
+/* Meu Pet → Visual: a cor do Neon */
+.mp-neon-cores { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; font-family: 'Inter', sans-serif; font-size: 13px; color: #c9cde0; }
+.mp-neon-cores[hidden] { display: none; }
+.mp-neon-cor { width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25); background: #0b0d1a; cursor: pointer;
+  box-shadow: inset 0 0 0 6px var(--c), 0 0 8px var(--c); }
+.mp-neon-cor.sel { border-color: #fff; transform: scale(1.12); }
+#jr-app .mp-chip-balao.trancada:disabled { cursor: default; }
+@media (prefers-reduced-motion: reduce) { #jr-app[class*="jr-balao-"] :is(.jr-pet-fala, .jr-mp-balao, .jr-pet-fala-arena, .jr-fala-vitoria, .aula-balao, .jr-erro-balao, .jr-rel-balao), .jr-bal-amostra { animation: none !important; } }

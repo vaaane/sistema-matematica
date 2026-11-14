@@ -7,26 +7,26 @@
   "alimentar_abaixo": { "dragao_vermelho": 80 },
   "_nota_come": "PROMPT-174: o que cada pet come, como na vida real. come = o que ele aceita (a linha 'Come:' do Meu Pet e o 🍖 Alimentar); nao_come = o que ele recusa (a comida não é gasta). 'peixe' = qualquer peixe (pescado ou o peixe fresco). Guloseimas (guloseima: true) todos comem e enchem menos. A isca é comida só para quem tem 'isca' no come. As formas adultas e as cores seguem o pet de base.",
   "come": {
-   "elefante": ["fruta", "maca", "banana", "cenoura", "milho", "batata", "racao"],
+   "elefante": ["maca", "banana", "cenoura", "milho", "batata", "racao", "uva", "morango", "melancia"],
    "gato": ["peixe", "carne", "racao"],
    "gaviao": ["carne", "peixe"],
    "axolote": ["isca", "peixe", "carne"],
-   "capivara": ["fruta", "maca", "banana", "cenoura", "milho", "batata", "racao"],
+   "capivara": ["maca", "banana", "cenoura", "milho", "batata", "racao", "uva", "morango", "melancia"],
    "tigre": ["carne", "peixe"],
-   "unicornio": ["maca", "cenoura", "fruta", "milho", "banana"],
-   "morcego": ["maca", "fruta", "banana"],
+   "unicornio": ["maca", "cenoura", "milho", "banana", "uva", "morango", "melancia"],
+   "morcego": ["maca", "banana", "uva", "morango", "melancia"],
    "dragao_vermelho": ["carne", "peixe"]
   },
   "nao_come": {
    "elefante": ["carne", "peixe"],
-   "gato": ["fruta", "maca", "banana", "cenoura", "milho", "batata"],
-   "gaviao": ["fruta", "maca", "banana", "cenoura", "milho", "batata", "racao"],
-   "axolote": ["fruta", "maca", "banana", "cenoura", "milho", "batata"],
+   "gato": ["maca", "banana", "cenoura", "milho", "batata", "uva", "morango", "melancia"],
+   "gaviao": ["maca", "banana", "cenoura", "milho", "batata", "racao", "uva", "morango", "melancia"],
+   "axolote": ["maca", "banana", "cenoura", "milho", "batata", "uva", "morango", "melancia"],
    "capivara": ["carne", "peixe"],
-   "tigre": ["fruta", "maca", "banana", "cenoura", "milho", "batata", "racao"],
+   "tigre": ["maca", "banana", "cenoura", "milho", "batata", "racao", "uva", "morango", "melancia"],
    "unicornio": ["carne", "peixe"],
    "morcego": ["carne", "peixe", "cenoura", "milho", "batata"],
-   "dragao_vermelho": ["fruta", "maca", "banana", "cenoura", "milho", "batata"]
+   "dragao_vermelho": ["maca", "banana", "cenoura", "milho", "batata", "uva", "morango", "melancia"]
   },
   "isca_comida": { "nome": "Isca (minhoca)", "lealdade": 2 },
   "cada_comida_enche": 20,
@@ -44,13 +44,76 @@
    "imagem": "img/jogo/itens/racao.webp"
   },
   {
-   "id": "fruta",
-   "nome": "Fruta",
+   "id": "maca",
+   "nome": "Maçã",
    "emoji": "🍎",
    "preco": 12,
    "lealdade": 2,
    "especial": false,
-   "imagem": "img/jogo/itens/fruta.webp"
+   "imagem": "img/jogo/itens/maca.webp"
+  },
+  {
+   "id": "banana",
+   "nome": "Banana",
+   "emoji": "🍌",
+   "preco": 12,
+   "lealdade": 2,
+   "especial": false,
+   "imagem": "img/jogo/itens/banana.webp"
+  },
+  {
+   "id": "uva",
+   "nome": "Uva",
+   "emoji": "🍇",
+   "preco": 12,
+   "lealdade": 2,
+   "especial": false,
+   "imagem": ""
+  },
+  {
+   "id": "morango",
+   "nome": "Morango",
+   "emoji": "🍓",
+   "preco": 12,
+   "lealdade": 2,
+   "especial": false,
+   "imagem": ""
+  },
+  {
+   "id": "melancia",
+   "nome": "Melancia",
+   "emoji": "🍉",
+   "preco": 12,
+   "lealdade": 2,
+   "especial": false,
+   "imagem": ""
+  },
+  {
+   "id": "cenoura",
+   "nome": "Cenoura",
+   "emoji": "🥕",
+   "preco": 12,
+   "lealdade": 2,
+   "especial": false,
+   "imagem": "img/jogo/itens/cenoura.webp"
+  },
+  {
+   "id": "milho",
+   "nome": "Milho",
+   "emoji": "🌽",
+   "preco": 12,
+   "lealdade": 2,
+   "especial": false,
+   "imagem": "img/jogo/itens/milho.webp"
+  },
+  {
+   "id": "batata",
+   "nome": "Batata",
+   "emoji": "🥔",
+   "preco": 12,
+   "lealdade": 1,
+   "especial": false,
+   "imagem": "img/jogo/itens/batata.webp"
   },
   {
    "id": "biscoito",
@@ -104,56 +167,6 @@
    "guloseima": true,
    "enche": 10,
    "imagem": "img/jogo/itens/bolo.webp"
-  },
-  {
-   "id": "maca",
-   "nome": "Maçã",
-   "emoji": "🍎",
-   "preco": 0,
-   "lealdade": 2,
-   "especial": false,
-   "venda_loja": false,
-   "imagem": "img/jogo/itens/maca.webp"
-  },
-  {
-   "id": "banana",
-   "nome": "Banana",
-   "emoji": "🍌",
-   "preco": 0,
-   "lealdade": 2,
-   "especial": false,
-   "venda_loja": false,
-   "imagem": "img/jogo/itens/banana.webp"
-  },
-  {
-   "id": "cenoura",
-   "nome": "Cenoura",
-   "emoji": "🥕",
-   "preco": 0,
-   "lealdade": 2,
-   "especial": false,
-   "venda_loja": false,
-   "imagem": "img/jogo/itens/cenoura.webp"
-  },
-  {
-   "id": "milho",
-   "nome": "Milho",
-   "emoji": "🌽",
-   "preco": 0,
-   "lealdade": 2,
-   "especial": false,
-   "venda_loja": false,
-   "imagem": "img/jogo/itens/milho.webp"
-  },
-  {
-   "id": "batata",
-   "nome": "Batata",
-   "emoji": "🥔",
-   "preco": 0,
-   "lealdade": 1,
-   "especial": false,
-   "venda_loja": false,
-   "imagem": "img/jogo/itens/batata.webp"
   }
  ],
  "favoritas": {
@@ -232,6 +245,79 @@
    "filtro": "grayscale(1) brightness(1.35) contrast(0.9) drop-shadow(0 0 4px #bdf)"
   }
  ],
+ "baloes": {
+  "_nota": "PROMPT-232: estilos do balão de fala, valem para os balões de todos os pets do aluno (pets/baloes, pets/balao, pets/balao_cor). Só CSS (classe jr-balao-{id} no #jr-app). torre: só ganhando no baú da Torre dos Campeões.",
+  "lista": [
+   {
+    "id": "",
+    "nome": "Clássico",
+    "preco": 0
+   },
+   {
+    "id": "quadrinho",
+    "nome": "Quadrinho",
+    "preco": 150
+   },
+   {
+    "id": "nuvem",
+    "nome": "Nuvem",
+    "preco": 150
+   },
+   {
+    "id": "doce",
+    "nome": "Doce",
+    "preco": 150
+   },
+   {
+    "id": "pergaminho",
+    "nome": "Pergaminho",
+    "preco": 200
+   },
+   {
+    "id": "neon",
+    "nome": "Neon",
+    "preco": 250
+   },
+   {
+    "id": "galaxia",
+    "nome": "Galáxia",
+    "preco": 300
+   },
+   {
+    "id": "ouro",
+    "nome": "Ouro",
+    "preco": 0,
+    "torre": true
+   }
+  ],
+  "cores_neon": [
+   {
+    "id": "ciano",
+    "nome": "Ciano",
+    "cor": "#3ee8ff"
+   },
+   {
+    "id": "rosa",
+    "nome": "Rosa",
+    "cor": "#ff5fd2"
+   },
+   {
+    "id": "verde",
+    "nome": "Verde",
+    "cor": "#4dff8f"
+   },
+   {
+    "id": "amarelo",
+    "nome": "Amarelo",
+    "cor": "#ffe14d"
+   },
+   {
+    "id": "lilas",
+    "nome": "Lilás",
+    "cor": "#c49bff"
+   }
+  ]
+ },
  "efeitos": [
   {
    "id": "estrelas",

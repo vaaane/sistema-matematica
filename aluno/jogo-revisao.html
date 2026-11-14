@@ -8,7 +8,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Jogo de Revisão</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700;800;900&family=Patrick+Hand&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700;800;900&family=Patrick+Hand&family=Comic+Neue:wght@700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="/css/main.css"/>
 <link rel="stylesheet" href="/css/jogo-revisao.css"/>
 </head>
@@ -960,7 +960,7 @@
       <div class="jr-pet-escolha-titulo" id="online-titulo"></div>
       <div class="jr-online-abas" id="online-abas" hidden><button data-online-aba="todos">👥 Online</button><button data-online-aba="amigos">🤝 Amigos <b id="online-ped-n" hidden></b></button><button data-online-aba="site" hidden>🎮 Outros jogos</button><button data-online-aba="busca" hidden>🔎 Alunos</button></div>
       <input type="search" class="jr-online-busca" id="online-busca" hidden placeholder="Nome do aluno ou turma (ex.: 8D)" autocomplete="off" aria-label="Pesquisar aluno">
-      <input type="search" class="jr-online-busca" id="amigos-busca" hidden placeholder="🔎 Buscar aluno pelo nome" autocomplete="off" aria-label="Buscar aluno pelo nome">
+      <input type="search" class="jr-online-busca" id="amigos-busca" hidden placeholder="🔎 Buscar pelo nome" autocomplete="off" aria-label="Buscar pelo nome">
       <ul class="jr-online-itens" id="online-itens"></ul>
       <div class="jr-online-bloq" id="online-bloqueado" hidden>🔒 Vença o mapa anterior para entrar</div>
       <div class="jr-mp-botoes">
@@ -1044,6 +1044,11 @@
             <div class="mp-visual-rot">✨ Efeitos</div>
             <div class="mp-chips" id="mp-efeitos"></div>
           </div>
+          <div id="mp-baloes-bloco" hidden>   <!-- 💬 PROMPT-232 -->
+            <div class="mp-visual-rot">💬 Balões de fala</div>
+            <div class="mp-chips" id="mp-baloes"></div>
+            <div class="mp-neon-cores" id="mp-neon-cores" hidden></div>
+          </div>
           <!-- 🖼️ PROMPT-179: fundo do cartão do pet (um só para todos os pets) -->
           <div id="mp-fundos-bloco">
             <div class="mp-visual-rot">🖼️ Fundo</div>
@@ -1080,7 +1085,7 @@
         <span class="jr-moedas" id="lj-moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span>0</span></span>
         <button class="bt-lista-x" id="lj-fechar" aria-label="Fechar">✕</button>
       </div>
-      <div class="lj-abas" id="lj-abas"><button data-aba="comidas">🍎 Comidas</button><button data-aba="tintas"><img class="jr-item-img jr-ic-btn" data-icone="tinta" alt="🎨" draggable="false"/> Tintas</button><button data-aba="efeitos">✨ Efeitos</button><button data-aba="pesca">🎣 Pesca</button><button data-aba="moveis">🛋️ Móveis</button><button data-aba="reformas">🎨 Reformas</button></div>
+      <div class="lj-abas" id="lj-abas"><button data-aba="comidas">🍎 Comidas</button><button data-aba="tintas"><img class="jr-item-img jr-ic-btn" data-icone="tinta" alt="🎨" draggable="false"/> Tintas</button><button data-aba="efeitos">✨ Estilo</button><button data-aba="pesca">🎣 Pesca</button><button data-aba="moveis">🛋️ Móveis</button><button data-aba="reformas">🎨 Reformas</button></div>
       <div class="lj-itens" id="lj-itens"></div>
       <div class="lj-msg" id="lj-msg" aria-live="polite"></div>
     </div>

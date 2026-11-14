@@ -228,6 +228,7 @@ function falaVitoria(img, pet, onde) {
     b.className = 'jr-fala-vitoria';
     b.textContent = frase;
     onde.appendChild(b);
+    caberBalaoPet(b);
     if (img.offsetParent === onde) {   // em cima do próprio pet (o palco da festa também tem o personagem)
       b.style.left = img.offsetLeft + img.offsetWidth / 2 + 'px';
       b.style.bottom = 'auto';
@@ -248,6 +249,7 @@ function comemorarPetNaCena() {
     el.hidden = false;
     el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
     conversa.falando = true;
+    caberBalaoPet(el);
     posicionarFalaPet();
     conversa.timer = setTimeout(pararFalaPet, duracaoBalao(frase));
   }, semMovimento() ? 0 : 1000);
@@ -504,6 +506,7 @@ async function carregarEstado() {
     estado.albumCompleto = v.album_completo || null;   // 🗨️ { data, n, ultimo } (PROMPT-96)
     estado.treino = v.treino && typeof v.treino === 'object' ? { ...v.treino, caixas: { ...(v.treino.caixas || {}) } } : {};   // 🎯 Treino do pet (PROMPT-91)
     estado.pets = lerPets(v);   // validado depois de ler o sprites.json (cachorro/porco antigos são ignorados)
+    aplicarEstiloBalao();   // 💬 PROMPT-232
     estado.petCor = typeof v.pet_cor === 'string' ? v.pet_cor : null;   // cor especial do dragão (PROMPT-74): null = normal
     estado.semConvites = !!v.sem_convites;   // "Não receber convites" (PROMPT-76)
     estado.config = { nomes: v.config?.nomes !== false };   // ⚙️ config/nomes: false = esconde os nomes dos colegas (PROMPT-167)
@@ -911,7 +914,9 @@ export async function iniciarJogo(sess) {
     batalhar: (id) => iniciarBatalha(id), pg: () => pg, meuPet: () => (abrirMeuPet(), mp), mp: () => mp, carinho: () => carinhoPet(),
     truque: (id) => fazerTruque(id), comer: (id) => darComida(id),
     tamanho: (f) => ({ alt: +altPet(f).toFixed(2), dist: +distPet(f).toFixed(2), rel: +relDuelo(f).toFixed(3) }),   // 🐘 PROMPT-213: conferir a tabela
-    torre: (a) => abrirTorre(a), bau: (a) => abrirBau(a), premiosTorre: () => abrirPremiosTorre(), quadroTorre: () => abrirQuadroTorre(), torreTrein: (i) => abrirPerguntaTorre(i), casinha: () => abrirCasinha(), temas: () => abrirTemasCasa() };   // 🏆 PROMPT-230
+    torre: (a) => abrirTorre(a), bau: (a) => abrirBau(a), premiosTorre: () => abrirPremiosTorre(), quadroTorre: () => abrirQuadroTorre(), torreTrein: (i) => abrirPerguntaTorre(i), casinha: () => abrirCasinha(), temas: () => abrirTemasCasa(),
+    aula: (chave, i = 0) => { abrirAula(chave, 'menu'); irPaginaAula(i); }, aulaPags: (chave) => aulaDe(chave)?.paginas?.length || 0,
+    perguntaPet: (enun, opcoes) => desenharPerguntaPet(enun, opcoes), falaPet: (txt) => mostrarFalaPet([{ texto: txt, espera: 0, fixo: 8000 }]), irPara: (x, y) => posicionarJogador(x, y, 'frente'), loja: (aba) => abrirLoja(aba) };   // 💬 PROMPT-232   // 🔠 PROMPT-231: conferir as letras   // 🏆 PROMPT-230
 
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
@@ -1042,7 +1047,7 @@ export async function iniciarJogo(sess) {
   setTimeout(verificarTutorial, 1500);   // 📖 PROMPT-166
   if (comecaNaPraca) abrirPraca('fonte').catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   atualizarBotaoMissoes();
-  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); ouvirAmigos(); avisarCoracoes(); ouvirVila(); ouvirPedidosVisita(); iniciarPraca(); publicarResumoInsignias(); publicarVencedoresAntigos(); migrarQuadrosV2(); ouvirConvitesAoVivo(); });
+  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); ouvirAmigos(); avisarCoracoes(); ouvirVila(); ouvirPedidosVisita(); iniciarPraca(); publicarResumoInsignias(); publicarVencedoresAntigos(); migrarQuadrosV2(); migrarCoresMoveis(); migrarFruta(); aplicarEstiloBalao(); ouvirConvitesAoVivo(); });
   // aluno novo escolhe o personagem antes de tudo (o pet inicial vem depois, ao entrar num mapa)
   if (carregouProgresso && estado.novo && !estado.personagem) abrirEscolhaPersonagem(true);
 }
@@ -1203,7 +1208,8 @@ function lerPets(v) {
     devolveuCoresGaviao: !!v.pets?.devolveu_cores_gaviao,   // 🦅 PROMPT-190
     devolveuCores194: !!v.pets?.devolveu_cores_194,   // 🐱🦄 PROMPT-194
     devolveuCoresUnicornio: !!v.pets?.devolveu_cores_unicornio,   // 🦄 PROMPT-212
-    fundo: v.pets?.fundo || null, fundosComprados: { ...(v.pets?.fundos_comprados || {}) } };   // 🖼️ PROMPT-179
+    fundo: v.pets?.fundo || null, fundosComprados: { ...(v.pets?.fundos_comprados || {}) },   // 🖼️ PROMPT-179
+    fruta_v2: !!v.pets?.fruta_v2, baloes: { ...(v.pets?.baloes || {}) }, balao: v.pets?.balao || '', balaoCor: v.pets?.balao_cor || '' };   // 🍎💬 PROMPT-232
 }
 
 const temPet = (p) => !!(p && estado.pets.conquistados[p]);
@@ -2283,6 +2289,8 @@ function mostrarBalaoMp(html, ms) {
   b.innerHTML = html;
   b.hidden = false;
   posicionarBalaoMp();
+  caberBalaoPet(b, Math.max(90, (b.closest('.jr-mp-caixa')?.clientHeight || innerHeight) * 0.5));
+  posicionarBalaoMp();
   clearTimeout(mp.timerBalao);
   mp.timerBalao = setTimeout(() => { b.hidden = true; }, ms);
 }
@@ -2656,6 +2664,11 @@ function abrirLoja(aba = 'comidas', provador = false, soMoveis = false) {
   renderLoja();
   if (lojaAba === 'comidas') { const f = fomeDePlanta(estado.pets.ativo); if (f) avisoPet(`${nomePet(estado.pets.ativo)}: “${f}”`); }
 }
+// 🍎 PROMPT-232: os nomes dos pets do aluno que têm esta comida como favorita (ou [''] para "do seu pet", sem nome)
+function favoritaDe(c) {
+  const l = Object.keys(estado.pets?.conquistados || {}).filter(p => petValido(p) && ehFavorita(p, c));
+  return [...new Set(l.map(p => nomePet(p) || ''))];
+}
 const GRATIS_PROF = '<span class="lj-preco lj-gratis-prof">Grátis (professora)</span>';
 function renderLoja() {
   const moedas = Number(estado.pets.moedas) || 0, pet = estado.pets.ativo;
@@ -2680,13 +2693,13 @@ function renderLoja() {
   if (lojaAba === 'reformas') html = CASA ? temasCasa().filter(t => !t.torre).map(cartaoTema).join('') : '<div class="lj-vazio">As reformas chegam logo!</div>';
   else if (lojaAba === 'comidas') {
     html = comidas().filter(c => c.venda_loja !== false).map(c => {
-      const q = lojaQtd[c.id] || 1, fav = pet && ehFavorita(pet, c);
+      const q = lojaQtd[c.id] || 1, donos = favoritaDe(c), fav = donos.length > 0;   // 🍎 PROMPT-232: a favorita de qualquer pet do aluno
       return `<div class="lj-item">
         <div class="lj-emoji">${imgItem(c.imagem, c.emoji, 'jr-item-loja')}</div>
         <div class="lj-info"><b>${esc(c.nome)}</b>
           ${preco(c.preco * q)}
           <span>+${c.lealdade} lealdade${c.limite_semana ? ` · ${c.limite_semana}× por semana` : ''}</span>
-          ${c.especial || fav ? `<span>${c.especial ? '<span class="lj-selo">come sem fome ✓</span>' : ''}${c.especial && fav ? ' ' : ''}${fav ? `<span class="lj-fav">❤️ favorita</span>` : ''}</span>` : ''}
+          ${c.especial || fav ? `<span>${c.especial ? '<span class="lj-selo">come sem fome ✓</span>' : ''}${c.especial && fav ? ' ' : ''}${fav ? `<span class="lj-fav">❤️ favorita ${donos.length && donos.length <= 3 && donos.every(Boolean) ? 'de ' + esc(juntarE(donos)) : 'dos seus pets'}</span>` : ''}</span>` : ''}
           <em class="lj-bolsa" title="Na bolsa">${imgItem(icone('bolsa'), '🎒', 'jr-ic-moeda')} na bolsa: ${Number(estado.pets.bolsa?.[c.id]) || 0}</em></div>
         <div class="lj-qtd"><button data-menos="${c.id}" aria-label="Menos">−</button><span>${q}</span><button data-mais="${c.id}" aria-label="Mais">+</button></div>
         ${botao(c.id, c.preco * q, 'Comprar')}
@@ -2738,6 +2751,7 @@ function renderLoja() {
         ${tem ? '<button class="lj-comprar ok" disabled>✓ Comprado</button>' : botao(e.id, e.preco, 'Comprar')}
       </div>`;
     }).join('');
+    if (listaBaloes().length) html = '<div class="lj-secao">✨ Efeitos · atrás do pet quando ele anda</div>' + html + cartoesBaloes(preco, botao);   // 💬 PROMPT-232
   }
   $('lj-itens').innerHTML = html;
   $('lj-itens').className = `lj-itens lj-${lojaAba}`;
@@ -2749,7 +2763,7 @@ function cliqueLoja(e) {
     lojaAba = aba.dataset.aba;
     $('lj-msg').textContent = { tintas: ehLoja() ? 'Cada cor é de um pet · toque numa tinta para provar no pet 🐾 (a tinta vale para todos).' : 'Cada cor é de um pet · a tinta vale para todos os seus pets.',
       pesca: 'Iscas para pescar e Dona Cida compra os peixes que você pescou.', moveis: 'Móveis para a sua 🏠 Casinha (placa na Praça).',
-      reformas: 'Um tema novo para o quarto. Os móveis continuam no lugar.' }[lojaAba] || '';
+      reformas: 'Um tema novo para o quarto. Os móveis continuam no lugar.', efeitos: 'Efeitos e balões de fala: valem para todos os seus pets.' }[lojaAba] || '';
     if (lojaAba === 'tintas' && ehLoja()) subirNoPedestal();
     renderLoja(); return;
   }
@@ -2809,7 +2823,8 @@ function cartoesQuadros(preco, botao) {
 }
 function comprar(id) {
   if (String(id).startsWith('cor:')) { const [, p, c] = id.split(':'); comprarCorPet(p, c); return; }   // 🎨 cor do pet (PROMPT-170)
-  if (String(id).startsWith('tema:')) { comprarTema(id.slice(5)); return; }   // 🎨 Reformas (aba própria ou no fim dos Móveis)
+  if (String(id).startsWith('tema:')) { comprarTema(id.slice(5)); return; }
+  if (String(id).startsWith('balao:')) { comprarBalao(id.slice(6)); return; }   // 💬 PROMPT-232   // 🎨 Reformas (aba própria ou no fim dos Móveis)
   if (id === 'quadro_ins') { if (insigniasSemQuadro().length) abrirColecaoCasa(null, true); return; }   // 🏅 escolhe a insígnia (PROMPT-117)
   const ps = estado.pets, moedas = Number(ps.moedas) || 0, patch = {};
   let msg = '', comprouMovel = null;
@@ -3056,6 +3071,7 @@ function renderVisual() {
   $('mp-visual-vazio').hidden = !vazio;
   $('mp-visual-vazio').textContent = vazio ? `${nomePet(mp.pet)} ainda não tem outras cores.` : '';
   renderEfeitosMp();
+  renderBaloesMp();   // 💬 PROMPT-232
   renderFundos();
 }
 // ✨ PROMPT-225: os efeitos na aba Visual. Os comprados valem para todos os pets (PROMPT-224): tocar veste no pet da vez, tocar
@@ -3073,6 +3089,78 @@ function irComprarEfeito() {
   fecharMeuPet();
   if (cena?.n === 'loja') { abrirLoja('efeitos'); return; }
   transicao(async () => { await abrirLojaInterior({ tipo: 'praca' }); abrirLoja('efeitos'); });
+}
+
+// ── 💬 Estilos do balão de fala (PROMPT-232): loja.json → baloes. Um só para o aluno: vale para os balões de todos os pets
+// (mapa, casinha, Meu Pet, duelo, aula e erro). Comprado na loja (aba ✨ Estilo); o Ouro só sai no baú da Torre.
+// pets/baloes/{id} = data · pets/balao = o escolhido · pets/balao_cor = a cor do Neon
+const listaBaloes = () => cfgLoja()?.baloes?.lista || [];
+const coresNeon = () => cfgLoja()?.baloes?.cores_neon || [];
+const temBalao = (id) => !id || !!estado?.pets?.baloes?.[id] || (ehProfessora() && !listaBaloes().find(b => b.id === id)?.torre);   // professora: os da loja, sem cobrar
+const balaoAtual = () => { const id = estado?.pets?.balao || ''; return listaBaloes().some(b => b.id === id) && temBalao(id) ? id : ''; };
+const corNeon = () => (coresNeon().find(c => c.id === estado?.pets?.balaoCor) || coresNeon()[0])?.cor || '#3ee8ff';
+function aplicarEstiloBalao() {
+  const app = $('jr-app');
+  if (!app) return;
+  for (const c of [...app.classList]) if (c.startsWith('jr-balao-')) app.classList.remove(c);
+  const id = lojaPronta() && estado?.pets ? balaoAtual() : '';
+  if (id) app.classList.add('jr-balao-' + id);
+  app.style.setProperty('--neon', corNeon());
+}
+const amostraBalao = (id, txt = 'Oi!') => `<span class="jr-bal-amostra ${esc(id || 'classico')}">${txt}</span>`;
+function renderBaloesMp() {
+  const lista = listaBaloes(), atual = balaoAtual();
+  $('mp-baloes-bloco').hidden = !lista.length;
+  if (!lista.length) return;
+  $('mp-baloes').innerHTML = lista.map(b => (temBalao(b.id)
+    ? `<button class="mp-chip mp-chip-balao${atual === b.id ? ' sel' : ''}" data-balao-mp="${esc(b.id)}" aria-pressed="${atual === b.id}">${amostraBalao(b.id)}${esc(b.nome)}</button>`
+    : b.torre ? `<button class="mp-chip mp-chip-balao trancada" disabled title="Só no baú da Torre dos Campeões">${amostraBalao(b.id)}🔒 ${esc(b.nome)} · só na 🏆 Torre</button>`
+    : `<button class="mp-chip mp-chip-balao trancada" data-efeito-loja title="Comprar na loja">${amostraBalao(b.id)}🔒 ${esc(b.nome)} ${moedaHtml()} ${b.preco}</button>`)).join('');
+  const neon = atual === 'neon';
+  $('mp-neon-cores').hidden = !neon;
+  if (neon) $('mp-neon-cores').innerHTML = '<span>Cor do Neon:</span>' + coresNeon().map(c => `<button class="mp-neon-cor${corNeon() === c.cor ? ' sel' : ''}" data-neon="${esc(c.id)}"
+    style="--c:${c.cor}" title="${esc(c.nome)}" aria-label="${esc(c.nome)}"></button>`).join('');
+}
+function escolherBalao(id) {
+  if (!temBalao(id) || !listaBaloes().some(b => b.id === id)) return;
+  estado.pets.balao = id;
+  gravar({ 'pets/balao': id || null });
+  aplicarEstiloBalao();
+  tocar('clique');
+  renderBaloesMp();
+  if (mp) falarPet(id ? 'Gostou do meu balão novo?' : 'Voltei ao clássico!');   // mostra na hora
+}
+function escolherCorNeon(id) {
+  if (!coresNeon().some(c => c.id === id)) return;
+  estado.pets.balaoCor = id;
+  gravar({ 'pets/balao_cor': id });
+  aplicarEstiloBalao();
+  tocar('clique');
+  renderBaloesMp();
+}
+// os cartões da loja (no fim da aba ✨ Estilo)
+function cartoesBaloes(preco, botao) {
+  const atual = balaoAtual();
+  return '<div class="lj-secao">💬 Balões de fala · valem para todos os seus pets</div>' + listaBaloes().filter(b => b.id && !b.torre).map(b => {
+    const tem = temBalao(b.id);
+    return `<div class="lj-item lj-balao">
+        <div class="lj-emoji">${amostraBalao(b.id, 'Oi! 🐾')}</div>
+        <div class="lj-info"><b>${esc(b.nome)}</b>${tem ? '' : preco(b.preco)}<span class="lj-sub">${b.id === 'neon' ? 'escolha a cor no Meu Pet · ' : ''}${tem && atual === b.id ? 'usando agora' : 'troque no Meu Pet → Visual'}</span></div>
+        ${tem ? '<button class="lj-comprar ok" disabled>✓ Comprado</button>' : botao('balao:' + b.id, b.preco, 'Comprar')}
+      </div>`;
+  }).join('');
+}
+function comprarBalao(id) {
+  const b = listaBaloes().find(x => x.id === id), ps = estado.pets, moedas = Number(ps.moedas) || 0;
+  if (!b || b.torre || !id || ps.baloes?.[id] || moedas < b.preco) return;
+  ps.moedas = moedas - b.preco;
+  ps.baloes = { ...ps.baloes, [id]: Date.now() };
+  ps.balao = id;
+  gravar({ 'pets/moedas': ps.moedas, [`pets/baloes/${id}`]: ps.baloes[id], 'pets/balao': id });
+  aplicarEstiloBalao();
+  tocar('vitoria');
+  renderLoja();
+  $('lj-msg').textContent = `Balão ${b.nome} comprado! Seus pets já estão usando. Troque no "Meu Pet" → Visual.`;
 }
 
 // ── 🖼️ Fundo do cartão do pet (PROMPT-179): um só para o aluno (vale para todos os pets), por enquanto só no Meu Pet ──
@@ -3254,6 +3342,10 @@ function escolherVisual(e) {
   const bc = e.target.closest('[data-cor]');
   if (bc) { escolherCor(bc.dataset.cor); return; }
   if (e.target.closest('[data-efeito-loja]')) { tocar('clique'); irComprarEfeito(); return; }   // ✨ PROMPT-225
+  const bb = e.target.closest('[data-balao-mp]');   // 💬 PROMPT-232
+  if (bb) { escolherBalao(bb.dataset.balaoMp); return; }
+  const bn = e.target.closest('[data-neon]');
+  if (bn) { escolherCorNeon(bn.dataset.neon); return; }
   const be = e.target.closest('[data-efeito-mp]');
   if (be && mp) {   // ✨ PROMPT-225: veste no pet da vez; tocar de novo tira
     const pet = mp.pet, c = cuidadosDe(pet), id = be.dataset.efeitoMp;
@@ -4037,28 +4129,41 @@ function renderListaAmigos() {
     (lista.map(linha).join('') || '<li class="jr-online-vazio">Você ainda não tem amigos. Busque um colega pelo nome ou toque num colega e em ➕ Amigo!</li>');
   pintarRostos($('online-itens'));
 }
-// 🔎 Buscar aluno pelo nome (PROMPT-209): todos os alunos (lista local ALUNOS_POR_TURMA, online ou não), com a turma ao lado.
-// O pedido fica guardado em jogo_revisao_pedidos_amizade e o outro vê quando entrar. PROFESSOR, TESTE e ALUNOS_TESTE nunca aparecem.
+// 🔎 Buscar aluno pelo nome (PROMPT-209, PROMPT-231): todos os alunos (lista local ALUNOS_POR_TURMA de js/constants.js, online ou não,
+// sem ler o banco). A partir de 3 letras, sem acento nem maiúscula; até 20, "Ana C. · 8E". O pedido fica guardado em
+// jogo_revisao_pedidos_amizade e o outro vê quando entrar. PROFESSOR, TESTE e ALUNOS_TESTE nunca aparecem.
+// buscarAlunos também serve para convidar para a equipe (PROMPT-235).
 const semAcento = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-function buscaAmigosHtml() {
-  const q = semAcento($('amigos-busca').value.trim());
-  if (q.length < 2) return '';
+const BUSCA_MIN = 3, BUSCA_MAX = 20;
+const LIGA_NOME = /^(da|de|do|das|dos|e)$/i;
+// "Ana Clara Souza" → "Ana C." (o primeiro nome e a inicial do seguinte)
+const nomeAbreviado = (nome) => { const p = String(nome || '').trim().split(/\s+/), seg = p.slice(1).find(x => !LIGA_NOME.test(x)); return seg ? `${p[0]} ${seg[0].toUpperCase()}.` : p[0] || ''; };
+function buscarAlunos(texto, { max = BUSCA_MAX } = {}) {
+  const q = semAcento(String(texto || '').trim());
+  if (q.length < BUSCA_MIN) return null;
   const lista = [];
   for (const [turma, nomes] of Object.entries(ALUNOS_POR_TURMA)) {
     if (!TURMAS_PLACAR.includes(turma)) continue;
     for (const nome of nomes) {
       const uid = uidAluno(turma, nome);
       if (uid === sessao.uid || !alunoDeVerdade(uid, nome, turma) || !semAcento(nome).includes(q)) continue;
-      lista.push({ uid, nome, turma });
+      lista.push({ uid, nome, turma, rotulo: `${nomeAbreviado(nome)} · ${turma}` });
     }
   }
   lista.sort((a, b) => Number(b.turma === sessao.turma) - Number(a.turma === sessao.turma) || a.nome.localeCompare(b.nome, 'pt'));
-  const botao = ({ uid, nome }) => amigos.has(uid) ? '<button class="jr-online-acao" disabled>✅ Amigos</button>'
+  return { total: lista.length, lista: lista.slice(0, max) };
+}
+function buscaAmigosHtml() {
+  const txt = $('amigos-busca').value.trim();
+  if (!txt) return '';
+  const r = buscarAlunos(txt);
+  if (!r) return `<li class="jr-online-vazio">Digite pelo menos ${BUSCA_MIN} letras do nome.</li>`;
+  const botao = ({ uid, nome }) => amigos.has(uid) ? '<button class="jr-online-acao" disabled>✔ Amigo</button>'
     : pedidosAmizade[uid] ? `<button class="jr-online-acao" data-amz-sim="${esc(uid)}">✔ Aceitar</button>`
-    : pedidosEnviados.has(uid) ? '<button class="jr-online-acao" disabled>⏳ Pedido enviado</button>'
-    : `<button class="jr-online-acao" data-pedir-amigo="${esc(uid)}" data-nome="${esc(nome)}">➕ Amigo</button>`;
-  return `<li class="jr-online-grupo">🔎 Alunos · ${lista.length}</li>` + (lista.slice(0, 40).map(a => `<li><span class="jr-rosto">👤</span>
-      <span class="jr-online-nome">${esc(a.nome)}</span><span class="jr-online-det">${esc(a.turma)}</span>
+    : pedidosEnviados.has(uid) ? '<button class="jr-online-acao" disabled>⏳ Convite enviado</button>'
+    : `<button class="jr-online-acao" data-pedir-amigo="${esc(uid)}" data-nome="${esc(nomeAbreviado(nome))}">➕ Convidar</button>`;
+  return `<li class="jr-online-grupo">🔎 Alunos · ${r.total > r.lista.length ? `${r.lista.length} de ${r.total}` : r.total}</li>` + (r.lista.map(a => `<li><span class="jr-rosto">👤</span>
+      <span class="jr-online-nome">${esc(a.rotulo)}</span><span class="jr-online-det">${esc(a.nome)}</span>
       <span class="jr-amigo-acoes">${botao(a)}</span></li>`).join('') || '<li class="jr-online-vazio">Ninguém com esse nome.</li>');
 }
 
@@ -4947,6 +5052,7 @@ function mostrarFalaPet(baloes, fome = false) {
     el.classList.toggle('largo', !!b.largo);   // curiosidade: balão mais largo
     el.hidden = false;
     el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    caberBalaoPet(el);
     posicionarFalaPet();
     if (i === 0) { if (fome) seguidor?.reagir('triste_fome', 2000); else reagirSeguidor('rapida', 'feliz'); }   // tocar no pet: ele ri (adulto: `carinho`)
     conversa.timer = setTimeout(() => {
@@ -5495,16 +5601,21 @@ function perguntaDoPet() {
   pararFalaPet();
   const certa = String(q.resposta);
   pp = { q, certa, chave: chaveGinasio(g.mapa, g.lado), respondeu: false };
-  const el = $('pet-pergunta');
-  const enun = String(q.enunciado).trim(), fim = /[?:.!]$/.test(enun) ? '' : '?';   // PROMPT-209: sem ". ?" nem "??"
-  el.innerHTML = `Ei! Rapidinho: <span class="pp-conta">${esc(enun)}</span>${fim}
-    <div class="pp-botoes">${embaralhar([certa, ...q.erradas.slice(0, 2).map(String)]).map(v => `<button data-pp="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
-  el.hidden = false;
-  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
-  posicionarPerguntaPet();
+  desenharPerguntaPet(q.enunciado, embaralhar([certa, ...q.erradas.slice(0, 2).map(String)]));
   reagirSeguidor('rapida', 'feliz');
   pp.timer = setTimeout(fecharPerguntaPet, PP_MS);   // ignorou: some sem penalidade
   return true;
+}
+// 💬 PROMPT-232: o balão da pergunta (o texto e os botões sempre dentro dele; a letra diminui até 15 px se ficar alto demais)
+function desenharPerguntaPet(enunciado, opcoes) {
+  const el = $('pet-pergunta');
+  const enun = String(enunciado).trim(), fim = /[?:.!]$/.test(enun) ? '' : '?';   // PROMPT-209: sem ". ?" nem "??"
+  el.innerHTML = `Ei! Rapidinho: <span class="pp-conta">${esc(enun)}</span>${fim}
+    <div class="pp-botoes">${opcoes.map(v => `<button data-pp="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
+  el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  caberBalaoPet(el, Math.max(140, $('cena-vp').clientHeight * 0.6));   // a pergunta tem os botões: pode ser mais alta
+  posicionarPerguntaPet();
 }
 function posicionarPerguntaPet() {
   const el = $('pet-pergunta');
@@ -6896,9 +7007,22 @@ function alvoNoInterior() {
 function posicionarNaTela(el, x, y) {
   const p = imagemParaTela(x, y);
   const vw = $('cena-vp').clientWidth;
-  const meia = el.offsetWidth / 2;
-  el.style.left = clamp(p.x, meia + 8, vw - meia - 8) + 'px';
+  const meia = el.offsetWidth / 2, cx = clamp(p.x, meia + 8, vw - meia - 8);
+  el.style.left = cx + 'px';
   el.style.top = Math.max(p.y, el.offsetHeight + 64) + 'px';
+  // 💬 PROMPT-232: o balão deslizou para dentro da tela, mas o biquinho continua apontando para o pet
+  el.style.setProperty('--bico-x', Math.round(clamp(p.x - (cx - meia), 16, el.offsetWidth - 16)) + 'px');
+}
+// 💬 PROMPT-232: balão de pet alto demais (ou com uma palavra que não cabe na largura): a letra diminui aos poucos, até 15 px;
+// abaixo disso o balão cresce para baixo (a quebra em qualquer ponto, overflow-wrap: anywhere, fica para o último caso)
+const LETRA_MIN_BALAO = 15;
+function caberBalaoPet(el, maxH) {
+  if (!el || el.hidden) return;
+  el.style.fontSize = '';
+  const lim = maxH ?? Math.max(90, (el.offsetParent?.clientHeight || innerHeight) * 0.42);
+  const palavraLarga = () => { el.style.overflowWrap = 'normal'; const r = el.scrollWidth > el.clientWidth + 1; el.style.overflowWrap = ''; return r; };
+  let f = parseFloat(getComputedStyle(el).fontSize);
+  while (f > LETRA_MIN_BALAO && (el.offsetHeight > lim || palavraLarga())) { f = Math.max(LETRA_MIN_BALAO, f - 1); el.style.fontSize = f + 'px'; }
 }
 
 // ============================================================
@@ -7191,8 +7315,21 @@ function montarPraca() {
     (cena.laboratorio ? rotulo('🤖 Laboratório', lb.x, lb.y - 150, 'laboratorio') : '') +
     (cena.casinha ? rotulo('🏠 Casinhas', ca.x, ca.y - 40, 'casinha') : ''));
   montarMesaDamas();
+  montarFonte();
   pintarLetreiroRelampago();
   montarPavilhao();
+}
+// ⛲ PROMPT-231: a fonte nova (praca/fonte_1.webp, 500 × 454) por cima da pintada no fundo: ~125 px de largura, centrada em
+// praca.json → fonte.x, a base em fonte.y + 2, na ordem por y (quem passa atrás fica atrás). A água é animada só com CSS:
+// um brilho passando na bacia, 4 gotinhas nos jatos e 3 ondinhas abrindo (8 elementos). A trilha em volta não muda.
+function montarFonte() {
+  const f = cfgPraca().fonte;
+  if (!f) return;
+  const larg = Number(f.largura) || 125, y = f.y + 2;
+  const gotas = [[27, 46, 0], [71, 46, .7], [45, 6, 1.3], [56, 6, 2]].map(([x, yy, d]) => `<i class="gota" style="left:${x}%;top:${yy}%;animation-delay:${d}s"></i>`).join('');
+  const ondas = [[28, 50, 0], [70, 50, 1.1], [50, 59, 2.2]].map(([x, yy, d]) => `<i class="onda" style="left:${x}%;top:${yy}%;animation-delay:${d}s"></i>`).join('');
+  $('cena-atores').insertAdjacentHTML('beforeend', `<div class="jr-fonte" aria-hidden="true" style="left:${f.x}px;top:${y}px;width:${larg}px;z-index:${Math.round(y)}">
+    <img src="${IMG}/praca/fonte_1.webp" alt="" draggable="false"/><i class="brilho"></i>${ondas}${gotas}</div>`);
 }
 function alvoPracaEm(p) {
   const { mural: m, fliperama: f, loja: l, laboratorio: lb, casinha: ca } = cena;
@@ -7548,8 +7685,9 @@ async function renderMural() {
 // Resumo de insígnias para o mural (cada aluno grava o seu: ao entrar no jogo e ao ganhar insígnia)
 async function publicarResumoInsignias() {
   if (!carregouProgresso || !entraNoRanking()) return;
-  const { conquistadas, douradas } = contarInsignias();
-  try { await set(ref(db, `${basePraca()}/insignias/${sessao.uid}`), { n: conquistadas, d: douradas, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), ts: Date.now(),
+  const { conquistadas, douradas } = contarInsignias(), hoje = diaLocal();
+  const h = Object.values(estado.ginasios).filter(g => g.insignia && g.dataInsignia && diaLocal(new Date(g.dataInsignia)) === hoje).length;   // 🏅 PROMPT-231: "+N hoje" na página inicial
+  try { await set(ref(db, `${basePraca()}/insignias/${sessao.uid}`), { n: conquistadas, d: douradas, h, dia: hoje, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), ts: Date.now(),
     m: estado.mestre?.data || null, l: estado.lenda?.data || null }); }
   catch (e) { console.warn('[jogo-revisao] resumo do mural indisponível', e?.code || e); }
 }
@@ -10425,6 +10563,35 @@ function migrarQuadrosV2() {
   gravar({ 'casinha/quadros_v2': true, 'casinha/moveis': c.moveis.map(limparMovel), 'casinha/guardados': { ...c.guardados } });
   if (c.publicada) publicarCasinha();
 }
+// 🎨 PROMPT-231: uma cor que o móvel não tem mais (a "Branca" saiu dos de madeira) volta para a cor padrão, no quarto e nos
+// guardados ("mesa~branca" → "mesa"). Ninguém perde o móvel nem moedas. Roda ao entrar e ao abrir a casinha; só grava se mudou.
+function migrarCoresMoveis() {
+  const c = estado?.casinha;
+  if (!c || !CASA?.itens || !carregouProgresso) return;
+  let mudou = false;
+  for (const m of c.moveis) { const it = itemCasa(m.id); if (it && m.cor && !corValida(it, m.cor)) { m.cor = ''; mudou = true; } }
+  for (const k of Object.keys(c.guardados)) {
+    const { id, cor } = daChave(k), it = itemCasa(id);
+    if (!it || !cor || corValida(it, cor)) continue;
+    c.guardados[id] = (Number(c.guardados[id]) || 0) + (Number(c.guardados[k]) || 0);
+    delete c.guardados[k]; mudou = true;
+  }
+  if (!mudou || casaSemGravar) return;
+  gravar({ 'casinha/moveis': c.moveis.map(limparMovel), 'casinha/guardados': { ...c.guardados } });
+  if (c.publicada) publicarCasinha();
+}
+// 🍎 PROMPT-232: a "Fruta" genérica saiu da loja; quem tinha recebe a mesma quantidade em maçã (uma vez: pets/fruta_v2)
+function migrarFruta() {
+  const ps = estado?.pets;
+  if (!ps || ps.fruta_v2 || !carregouProgresso) return;
+  const n = Number(ps.bolsa?.fruta) || 0, patch = { 'pets/fruta_v2': true };
+  if (n > 0) {
+    ps.bolsa.maca = (Number(ps.bolsa.maca) || 0) + n; delete ps.bolsa.fruta;
+    patch['pets/bolsa/maca'] = ps.bolsa.maca; patch['pets/bolsa/fruta'] = null;
+  }
+  ps.fruta_v2 = true;
+  gravar(patch);
+}
 // 🏆 com as 26 insígnias, o Quadro dos Campeões entra nos guardados (uma vez)
 function verificarCampeoes() {
   const c = estado?.casinha;
@@ -10554,7 +10721,7 @@ async function abrirCasinha(visita = null, volta = null) {
       : ganhou.length ? `🎁 Presente: ${ganhou.length > 1 ? ganhou.slice(0, -1).join(', ') + ' e ' + ganhou.at(-1) : ganhou[0]}! Toque em 🛠️ Arrumar.` : null;
     if (!casaSemGravar) gravar({ 'casinha/kit': true, 'casinha/cama_gratis': true, 'casinha/moveis': c.moveis.map(limparMovel), 'casinha/guardados': { ...c.guardados } });
   }
-  if (!visita) { migrarQuadrosV2(); verificarCampeoes(); }   // PROMPT-117
+  if (!visita) { migrarQuadrosV2(); migrarCoresMoveis(); verificarCampeoes(); }   // PROMPT-117
   const Q = CASA.quarto, [ex, ey] = Q.porta.entrada;
   cs = { visita, volta, moveis: [], guardados: visita ? {} : { ...c.guardados }, arrumando: false, sel: null, ida: null, petAlvo: null, petVel: 0, tSono: 0 };
   cs.moveis = (visita ? lerCasinha({ moveis: visita.dados.moveis }).moveis : c.moveis.map(m => ({ ...m }))).filter(m => itemCasa(m.id));
@@ -12407,7 +12574,7 @@ function lerTorre(t) {
   const n = (v, a, b, d) => { v = Math.round(Number(v)); return Number.isFinite(v) ? Math.min(b, Math.max(a, v)) : d; };
   const ob = (o) => (o && typeof o === 'object' ? { ...o } : {});
   const premios = ob(t.premios);
-  for (const k of ['auras', 'fumacas', 'estilos', 'moveis', 'acabamentos', 'temas']) premios[k] = ob(premios[k]);
+  for (const k of ['auras', 'fumacas', 'estilos', 'moveis', 'acabamentos', 'temas', 'baloes']) premios[k] = ob(premios[k]);
   const s = (v) => (typeof v === 'string' && v ? v : null);
   return { andar: n(t.andar, 1, N_ANDARES, 1), treinador: n(t.treinador, 0, 3, 0), vencidos: ob(t.andares_vencidos), premios,
     aura: s(t.aura_ativa), fumaca: s(t.fumaca_ativa), estilo: s(t.estilo_ativo), insignias: ob(t.insignias),
@@ -12826,9 +12993,9 @@ function fecharModalTorre() { torreModal?.remove(); torreModal = null; }
 //  categorias diferentes quando der, nunca algo que ele já tem). O sorteio fica guardado (torre/bau_pendente) até escolher.
 //  Andar 10: o baú de ouro — 500 moedas e os 3 exclusivos juntos (aura e fumaça arco-íris e o Trono dourado).
 // ============================================================
-const CATS_TORRE = ['aura', 'fumaca', 'estilo', 'movel', 'acabamento', 'tema'];
-const NOME_CAT = { aura: '✨ Aura do personagem', fumaca: '💨 Fumaça do pet', estilo: '🌟 Estilo do pet', movel: '🪑 Móvel', acabamento: '🎨 Acabamento de móvel', tema: '🏠 Tema da casa' };
-const CHAVE_CAT = { aura: 'auras', fumaca: 'fumacas', estilo: 'estilos', movel: 'moveis', acabamento: 'acabamentos', tema: 'temas' };
+const CATS_TORRE = ['aura', 'fumaca', 'estilo', 'movel', 'acabamento', 'tema', 'balao'];   // 💬 balao: o balão Ouro (PROMPT-232)
+const NOME_CAT = { aura: '✨ Aura do personagem', fumaca: '💨 Fumaça do pet', estilo: '🌟 Estilo do pet', movel: '🪑 Móvel', acabamento: '🎨 Acabamento de móvel', tema: '🏠 Tema da casa', balao: '💬 Balão de fala' };
+const CHAVE_CAT = { aura: 'auras', fumaca: 'fumacas', estilo: 'estilos', movel: 'moveis', acabamento: 'acabamentos', tema: 'temas', balao: 'baloes' };
 function itensDaCategoria(cat) {
   const P = cfgPremios();
   if (cat === 'aura' || cat === 'fumaca') return (P.cores || []).map(c => c.id);
@@ -12836,9 +13003,10 @@ function itensDaCategoria(cat) {
   if (cat === 'acabamento') return (P.acabamentos || []).map(e => e.id);
   if (cat === 'movel') return (P.moveis || []).map(e => e.id);
   if (cat === 'tema') return (P.temas || []).filter(t => t.ativo !== false).map(t => t.id);
+  if (cat === 'balao') return listaBaloes().filter(b => b.torre).map(b => b.id);
   return [];
 }
-const temPremio = (cat, id) => !!torreEst().premios[CHAVE_CAT[cat]]?.[id];
+const temPremio = (cat, id) => !!torreEst().premios[CHAVE_CAT[cat]]?.[id] || (cat === 'balao' && !!estado.pets?.baloes?.[id]);
 function sortearBau() {
   const disp = CATS_TORRE.map(cat => [cat, itensDaCategoria(cat).filter(id => !temPremio(cat, id))]).filter(([, l]) => l.length);
   const out = [], cats = [...disp].sort(() => Math.random() - 0.5);
@@ -12857,6 +13025,7 @@ function infoPremio(o) {
   if (o.cat === 'acabamento') { const e = (P.acabamentos || []).find(x => x.id === o.id); return { nome: `Acabamento ${e?.nome || o.id}`, icone: `<span class="jr-bau-emoji">${e?.emoji || '🎨'}</span>` }; }
   if (o.cat === 'movel') { const e = (P.moveis || []).find(x => x.id === o.id) || (o.id === 'trono_ouro' ? P.trono_ouro : null); return { nome: e?.nome || o.id, icone: `<img src="${IMG}/casinha/moveis/${esc(e?.imagem_de || o.id)}_d.webp" alt="" draggable="false"${o.id === 'trono_ouro' ? ' class="jr-est jr-est-ouro"' : ''}/>` }; }
   if (o.cat === 'tema') { const e = (P.temas || []).find(x => x.id === o.id); return { nome: `Tema ${e?.nome || o.id}`, icone: `<img src="${IMG}/casinha/${esc(e?.imagem || '')}" alt="" draggable="false"/>` }; }
+  if (o.cat === 'balao') { const b = listaBaloes().find(x => x.id === o.id); return { nome: `Balão ${b?.nome || o.id}`, icone: `<span class="jr-bal-amostra ${esc(o.id)}">Oi!</span>` }; }
   return { nome: o.id, icone: '🎁' };
 }
 // entrega um prêmio (patch: o que gravar); devolve false se ele já tinha (vira moedas)
@@ -12870,6 +13039,11 @@ function darPremio(o, patch) {
   if (o.cat === 'aura' && !te.aura) { te.aura = o.id; patch['torre/aura_ativa'] = o.id; }        // o 1º já vem ligado
   if (o.cat === 'fumaca' && !te.fumaca) { te.fumaca = o.id; patch['torre/fumaca_ativa'] = o.id; }
   if (o.cat === 'estilo' && !te.estilo) { te.estilo = o.id; patch['torre/estilo_ativo'] = o.id; }
+  if (o.cat === 'balao') {   // 💬 vai para os balões do aluno e já fica ligado
+    estado.pets.baloes = { ...estado.pets.baloes, [o.id]: agora }; estado.pets.balao = o.id;
+    patch[`pets/baloes/${o.id}`] = agora; patch['pets/balao'] = o.id;
+    aplicarEstiloBalao();
+  }
   return true;
 }
 function moedasBau(n, patch) {
@@ -13072,7 +13246,7 @@ function abrirPremiosTorre() {
   const ins = [te.insignias.andar5 ? '🏅 Andar 5 da Torre' : '', te.insignias.campeao ? '🏆 Campeão da Torre' : ''].filter(Boolean);
   const m = modalTorre('torre-premios', '🎁 Prêmios da Torre', (ins.length ? `<p class="jr-pt-ins">${ins.join(' · ')}</p>` : '') +
     linha('aura', te.aura, cores) + linha('fumaca', te.fumaca, cores) + linha('estilo', te.estilo, estilos) +
-    '<p class="jr-pt-nota">Os móveis, os acabamentos e os temas ficam na 🏠 Casinha.</p>');
+    '<p class="jr-pt-nota">Os móveis, os acabamentos e os temas ficam na 🏠 Casinha. O balão Ouro fica no 🐾 Meu Pet → Visual.</p>');
   m.querySelector('.jr-torre-corpo').addEventListener('click', (e) => {
     const b = e.target.closest('[data-pt]');
     if (!b) return;
@@ -15315,6 +15489,7 @@ function falaAjuda(texto) {
     el.textContent = partes[k];
     el.hidden = false;
     el.classList.remove('nova'); void el.offsetWidth; el.classList.add('nova');
+    caberBalaoPet(el);
     $('perg-fala').classList.add('quieto');   // o balão do adversário dá lugar ao do pet
     clearTimeout(timerFalaAjuda);
     timerFalaAjuda = setTimeout(() => {
@@ -15964,7 +16139,8 @@ function caberBalao(el, texto) {
   el.style.maxHeight = '';
   el.textContent = texto;
   let fs = parseFloat(getComputedStyle(el).fontSize) || 16;
-  for (let g = 0; g < 20 && el.scrollHeight > el.clientHeight + 1 && fs > 11; g++) { fs -= 1; el.style.fontSize = `${fs}px`; }
+  const min = parseFloat(getComputedStyle(el).getPropertyValue('--jr-min')) || 15;   // 🔠 PROMPT-231/232: nunca abaixo da letra mínima (era 11 px)
+  for (let g = 0; g < 20 && el.scrollHeight > el.clientHeight + 1 && fs > min; g++) { fs = Math.max(min, fs - 1); el.style.fontSize = `${fs}px`; }
   if (el.scrollHeight > el.clientHeight + 1) el.style.maxHeight = 'none';
 }
 // se chega outra frase enquanto esta ainda está sendo escrita, ela espera: esta termina inteira, fica um pouco, e só então troca

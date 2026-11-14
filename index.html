@@ -330,10 +330,10 @@
       </div>
       <div class="stat-col">
         <div class="stat-top">
-          <span class="stat-num" id="statDuelos">—</span>
-          <span class="stat-today" id="statDuelosHoje"></span>
+          <span class="stat-num" id="statInsignias">—</span>
+          <span class="stat-today" id="statInsigniasHoje"></span>
         </div>
-        <div class="stat-label">Duelos</div>
+        <div class="stat-label">Insígnias</div>
       </div>
     </div>
   </div>
@@ -447,7 +447,7 @@
 <script type="module">
 import { getConfig, getSenhaAluno, getResultados, getLiberadas, getAllAtividadeStatus, contarSessoesTabuadaHoje, somarPartidasTabuadaTotal, getFeedGlobal } from "/js/db.js";
 import { getSession, setSession, hashSenha } from "/js/auth.js";
-import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
 
 // Redireciona se já logado
 const sess = getSession();
@@ -527,25 +527,22 @@ let liberadasCache = [];
     const elTabHj = document.getElementById('statTabuadaHoje');
     if (elTabHj && tabuadaTotal) elTabHj.textContent = tabuadaHoje > 0 ? `+${tabuadaHoje} hj` : '';
 
-    // Duelos — só conta status encerrado (duelos realmente disputados)
+    // 🏅 Insígnias (PROMPT-231): o resumo que o jogo publica em jogo_revisao_praca/insignias/{uid} = { n, h, dia, nome, turma, … }
+    // (um registro pequeno por aluno, sem baixar o progresso). Professor e contas de teste ficam de fora.
     try {
-      const duelosFullSnap = await fetch(
-        'https://sistemamatematica-50eff-default-rtdb.firebaseio.com/duelos.json?shallow=false'
+      const resumo = await fetch(
+        'https://sistemamatematica-50eff-default-rtdb.firebaseio.com/jogo_revisao_praca/insignias.json'
       ).then(r => r.json()).catch(() => null);
-
-      const duelArr = duelosFullSnap && typeof duelosFullSnap === 'object'
-        ? Object.values(duelosFullSnap) : [];
-
-      const totalDuelos = duelArr.filter(d => d?.status === 'encerrado').length;
-      document.getElementById('statDuelos').textContent = totalDuelos;
-
-      const dHoje = duelArr.filter(d =>
-        d?.status === 'encerrado' && d.ts_aceito && d.ts_aceito >= tsInicioHoje
-      ).length;
-      const elDHj = document.getElementById('statDuelosHoje');
-      if (elDHj) elDHj.textContent = dHoje > 0 ? `+${dHoje} hj` : '';
+      const hojeLocal = `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`;
+      const deVerdade = ([uid, v]) => v && typeof v === 'object' && uid !== 'PROFESSORA' && !ALUNOS_TESTE.includes(uid) && v.turma !== 'TESTE' &&
+        !/PROFESSOR|TESTE/i.test(`${uid} ${v.nome || ''}`);
+      const regs = resumo && typeof resumo === 'object' ? Object.entries(resumo).filter(deVerdade).map(([, v]) => v) : [];
+      document.getElementById('statInsignias').textContent = regs.reduce((t, v) => t + (Number(v.n) || 0), 0);
+      const insHoje = regs.reduce((t, v) => t + (v.dia === hojeLocal ? Number(v.h) || 0 : 0), 0);
+      const elIHj = document.getElementById('statInsigniasHoje');
+      if (elIHj) elIHj.textContent = insHoje > 0 ? `+${insHoje} hj` : '';
     } catch(_) {
-      document.getElementById('statDuelos').textContent = '—';
+      document.getElementById('statInsignias').textContent = '—';
     }
 
     // Ticker
@@ -560,7 +557,7 @@ let liberadasCache = [];
   } catch(e) {
     document.getElementById('statAtividades').textContent = '—';
     document.getElementById('statSessoesTabuada').textContent = '—';
-    document.getElementById('statDuelos').textContent = '—';
+    document.getElementById('statInsignias').textContent = '—';
   }
 })();
 

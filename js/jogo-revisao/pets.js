@@ -15,8 +15,8 @@ let SPR = null;
 export async function carregarSprites() {
   if (!SPR) {
     const [j, cores] = await Promise.all([
-      fetch(BASE + 'pets/sprites.json?v=228').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228)
-      fetch(BASE + 'pets/sprites-pets-cores.json').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
+      fetch(BASE + 'pets/sprites.json?v=233').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228, 232, 233)
+      fetch(BASE + 'pets/sprites-pets-cores.json?v=232').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
     ]);
     for (const [f, a] of Object.entries(cores?.pets || {})) if ((petDaCor(f) || adultoDaCor(f)) && !j.pets[f]) j.pets[f] = a;
     // a forma colorida usa as sequências do pet (o sprites-pets-cores.json só tem as animações); o adulto colorido, também o quadro do adulto
@@ -122,8 +122,11 @@ export function quadrosDe(pet, anim) {
   const a = SPR?.pets?.[pet] || {};
   const reserva = SPR?.reserva?.[anim];
   const lista = a[anim]?.length ? a[anim] : a[reserva]?.length ? a[reserva] : (a.sentado_girando || []);
-  return lista.map(q => BASE + q);
+  return lista.map(q => BASE + q + versaoImg(q));
 }
+// ?v= das imagens que mudaram com o mesmo nome (o navegador guardava as antigas): 🐉 PROMPT-233, dragões adultos redesenhados
+const VERSAO_IMG = [[/^pets\/dragao_[a-z]+_adulto\//, 233]];
+const versaoImg = (q) => { const v = VERSAO_IMG.find(([re]) => re.test(q)); return v ? '?v=' + v[1] : ''; };
 export const bustoPet = (pet) => quadrosDe(pet, 'busto_sorrindo')[0];
 export const temBusto = (pet) => temAnim(pet, 'busto_sorrindo');
 // tamanhos vêm do sprites.json (os números abaixo só valem se ele não carregar);
@@ -227,8 +230,9 @@ export const deitaParado = (forma) => /^unicornio_adulto/.test(forma || '') && t
 const DISPARA = 2.5, CORRE_DISPARO = 2 * 0.7;   // 🦄 PROMPT-224: 30% mais devagar (era 2 × a velocidade do personagem)
 const correParaAlcancar = (forma) => /^unicornio_adulto/.test(forma || '');
 // 🐘 PROMPT-224: andar de frente/de costas com uma imagem só (o sprites.json repete o quadro): os quadros ímpares saem espelhados
-const ALTERNA_ESPELHO = { elefante_adulto: new Set(['andar_frente', 'andar_costas']) };
-const alternaEspelho = (forma, anim) => !!ALTERNA_ESPELHO[forma]?.has(anim);
+// 🐯 PROMPT-232: o tigre adulto (e as cores dele) anda de frente com o andar_frente_1 e ele mesmo espelhado
+const ALTERNA_ESPELHO = { elefante_adulto: new Set(['andar_frente', 'andar_costas']), tigre_adulto: new Set(['andar_frente']) };
+const alternaEspelho = (forma, anim) => !!(ALTERNA_ESPELHO[forma] || ALTERNA_ESPELHO[String(forma || '').replace(/^(tigre_adulto)_[a-z]+$/, '$1')])?.has(anim);
 // 🐘 PROMPT-224: parou depois de andar para cima: fica parado de costas (costas_parado) até a próxima ação ou andar de novo
 const paraDeCostas = (forma) => forma === 'elefante_adulto' && temAnim(forma, 'costas_parado');
 const NUNCA_SOZINHO = new Set(['cuspir_fogo', 'voar', 'voo_campeao', 'ataque_batalha', 'pendurada', 'comer', 'comendo']);
@@ -265,6 +269,7 @@ export const MS_EMOCAO = 1500;
 // Ritmo de cada animação: ms por quadro, se repete, quanto segura o último quadro e quantas vezes passa (vezes)
 // forma: a forma desenhada (o dragão adulto anda de lado mais devagar, PROMPT-87)
 function ritmo(anim, n, forma = '') {
+  if (/^tigre_adulto/.test(forma) && anim.startsWith('andar_')) return { ms: 180, loop: true };   // 🐯 PROMPT-232: de lado só os quadros 1 e 2 (sprites.json), de frente alterna espelhado
   if ((anim === 'andar_direita' || anim === 'andar_esquerda') && ehFormaAdulta(forma)) return { ms: 200, loop: true };   // dragão adulto de lado: 200 ms por quadro
   if (anim.startsWith('andar_')) return { ms: n === 2 ? 200 : 150, loop: true };   // andar_frente/andar_costas do adulto: os 8 quadros em ciclo
   if (n === 1 && EMOCOES.has(anim)) return { ms: MS_EMOCAO, loop: false };

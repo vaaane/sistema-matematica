@@ -123,7 +123,8 @@ export function criarQuadro(raiz) {
   const pergHtml = (fr) => esc(fr)
     .replace(/(\d+(?:,\d+)?)(?: (cm²|m²|cm|mm|km|m)|(°))(?![a-zà-ú²])/g, (m, n, u, g) => `<u class="qd-med">${n}${g ? '' : ' '}${u || g}</u>`)   // PROMPT-220: unidade com espaço (9m é termo, não metro)
     .replace(/\{([AB]):([^{}]+)\}/g, (m, k, t) => `<span class="qd-cmp${k}">${t}</span>`)
-    .replace(/(\d),(\d)/g, '$1<span class="qd-v">,</span>$2');
+    .replace(/(\d),(\d)/g, '$1<span class="qd-v">,</span>$2')
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+/g, (m) => `<sup>${[...m].map(c => '0123456789-'['⁰¹²³⁴⁵⁶⁷⁸⁹⁻'.indexOf(c)]).join('')}</sup>`);   // 🔠 PROMPT-231: 2³ com o expoente legível
   const ler = (txt) => wait(1800 + 160 * String(txt).replace(/<[^>]+>/g, ' ').trim().split(/\s+/).length);
   async function poePergunta(txt, espera = true) {
     txt = String(txt || '').trim();
@@ -155,6 +156,25 @@ export function criarQuadro(raiz) {
   new ResizeObserver(caber).observe(FOCO);
   // PROMPT-216: caber() na hora (antes da pintura), não no requestAnimationFrame: a conta nasce no tamanho certo
   new MutationObserver(() => caber()).observe(FOCO, { childList: true, subtree: true, characterData: true });
+  // ✖️ PROMPT-231: a tabuada da lateral nunca passa da linha pontilhada (a lateral termina acima dela). Se não couber:
+  // 1) aperta o espaço entre as linhas, 2) quebra em 2 colunas, 3) diminui só a tabuada (o CSS segura no mínimo de letra)
+  function encaixarLado() {
+    const tabs = LADO.querySelectorAll(':scope > .qd-tab');
+    LADO.classList.remove('apertado', 'duas-col', 'menor');
+    LADO.style.removeProperty('--tab-k'); LADO.style.removeProperty('--tab-lin');
+    if (!tabs.length || !LADO.clientHeight) return;
+    const cabe = () => LADO.scrollHeight <= LADO.clientHeight + 1 && LADO.scrollWidth <= LADO.clientWidth + 1;
+    if (cabe()) return;
+    LADO.classList.add('apertado');
+    if (cabe()) return;
+    LADO.style.setProperty('--tab-lin', Math.ceil(tabs.length / 2));
+    LADO.classList.add('duas-col');
+    if (!cabe()) LADO.classList.remove('duas-col');   // largo demais para 2 colunas: volta a 1 e diminui
+    LADO.classList.add('menor');
+    for (let k = 0.95; !cabe() && k >= 0.5; k -= 0.05) LADO.style.setProperty('--tab-k', k.toFixed(2));
+  }
+  new MutationObserver(() => encaixarLado()).observe(LADO, { childList: true });
+  new ResizeObserver(() => encaixarLado()).observe(LADO);
 
   // ── tempo (respeita a pausa e a troca de página) ──
   function wait(ms) {
@@ -6628,8 +6648,10 @@ export function criarQuadro(raiz) {
     ultCenas = cenas;
     try {
       await (document.fonts?.ready || Promise.resolve());
+      if (meu !== token) return false;   // PROMPT-231: outra página começou enquanto esperava a fonte (senão as duas desenham juntas)
       await wait(300);
       for (const c of cenas || []) {
+        if (meu !== token) return false;
         if (!CENAS[c.t]) continue;
         pergPend = PERG_PROPRIA.has(c.t) ? '' : perguntaDe(c) || '';
         if (!comecaComEtq(c)) await pend();   // pergunta nova: espera o aluno ler antes da primeira anotação
