@@ -15,6 +15,10 @@ import { bimestreAtual, ALUNOS_TESTE, ALUNOS_POR_TURMA, bimestreJogos, pathTabua
 import { gerarQuestoes, gerarUma, assuntoDe, nPerguntas } from '/js/jogo-revisao/geradores.js';
 import { tocar, somLigado, alternarSom, tocarArquivo, pararEfeitos, musicaPara, musicaLigada, alternarMusica, pausarMusica, musicaBloqueada, abaixarMusica } from '/js/jogo-revisao/sons.js';
 import { srcAudioGrio, temAudioGrio, legendaGrio, tempoDasLinhas, fraseNoTempo } from '/js/jogo-revisao/grio.js';   // 🎙️ PROMPT-234
+import { EMBLEMAS, CORES_EQUIPE, MAX_MEMBROS as MAX_MEMBROS_EQ, NOME_MAX as NOME_MAX_EQ, emblemaDe, corValida as corEquipeValida, htmlEmblema, htmlRotuloEquipe, bases as basesEquipe,
+  membrosDe as membrosDeEq, naEquipe as naEquipeEq, equipeVale as equipeValeEq, lerAlunos as lerAlunosEq, criarEquipe as criarEquipeEq, editarEquipe as editarEquipeEq, pedirNome as pedirNomeEq,
+  convidar as convidarEq, cancelarConvite as cancelarConviteEq, aceitarConvite as aceitarConviteEq, recusarConvite as recusarConviteEq, sairDaEquipe as sairDaEquipeEq,
+  expulsar as expulsarEq } from '/js/jogo-revisao/equipes.js';   // 🛡️ PROMPT-235
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comMult, multMoedas, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
@@ -189,6 +193,8 @@ function nomeT(uid, nome, r) {
 function pintarNomeColega(el, uid, r, extra) {
   const t = tituloDe(uid, r);
   el.textContent = prefixoTitulo(uid, r) + rotuloColega(uid, r) + extra;
+  const eq = r?.equipe;   // 🛡️ PROMPT-235: o emblema da equipe, pequeno e na cor dela
+  if (eq?.e) el.insertAdjacentHTML('beforeend', ' ' + htmlEmblema(eq.e, eq.c, 'eq-mapa'));
   el.classList.toggle('mestre', t === 1); el.classList.toggle('lenda', t === 2);
 }
 function registrarTitulos(todos) {
@@ -1048,7 +1054,7 @@ export async function iniciarJogo(sess) {
   setTimeout(verificarTutorial, 1500);   // 📖 PROMPT-166
   if (comecaNaPraca) abrirPraca('fonte').catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   atualizarBotaoMissoes();
-  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); ouvirAmigos(); avisarCoracoes(); ouvirVila(); ouvirPedidosVisita(); iniciarPraca(); publicarResumoInsignias(); publicarVencedoresAntigos(); migrarQuadrosV2(); migrarCoresMoveis(); migrarFruta(); aplicarEstiloBalao(); ouvirConvitesAoVivo(); });
+  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); ouvirAmigos(); ouvirEquipe(); avisarNomesPets(); avisarCoracoes(); ouvirVila(); ouvirPedidosVisita(); iniciarPraca(); publicarResumoInsignias(); publicarVencedoresAntigos(); migrarQuadrosV2(); migrarCoresMoveis(); migrarFruta(); aplicarEstiloBalao(); ouvirConvitesAoVivo(); });
   // aluno novo escolhe o personagem antes de tudo (o pet inicial vem depois, ao entrar num mapa)
   if (carregouProgresso && estado.novo && !estado.personagem) abrirEscolhaPersonagem(true);
 }
@@ -1969,6 +1975,7 @@ function renderMeuPet() {
   const nivel = nivelPet(pet), pp = cfgLoja().amizade?.pontos_por_nivel || 100;
   $('mp-nome').innerHTML = `${esc(nomePet(pet))}${nivel >= 10 ? ' <span class="mp-coroa" title="Amizade nível 10">👑</span>' : ''}` +
     (nivel >= 2 ? ` <span class="mp-nivel" title="Nível de amizade">❤️ ${nivel}</span>` : '');
+  pintarPedidoNomePet(pet);   // ⏳ PROMPT-235
   $('mp-palco').classList.toggle('moldura-prata', nivel >= 2 && nivel < 5);
   $('mp-palco').classList.toggle('moldura-ouro', nivel >= 5);
   pintarFundoMp();
@@ -3377,25 +3384,62 @@ function abrirNomear() {
   $('mp-nome-input').placeholder = NOME_PET[mp.pet];
   $('mp-nome-erro').textContent = '';
   $('mp-nome-padrao').textContent = `Usar "${NOME_PET[mp.pet]}"`;
-  $('mp-nome-padrao').hidden = !c.nome;
+  $('mp-nome-padrao').hidden = !c.nome && !c.nome_pedido;
+  $('mp-nome-input').value = c.nome_pedido || c.nome || '';
   $('mp-nomear').hidden = false;
   $('mp-nome-input').focus();
 }
+// ✔ PROMPT-235: o nome novo vira um PEDIDO (nome_pedido) que a professora aprova (vira o nome) ou recusa (nome_recusado);
+// até lá todos (o aluno também) veem o nome aprovado de antes ou o da espécie; o aluno vê "⏳ aguardando aprovação" no Meu Pet.
+// O pedido também vai para jogo_revisao_nomes_pets/{uid}__{pet} (modo teste: _teste), que a página da professora lê.
+// "Usar o nome da espécie" não precisa de aprovação. A conta da professora dá o nome direto. Dar nome continua de graça.
+const baseNomesPets = () => (teste ? 'jogo_revisao_nomes_pets_teste' : 'jogo_revisao_nomes_pets');
+const refPedidoNomePet = (pet) => ref(db, `${baseNomesPets()}/${sessao.uid}__${pet}`);
 function salvarNomePet(padrao = false) {
   if (!mp) return;
-  const pet = mp.pet, c = cuidadosDe(pet);
+  const pet = mp.pet, c = cuidadosDe(pet), base = `pets/conquistados/${pet}`;
   let nome = null;
   if (!padrao) {
     const r = validarNomePet($('mp-nome-input').value);
     if (r.erro) { $('mp-nome-erro').textContent = r.erro; return; }
     nome = r.nome;
   }
-  c.nome = nome;
-  gravar({ [`pets/conquistados/${pet}/nome`]: nome });
+  const direto = padrao || ehProfessora() || nome === c.nome;   // sem pedido: a espécie, a professora ou o nome que já é dele
+  if (direto) {
+    c.nome = nome; c.nome_pedido = null; c.nome_recusado = null;
+    gravar({ [`${base}/nome`]: nome, [`${base}/nome_pedido`]: null, [`${base}/nome_recusado`]: null, [`${base}/nome_aviso`]: null });
+    remove(refPedidoNomePet(pet)).catch(() => {});
+  } else {
+    c.nome_pedido = nome; c.nome_recusado = null;
+    gravar({ [`${base}/nome_pedido`]: nome, [`${base}/nome_recusado`]: null, [`${base}/nome_aviso`]: null });
+    set(refPedidoNomePet(pet), { uid: sessao.uid, turma: sessao.turma || '', aluno: String(sessao.nome || '').slice(0, 60), pet, nome, data: Date.now() })
+      .catch(e => console.warn('[jogo-revisao] pedido do nome do pet', e?.code || e));
+  }
   $('mp-nomear').hidden = true;
   renderMeuPet();
   enviarOnline(visualOnline(pet));
-  if (nome) falarPet(`${nome}? Adorei! 💜`);
+  if (nome && direto) falarPet(`${nome}? Adorei! 💜`);
+  else if (nome) falarPet(`${nome}? Adorei! 💜 A professora vai aprovar o nome ⏳`);
+}
+// o aviso do Meu Pet: o pedido esperando ou recusado
+function pintarPedidoNomePet(pet) {
+  const c = cuidadosDe(pet) || {}, el = $('mp-nome-pedido');
+  const txt = c.nome_pedido ? `⏳ "${c.nome_pedido}" aguardando aprovação da professora` : c.nome_recusado ? '😕 Seu nome não foi aprovado, tente outro' : '';
+  el.textContent = txt; el.hidden = !txt; el.classList.toggle('recusado', !c.nome_pedido && !!c.nome_recusado);
+}
+// ao entrar: a professora aprovou ou recusou (nome_aviso) → um aviso só, e o aviso sai do registro
+function avisarNomesPets() {
+  if (!estado?.pets?.conquistados) return;
+  const patch = {}, msgs = [];
+  for (const [pet, c] of Object.entries(estado.pets.conquistados)) {
+    if (!c?.nome_aviso) continue;
+    if (c.nome_aviso === 'aprovado' && c.nome) msgs.push(`✔ A professora aprovou o nome "${c.nome}"!`);
+    else if (c.nome_aviso === 'recusado') msgs.push(`😕 O nome do seu ${NOME_PET[pet] || 'pet'} não foi aprovado. Tente outro no Meu Pet!`);
+    delete c.nome_aviso; patch[`pets/conquistados/${pet}/nome_aviso`] = null;
+  }
+  if (!msgs.length) return;
+  gravar(patch);
+  setTimeout(() => avisoPet(msgs.join(' '), msgs.some(m => m.startsWith('✔'))), 2500);
 }
 
 // ============================================================
@@ -4166,6 +4210,213 @@ function buscaAmigosHtml() {
   return `<li class="jr-online-grupo">🔎 Alunos · ${r.total > r.lista.length ? `${r.lista.length} de ${r.total}` : r.total}</li>` + (r.lista.map(a => `<li><span class="jr-rosto">👤</span>
       <span class="jr-online-nome">${esc(a.rotulo)}</span><span class="jr-online-det">${esc(a.nome)}</span>
       <span class="jr-amigo-acoes">${botao(a)}</span></li>`).join('') || '<li class="jr-online-vazio">Ninguém com esse nome.</li>');
+}
+
+// ============================================================
+//  🛡️ EQUIPES (PROMPT-235) — duplas e trios (js/jogo-revisao/equipes.js tem o banco e as regras do jogo).
+//  🛡️ Equipe no estojo abre a tela; o convite chega como o pedido de amizade. O emblema (na cor da equipe) vai no registro
+//  online (equipe: { e, c, n }) e aparece ao lado do nome do aluno para os colegas, e "Equipe: …" no perfil.
+//  Nome: "Equipe N" ao criar; o dono pede outro e a professora aprova. Professora e contas de teste ficam fora (usaAmigos).
+// ============================================================
+let minhaEquipe = null, equipeId = null, pararEquipeEq = null, pararEquipe = null, convitesEquipe = {}, equipeDosAlunos = {};
+const filaEquipe = [], equipeVista = new Set();
+const eqTela = { emblema: 'escudo', cor: CORES_EQUIPE[0].cor, busca: '', sair: false, msg: '', pedido: '' };
+const souDono = () => !!minhaEquipe && minhaEquipe.dono === sessao.uid;
+// o que os colegas veem: o emblema, a cor e o nome aprovado
+const equipeOnline = () => (minhaEquipe ? { e: emblemaDe(minhaEquipe.emblema).id, c: corEquipeValida(minhaEquipe.cor), n: String(minhaEquipe.nome || '').slice(0, 20) } : null);
+function ouvirEquipe() {
+  if (pararEquipe || !usaAmigos()) return;
+  $('btn-equipe').hidden = false;
+  const B = basesEquipe(teste), fs = [];
+  try {
+    fs.push(onValue(ref(db, `${B.al}/${sessao.uid}/equipe`), (s) => trocarEquipeId(s.exists() ? String(s.val()) : null),
+      (e) => console.warn('[jogo-revisao] equipe indisponível', e?.code || e)));
+    fs.push(onValue(ref(db, `${B.cv}/${sessao.uid}`), (s) => {
+      const v = s.exists() ? s.val() || {} : {};
+      const novos = Object.fromEntries(Object.entries(v).filter(([, c]) => c && typeof c === 'object'));
+      if (JSON.stringify(novos) === JSON.stringify(convitesEquipe)) return;
+      convitesEquipe = novos;
+      for (const id of Object.keys(convitesEquipe)) if (!equipeVista.has(id)) { equipeVista.add(id); filaEquipe.push(id); }
+      mostrarConviteEquipe();
+      if (!$('equipe').hidden) renderEquipe();
+    }, (e) => console.warn('[jogo-revisao] convites de equipe indisponíveis', e?.code || e)));
+  } catch (e) { console.warn('[jogo-revisao] equipe indisponível', e?.code || e); }
+  pararEquipe = () => { for (const f of fs) try { f(); } catch (_) {} pararEquipeEq?.(); };
+}
+function trocarEquipeId(id) {
+  if (id === equipeId) return;
+  pararEquipeEq?.(); pararEquipeEq = null;
+  equipeId = id;
+  if (!id) { mudouEquipe(null); return; }
+  try {
+    pararEquipeEq = onValue(ref(db, `${basesEquipe(teste).eq}/${id}`), (s) => {
+      const eq = s.exists() ? s.val() : null;
+      if (!eq || !naEquipeEq(eq, sessao.uid)) {   // apagada (ou me tiraram): o "equipe" que sobrou sai
+        if (equipeId === id) update(ref(db), { [`${basesEquipe(teste).al}/${sessao.uid}/equipe`]: null }).catch(() => {});
+        mudouEquipe(null);
+        return;
+      }
+      mudouEquipe(eq);
+    }, (e) => console.warn('[jogo-revisao] equipe indisponível', e?.code || e));
+  } catch (e) { console.warn('[jogo-revisao] equipe indisponível', e?.code || e); }
+}
+function mudouEquipe(eq) {
+  const antes = minhaEquipe;
+  if (JSON.stringify(antes) === JSON.stringify(eq)) return;   // nada mudou (não regrava o online nem redesenha a tela)
+  minhaEquipe = eq;
+  if (antes && eq) {
+    if (eq.nome_recusado && !antes.nome_recusado) avisoPet('😕 Seu nome não foi aprovado. Tente outro!');
+    else if (antes.nome !== eq.nome && antes.nome_pedido === eq.nome) avisoPet(`🛡️ A professora aprovou o nome "${eq.nome}"!`, true);
+  }
+  enviarOnline({ equipe: equipeOnline() });
+  mostrarConviteEquipe();
+  if (!$('equipe').hidden) renderEquipe();
+}
+function abrirEquipe() {
+  if (!usaAmigos()) return;
+  $('estojo').hidden = true;
+  eqTela.busca = ''; eqTela.sair = false; eqTela.msg = ''; eqTela.pedido = '';
+  if (minhaEquipe) { eqTela.emblema = minhaEquipe.emblema; eqTela.cor = minhaEquipe.cor; }
+  $('equipe').hidden = false;
+  renderEquipe();
+  lerAlunosEquipe();
+  if (amigos.size) lerVistoAmigos().then(m => { if (m && !$('equipe').hidden) renderEquipe(); }).catch(() => {});
+  tocar('clique');
+}
+// quem já tem equipe (para a busca não oferecer convite a eles)
+async function lerAlunosEquipe() {
+  try { equipeDosAlunos = await lerAlunosEq(teste); } catch (e) { console.warn('[jogo-revisao] equipes dos alunos', e?.code || e); }
+  if (!$('equipe').hidden) renderEquipe();
+}
+const nomeAlunoEq = (uid) => nomeAbreviado(nomeVisivel(String(uid || '').split('_').slice(1).join(' '))) || 'Colega';   // "Alice T." e "Alice P." (as duas não ficam iguais)
+function htmlEscolhaEmblema() {
+  return `<div class="eq-grade">${EMBLEMAS.map(x => `<button class="eq-op${x.id === eqTela.emblema ? ' sel' : ''}" data-eq-emblema="${x.id}" title="${x.nome}" aria-label="${x.nome}">${x.e}</button>`).join('')}</div>
+    <div class="eq-cores">${CORES_EQUIPE.map(x => `<button class="eq-cor${x.cor === eqTela.cor ? ' sel' : ''}" data-eq-cor="${x.cor}" style="--eq:${x.cor}" title="${x.nome}" aria-label="${x.nome}"></button>`).join('')}</div>`;
+}
+function renderEquipe() {
+  const el = $('equipe-corpo'), eq = minhaEquipe, msg = eqTela.msg ? `<p class="eq-msg">${esc(eqTela.msg)}</p>` : '';
+  const convites = Object.entries(convitesEquipe).map(([id, c]) => `<li><span class="jr-rosto eq-rosto">${htmlEmblema(c.emblema, c.cor)}</span>
+      <span class="jr-online-nome">${esc(c.nome || 'Equipe')}</span><span class="jr-online-det">convite de ${esc(nomeVisivel(c.de) || 'um colega')}</span>
+      <span class="jr-amigo-acoes">${eq ? '' : `<button class="jr-online-acao" data-eqc-sim="${esc(id)}">✔ Aceitar</button>`}<button class="jr-online-acao sec" data-eqc-nao="${esc(id)}">Recusar</button></span></li>`).join('');
+  if (!eq) {
+    el.innerHTML = `${msg}<div class="eq-previa">${htmlEmblema(eqTela.emblema, eqTela.cor, 'eq-grande')}<div><b>Nova equipe</b><small>O nome começa como "Equipe" e um número. Depois você pode pedir outro nome à professora.</small></div></div>
+      <p class="eq-sub">Escolha o emblema e a cor</p>${htmlEscolhaEmblema()}
+      <button class="jr-btn jr-btn-ouro eq-criar" data-eq-acao="criar">🛡️ Criar equipe</button>
+      <p class="eq-dica">Uma equipe tem 2 ou 3 alunos e serve para a torre e os duelos em grupo.</p>
+      ${convites ? `<p class="eq-sub">📨 Convites recebidos</p><ol class="jr-online-itens eq-lista">${convites}</ol>` : ''}`;
+    return;
+  }
+  const dono = souDono(), membros = membrosDeEq(eq), regs = regsOnline();
+  const linhaM = (u) => `<li><span class="jr-rosto eq-rosto">${u === eq.dono ? '👑' : '👤'}</span>
+      <span class="jr-online-nome">${u === sessao.uid || colegaVisivel(u, regs[u]) ? '🟢' : '⚪'} ${esc(u === sessao.uid ? 'Você' : nomeAlunoEq(u))}</span>
+      <span class="jr-online-det">${esc(nomeVisivel(turmaDoUid(u)))}${u === eq.dono ? ' · dono' : ''}</span>
+      <span class="jr-amigo-acoes">${dono && u !== sessao.uid ? `<button class="jr-online-acao sec" data-eq-tirar="${esc(u)}">✖ Tirar</button>` : ''}</span></li>`;
+  const conv = Object.keys(eq.convidados || {}).map(u => `<li><span class="jr-rosto eq-rosto">📨</span><span class="jr-online-nome">${esc(nomeAlunoEq(u))}</span>
+      <span class="jr-online-det">${esc(nomeVisivel(turmaDoUid(u)))} · convite esperando</span>
+      <span class="jr-amigo-acoes">${dono ? `<button class="jr-online-acao sec" data-eq-cancelar="${esc(u)}">Cancelar</button>` : ''}</span></li>`).join('');
+  let convidar = '';
+  if (dono && membros.length < MAX_MEMBROS_EQ) {
+    const r = eqTela.busca.trim() ? buscarAlunos(eqTela.busca) : null;
+    const botao = (uid) => naEquipeEq(eq, uid) ? '<button class="jr-online-acao" disabled>✔ Na equipe</button>'
+      : eq.convidados?.[uid] ? '<button class="jr-online-acao" disabled>⏳ Convidado</button>'
+      : equipeDosAlunos[uid]?.equipe ? '<button class="jr-online-acao" disabled>Já tem equipe</button>'
+      : `<button class="jr-online-acao" data-eq-convidar="${esc(uid)}">🛡️ Convidar</button>`;
+    const lista = eqTela.busca.trim()
+      ? (!r ? '<li class="jr-online-vazio">Digite pelo menos 3 letras do nome.</li>'
+        : r.lista.map(a => `<li><span class="jr-rosto eq-rosto">👤</span><span class="jr-online-nome">${esc(a.rotulo)}</span><span class="jr-online-det">${esc(a.nome)}</span>
+          <span class="jr-amigo-acoes">${botao(a.uid)}</span></li>`).join('') || '<li class="jr-online-vazio">Ninguém com esse nome.</li>')
+      : [...amigos].filter(u => !naEquipeEq(eq, u)).map(u => `<li><span class="jr-rosto eq-rosto">🤝</span><span class="jr-online-nome">${esc(rotuloColega(u, regs[u]))}</span>
+          <span class="jr-online-det">${esc(nomeVisivel(turmaDoUid(u)))} · amigo</span><span class="jr-amigo-acoes">${botao(u)}</span></li>`).join('')
+        || '<li class="jr-online-vazio">Busque um colega pelo nome.</li>';
+    convidar = `<p class="eq-sub">➕ Convidar</p><input class="vila-busca-txt" id="equipe-busca" type="search" placeholder="Nome do colega (todas as turmas)" autocomplete="off" value="${esc(eqTela.busca)}"/>
+      <ol class="jr-online-itens eq-lista" id="equipe-busca-lista">${lista}</ol>`;
+  }
+  const nomeInfo = eq.nome_pedido ? `<p class="eq-pedido">⏳ "${esc(eq.nome_pedido)}" aguardando aprovação da professora</p>`
+    : eq.nome_recusado ? '<p class="eq-pedido recusado">😕 Seu nome não foi aprovado, tente outro.</p>' : '';
+  el.innerHTML = `${msg}<div class="eq-previa">${htmlEmblema(eq.emblema, eq.cor, 'eq-grande')}<div><b>${esc(eq.nome)}</b><small>${membros.length} de ${MAX_MEMBROS_EQ} alunos</small></div></div>
+    ${nomeInfo}
+    ${equipeValeEq(eq) ? '' : '<p class="eq-dica">Convide pelo menos 1 colega: a torre e os duelos em grupo precisam de 2 ou 3 alunos.</p>'}
+    <ol class="jr-online-itens eq-lista">${membros.sort((a, b) => Number(b === eq.dono) - Number(a === eq.dono)).map(linhaM).join('')}${conv}</ol>
+    ${dono ? `<p class="eq-sub">✏️ Pedir um nome <small>(a professora aprova)</small></p>
+      <div class="eq-nome"><input class="vila-busca-txt" id="equipe-nome" maxlength="${NOME_MAX_EQ}" placeholder="Até ${NOME_MAX_EQ} letras" autocomplete="off" value="${esc(eqTela.pedido)}"/>
+        <button class="jr-btn jr-btn-ouro" data-eq-acao="pedir">${eq.nome_pedido ? 'Trocar pedido' : 'Pedir'}</button></div>
+      <p class="eq-sub">🎨 Emblema e cor</p>${htmlEscolhaEmblema()}` : ''}
+    ${convidar}
+    ${convites ? `<p class="eq-sub">📨 Convites recebidos <small>(saia desta equipe para aceitar outra)</small></p><ol class="jr-online-itens eq-lista">${convites}</ol>` : ''}
+    <button class="jr-btn ${eqTela.sair ? 'eq-sair-certeza' : 'jr-btn-sec'} eq-sair" data-eq-acao="sair">${eqTela.sair ? 'Tem certeza? Toque de novo para sair' : '🚪 Sair da equipe'}</button>`;
+}
+// um erro do banco ou da regra → a mensagem na tela
+async function acaoEquipe(f, ok) {
+  try { const r = await f(); eqTela.msg = ''; if (ok) avisoPet(typeof ok === 'function' ? ok(r) : ok); tocar('clique'); }
+  catch (e) { if (e?.code) console.warn('[jogo-revisao] equipe', e.code); eqTela.msg = e?.message && !/permission/i.test(e.message) ? e.message : 'Não deu agora. Tente de novo.'; }
+  if (!$('equipe').hidden) renderEquipe();
+}
+function cliqueEquipe(e) {
+  if (e.target === $('equipe') || e.target.closest('[data-fechar="equipe"]')) { $('equipe').hidden = true; return; }
+  const em = e.target.closest('[data-eq-emblema]'), co = e.target.closest('[data-eq-cor]');
+  if (em || co) {
+    if (em) eqTela.emblema = em.dataset.eqEmblema; else eqTela.cor = co.dataset.eqCor;
+    if (minhaEquipe && souDono()) acaoEquipe(() => editarEquipeEq(teste, equipeId, { emblema: eqTela.emblema, cor: eqTela.cor }));
+    else { tocar('clique'); renderEquipe(); }
+    return;
+  }
+  const sim = e.target.closest('[data-eqc-sim]'), nao = e.target.closest('[data-eqc-nao]');
+  if (sim) { aceitarConviteEquipe(sim.dataset.eqcSim); return; }
+  if (nao) { recusarConviteEquipe(nao.dataset.eqcNao); return; }
+  const cv = e.target.closest('[data-eq-convidar]');
+  if (cv && !cv.disabled) {
+    const u = cv.dataset.eqConvidar; cv.disabled = true;
+    acaoEquipe(() => convidarEq(teste, equipeId, minhaEquipe, u, nomeRanking()), `🛡️ Convite enviado para ${nomeAlunoEq(u)}!`).then(() => lerAlunosEquipe());
+    return;
+  }
+  const ca = e.target.closest('[data-eq-cancelar]');
+  if (ca) { acaoEquipe(() => cancelarConviteEq(teste, equipeId, ca.dataset.eqCancelar)); return; }
+  const ti = e.target.closest('[data-eq-tirar]');
+  if (ti) {
+    if (ti.dataset.certeza !== '1') { ti.dataset.certeza = '1'; ti.textContent = 'Tirar mesmo?'; return; }
+    const u = ti.dataset.eqTirar;
+    acaoEquipe(() => expulsarEq(teste, equipeId, u), `${nomeAlunoEq(u)} saiu da equipe.`);
+    return;
+  }
+  const ac = e.target.closest('[data-eq-acao]')?.dataset.eqAcao;
+  if (ac === 'criar') acaoEquipe(() => criarEquipeEq(teste, sessao.uid, { emblema: eqTela.emblema, cor: eqTela.cor }), '🛡️ Equipe criada! Agora convide 1 ou 2 colegas.');
+  else if (ac === 'pedir') {
+    const v = $('equipe-nome').value;
+    acaoEquipe(async () => { const n = await pedirNomeEq(teste, equipeId, v); eqTela.pedido = ''; return n; }, (n) => `⏳ "${n}" foi para a professora aprovar.`);
+  } else if (ac === 'sair') {
+    if (!eqTela.sair) { eqTela.sair = true; tocar('clique'); renderEquipe(); return; }
+    eqTela.sair = false;
+    acaoEquipe(() => sairDaEquipeEq(teste, equipeId, sessao.uid), (r) => r === 'apagada' ? 'Você saiu. A equipe ficou com 1 aluno e foi desfeita.' : 'Você saiu da equipe.');
+  }
+}
+async function aceitarConviteEquipe(id) {
+  delete convitesEquipe[id];
+  await acaoEquipe(() => aceitarConviteEq(teste, sessao.uid, id), (eq) => `🛡️ Você entrou na ${eq?.nome || 'equipe'}!`);
+}
+function recusarConviteEquipe(id) {
+  delete convitesEquipe[id];
+  recusarConviteEq(teste, sessao.uid, id).catch(e => console.warn('[jogo-revisao] recusar convite de equipe', e?.code || e));
+  tocar('clique');
+  if (!$('equipe').hidden) renderEquipe();
+}
+// o convite recebido: um por vez, quando nada estiver aberto (como o pedido de amizade); com equipe, ficam na tela da equipe
+function mostrarConviteEquipe() {
+  if (!$('equipe-convite').hidden) return;
+  while (filaEquipe.length && !convitesEquipe[filaEquipe[0]]) filaEquipe.shift();
+  if (!filaEquipe.length || minhaEquipe) return;
+  if (perguntaAberta || transicionando || sobreposicaoAberta()) { clearTimeout(mostrarConviteEquipe.t); mostrarConviteEquipe.t = setTimeout(mostrarConviteEquipe, 2000); return; }
+  const id = filaEquipe[0], c = convitesEquipe[id];
+  $('equipe-conv-txt').innerHTML = `🛡️ <b>${esc(nomeVisivel(c.de) || 'Um colega')}</b> convidou você para a equipe ${htmlEmblema(c.emblema, c.cor)} <b>${esc(c.nome || 'Equipe')}</b>`;
+  $('equipe-convite').dataset.id = id;
+  $('equipe-convite').hidden = false;
+  tocar('clique');
+}
+function responderConviteEquipe(sim) {
+  const id = $('equipe-convite').dataset.id;
+  $('equipe-convite').hidden = true;
+  filaEquipe.shift();
+  if (id && convitesEquipe[id]) { if (sim) aceitarConviteEquipe(id); else recusarConviteEquipe(id); }
+  setTimeout(mostrarConviteEquipe, 400);
 }
 
 // ── 🎓 só a conta da professora: quem está no site (outros jogos) e a busca de alunos (com 🏠 Visitar) ──
@@ -6103,7 +6354,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !!torreModal || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('amigo-presente').hidden || !$('cs-visitas-escolha').hidden;
+  perguntaAberta || !!torreModal || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('equipe').hidden || !$('equipe-convite').hidden || !$('amigo-presente').hidden || !$('cs-visitas-escolha').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -12712,6 +12963,17 @@ function ligarVila() {
   $('vila-balao').addEventListener('click', cliqueBalaoVila);
   $('vila-convite').addEventListener('click', (e) => { const b = e.target.closest('[data-conv]'); if (b) responderConviteVila(b.dataset.conv === 'aceitar'); });
   $('amizade-pedido').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-amz]'); if (b) responderAmizade(b.dataset.amz === 'sim'); });   // 🤝 (PROMPT-183)
+  $('equipe-convite').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-eqc]'); if (b) responderConviteEquipe(b.dataset.eqc === 'sim'); });   // 🛡️ (PROMPT-235)
+  $('equipe').addEventListener('click', (e) => { e.stopPropagation(); cliqueEquipe(e); });
+  $('equipe').addEventListener('input', (e) => {
+    if (e.target.id === 'equipe-nome') { eqTela.pedido = e.target.value; return; }
+    if (e.target.id !== 'equipe-busca') return;
+    eqTela.busca = e.target.value;
+    const pos = e.target.selectionStart; renderEquipe();
+    const i = $('equipe-busca'); if (i) { i.focus(); try { i.setSelectionRange(pos, pos); } catch (_) {} }
+  });
+  $('equipe').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && e.target.id === 'equipe-nome') $('equipe').querySelector('[data-eq-acao="pedir"]')?.click(); });
+  $('btn-equipe').addEventListener('click', (e) => { e.stopPropagation(); abrirEquipe(); });
   $('amigo-presente').addEventListener('click', (e) => { e.stopPropagation(); cliquePresenteAmigo(e); });
   $('cs-arquivo').addEventListener('change', (e) => { const f = e.target.files?.[0]; if (f) enviarFotoCasa(f); });   // 📷 (PROMPT-184)
   $('visita-pedido').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-ped]'); if (b) responderPedidoVisita(b.dataset.ped === 'deixar'); });   // 🚪 (PROMPT-168)
@@ -17845,7 +18107,8 @@ async function abrirPerfilColega(c) {
     ${lista.length ? `<div class="pf-ins">${lista.map(k => `<img src="${IMG}/insignias/insignia-${k}.webp" class="${casa.ins[k]?.d ? 'dourada' : ''}" alt="" draggable="false"/>`).join('')}</div>` : ''}
     ${pet ? `<div class="pf-linha pf-pet"><span class="jr-icone-pet"><img src="${srcIcone(forma)}" alt="" draggable="false" data-icone-pet${r.pet_tinta ? ` data-tinta="${esc(r.pet_tinta)}"` : ''}/></span>
       <span>🐾 <b>${esc(r.pet_nome || NOME_PET[pet])}</b>${r.pet_nome && r.pet_nome !== NOME_PET[pet] ? ` <small>(${NOME_PET[pet]})</small>` : ''}${Number(r.pet_nivel) > 0 ? ` · ❤️ ${Number(r.pet_nivel)}` : ''}${Number(r.n_pets) > 1 ? ` · ${Number(r.n_pets)} pets` : ''}</span></div>` : ''}
-    ${seq > 0 ? `<div class="pf-linha">🔥 <b>${seq}</b> dia${seq === 1 ? '' : 's'} seguido${seq === 1 ? '' : 's'}</div>` : ''}`;
+    ${seq > 0 ? `<div class="pf-linha">🔥 <b>${seq}</b> dia${seq === 1 ? '' : 's'} seguido${seq === 1 ? '' : 's'}</div>` : ''}
+    ${r.equipe?.e ? `<div class="pf-linha">🛡️ Equipe: ${htmlRotuloEquipe({ emblema: r.equipe.e, cor: r.equipe.c, nome: r.equipe.n })}</div>` : ''}`;
   const ti = $('perfil-corpo').querySelector('img[data-tinta]');
   if (ti) aplicarTinta(ti, ti.dataset.tinta);
   $('perfil-colega').hidden = false;

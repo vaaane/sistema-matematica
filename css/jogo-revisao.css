@@ -5753,3 +5753,38 @@ html.jr-deitado .jr-mp-info > .jr-mp-balao { font-size: 15px; }
 @media (prefers-reduced-motion: reduce) { #jr-app .ex-grio.falando .ex-grio-som { animation: none; opacity: 1; } #jr-app .ex-grio-chama { animation: none; } }
 
 #jr-app .ex-grio-ui[hidden], #jr-app .ex-grio-ui [hidden] { display: none !important; }
+
+/* 🛡️ PROMPT-235: equipes — o emblema (emoji num círculo da cor da equipe), a tela da equipe e o convite */
+.eq-emb { display: inline-grid; place-items: center; width: 1.45em; height: 1.45em; border-radius: 50%; background: var(--eq, #7c5cfc);
+  box-shadow: 0 0 0 2px rgba(255,255,255,.85), 0 1px 3px rgba(0,0,0,.45); font-size: .78em; line-height: 1; vertical-align: middle; text-shadow: none; }
+.eq-emb.eq-mapa { font-size: .95em; margin-left: 2px; }
+.eq-emb.eq-grande { width: 64px; height: 64px; font-size: 36px; flex: none; box-shadow: 0 0 0 3px #fff, 0 0 18px var(--eq); }
+.jr-online-itens .jr-rosto .eq-emb { width: 26px; height: 26px; font-size: 15px; }
+.eq-caixa { max-height: calc(var(--jr-alt, 100dvh) - 16px); }
+.eq-corpo { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 2px 2px 6px; }
+.eq-corpo .eq-lista { max-height: none; overflow: visible; }
+.eq-previa { display: flex; align-items: center; gap: 14px; padding: 8px 10px; border-radius: 14px; background: rgba(124,92,252,.14); }
+.eq-previa b { display: block; font: 700 24px 'Rajdhani', sans-serif; color: #fff; }
+.eq-previa small { display: block; font-size: var(--jr-min, 15px); color: #c9cde0; }
+.eq-sub { margin: 6px 0 0; font: 700 17px 'Rajdhani', sans-serif; color: var(--jr-ouro); }
+.eq-sub small { font: 400 var(--jr-min, 14px) 'Inter', sans-serif; color: #c9cde0; }
+.eq-dica, .eq-msg, .eq-pedido { margin: 0; font-size: var(--jr-min, 15px); color: #c9cde0; }
+.eq-msg { padding: 8px 10px; border-radius: 10px; background: rgba(255,77,109,.18); border: 1px solid #ff4d6d; color: #fff; }
+.eq-pedido { padding: 6px 10px; border-radius: 10px; background: rgba(255,215,0,.12); color: #ffe680; }
+.eq-pedido.recusado { background: rgba(255,123,46,.15); color: #ffb98a; }
+.eq-grade { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.eq-op { min-height: 44px; font-size: 24px; border-radius: 12px; border: 2px solid transparent; background: rgba(255,255,255,.08); cursor: pointer; }
+.eq-op.sel { border-color: var(--jr-ouro); background: rgba(255,215,0,.16); }
+.eq-cores { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.eq-cor { width: 34px; height: 34px; border-radius: 50%; background: var(--eq); border: 3px solid transparent; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.eq-cor.sel { border-color: #fff; transform: scale(1.12); }
+.eq-nome { display: flex; gap: 6px; }
+.eq-nome input { flex: 1; min-width: 0; }
+.eq-criar, .eq-sair { align-self: center; margin-top: 4px; }
+.eq-sair-certeza { background: #ff4d6d; border-color: #ff4d6d; color: #fff; }
+@media (max-width: 420px) { .eq-grade { grid-template-columns: repeat(4, 1fr); } }
+.jr-online-itens .jr-rosto.eq-rosto { display: grid; place-items: center; overflow: visible; font-size: 18px; background: none; border: 0; margin: 0; }
+
+/* ⏳ PROMPT-235: o nome do pet esperando a aprovação da professora (só o dono do pet vê) */
+.mp-nome-pedido { font: 600 var(--jr-min, 14px) 'Inter', sans-serif; color: #ffe680; line-height: 1.25; margin-top: 2px; }
+.mp-nome-pedido.recusado { color: #ffb98a; }

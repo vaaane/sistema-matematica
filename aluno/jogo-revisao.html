@@ -295,6 +295,7 @@
           <button class="ins-btn" id="btn-trocar-pet" hidden><span class="ico">🐾</span>Meus pets</button>
           <button class="ins-btn" id="btn-album" hidden><span class="ico">📒</span>Álbum</button>
           <button class="ins-btn" id="btn-premios-torre" hidden><span class="ico">🏆</span>Prêmios da Torre</button>
+          <button class="ins-btn" id="btn-equipe" hidden><span class="ico">🛡️</span>Equipe</button>
         </nav>
         <div class="ins-selo" id="estojo-especial" hidden></div>
         <div class="ins-placar" id="estojo-placar"></div>
@@ -356,6 +357,19 @@
     <div class="jr-pet-escolha-caixa pres-caixa ap-caixa">
       <div class="al-topo"><b id="ap-tit">🎁 Presente</b><button class="bt-lista-x" data-fechar="amigo-presente" aria-label="Fechar">✕</button></div>
       <div id="ap-corpo"></div>
+    </div>
+  </div>
+  <!-- 🛡️ Equipe (PROMPT-235): criar, convidar, sair; o dono pede o nome (a professora aprova), muda emblema e cor e tira membros -->
+  <div id="equipe" class="al-fundo" hidden role="dialog" aria-label="Equipe">
+    <div class="al-caixa cs-menu-caixa eq-caixa">
+      <div class="al-topo"><b>🛡️ Equipe</b><button class="bt-lista-x" data-fechar="equipe" aria-label="Fechar">✕</button></div>
+      <div class="eq-corpo" id="equipe-corpo"></div>
+    </div>
+  </div>
+  <div id="equipe-convite" class="jr-pet-escolha" hidden role="dialog" aria-label="Convite de equipe">
+    <div class="jr-pet-escolha-caixa pres-caixa">
+      <div class="jr-pet-escolha-titulo" id="equipe-conv-txt"></div>
+      <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-eqc="sim">✔ Aceitar</button><button class="jr-btn jr-btn-sec" data-eqc="nao">✖ Recusar</button></div>
     </div>
   </div>
   <!-- 🏅 Perfil do colega (PROMPT-168) -->
@@ -991,7 +1005,7 @@
       </div>
       <div class="jr-mp-info">
         <div class="jr-mp-cab">
-          <div class="jr-mp-cab-nome"><div class="jr-mp-nome"><span id="mp-nome"></span><button class="jr-mp-editar" id="mp-editar" title="Dar um nome" aria-label="Dar um nome">✏️</button></div></div>
+          <div class="jr-mp-cab-nome"><div class="jr-mp-nome"><span id="mp-nome"></span><button class="jr-mp-editar" id="mp-editar" title="Dar um nome" aria-label="Dar um nome">✏️</button></div><div class="mp-nome-pedido" id="mp-nome-pedido" hidden></div></div>
           <div class="mp-cab-dir"><div class="jr-moedas jr-mp-moedas" aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span id="mp-moedas" data-moedas-n>0</span></div>
             <button class="mp-bolsa-ic" id="mp-bolsa" aria-label="Bolsa" title="Bolsa"><img class="jr-item-img" data-icone="bolsa" alt="🎒" draggable="false"/><b id="mp-bolsa-n"></b></button></div>
           <button class="bt-lista-x jr-mp-x" id="mp-fechar" aria-label="Fechar">✕</button>
@@ -1065,7 +1079,7 @@
       </div>
       <!-- Nome do pet -->
       <div class="mp-sub mp-nomear" id="mp-nomear" hidden>
-        <div class="mp-sub-topo"><b>✏️ Nome do pet</b><span>De 2 a 12 letras</span></div>
+        <div class="mp-sub-topo"><b>✏️ Nome do pet</b><span>De 2 a 12 letras · a professora aprova</span></div>
         <input type="text" id="mp-nome-input" maxlength="12" autocomplete="off" spellcheck="false"/>
         <div class="mp-nome-erro" id="mp-nome-erro"></div>
         <div class="jr-mp-botoes">

@@ -110,11 +110,24 @@ export const nivelAmizade = (pontos) => 1 + Math.floor((Number(pontos) || 0) / (
 // Nome do pet: 2–12 letras (só letras, espaços e acentos), sem palavras proibidas
 const semAcento = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 // o filtro de palavras (nome_pet.proibidas): cada palavra do texto e o texto todo junto (sem espaços). Também nos
-// títulos, textos e no nome da sala da Exposição (PROMPT-EXPOSICAO-2)
+// títulos, textos e no nome da sala da Exposição (PROMPT-EXPOSICAO-2) e no nome da equipe (PROMPT-235).
+// PROMPT-235: também pega números e símbolos no lugar de letras (p0rr4, $, @), letras separadas ("p u t a", "p.u.t.a"),
+// letras repetidas ("merdaaa") e o plural ("vagabundos", "cuzões")
+const LEET = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b', '@': 'a', '$': 's', '!': 'i' };
+const semRepetir = (s) => s.replace(/(.)\1+/g, '$1');
 export function temPalavraProibida(txt) {
-  const proib = new Set((L?.nome_pet?.proibidas || []).map(semAcento));
-  const t = semAcento(String(txt || '')).replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
-  return !!t && (t.split(' ').some(p => proib.has(p)) || proib.has(t.replace(/ /g, '')));
+  const lista = (L?.nome_pet?.proibidas || []).map(semAcento);
+  const proib = new Set([...lista, ...lista.map(semRepetir)]);
+  const base = semAcento(String(txt || ''));
+  for (const v of [base, base.replace(/[0-9@$!]/g, c => LEET[c] || c)]) {
+    const t = v.replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!t) continue;
+    const ps = t.split(' '), juntas = [];
+    let seq = '';   // os pedaços de uma letra seguidos viram uma palavra
+    for (const p of [...ps, '--']) { if (p.length === 1) seq += p; else { if (seq.length > 1) juntas.push(seq); seq = ''; } }
+    if ([...ps, ...juntas, t.replace(/ /g, '')].some(p => [p, semRepetir(p), p.replace(/oes$/, 'ao'), p.replace(/s$/, '')].some(x => proib.has(x)))) return true;   // e o plural
+  }
+  return false;
 }
 export function validarNomePet(txt) {
   const cfg = L?.nome_pet || {};

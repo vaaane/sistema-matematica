@@ -13,6 +13,10 @@
   <style>
     .filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
     .filtros select{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:9px 13px;font-size:14px;font-family:'Inter',sans-serif}
+    .eq-emb{display:inline-grid;place-items:center;width:1.6em;height:1.6em;border-radius:50%;background:var(--eq,#7c5cfc);box-shadow:0 0 0 2px rgba(255,255,255,.8);font-size:.9em;line-height:1;vertical-align:middle}
+    .eqp-teste{display:inline-flex;gap:6px;align-items:center;margin:0 0 12px;font-size:13px;color:var(--text-muted);cursor:pointer}
+    .eqp-acoes{display:flex;gap:6px;flex-wrap:wrap}
+    .eqp-pedido{color:#ffd700}
     .btn-sec{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer}
     .btn-sec:hover{border-color:var(--purple)}
     .btn-pri{background:linear-gradient(135deg,var(--purple),var(--purple-dark));color:#fff;border:0;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer}
@@ -204,6 +208,8 @@
         <button class="aba" data-aba="antes-depois">📊 Antes e depois</button>
         <button class="aba" data-aba="programe">🤖 Programe o pet</button>
         <button class="aba" data-aba="praca">🏛️ Praça</button>
+        <button class="aba" data-aba="nomes-aprovar">✔ Nomes para aprovar <b id="nomes-aprovar-n" class="ouro"></b></button>
+        <button class="aba" data-aba="equipes">🛡️ Equipes</button>
         <button class="aba" data-aba="config">⚙️ Configurar o jogo</button>
       </div>
 
@@ -272,6 +278,18 @@
         <div id="achados" style="margin-top:16px"></div>
       </section>
 
+      <!-- Aba — ✔ Nomes para aprovar (PROMPT-235): os nomes pedidos para as equipes e para os pets, separados -->
+      <section class="painel" id="aba-nomes-aprovar" hidden>
+        <label class="eqp-teste"><input type="checkbox" id="nomes-teste"/> Ver os pedidos do modo teste</label>
+        <div id="nomes-aprovar"><div class="empty">Carregando…</div></div>
+      </section>
+
+      <!-- Aba — 🛡️ Equipes (PROMPT-235): nomes para aprovar, todas as equipes (todas as turmas), renomear e apagar -->
+      <section class="painel" id="aba-equipes" hidden>
+        <label class="eqp-teste"><input type="checkbox" id="eqp-teste"/> Ver as equipes do modo teste</label>
+        <div id="equipes"><div class="empty">Carregando…</div></div>
+      </section>
+
       <!-- Aba — Praça do Encontro: quem está lá agora, desafios da semana e liga/desliga -->
       <section class="painel" id="aba-praca" hidden>
         <div class="bloco">
@@ -330,6 +348,8 @@ import { notaJogoRevisao, formatarNota, TOTAL_INSIGNIAS, XP_META } from "/js/jog
 import { gerarUma, assuntoDe } from "/js/jogo-revisao/geradores.js";
 import { NOME_PET } from "/js/jogo-revisao/pets.js";
 import { semanaPesca } from "/js/jogo-revisao/pesca.js";
+import { definirLoja, validarNomePet } from "/js/jogo-revisao/loja.js";
+import { htmlEmblema, membrosDe, lerTodas, aprovarNome, recusarNome, renomearEquipe, apagarEquipe, MAX_MEMBROS } from "/js/jogo-revisao/equipes.js";   // 🛡️ PROMPT-235
 
 if (!requireProfessor()) throw new Error("sem sessão de professor");
 renderSidebarProfessor("sidebar", "jogo_revisao");
@@ -1202,10 +1222,138 @@ $("btn-recalcular").addEventListener("click", async () => {
   b.disabled = false;
 });
 
+// ── 🛡️ Equipes (PROMPT-235) ─────────────────────────────────
+// jogo_revisao_equipes (modo teste: _teste). Nomes para aprovar no topo (✔ vira o nome · ✖ os membros veem "tente outro");
+// depois todas as equipes, de todas as turmas, com ✏️ Renomear (passa pelo filtro) e 🗑️ Apagar (os membros ficam sem equipe).
+let equipes = null, eqTeste = false;
+try { eqTeste = localStorage.getItem("p_jr_eq_teste") === "1"; } catch (_) {}
+$("eqp-teste").checked = eqTeste;
+const nomeDoUid = (uid) => String(uid || "").split("_").slice(1).join(" ") || uid;
+const turmaDoUid = (uid) => String(uid || "").split("_")[0] || "";
+async function carregarEquipes() {
+  $("equipes").innerHTML = '<div class="empty">Carregando…</div>';
+  try {
+    if (!carregarEquipes.loja) { definirLoja(await fetch("/dados/jogo/loja.json").then(r => r.json())); carregarEquipes.loja = true; }   // o filtro de palavrões
+    equipes = await lerTodas(eqTeste);
+  } catch (e) { console.error(e); equipes = null; }
+  renderEquipes();
+}
+function renderEquipes() {
+  const el = $("equipes");
+  if (!equipes) { el.innerHTML = '<div class="empty">Não deu para ler as equipes (confira as regras do banco).</div>'; return; }
+  const lista = Object.entries(equipes).filter(([, e]) => e && e.membros).map(([id, e]) => ({ id, e, m: membrosDe(e) }))
+    .sort((a, b) => (Number(a.e.criada) || 0) - (Number(b.e.criada) || 0));
+  const membrosHtml = (x) => x.m.map(u => `${esc(nomeDoUid(u))}${u === x.e.dono ? " 👑" : ""} <span class="muted">${esc(turmaDoUid(u))}</span>`).join("<br>");
+  const turmas = (x) => [...new Set(x.m.map(turmaDoUid))].join(", ");
+  el.innerHTML = `<div class="bloco"><h3>🛡️ Equipes · ${lista.length}</h3>
+      ${lista.length ? `<div class="tabela-wrap"><table class="jr bt"><thead><tr><th>Equipe</th><th>Membros</th><th>Turma</th><th></th></tr></thead><tbody>
+        ${lista.map(x => `<tr><td>${htmlEmblema(x.e.emblema, x.e.cor)} <b>${esc(x.e.nome)}</b>${x.m.length < 2 ? ' <span class="muted">(só o dono)</span>' : ""}<br><span class="muted">${x.m.length}/${MAX_MEMBROS} alunos</span></td>
+          <td>${membrosHtml(x)}</td><td>${esc(turmas(x))}</td>
+          <td><div class="eqp-acoes"><button class="btn-sec" data-eq-renomear="${esc(x.id)}">✏️ Renomear</button><button class="btn-sec" data-eq-apagar="${esc(x.id)}">🗑️ Apagar</button></div></td></tr>`).join("")}
+      </tbody></table></div>` : '<div class="sub">Nenhuma equipe ainda.</div>'}
+      <div class="legenda">O aluno vê o nome novo na hora (ou na próxima vez que entrar). Apagar desfaz a equipe: os membros ficam sem equipe e os convites somem.</div></div>`;
+}
+$("equipes").addEventListener("click", async (ev) => {
+  const b = ev.target.closest("button[data-eq-renomear], button[data-eq-apagar]");
+  if (!b) return;
+  const id = b.dataset.eqRenomear || b.dataset.eqApagar, e = equipes?.[id];
+  if (!e) return;
+  try {
+    if (b.dataset.eqRenomear) {
+      const nome = prompt(`Novo nome para "${e.nome}" (até 20 letras):`, e.nome);
+      if (nome === null) return;
+      await renomearEquipe(eqTeste, id, nome);
+    } else {
+      if (!confirm(`Apagar a equipe "${e.nome}"? Os membros ficam sem equipe.`)) return;
+      b.disabled = true; await apagarEquipe(eqTeste, id);
+    }
+  } catch (err) { console.error(err); alert(err?.message && !/permission/i.test(err.message) ? err.message : "Não foi possível salvar (confira as regras do banco)."); }
+  carregarEquipes();
+});
+function trocarTeste(v) {
+  eqTeste = v; $("eqp-teste").checked = $("nomes-teste").checked = v;
+  try { localStorage.setItem("p_jr_eq_teste", v ? "1" : "0"); } catch (_) {}
+  if (!$("aba-equipes").hidden) carregarEquipes(); else carregarNomes();
+}
+$("eqp-teste").addEventListener("change", () => trocarTeste($("eqp-teste").checked));
+$("nomes-teste").addEventListener("change", () => trocarTeste($("nomes-teste").checked));
+$("nomes-teste").checked = eqTeste;
+
+// ── ✔ Nomes para aprovar (PROMPT-235) ───────────────────────
+// equipes: jogo_revisao_equipes/{id}/nome_pedido · pets: jogo_revisao_nomes_pets/{uid}__{pet} (o pedido) e o pet do aluno em
+// jogo_revisao/{uid}/pets/conquistados/{pet} (modo teste: modo_teste_historico/{uid}/jogo_revisao/…).
+// ✔ o pedido vira o nome (nome_aviso = 'aprovado') · ✖ nome_recusado = true (nome_aviso = 'recusado': "Seu nome não foi aprovado, tente outro")
+let pedidosPets = null;
+const basePets = () => (eqTeste ? "jogo_revisao_nomes_pets_teste" : "jogo_revisao_nomes_pets");
+const caminhoPet = (uid, pet) => `${eqTeste ? `modo_teste_historico/${uid}/jogo_revisao` : `jogo_revisao/${uid}`}/pets/conquistados/${pet}`;
+async function carregarNomes() {
+  $("nomes-aprovar").innerHTML = '<div class="empty">Carregando…</div>';
+  try {
+    if (!carregarEquipes.loja) { definirLoja(await fetch("/dados/jogo/loja.json").then(r => r.json())); carregarEquipes.loja = true; }
+    const [eqs, pp] = await Promise.all([lerTodas(eqTeste), get(ref(db, basePets()))]);
+    equipes = eqs; pedidosPets = pp.exists() ? pp.val() || {} : {};
+  } catch (e) { console.error(e); equipes = null; pedidosPets = null; }
+  renderNomes();
+}
+function renderNomes() {
+  const el = $("nomes-aprovar");
+  if (!equipes || !pedidosPets) { el.innerHTML = '<div class="empty">Não deu para ler os pedidos (confira as regras do banco).</div>'; return; }
+  const eqs = Object.entries(equipes).filter(([, e]) => e?.nome_pedido).map(([id, e]) => ({ id, e, m: membrosDe(e) }));
+  const pets = Object.entries(pedidosPets).filter(([, v]) => v?.uid && v.pet && v.nome).sort((a, b) => (Number(a[1].data) || 0) - (Number(b[1].data) || 0));
+  const n = eqs.length + pets.length;
+  $("nomes-aprovar-n").textContent = n ? String(n) : "";
+  const botoes = (tipo, k) => `<div class="eqp-acoes"><button class="btn-sec" data-aprovar="${tipo}" data-k="${esc(k)}">✔ Aprovar</button><button class="btn-sec" data-recusar="${tipo}" data-k="${esc(k)}">✖ Recusar</button></div>`;
+  el.innerHTML = `<div class="bloco"><h3>🛡️ Equipes · ${eqs.length}</h3>
+      ${eqs.length ? `<div class="tabela-wrap"><table class="jr bt"><thead><tr><th>Equipe agora</th><th>Nome pedido</th><th>Membros</th><th></th></tr></thead><tbody>
+        ${eqs.map(x => `<tr><td>${htmlEmblema(x.e.emblema, x.e.cor)} ${esc(x.e.nome)}</td><td><b class="eqp-pedido">${esc(x.e.nome_pedido)}</b></td>
+          <td>${x.m.map(u => `${esc(nomeDoUid(u))}${u === x.e.dono ? " 👑" : ""} <span class="muted">${esc(turmaDoUid(u))}</span>`).join("<br>")}</td><td>${botoes("equipe", x.id)}</td></tr>`).join("")}
+      </tbody></table></div>` : '<div class="sub">Nenhum nome de equipe esperando.</div>'}</div>
+    <div class="bloco"><h3>🐾 Pets · ${pets.length}</h3>
+      ${pets.length ? `<div class="tabela-wrap"><table class="jr bt"><thead><tr><th>Aluno</th><th>Turma</th><th>Pet</th><th>Nome pedido</th><th></th></tr></thead><tbody>
+        ${pets.map(([k, v]) => `<tr><td class="aluno">${esc(v.aluno || nomeDoUid(v.uid))}</td><td>${esc(v.turma || turmaDoUid(v.uid))}</td><td>${esc(NOME_PET[v.pet] || v.pet)}</td>
+          <td><b class="eqp-pedido">${esc(v.nome)}</b></td><td>${botoes("pet", k)}</td></tr>`).join("")}
+      </tbody></table></div>` : '<div class="sub">Nenhum nome de pet esperando.</div>'}
+      <div class="legenda">Até aprovar, os colegas veem o nome de antes (ou o da espécie). Recusado, o aluno vê "Seu nome não foi aprovado, tente outro" e pode pedir outro.</div></div>`;
+}
+async function decidirNomePet(k, aprova) {
+  const v = pedidosPets?.[k];
+  if (!v) return;
+  const caminho = caminhoPet(v.uid, v.pet), s = await get(ref(db, caminho)), p = { [`${basePets()}/${k}`]: null };
+  if (s.exists() && s.val()?.nome_pedido === v.nome) {   // o pet ainda existe e o pedido é o mesmo (o aluno não trocou depois)
+    if (aprova) {
+      const r = validarNomePet(v.nome);
+      if (r.erro) throw new Error(r.erro);
+      Object.assign(p, { [`${caminho}/nome`]: r.nome, [`${caminho}/nome_pedido`]: null, [`${caminho}/nome_recusado`]: null, [`${caminho}/nome_aviso`]: "aprovado" });
+    } else Object.assign(p, { [`${caminho}/nome_pedido`]: null, [`${caminho}/nome_recusado`]: true, [`${caminho}/nome_aviso`]: "recusado" });
+  }
+  await update(ref(db), p);
+}
+$("nomes-aprovar").addEventListener("click", async (ev) => {
+  const b = ev.target.closest("button[data-aprovar], button[data-recusar]");
+  if (!b) return;
+  const tipo = b.dataset.aprovar || b.dataset.recusar, aprova = !!b.dataset.aprovar, k = b.dataset.k;
+  b.disabled = true;
+  try {
+    if (tipo === "equipe") { if (aprova) await aprovarNome(eqTeste, k); else await recusarNome(eqTeste, k); }
+    else await decidirNomePet(k, aprova);
+  } catch (err) { console.error(err); alert(err?.message && !/permission/i.test(err.message) ? err.message : "Não foi possível salvar (confira as regras do banco)."); }
+  carregarNomes();
+});
+// o número de pedidos esperando aparece na aba assim que a página abre
+(async () => {
+  try {
+    const [eqs, pp] = await Promise.all([lerTodas(eqTeste), get(ref(db, basePets()))]);
+    const n = Object.values(eqs).filter(e => e?.nome_pedido).length + (pp.exists() ? Object.keys(pp.val() || {}).length : 0);
+    $("nomes-aprovar-n").textContent = n ? String(n) : "";
+  } catch (_) {}
+})();
+
 // ── abas, turma e atualizar ─────────────────────────────────
 document.querySelectorAll(".aba").forEach(a => a.addEventListener("click", () => {
   document.querySelectorAll(".aba").forEach(x => x.classList.toggle("ativa", x === a));
   document.querySelectorAll(".painel").forEach(p => { p.hidden = p.id !== "aba-" + a.dataset.aba; });
+  if (a.dataset.aba === "equipes") carregarEquipes();
+  if (a.dataset.aba === "nomes-aprovar") carregarNomes();
 }));
 sel.addEventListener("change", () => { try { localStorage.setItem("p_jr_turma", sel.value); } catch (_) {} montarTurma(); });
 $("btn-atualizar").addEventListener("click", async () => { if (await carregarDados()) { montarTurma(); renderConfig(); } });
