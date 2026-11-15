@@ -5853,3 +5853,40 @@ html.jr-deitado .jr-mp-info > .jr-mp-balao { font-size: 15px; }
 @media (max-width: 768px) { .deq-ops { grid-template-columns: repeat(2, 1fr); } .deq-q { font-size: 1.15rem; } }
 .deq-alerta { position: fixed; left: 50%; top: max(64px, calc(var(--sa-t, 0px) + 56px)); transform: translateX(-50%); z-index: 95; max-width: calc(100% - 32px); padding: 8px 16px; border-radius: 12px; background: #2a1a10; border: 2px solid #ff7b2e; color: #ffd2b0; font: 700 1.05rem Rajdhani, sans-serif; text-align: center; box-shadow: 0 6px 20px rgba(0, 0, 0, .5); pointer-events: none; animation: deq-alerta-in .25s ease-out; }
 @keyframes deq-alerta-in { from { opacity: 0; transform: translate(-50%, -8px); } }
+
+/* ── ❤️ Amizade com os NPCs (PROMPT-238) ── */
+.amz-coracoes { display: block; font-size: .78rem; letter-spacing: 1px; line-height: 1.2; }
+#pessoa-balao .amz-coracoes { margin: 1px 0 3px; }
+.amz-balao-hist { margin-top: 6px; padding: 6px 8px; border-radius: 10px; background: rgba(255, 92, 122, .14); border: 1px solid rgba(255, 92, 122, .55); font-style: italic; }
+.amz-festa { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 96; text-align: center; padding: 14px 22px; border-radius: 18px;
+  background: rgba(26, 14, 30, .94); border: 2px solid #ff5c7a; color: #fff; box-shadow: 0 10px 34px rgba(0, 0, 0, .55); pointer-events: none; animation: amz-entra .35s ease-out; max-width: calc(100% - 32px); }
+.amz-festa p { margin: 6px 0; font: 600 1.15rem Rajdhani, sans-serif; }
+.amz-festa b { color: #ffd700; }
+.amz-festa .amz-coracoes { font-size: 1.2rem; }
+.amz-festa-cor { font-size: 3rem; animation: amz-bate .6s ease-in-out infinite alternate; }
+@keyframes amz-entra { from { opacity: 0; transform: translate(-50%, -40%) scale(.85); } }
+@keyframes amz-bate { to { transform: scale(1.18); } }
+.amz-caixa { max-width: 560px; }
+.amz-corpo { overflow-y: auto; max-height: min(70dvh, 560px); padding: 4px 2px; }
+.amz-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.amz-linha { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 10px; border-radius: 12px; border: 1px solid #2e2e52; background: #1b1b36; color: inherit; cursor: pointer; text-align: left; }
+.amz-linha:hover { border-color: #7c5cfc; }
+.amz-rosto { width: 44px; height: 44px; flex: none; }
+.amz-quem { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.amz-quem b { font-family: Rajdhani, sans-serif; font-size: 1.05rem; }
+.amz-quem small, .amz-topo small { color: #a3a1c9; font-size: .78rem; }
+.amz-dir { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.amz-barra { display: block; width: 92px; height: 6px; border-radius: 3px; background: #2e2e52; overflow: hidden; }
+.amz-barra i { display: block; height: 100%; background: #ff5c7a; }
+.amz-vazio { text-align: center; color: #a3a1c9; margin: 18px 0; }
+.amz-voltar { margin-bottom: 8px; padding: 4px 10px; font-size: .85rem; }
+.amz-topo { display: flex; gap: 12px; align-items: center; }
+.amz-topo > div { display: flex; flex-direction: column; }
+.amz-topo b { font: 700 1.25rem Rajdhani, sans-serif; }
+.amz-busto { width: 72px; height: 72px; flex: none; }
+.amz-nivel { text-transform: capitalize; }
+.amz-pers { margin: 10px 0 6px; font-style: italic; color: #d8d6ff; }
+.amz-historias { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.amz-hist { padding: 8px 10px; border-radius: 10px; background: #1b1b36; border: 1px solid #2e2e52; }
+.amz-hist.tranca { color: #8a88b0; }
+.amz-presente { margin: 10px 0 0; color: #ffd700; }

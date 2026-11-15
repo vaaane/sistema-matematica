@@ -1,0 +1,856 @@
+{
+ "_nota": "Favores dos NPCs. nivel_min = nível de amizade com o NPC que oferece. Valores {vars}: [min, max, passo]; inteiros se passo omitido.",
+ "favores_dia_base": 2,
+ "favores_dia_por_amigo": {
+  "nivel": 3,
+  "mais": 1,
+  "max": 5
+ },
+ "corrente_por_semana": 1,
+ "moedas_base": {
+  "entrega": 8,
+  "recado": 6,
+  "achado": 10,
+  "pet_perdido": 10,
+  "cobranca": 14,
+  "compra": 14,
+  "tesouro": 0,
+  "corrente": 60
+ },
+ "multiplicador_nivel": [
+  1,
+  1.2,
+  1.4,
+  1.7,
+  2,
+  2.5
+ ],
+ "amizade_favor": {
+  "entrega": 4,
+  "recado": 4,
+  "achado": 5,
+  "pet_perdido": 5,
+  "cobranca": 6,
+  "compra": 6,
+  "tesouro": 6,
+  "corrente": 15
+ },
+ "amizade_destino": 2,
+ "chance_brinde": {
+  "nivel": 3,
+  "chance": 0.2,
+  "sorteio": "comum"
+ },
+ "tentativas_conta": 3,
+ "validade_horas": 24,
+ "favores": [
+  {
+   "id": "ent_bolo",
+   "tipo": "entrega",
+   "npc": "vovo_lurdes",
+   "nivel_min": 0,
+   "texto": "Querido, leva esse bolo de fubá pro Seu Antônio? Ele adora!",
+   "para": "seu_antonio",
+   "item": "🍰 Bolo de fubá",
+   "agradece": "Bolo da Lurdes! Ela lembrou de mim… obrigado, jovem."
+  },
+  {
+   "id": "ent_carta",
+   "tipo": "entrega",
+   "npc": "jorge",
+   "nivel_min": 0,
+   "texto": "Tô atrasado! Entrega essa carta pra Clara pra mim?",
+   "para": "clara",
+   "item": "✉️ Carta",
+   "agradece": "…uma carta pra mim? Obrigada…"
+  },
+  {
+   "id": "ent_isca",
+   "tipo": "entrega",
+   "npc": "seu_ze",
+   "nivel_min": 0,
+   "texto": "A Naira pediu umas iscas pra pescar no gelo. Leva pra ela?",
+   "para": "naira",
+   "item": "🪱 Iscas",
+   "agradece": "Iscas do Seu Zé! Agora sim vou pescar!"
+  },
+  {
+   "id": "ent_remedio",
+   "tipo": "entrega",
+   "npc": "dra_ana",
+   "nivel_min": 1,
+   "texto": "O Pipoca, cachorro do Seu Lauro, precisa desse remédio. Leva rapidinho?",
+   "para": "seu_lauro",
+   "item": "💊 Remédio do Pipoca",
+   "agradece": "O remédio do Pipoca! Você salvou o dia!"
+  },
+  {
+   "id": "ent_tinta",
+   "tipo": "entrega",
+   "npc": "lia",
+   "nivel_min": 0,
+   "texto": "O Jorginho tá sem tinta amarela. Leva essa lata pra ele?",
+   "para": "jorginho",
+   "item": "🎨 Lata de tinta",
+   "agradece": "Amarelo-ovo! Finalmente! Valeu!"
+  },
+  {
+   "id": "ent_marmita",
+   "tipo": "entrega",
+   "npc": "chef_paulo",
+   "nivel_min": 1,
+   "texto": "A obra tá com fome! Leva essa marmita pro Tiago?",
+   "para": "tiago",
+   "item": "🍱 Marmita",
+   "agradece": "Comida do Chef! Agora eu levanto 200 tijolos!"
+  },
+  {
+   "id": "ent_livro",
+   "tipo": "entrega",
+   "npc": "clara",
+   "nivel_min": 1,
+   "texto": "…você pode devolver esse livro pro Orion? Eu tenho vergonha.",
+   "para": "orion",
+   "item": "📘 Livro de estrelas",
+   "agradece": "Meu livro! A Clara leu tudo? Que bom!"
+  },
+  {
+   "id": "ent_parafuso",
+   "tipo": "entrega",
+   "npc": "wesley",
+   "nivel_min": 0,
+   "texto": "A Eng. Carla pediu esses parafusos. Leva pra ela?",
+   "para": "eng_carla",
+   "item": "🔩 Parafusos",
+   "agradece": "Exatamente os que eu pedi. Obrigada."
+  },
+  {
+   "id": "ent_cachecol",
+   "tipo": "entrega",
+   "npc": "vovo_lurdes",
+   "nivel_min": 2,
+   "texto": "Fiz um cachecol pro Kauê, lá da ilha gelada. Leva pra ele?",
+   "para": "kaue",
+   "item": "🧣 Cachecol",
+   "agradece": "Um cachecol da Vovó Lurdes! Agora encaro qualquer nevasca!"
+  },
+  {
+   "id": "ent_pocao",
+   "tipo": "entrega",
+   "npc": "bruxa_iris",
+   "nivel_min": 2,
+   "texto": "Leva essa poção pro Druida Bento? É pro lobo dele. Não derruba!",
+   "para": "druida_bento",
+   "item": "🧪 Poção",
+   "agradece": "Poção pro Uivo… obrigado. A floresta agradece."
+  },
+  {
+   "id": "rec_jogo",
+   "tipo": "recado",
+   "npc": "lucas",
+   "nivel_min": 0,
+   "texto": "Avisa o Marcos que a corrida de amanhã mudou pra tarde? E me fala o que ele disse!",
+   "para": "marcos",
+   "resposta_npc": "Tarde? Beleza! Fala pro Lucas que eu vou ganhar de novo!",
+   "volta": true
+  },
+  {
+   "id": "rec_festa",
+   "tipo": "recado",
+   "npc": "joana",
+   "nivel_min": 0,
+   "texto": "Pergunta pra Duda se ela vem no piquenique de domingo?",
+   "para": "duda",
+   "resposta_npc": "Vou sim! Fala pra ela que levo suco!",
+   "volta": true
+  },
+  {
+   "id": "rec_neve",
+   "tipo": "recado",
+   "npc": "lena",
+   "nivel_min": 1,
+   "texto": "Pergunta pro Rui qual a espessura do gelo hoje?",
+   "para": "rui",
+   "resposta_npc": "Hoje: 28 cm. Seguro. Pode avisar a Lena.",
+   "volta": true
+  },
+  {
+   "id": "rec_obra",
+   "tipo": "recado",
+   "npc": "seu_raimundo",
+   "nivel_min": 1,
+   "texto": "Pergunta pra Dandara se a obra tá liberada hoje.",
+   "para": "dandara",
+   "resposta_npc": "Liberada! Mas todo mundo de capacete, avisa ele!",
+   "volta": true
+  },
+  {
+   "id": "rec_estrela",
+   "tipo": "recado",
+   "npc": "zara",
+   "nivel_min": 2,
+   "texto": "Vai até o Orion e pergunta: a lua hoje é cheia? Minha bola de cristal tá embaçada.",
+   "para": "orion",
+   "resposta_npc": "Lua crescente! Diz pra Zara que a bola de cristal dela precisa de limpeza. Hehe.",
+   "volta": true
+  },
+  {
+   "id": "ach_chave",
+   "tipo": "achado",
+   "npc": "seu_tomas",
+   "nivel_min": 0,
+   "texto": "Perdi a chave de casa em algum lugar aqui na ilha… me ajuda a achar?",
+   "mapa": "proprio",
+   "item": "🔑 Chave",
+   "agradece": "Minha chave! Sem ela eu dormia no frio!"
+  },
+  {
+   "id": "ach_oculos",
+   "tipo": "achado",
+   "npc": "vovo_lurdes",
+   "nivel_min": 0,
+   "texto": "Cadê meus óculos, querido? Devo ter deixado por aí…",
+   "mapa": "proprio",
+   "item": "👓 Óculos",
+   "agradece": "Ah, agora enxergo você direito! Obrigada!"
+  },
+  {
+   "id": "ach_lente",
+   "tipo": "achado",
+   "npc": "hugo",
+   "nivel_min": 0,
+   "texto": "Caiu a tampa da minha lente! Tava aqui no mapa…",
+   "mapa": "proprio",
+   "item": "📷 Tampa da lente",
+   "agradece": "Salvou minha câmera! Toma uma foto sua!"
+  },
+  {
+   "id": "ach_bola",
+   "tipo": "achado",
+   "npc": "duda",
+   "nivel_min": 0,
+   "texto": "Chutei minha bola longe demais! Me ajuda a achar?",
+   "mapa": "proprio",
+   "item": "⚽ Bola",
+   "agradece": "Achou! Você é o melhor!"
+  },
+  {
+   "id": "ach_varinha",
+   "tipo": "achado",
+   "npc": "mago_elias",
+   "nivel_min": 2,
+   "texto": "Minha varinha… deixei cair num mapa vizinho. Hmm. Qual será?",
+   "mapa": "vizinho",
+   "item": "🪄 Varinha",
+   "agradece": "Minha varinha! O x volta a obedecer."
+  },
+  {
+   "id": "ach_bussola",
+   "tipo": "achado",
+   "npc": "nina",
+   "nivel_min": 3,
+   "texto": "Perdi minha bússola em outro mapa! Era da minha mãe…",
+   "mapa": "qualquer",
+   "item": "🧭 Bússola",
+   "agradece": "Minha bússola… obrigada. Isso vale muito pra mim."
+  },
+  {
+   "id": "pet_pipoca",
+   "tipo": "pet_perdido",
+   "npc": "seu_lauro",
+   "nivel_min": 0,
+   "texto": "O Pipoca fugiu! Segue as pegadas dele, por favor!",
+   "mapa": "proprio",
+   "agradece": "Pipoca! Seu danado! Obrigado, obrigado!"
+  },
+  {
+   "id": "pet_uivo",
+   "tipo": "pet_perdido",
+   "npc": "druida_bento",
+   "nivel_min": 1,
+   "texto": "O Uivo correu atrás de uma lebre. Siga as pegadas.",
+   "mapa": "proprio",
+   "agradece": "Uivo, uivo, uivo! Ele voltou. Obrigado."
+  },
+  {
+   "id": "pet_newton",
+   "tipo": "pet_perdido",
+   "npc": "lena",
+   "nivel_min": 1,
+   "texto": "O Newton, meu pinguim gordinho, escapou! Siga as pegadas na neve!",
+   "mapa": "proprio",
+   "agradece": "Newton! Que susto! Obrigada!"
+  },
+  {
+   "id": "cob_lanches",
+   "tipo": "cobranca",
+   "npc": "dona_cida",
+   "nivel_min": 0,
+   "texto": "O {devedor} levou {q} lanches de R$ {p} e me deu R$ {pago}. Vai lá cobrar o resto, meu bem?",
+   "devedor": "tiago",
+   "vars": {
+    "q": [
+     2,
+     5
+    ],
+    "p": [
+     3.5,
+     6.5,
+     0.5
+    ],
+    "pago": [
+     5,
+     10,
+     5
+    ]
+   },
+   "resposta": "q*p-pago",
+   "unidade": "reais",
+   "minimo": 1,
+   "certo": "Ah, é verdade, esqueci! Toma aqui.",
+   "errado": "Hmm, isso não bate… confere a conta?"
+  },
+  {
+   "id": "cob_tinta",
+   "tipo": "cobranca",
+   "npc": "jorginho",
+   "nivel_min": 1,
+   "texto": "O {devedor} pegou {q} latas de tinta de R$ {p}. Ele já pagou R$ {pago}. Cobra o que falta?",
+   "devedor": "seu_raimundo",
+   "vars": {
+    "q": [
+     2,
+     4
+    ],
+    "p": [
+     18,
+     32,
+     2
+    ],
+    "pago": [
+     10,
+     30,
+     10
+    ]
+   },
+   "resposta": "q*p-pago",
+   "unidade": "reais",
+   "minimo": 1,
+   "certo": "Tá certo. Toma, e diz que a pintura ficou ótima.",
+   "errado": "Não é isso não. Refaz a conta."
+  },
+  {
+   "id": "cob_peixe",
+   "tipo": "cobranca",
+   "npc": "seu_ze",
+   "nivel_min": 1,
+   "texto": "O {devedor} comprou {q} kg de peixe a R$ {p} o quilo. Ainda não pagou nada. Cobra pra mim?",
+   "devedor": "chef_paulo",
+   "vars": {
+    "q": [
+     2,
+     5
+    ],
+    "p": [
+     12,
+     24,
+     2
+    ],
+    "pago": [
+     0,
+     0,
+     1
+    ]
+   },
+   "resposta": "q*p-pago",
+   "unidade": "reais",
+   "minimo": 1,
+   "certo": "Magnífico peixe, justo preço! Toma.",
+   "errado": "Hmm, chef sabe conta. Isso tá errado!"
+  },
+  {
+   "id": "cob_divide",
+   "tipo": "cobranca",
+   "npc": "joana",
+   "nivel_min": 2,
+   "texto": "Fizemos um piquenique de R$ {total} e dividimos igual entre {pessoas} pessoas. O {devedor} não pagou a parte dele. Quanto ele me deve?",
+   "devedor": "hugo",
+   "vars": {
+    "pessoas": [
+     3,
+     6
+    ],
+    "parte": [
+     6,
+     15,
+     1
+    ]
+   },
+   "calc": {
+    "total": "pessoas*parte"
+   },
+   "resposta": "parte",
+   "unidade": "reais",
+   "certo": "É verdade! Toma, e uma foto de presente!",
+   "errado": "Ué, acho que não é isso, não…"
+  },
+  {
+   "id": "cob_porcento",
+   "tipo": "cobranca",
+   "npc": "marta",
+   "nivel_min": 3,
+   "texto": "O {devedor} comprou um produto de R$ {preco} com {d}% de desconto e ainda não pagou. Quanto ele me deve?",
+   "devedor": "caio",
+   "vars": {
+    "preco": [
+     40,
+     120,
+     20
+    ],
+    "d": [
+     10,
+     30,
+     10
+    ]
+   },
+   "resposta": "preco*(100-d)/100",
+   "unidade": "reais",
+   "certo": "Conta certinha! Bombeiro paga em dia.",
+   "errado": "Opa, desconto errado aí!"
+  },
+  {
+   "id": "com_farinha",
+   "tipo": "compra",
+   "npc": "chef_paulo",
+   "nivel_min": 0,
+   "texto": "Compra {q} kg de farinha na Dona Cida? O quilo tá R$ {p}. Toma R$ {nota}. Me traz o troco!",
+   "loja": "dona_cida",
+   "vars": {
+    "q": [
+     1,
+     3
+    ],
+    "p": [
+     3.2,
+     5.8,
+     0.2
+    ],
+    "nota": [
+     20,
+     20,
+     1
+    ]
+   },
+   "resposta": "nota-q*p",
+   "unidade": "reais",
+   "certo": "Troco certinho! Você é de confiança!",
+   "errado": "Hmm… esse troco não fecha. Confere?"
+  },
+  {
+   "id": "com_racao",
+   "tipo": "compra",
+   "npc": "seu_lauro",
+   "nivel_min": 1,
+   "texto": "Compra {q} pacotes de ração pro Pipoca? É R$ {p} cada. Toma R$ {nota}.",
+   "loja": "marta",
+   "vars": {
+    "q": [
+     2,
+     4
+    ],
+    "p": [
+     7.5,
+     12.5,
+     0.5
+    ],
+    "nota": [
+     50,
+     50,
+     1
+    ]
+   },
+   "resposta": "nota-q*p",
+   "unidade": "reais",
+   "certo": "Troco certo! O Pipoca agradece.",
+   "errado": "Faltou ou sobrou aí… confere de novo?"
+  },
+  {
+   "id": "com_cimento",
+   "tipo": "compra",
+   "npc": "tiago",
+   "nivel_min": 2,
+   "texto": "Compra {q} sacos de cimento? Cada um R$ {p}. Toma R$ {nota}.",
+   "loja": "marta",
+   "vars": {
+    "q": [
+     3,
+     6
+    ],
+    "p": [
+     28,
+     36,
+     1
+    ],
+    "nota": [
+     200,
+     200,
+     1
+    ]
+   },
+   "resposta": "nota-q*p",
+   "unidade": "reais",
+   "certo": "Valeu! E o troco tá certinho!",
+   "errado": "Peraí, esse troco não bate."
+  },
+  {
+   "id": "tes_ilha",
+   "tipo": "tesouro",
+   "npc": "seu_tomas",
+   "nivel_min": 2,
+   "texto": "Meu avô enterrou um baú na ilha. Só tenho essas pistas…",
+   "mapa": "proprio",
+   "pistas": 3
+  },
+  {
+   "id": "tes_floresta",
+   "tipo": "tesouro",
+   "npc": "zara",
+   "nivel_min": 2,
+   "texto": "Vi numa visão: um tesouro na floresta. As pistas estão no meu caderno.",
+   "mapa": "proprio",
+   "pistas": 3
+  },
+  {
+   "id": "tes_mapa",
+   "tipo": "tesouro",
+   "npc": "nina",
+   "nivel_min": 3,
+   "texto": "Achei um mapa velho! O tesouro tá em outro mapa da cidade. Topa?",
+   "mapa": "qualquer",
+   "pistas": 4
+  },
+  {
+   "id": "tes_estrela",
+   "tipo": "tesouro",
+   "npc": "orion",
+   "nivel_min": 3,
+   "texto": "As estrelas apontam um tesouro. Pista em coordenadas: x e y!",
+   "mapa": "proprio",
+   "pistas": 3,
+   "coordenadas": true
+  },
+  {
+   "id": "tes_obra",
+   "tipo": "tesouro",
+   "npc": "seu_raimundo",
+   "nivel_min": 4,
+   "texto": "Cavando a fundação achei um papel com pistas de um tesouro antigo!",
+   "mapa": "qualquer",
+   "pistas": 4
+  }
+ ],
+ "correntes": [
+  {
+   "id": "cor_festa",
+   "nome": "A festa da vila",
+   "nivel_min": 2,
+   "npc": "joana",
+   "passos": [
+    {
+     "tipo": "recado",
+     "npc": "joana",
+     "texto": "Vou fazer uma festa surpresa pra Vovó Lurdes! Pergunta pro Chef Paulo se ele faz o bolo?",
+     "para": "chef_paulo",
+     "resposta_npc": "Faço! Mas preciso de farinha. Pede pra Dona Cida!"
+    },
+    {
+     "tipo": "compra",
+     "npc": "chef_paulo",
+     "loja": "dona_cida",
+     "texto": "Compra {q} kg de farinha a R$ {p}. Toma R$ {nota}.",
+     "vars": {
+      "q": [
+       2,
+       4
+      ],
+      "p": [
+       3.5,
+       5.5,
+       0.5
+      ],
+      "nota": [
+       20,
+       20,
+       1
+      ]
+     },
+     "resposta": "nota-q*p"
+    },
+    {
+     "tipo": "entrega",
+     "npc": "chef_paulo",
+     "para": "lia",
+     "item": "🎂 Bolo",
+     "texto": "Bolo pronto! Leva pra Lia decorar?",
+     "agradece": "Vou pintar flores nele!"
+    },
+    {
+     "tipo": "entrega",
+     "npc": "lia",
+     "para": "vovo_lurdes",
+     "item": "🎂 Bolo decorado",
+     "texto": "Agora leva pra Vovó! Surpresa!",
+     "agradece": "Uma festa pra mim?! Ai, meu coração…"
+    }
+   ]
+  },
+  {
+   "id": "cor_pinguim",
+   "nome": "O mistério do pinguim",
+   "nivel_min": 3,
+   "npc": "lena",
+   "passos": [
+    {
+     "tipo": "recado",
+     "npc": "lena",
+     "texto": "O Newton sumiu de novo! Pergunta pro Davi se ele viu algo no porto?",
+     "para": "davi",
+     "resposta_npc": "Câmbio! Vi um pinguim indo pro morro, perto do Kauê!"
+    },
+    {
+     "tipo": "recado",
+     "npc": "davi",
+     "texto": "Vai até o Kauê!",
+     "para": "kaue",
+     "resposta_npc": "Vi pegadas! Ele foi pro gelo fino!"
+    },
+    {
+     "tipo": "pet_perdido",
+     "npc": "kaue",
+     "texto": "Segue as pegadas, mas cuidado!",
+     "mapa": "proprio"
+    },
+    {
+     "tipo": "entrega",
+     "npc": "rui",
+     "para": "lena",
+     "item": "🐧 Newton",
+     "texto": "Achei o Newton perto do gelo fino. Leva ele de volta pra Lena!",
+     "agradece": "Newton! Você é o herói da ilha!"
+    }
+   ]
+  },
+  {
+   "id": "cor_casa",
+   "nome": "A casa nova do Tiago",
+   "nivel_min": 4,
+   "npc": "tiago",
+   "passos": [
+    {
+     "tipo": "recado",
+     "npc": "tiago",
+     "texto": "Vou construir minha casa! Pergunta pra Eng. Carla se ela faz a planta?",
+     "para": "eng_carla",
+     "resposta_npc": "Faço. Ela vai ter 8 m por 6 m."
+    },
+    {
+     "tipo": "cobranca",
+     "npc": "eng_carla",
+     "devedor": "tiago",
+     "texto": "A casa tem {a} m por {b} m. O piso custa R$ {p} o metro quadrado. Quanto o Tiago vai gastar?",
+     "vars": {
+      "a": [
+       6,
+       10,
+       1
+      ],
+      "b": [
+       5,
+       8,
+       1
+      ],
+      "p": [
+       20,
+       40,
+       5
+      ]
+     },
+     "resposta": "a*b*p"
+    },
+    {
+     "tipo": "entrega",
+     "npc": "seu_beto",
+     "para": "tiago",
+     "item": "🚪 Porta de madeira",
+     "texto": "Fiz a porta da casa do Tiago. Leva pra ele?",
+     "agradece": "Minha porta! Minha casa!"
+    },
+    {
+     "tipo": "achado",
+     "npc": "tiago",
+     "texto": "Perdi a chave da casa nova! Me ajuda?",
+     "mapa": "proprio",
+     "item": "🔑 Chave nova",
+     "agradece": "Agora sim! Vem tomar um café na minha casa nova um dia!"
+    }
+   ]
+  }
+ ],
+ "tesouro": {
+  "_nota": "Sorteio do baú do tesouro. peso = chance relativa. Itens que o aluno já tem (móvel, tinta, efeito) são trocados por moedas.",
+  "por_nivel": {
+   "2": [
+    "comum"
+   ],
+   "3": [
+    "comum",
+    "bom"
+   ],
+   "4": [
+    "comum",
+    "bom",
+    "raro"
+   ],
+   "5": [
+    "bom",
+    "raro"
+   ]
+  },
+  "premios": {
+   "comum": [
+    {
+     "tipo": "moedas",
+     "qtd": [
+      20,
+      40
+     ],
+     "peso": 4
+    },
+    {
+     "tipo": "comida",
+     "ids": [
+      "maca",
+      "banana",
+      "uva",
+      "morango",
+      "cenoura",
+      "milho"
+     ],
+     "qtd": [
+      3,
+      5
+     ],
+     "peso": 4
+    },
+    {
+     "tipo": "item",
+     "id": "isca",
+     "qtd": [
+      2,
+      4
+     ],
+     "peso": 2
+    }
+   ],
+   "bom": [
+    {
+     "tipo": "moedas",
+     "qtd": [
+      50,
+      80
+     ],
+     "peso": 3
+    },
+    {
+     "tipo": "comida",
+     "ids": [
+      "bolo",
+      "carne",
+      "peixe_fresco",
+      "petisco"
+     ],
+     "qtd": [
+      2,
+      4
+     ],
+     "peso": 3
+    },
+    {
+     "tipo": "tinta",
+     "ids": [
+      "azul",
+      "rosa",
+      "verde",
+      "roxo",
+      "laranja"
+     ],
+     "peso": 2
+    },
+    {
+     "tipo": "movel",
+     "ids": [
+      "abajur",
+      "vaso",
+      "luzes",
+      "quadro_imagem",
+      "pote",
+      "cacto"
+     ],
+     "peso": 2
+    }
+   ],
+   "raro": [
+    {
+     "tipo": "moedas",
+     "qtd": [
+      100,
+      150
+     ],
+     "peso": 2
+    },
+    {
+     "tipo": "tinta",
+     "ids": [
+      "dourado",
+      "noite",
+      "arco_iris",
+      "esmeralda",
+      "cristal"
+     ],
+     "peso": 2
+    },
+    {
+     "tipo": "efeito",
+     "ids": [
+      "estrelas",
+      "coracoes",
+      "bolhas",
+      "folhas",
+      "faiscas"
+     ],
+     "peso": 2
+    },
+    {
+     "tipo": "movel",
+     "ids": [
+      "aquario",
+      "trofeus",
+      "estante_album",
+      "sofa",
+      "guarda_roupa"
+     ],
+     "peso": 2
+    },
+    {
+     "tipo": "item",
+     "id": "segunda_chance",
+     "qtd": [
+      1,
+      2
+     ],
+     "peso": 1
+    }
+   ]
+  }
+ }
+}

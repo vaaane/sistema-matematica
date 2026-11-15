@@ -24,6 +24,8 @@ import { criarSala as criarSalaDeq, marcarPresenca as marcarPresencaDeq, sairPre
   lerSala as lerSalaDeq, Condutor as CondutorDeq, lutadores as lutadoresDeq, podeResponder as podeResponderDeq, inicioTorre as inicioTorreDeq, progressoTorre as progressoTorreDeq,
   lutaInicial as lutaInicialDeq, fator as fatorDeq, MAX_RODADAS as MAX_RODADAS_DEQ, LIBERA_MS as LIBERA_DEQ_MS, CONVITE_MS as CONVITE_DEQ_MS, VIDA_TORRE as VIDA_TORRE_DEQ,
   MOEDAS_ANDAR_REPETIDO as MOEDAS_ANDAR_REPETIDO_DEQ } from '/js/jogo-revisao/duelo-equipe.js';   // 🤝 PROMPT-236
+import { definirAmizade, amizadePronta, npcAmizade, ganhoAmizade, nomeNivel, nivelDe, progresso as progressoAmz, coracoes, saudacao, memoria, falaTom, historia, presenteDe,
+  diasEntre as diasEntreAmz, NIVEL_MAX as NIVEL_MAX_AMZ } from '/js/jogo-revisao/amizade.js';   // ❤️ PROMPT-238
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comMult, multMoedas, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
@@ -545,6 +547,8 @@ async function carregarEstado() {
     estado.presentesDia = v.presentes_dia || null;
     estado.presentesRecebidos = Number(v.presentes_recebidos) || 0;   // 🎁 só o número (PROMPT-103)
     estado.torre = lerTorre(v.torre);   // 🏆 Torre dos Campeões (PROMPT-230)
+    estado.amizade = v.amizade && typeof v.amizade === 'object' ? JSON.parse(JSON.stringify(v.amizade)) : {};   // ❤️ { npc: { p, conversa, t, viu, presente, bat } } (PROMPT-238)
+    estado.errosMapa = v.erros_mapa && typeof v.erros_mapa === 'object' ? { ...v.erros_mapa } : {};   // { n: { dia, lado } }: a fala de erro do NPC do mapa
     estado.casinha = lerCasinha(v.casinha);   // 🏠 { guardados, moveis, cama_gratis } (PROMPT-105)
     estado.pescaEspecies = v.pesca_especies && typeof v.pesca_especies === 'object' ? { ...v.pesca_especies } : null;   // 🐠 { peixe: vezes } (PROMPT-106)
     estado.desafiosDia = v.desafios_dia || null;
@@ -679,7 +683,7 @@ function juntarNaFila(caminho, valor) {
 function gravar(patch, errouId) {
   if (!carregouProgresso) return;
   for (const [k, v] of Object.entries(patch)) juntarNaFila(k, v);
-  if (errouId) fila.erros[errouId] = (fila.erros[errouId] || 0) + 1;
+  if (errouId) { fila.erros[errouId] = (fila.erros[errouId] || 0) + 1; const em = lembrarErroMapa(errouId); if (em) juntarNaFila(em[0], em[1]); }   // ❤️ o NPC do mapa lembra
   enviarFila();
 }
 
@@ -919,6 +923,7 @@ export async function iniciarJogo(sess) {
   modoDev = new URLSearchParams(location.search).get('dev') === '1' && isModoTeste();
   // só para a professora testar pelo console (?dev=1 no modo teste): jogoRevisaoDev.somarTurma('ZZ_DEV', 'insignias')
   if (modoDev) window.jogoRevisaoDev = { somarTurma, batalha: () => bt, pesca: () => pesca,   // batalha/pesca em andamento (testes)
+    amizade: (id, n) => ganharAmizade(id, n), amizades: () => estado.amizade, falar: (id) => falarCom(pessoasMapa.find(o => o.p.id === id)),   // ❤️ PROMPT-238
     praca: () => abrirPraca(), laboratorio: () => abrirLaboratorio(), computador: (id) => abrirComputador(id), fantasma: () => abrirFantasma(), fase: (n) => abrirFasePrograme(n), escolherPet: (p) => escolherPet(p),
     desafiar: (uid, modo, aposta) => desafiarColega(colegas.get(uid), modo, aposta), colegas: () => [...colegas.keys()],
     mapa: (n) => abrirMapa(n, 'entrada'), pescar: () => { const p = pontosDoMapa(cena.n)[0]; if (p) sentarPesca(p); return !!p; }, pergunta: (chave, p) => abrirPergunta(chave, p),
@@ -969,6 +974,7 @@ export async function iniciarJogo(sess) {
   try { LOJA = await fetch(`${DADOS}/loja-interior.json`).then(r => { if (!r.ok) throw new Error('loja-interior.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] interior da loja indisponível', e); }
   await carregarTorre();   // 🏆 PROMPT-230: Torre dos Campeões
+  await carregarAmizade();   // ❤️ PROMPT-238
   try {   // 🏠 Casinha (PROMPT-105); ?casinha=cheia (modo teste): 1 de cada móvel nos guardados, sem gastar e sem gravar
     CASA = await fetch(`${DADOS}/casinha.json`).then(r => { if (!r.ok) throw new Error('casinha.json'); return r.json(); });
     acrescentarTrofeusOuro();   // 🏆 PROMPT-230: "Troféu dourado do mapa N", só ganhando no Difícil
@@ -6362,7 +6368,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !!torreModal || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('equipe').hidden || !$('equipe-convite').hidden || !$('amigo-presente').hidden || !$('cs-visitas-escolha').hidden || !!deq || ($('deq-convite') && !$('deq-convite').hidden);   // 🤝 PROMPT-236
+  perguntaAberta || !!torreModal || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('equipe').hidden || !$('equipe-convite').hidden || !$('amigos').hidden || !$('amigo-presente').hidden || !$('cs-visitas-escolha').hidden || !!deq || ($('deq-convite') && !$('deq-convite').hidden);   // 🤝 PROMPT-236
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -12982,6 +12988,8 @@ function ligarVila() {
   });
   $('equipe').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && e.target.id === 'equipe-nome') $('equipe').querySelector('[data-eq-acao="pedir"]')?.click(); });
   $('btn-equipe').addEventListener('click', (e) => { e.stopPropagation(); abrirEquipe(); });
+  $('btn-amigos').addEventListener('click', (e) => { e.stopPropagation(); abrirCadernoAmigos(); });   // ❤️ PROMPT-238
+  $('amigos').addEventListener('click', cliqueCadernoAmigos);
   $('amigo-presente').addEventListener('click', (e) => { e.stopPropagation(); cliquePresenteAmigo(e); });
   $('cs-arquivo').addEventListener('change', (e) => { const f = e.target.files?.[0]; if (f) enviarFotoCasa(f); });   // 📷 (PROMPT-184)
   $('visita-pedido').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-ped]'); if (b) responderPedidoVisita(b.dataset.ped === 'deixar'); });   // 🚪 (PROMPT-168)
@@ -15280,6 +15288,7 @@ function registrarBatalha(resultado, b = bt) {   // b: a batalha sozinho (bt) ou
     tipo: 'batalha', treinador: t.id, nivel: d.nivel, pet, resultado, data: agora, ...(b.equipe ? { equipe: true } : {}),
     acertos: b.contas.filter(x => x.acertou).length, erradas: b.contas.filter(x => !x.acertou).length, contas: b.contas,
   };
+  amizadeDaBatalha(t.id, resultado, patch);   // ❤️ PROMPT-238: +1, e +2 se venceu
   gravar(patch);
   if (pr.lealdade) verificarMarcosLealdade(pet);
   return pr;
@@ -15290,6 +15299,194 @@ function sairDaBatalha() {
   if (!bt || bt.fim) return;
   registrarBatalha('saiu');
   fecharBatalha(true);
+}
+
+// ============================================================
+//  ❤️ AMIZADE COM OS NPCs (PROMPT-238) — dados/jogo/amizade.json; regras em js/jogo-revisao/amizade.js
+//  amizade/{npc} = { p, conversa: 'AAAA-MM-DD', t, viu, presente, bat: { r: 'venceu'|'perdeu', t }, tesouro }
+//  erros_mapa/{n} = { dia, lado }: o último erro de ginásio no mapa n (a fala de erro do NPC desse mapa)
+//  Os treinadores dos ginásios não entram: só os NPCs de npcs.json.
+// ============================================================
+const MOEDAS_PRESENTE_REPETIDO_AMZ = 50;
+async function carregarAmizade() {
+  try { definirAmizade(await fetch(`${DADOS}/amizade.json`).then(r => { if (!r.ok) throw new Error('amizade.json'); return r.json(); })); }
+  catch (e) { console.warn('[jogo-revisao] amizade indisponível', e); }
+  $('btn-amigos').hidden = !amizadePronta();
+}
+const amizadeLigada = () => amizadePronta() && carregouProgresso && !!estado;
+const amzLer = (id) => estado?.amizade?.[id] || {};
+const nomeNpcAmz = (id) => NPCS.find(p => p.id === id)?.nome || id;
+const primeiroNomeAmz = () => nomeVisivel(String(sessao?.nome || '').split(' ')[0]) || null;
+const htmlCoracoes = (n) => `<span class="amz-coracoes" aria-label="${n} de 5 corações">${coracoes(n)}</span>`;
+
+// soma pontos com um NPC; subiu de nível: a festa (e o presente no 5). patch: grava junto com o do chamador
+function ganharAmizade(id, n, patch = null) {
+  if (!amizadeLigada() || !npcAmizade(id) || !(n > 0)) return;
+  const r = estado.amizade[id] = { ...amzLer(id) };
+  const antes = nivelDe(r.p);
+  r.p = (Number(r.p) || 0) + n;
+  const meu = patch || {};
+  meu[`amizade/${id}/p`] = r.p;
+  if (!patch) gravar(meu);
+  const depois = nivelDe(r.p);
+  for (let k = antes + 1; k <= depois; k++) festaAmizade(id, k);
+  if (depois >= NIVEL_MAX_AMZ && !r.presente) setTimeout(() => darPresenteAmizade(id), 3600);
+}
+// ❤️ a animação de coração: "Você e a Dona Cida agora são conhecidos!" (em fila, uma por vez)
+const filaFestaAmz = [];
+function festaAmizade(id, nivel) {
+  filaFestaAmz.push({ id, nivel });
+  if (filaFestaAmz.length === 1) proximaFestaAmz();
+}
+function proximaFestaAmz() {
+  const f = filaFestaAmz[0];
+  if (!f) return;
+  const el = document.createElement('div');
+  el.className = 'amz-festa'; el.setAttribute('role', 'status');
+  const nome = nomeNivel(f.nivel), plural = f.nivel === NIVEL_MAX_AMZ ? 'melhores amigos' : nome === 'grande amigo' ? 'grandes amigos' : `${nome}s`;
+  el.innerHTML = `<div class="amz-festa-cor">❤️</div><p>Você e ${esc(nomeNpcAmz(f.id))} agora são <b>${esc(plural)}</b>!</p>${htmlCoracoes(f.nivel)}`;
+  $('jr-app').appendChild(el);
+  tocar('vitoria');
+  setTimeout(() => { el.remove(); filaFestaAmz.shift(); proximaFestaAmz(); }, 3200);
+}
+// 🎁 nível 5: o presente do NPC, uma vez só (já tem o móvel, a tinta ou o efeito: 50 moedas)
+function darPresenteAmizade(id) {
+  const r = estado.amizade[id] = { ...amzLer(id) }, pr = presenteDe(id);
+  if (!pr || r.presente || nivelDe(r.p) < NIVEL_MAX_AMZ) return;
+  const ps = estado.pets, patch = { [`amizade/${id}/presente`]: true }, q = Math.max(1, Math.round(Number(pr.qtd) || 1));
+  r.presente = true;
+  let moedas = 0, texto = pr.texto || 'Um presente';
+  const jaTem = () => { moedas = MOEDAS_PRESENTE_REPETIDO_AMZ; texto += ` (você já tinha: +${moedas} moedas)`; };
+  if (pr.tipo === 'movel') {
+    const c = estado.casinha ||= lerCasinha(null);
+    if ((Number(c.guardados[pr.id]) || 0) > 0 || c.moveis.some(m => m.id === pr.id)) jaTem();
+    else { c.guardados[pr.id] = 1; patch[`casinha/guardados/${pr.id}`] = 1; if (cs && !cs.visita) cs.guardados[pr.id] = (Number(cs.guardados[pr.id]) || 0) + 1; texto += ' (está nos guardados da 🏠 Casinha)'; }
+  } else if (pr.tipo === 'tinta' || pr.tipo === 'efeito') {
+    const k = pr.tipo === 'tinta' ? 'tintas' : 'efeitos';
+    if (ps[k]?.[pr.id]) jaTem();
+    else { ps[k] = { ...(ps[k] || {}), [pr.id]: true }; patch[`pets/${k}/${pr.id}`] = true; }
+  } else if (pr.tipo === 'comida') {
+    ps.bolsa = { ...(ps.bolsa || {}), [pr.id]: (Number(ps.bolsa?.[pr.id]) || 0) + q }; patch[`pets/bolsa/${pr.id}`] = ps.bolsa[pr.id];
+  } else if (pr.tipo === 'item') {
+    if (pr.id === 'isca') { ps.iscas = (Number(ps.iscas) || 0) + q; patch['pets/iscas'] = ps.iscas; }
+    else { ps.itens = { ...(ps.itens || {}), [pr.id]: (Number(ps.itens?.[pr.id]) || 0) + q }; patch[`pets/itens/${pr.id}`] = ps.itens[pr.id]; }
+  } else if (pr.tipo === 'moedas') moedas = q;   // o valor exato do amizade.json (sem multiplicador)
+  else if (pr.tipo === 'tesouro') { r.tesouro = 'guardado'; patch[`amizade/${id}/tesouro`] = 'guardado'; texto += ' (vai aparecer no caderno de favores)'; }
+  if (moedas) { ps.moedas = (Number(ps.moedas) || 0) + moedas; patch['pets/moedas'] = ps.moedas; registrarGanho('amizade', moedas, patch); }
+  gravar(patch);
+  const fala = falaTom(id, 'presente', { nome: primeiroNomeAmz() }, NIVEL_MAX_AMZ) || 'Toma, é pra você!';
+  avisoPet(`🎁 ${nomeNpcAmz(id)}: "${fala}" ${texto}!`, true);
+}
+
+// a fala de memória: os motivos, na ordem de prioridade
+function motivosMemoriaAmz(id, o, r0) {
+  const out = [], hoje = diaLocal(), desde = Number(r0.t) || 0;
+  if (r0.conversa) { const d = diasEntreAmz(r0.conversa, hoje); if (d >= 4) out.push({ tipo: 'ausente', vars: { dias: d } }); }
+  const mapa = Number(o?.p?.mapa) || 0, em = estado.errosMapa?.[mapa];
+  if (mapa && em?.dia && diasEntreAmz(em.dia, hoje) <= 7) {
+    const c = D.questoes[mapa]?.ginasios?.[em.lado]?.conteudo;
+    if (c) out.push({ tipo: 'erro', vars: { conteudo: c.charAt(0).toLowerCase() + c.slice(1) } });
+  }
+  const b = r0.bat;
+  if (b?.r && Number(b.t) > desde) out.push({ tipo: b.r === 'venceu' ? 'venceu' : 'perdeu', vars: {} });
+  if (desde) {
+    const ins = Object.entries(estado.ginasios || {}).filter(([, g]) => g?.insignia && Number(g.dataInsignia) > desde).sort((a, b) => b[1].dataInsignia - a[1].dataInsignia)[0];
+    if (ins) { const m = /^mapa(\d+)-([AB])$/.exec(ins[0]); const nome = m && D.questoes[+m[1]]?.ginasios?.[m[2]]?.nome; if (nome) out.push({ tipo: 'insignia', vars: { ginasio: nome } }); }
+    const te = torreEst();
+    if (Object.values(te.vencidos || {}).some(t => Number(t) > desde)) out.push({ tipo: 'torre', vars: { andar: te.andar } });
+    const pet = estado.pets?.ativo, c = pet && cuidadosDe(pet);
+    if (c) {
+      const evoluiu = Number(statsDe(pet).adulto) > desde;
+      const ns = Object.keys(c.aniversarios || {}).map(Number).filter(Boolean), n = ns.length ? Math.max(...ns) : 0;
+      let aniv = false;
+      if (n && Number(c.data)) { const d = new Date(Number(c.data)); d.setMonth(d.getMonth() + n); aniv = d.getTime() > desde; }
+      if (evoluiu || aniv) out.push({ tipo: 'pet', vars: { pet: nomePet(pet) } });
+    }
+  }
+  return out;
+}
+// a conversa: 1ª do dia → saudação + memória (+1 ponto); história nova (nível novo ainda não visto) → o balão ❤️
+function conversaAmizade(o) {
+  const id = o.p.id;
+  if (!amizadeLigada() || !npcAmizade(id)) return null;
+  const r0 = amzLer(id), hoje = diaLocal(), vars = { nome: primeiroNomeAmz() };
+  let texto = null;
+  if (r0.conversa !== hoje) {
+    const n0 = nivelDe(r0.p);
+    const s = saudacao(id, n0, vars), m = memoria(id, n0, motivosMemoriaAmz(id, o, r0), vars);
+    texto = [s, m?.texto].filter(Boolean).join(' ') || null;
+    const agora = Date.now();
+    estado.amizade[id] = { ...r0, conversa: hoje, t: agora };
+    const patch = { [`amizade/${id}/conversa`]: hoje, [`amizade/${id}/t`]: agora };
+    ganharAmizade(id, ganhoAmizade('conversar_dia') || 1, patch);
+    gravar(patch);
+  }
+  const r = amzLer(id), nivel = nivelDe(r.p), viu = Number(r.viu) || 0;
+  let hist = null;
+  if (viu < nivel) {
+    hist = historia(id, viu + 1);
+    r.viu = viu + 1;
+    gravar({ [`amizade/${id}/viu`]: r.viu });
+  }
+  return { texto, hist, nivel };
+}
+// 🗒️ erro de ginásio: guarda o mapa e o lado (a fala "Lembra que você errou…" do NPC do mapa)
+function lembrarErroMapa(errouId) {
+  const m = /^m(\d+)([AB])-/.exec(String(errouId || ''));
+  if (!m || !carregouProgresso) return null;
+  const v = { dia: diaLocal(), lado: m[2] };
+  (estado.errosMapa ||= {})[m[1]] = v;
+  return [`erros_mapa/${m[1]}`, v];
+}
+// ⚔️ batalha com um treinador (sozinho ou em equipe): +1, e +2 se venceu; a fala "venceu"/"perdeu" na próxima conversa
+function amizadeDaBatalha(id, resultado, patch) {
+  if (!amizadeLigada() || !npcAmizade(id) || (resultado !== 'venceu' && resultado !== 'perdeu')) return;
+  const bat = { r: resultado, t: Date.now() };
+  estado.amizade[id] = { ...amzLer(id), bat };
+  patch[`amizade/${id}/bat`] = bat;
+  ganharAmizade(id, (ganhoAmizade('batalhar') || 1) + (resultado === 'venceu' ? ganhoAmizade('vencer_treinador') || 2 : 0), patch);
+}
+
+// ── 📔 Caderno de amigos (no estojo) ──
+let amzSel = null;
+function abrirCadernoAmigos() {
+  if (!amizadeLigada()) return;
+  $('estojo').hidden = true;
+  amzSel = null;
+  $('amigos').hidden = false;
+  renderCadernoAmigos();
+  tocar('clique');
+}
+function renderCadernoAmigos() {
+  const el = $('amigos-corpo');
+  if (amzSel) {
+    const id = amzSel, a = npcAmizade(id), r = amzLer(id), n = nivelDe(r.p), p = NPCS.find(x => x.id === id);
+    const hist = (a?.historia || []).map((h, i) => (i < n
+      ? `<li class="amz-hist">❤️ ${esc(h)}</li>` : `<li class="amz-hist tranca">🔒 ${'❤️'.repeat(i + 1)}</li>`)).join('');
+    el.innerHTML = `<button class="jr-btn jr-btn-sec amz-voltar" data-amz-voltar>← Voltar</button>
+      <div class="amz-topo">${bustoHtml(`${IMG}/npcs/${esc(id)}.webp`, 'amz-busto', BUSTO_NPC)}
+        <div><b>${esc(p?.nome || id)}</b><small>${esc(p?.quem || '')}${p?.mapa ? ` · ${esc(nomeMapaAmz(p))}` : ''}</small>${htmlCoracoes(n)}<small class="amz-nivel">${esc(nomeNivel(n))}</small></div></div>
+      <p class="amz-pers">${esc(a?.personalidade || '')}</p>
+      <ul class="amz-historias">${hist}</ul>
+      ${r.presente ? `<p class="amz-presente">🎁 Presente recebido: ${esc(presenteDe(id)?.texto || '')}</p>` : ''}`;
+    return;
+  }
+  const conhecidos = NPCS.filter(p => npcAmizade(p.id) && (Number(amzLer(p.id).p) || 0) > 0)
+    .sort((a, b) => (Number(amzLer(b.id).p) || 0) - (Number(amzLer(a.id).p) || 0) || a.nome.localeCompare(b.nome));
+  el.innerHTML = conhecidos.length ? `<ul class="amz-lista">${conhecidos.map(p => {
+    const r = amzLer(p.id), pg = progressoAmz(r.p);
+    return `<li><button class="amz-linha" data-amz="${esc(p.id)}">${bustoHtml(`${IMG}/npcs/${esc(p.id)}.webp`, 'amz-rosto', ROSTO_NPC)}
+      <span class="amz-quem"><b>${esc(p.nome)}</b><small>${esc(nomeMapaAmz(p))}</small></span>
+      <span class="amz-dir">${htmlCoracoes(pg.nivel)}<span class="amz-barra" title="${pg.ate == null ? 'nível máximo' : `${Number(r.p) || 0} de ${pg.ate} pontos`}"><i style="width:${Math.round(pg.frac * 100)}%"></i></span></span></button></li>`;
+  }).join('')}</ul>` : '<p class="amz-vazio">Converse com as pessoas dos mapas para fazer amizade! 💬</p>';
+}
+const nomeMapaAmz = (p) => (p?.interior === 'loja' ? 'Loja da Dona Cida' : Number(p?.mapa) > 0 ? `${p.mapa}. ${D.questoes[p.mapa]?.nome || ''}` : p?.mapa === 'praca' ? 'Praça' : '');
+function cliqueCadernoAmigos(e) {
+  e.stopPropagation();
+  if (e.target === $('amigos') || e.target.closest('[data-fechar="amigos"]')) { $('amigos').hidden = true; return; }
+  if (e.target.closest('[data-amz-voltar]')) { amzSel = null; renderCadernoAmigos(); return; }
+  const b = e.target.closest('[data-amz]');
+  if (b) { amzSel = b.dataset.amz; renderCadernoAmigos(); tocar('clique'); }
 }
 
 // ============================================================
@@ -15728,7 +15925,10 @@ function aplicarFimDeq(s) {
   if (!eu || eu.status !== 'aceitou' || s.luta?.fora?.[sessao.uid] === 'saiu') return out;
   if (s.tipo === 'mapa') {
     const t = treinador(s.alvo.treinador), d = desafioCom(s.alvo.treinador);
-    if (situacao(d) === 'descansando') { out.aviso = 'Você ajudou a equipe! Sem prêmio: este treinador está descansando para você.'; return out; }
+    if (situacao(d) === 'descansando') {
+      const patch = {}; amizadeDaBatalha(s.alvo.treinador, r === 'venceu' ? 'venceu' : 'perdeu', patch); gravar(patch);   // ❤️ a amizade conta mesmo descansando
+      out.aviso = 'Você ajudou a equipe! Sem prêmio: este treinador está descansando para você.'; return out;
+    }
     const pr = registrarBatalha(r === 'venceu' ? 'venceu' : 'perdeu', { t, d, pet: estado.pets.ativo, contas: deq.contas, equipe: true });
     if (pr.xp) { out.chips.push(`<span class="bt-premio xp">+${pr.xp} XP</span>`); darXP(pr.xp); }
     if (pr.moedas) out.chips.push(`<span class="bt-premio mo">+${pr.moedas} ${moedaHtml()}</span>`);
@@ -15998,8 +16198,9 @@ function falarCom(o, convite = false) {   // convite: tocou no Engrenaldo → pe
   if (falas.length > 1 && i === ultimaFalaPessoa[o.p.id]) i = (i + 1 + Math.floor(Math.random() * (falas.length - 1))) % falas.length;
   ultimaFalaPessoa[o.p.id] = i;
   if (destaque?.id === o.p.id) tirarDestaque();
-  const saudacao = ehLoja() && o.p.id === cfgLoja().vendedor ? `Oi, ${nomeAluno()}! O que vai ser hoje?`
-    : o.p.id === 'engrenaldo' ? falaEngrenaldo() : null;
+  const amz = conversaAmizade(o);   // ❤️ PROMPT-238: a 1ª conversa do dia (saudação + memória) e a história nova
+  const saudacao = amz?.texto || (ehLoja() && o.p.id === cfgLoja().vendedor ? `Oi, ${nomeAluno()}! O que vai ser hoje?`
+    : o.p.id === 'engrenaldo' ? falaEngrenaldo() : null);
   const el = $('pessoa-balao');
   // pedido de ajuda: "🙋 Ajudar"; treinadora: "⚔️ Batalhar" (ou o aviso de descanso/fome); com botão, também "Agora não"
   const ped = pedidoDe(o.p.id), botoes = [];
@@ -16025,10 +16226,11 @@ function falarCom(o, convite = false) {   // convite: tocou no Engrenaldo → pe
   }
   if (botoes.length) botoes.push('<button class="jr-btn jr-btn-sec" data-acao="nao">Agora não</button>');
   const extra = aviso + (botoes.length ? `<div class="jr-pessoa-botoes">${botoes.join('')}</div>` : '');
-  el.innerHTML = `<b>${esc(o.p.nome)}</b><span>${esc(saudacao || falas[i] || '')}</span>${extra}`;
+  const hist = amz?.hist ? `<div class="amz-balao-hist">❤️ ${esc(amz.hist)}</div>` : '';
+  el.innerHTML = `<b>${esc(o.p.nome)}</b>${amz ? htmlCoracoes(amz.nivel) : ''}<span>${esc(saudacao || falas[i] || '')}</span>${hist}${extra}`;
   el.hidden = false;
   el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
-  balaoPessoa = { o, timer: setTimeout(fecharBalaoPessoa, extra.includes('data-acao') ? 9000 : 5000) };
+  balaoPessoa = { o, timer: setTimeout(fecharBalaoPessoa, hist ? 12000 : extra.includes('data-acao') ? 9000 : 5000) };
   posicionarBalaoPessoa();
 }
 
@@ -16199,6 +16401,7 @@ function responderPedido() {
   const certa = `${mostrarInteiro(p.resposta)}${p.unidade ? ' ' + esc(p.unidade) : ''}`;
   if (ok) {
     const moedas = moedasDoPedido(pd.tentativa, diaMoedasPedidos());
+    ganharAmizade(p.npc, ganhoAmizade('pedido_certo') || 3, patch);   // ❤️ PROMPT-238
     finalizarPedido('acertou', moedas, patch);
     missaoProgresso('ajudar');
     tocar('acerto');

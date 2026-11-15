@@ -1,0 +1,930 @@
+{
+ "_nota": "Amizade com os NPCs. pontos acumulados por NPC; nível = maior i com pontos >= niveis[i]. Falas: {nome}=primeiro nome do aluno, {dias}, {pet}, {conteudo}, {ginasio}, {andar}.",
+ "niveis": [
+  0,
+  10,
+  25,
+  45,
+  70,
+  100
+ ],
+ "nomes_niveis": [
+  "estranho",
+  "conhecido",
+  "colega",
+  "amigo",
+  "grande amigo",
+  "melhor amigo"
+ ],
+ "ganhos": {
+  "conversar_dia": 1,
+  "pedido_certo": 3,
+  "favor": "ver favores.json",
+  "vencer_treinador": 2,
+  "batalhar": 1,
+  "presente_aniversario": 0
+ },
+ "falas_tom": {
+  "animado": {
+   "oi": [
+    [
+     "E aí! Tudo certo?",
+     "Opa, chegou alguém novo!"
+    ],
+    [
+     "Fala, {nome}! Bora?",
+     "{nome}! Sabia que ia aparecer!"
+    ],
+    [
+     "{nome}, meu parceiro! Tava te esperando!",
+     "Meu amigo {nome} chegou! Agora sim!"
+    ]
+   ],
+   "ausente": "{nome}! Sumiu {dias} dias! Achei que tinha desistido de mim!",
+   "venceu": "Ontem você me venceu, mas hoje eu treinei, hein!",
+   "perdeu": "Da última vez eu ganhei… quer revanche?",
+   "erro": "Lembra que você errou {conteudo}? Treinou? Bora ver!",
+   "pet": "Que {pet} lindo! Tá cada vez maior!",
+   "insignia": "Vi que você ganhou a insígnia do {ginasio}! Mandou bem demais!",
+   "torre": "Andar {andar} da torre?! Você é fera!",
+   "favor_ok": "Valeu demais, {nome}! Você é o cara!",
+   "presente": "Toma, é pra você!"
+  },
+  "sabio": {
+   "oi": [
+    [
+     "Bom dia, jovem.",
+     "Seja bem-vindo."
+    ],
+    [
+     "Olá, {nome}. Que bom te ver.",
+     "{nome}, sente-se um pouco."
+    ],
+    [
+     "Meu amigo {nome}. O dia ficou melhor.",
+     "{nome}… sabia que vinha hoje."
+    ]
+   ],
+   "ausente": "{dias} dias sem te ver, {nome}. Senti falta.",
+   "venceu": "Você me venceu da última vez. Aprendi com você.",
+   "perdeu": "Da última vez não deu certo. Calma: quem tenta de novo aprende.",
+   "erro": "Lembra de {conteudo}? Errar ensina, se a gente volta pra ver.",
+   "pet": "Seu {pet} está crescendo forte. Cuidado é tudo.",
+   "insignia": "A insígnia do {ginasio}… mérito seu.",
+   "torre": "Andar {andar}. Subindo devagar, mas subindo.",
+   "favor_ok": "Obrigado, {nome}. Não esqueço.",
+   "presente": "Guarde isso com você."
+  },
+  "acolhedor": {
+   "oi": [
+    [
+     "Oi, querido! Seja bem-vindo!",
+     "Que bom ver gente nova!"
+    ],
+    [
+     "{nome}, meu bem! Como você está?",
+     "Oi, {nome}! Já comeu hoje?"
+    ],
+    [
+     "{nome}! Vem cá, me dá um abraço!",
+     "Meu {nome} querido chegou!"
+    ]
+   ],
+   "ausente": "Ai, {nome}, {dias} dias! Fiquei preocupada! Tá tudo bem?",
+   "venceu": "Você me venceu, meu bem! Fiquei orgulhosa!",
+   "perdeu": "Não fica triste por ontem, tá? Hoje é outro dia.",
+   "erro": "Lembra daquela de {conteudo}? Vamos ver juntinhos?",
+   "pet": "Ai, que {pet} fofo! Tá bem cuidado!",
+   "insignia": "Vi sua insígnia do {ginasio}! Que orgulho!",
+   "torre": "Andar {andar} da torre! Cuidado lá em cima, viu?",
+   "favor_ok": "Obrigada, meu bem! Você é um anjo!",
+   "presente": "Fiz com carinho, é seu!"
+  },
+  "brincalhao": {
+   "oi": [
+    [
+     "Opa! Cara nova na área!",
+     "Olha quem chegou! Prazer!"
+    ],
+    [
+     "{nome}! Trouxe uma piada nova?",
+     "Ei, {nome}! Saudade das suas risadas!"
+    ],
+    [
+     "{nome}!!! Meu favorito! (Não conta pros outros.)",
+     "O grande {nome} chegou! Palmas!"
+    ]
+   ],
+   "ausente": "{nome}! {dias} dias! Já ia pendurar cartaz de \"procura-se\"!",
+   "venceu": "Você me venceu ontem… foi sorte! Hehe, brincadeira.",
+   "perdeu": "Ontem eu ganhei, mas hoje deixo você ganhar. Mentira!",
+   "erro": "{conteudo} te pegou da última vez, hein! Hoje vai?",
+   "pet": "Seu {pet} tá mais bonito que você! Hehe.",
+   "insignia": "Insígnia do {ginasio}?! Vou contar pra cidade inteira!",
+   "torre": "Andar {andar}? Lá de cima dá pra me ver acenando?",
+   "favor_ok": "Valeu, {nome}! Te devo uma… ou duas!",
+   "presente": "Surpresa! Hehe."
+  },
+  "serio": {
+   "oi": [
+    [
+     "Bom dia.",
+     "Olá. Precisa de algo?"
+    ],
+    [
+     "Olá, {nome}.",
+     "{nome}. Tudo em ordem?"
+    ],
+    [
+     "{nome}! Bom te ver. De verdade.",
+     "Meu amigo {nome}. Sempre bem-vindo."
+    ]
+   ],
+   "ausente": "{dias} dias fora, {nome}. Notei.",
+   "venceu": "Você venceu da última vez. Bem feito.",
+   "perdeu": "Ontem não foi. Revise e volte.",
+   "erro": "Você errou {conteudo}. Já revisou?",
+   "pet": "Seu {pet} está saudável. Bom trabalho.",
+   "insignia": "Insígnia do {ginasio}. Conquista justa.",
+   "torre": "Andar {andar}. Disciplina dá resultado.",
+   "favor_ok": "Trabalho bem feito, {nome}. Obrigado.",
+   "presente": "Isto é seu. Merecido."
+  },
+  "curioso": {
+   "oi": [
+    [
+     "Oh! Olá! Você é novo por aqui?",
+     "Oi! Já viu isso aqui?"
+    ],
+    [
+     "{nome}! Descobri uma coisa, quer saber?",
+     "Oi, {nome}! Que bom, tenho uma pergunta!"
+    ],
+    [
+     "{nome}! Meu parceiro de descobertas!",
+     "{nome}, precisava te contar uma coisa!"
+    ]
+   ],
+   "ausente": "{nome}! {dias} dias! Anotei aqui sua ausência, sabia?",
+   "venceu": "Você me venceu! Preciso estudar como você fez isso.",
+   "perdeu": "Interessante… da última vez você errou. Vamos testar de novo?",
+   "erro": "Hipótese: hoje você acerta {conteudo}. Vamos testar?",
+   "pet": "Seu {pet} cresceu! Quanto será que ele mede agora?",
+   "insignia": "A insígnia do {ginasio}! Que dado incrível!",
+   "torre": "Andar {andar}? Qual a vista lá de cima?",
+   "favor_ok": "Perfeito! Obrigada, {nome}!",
+   "presente": "Toma, é pra você!"
+  },
+  "timido": {
+   "oi": [
+    [
+     "…oi.",
+     "Ah… olá."
+    ],
+    [
+     "Oi, {nome}… tudo bem?",
+     "{nome}… que bom que veio."
+    ],
+    [
+     "{nome}! Ai, fico feliz quando você aparece.",
+     "Oi, {nome}! Guardei um lugar pra você."
+    ]
+   ],
+   "ausente": "…{dias} dias. Achei que tinha esquecido de mim.",
+   "venceu": "Você me venceu… foi bonito de ver.",
+   "perdeu": "Ontem não deu… mas eu acho que você consegue.",
+   "erro": "Aquela de {conteudo}… quer tentar de novo? Sem pressa.",
+   "pet": "Seu {pet} é tão fofo…",
+   "insignia": "Vi sua insígnia do {ginasio}… parabéns.",
+   "torre": "Andar {andar}… você é corajoso.",
+   "favor_ok": "Obrigada… de verdade.",
+   "presente": "…é pra você."
+  },
+  "misterioso": {
+   "oi": [
+    [
+     "Hmm… um rosto novo.",
+     "Eu sabia que viria."
+    ],
+    [
+     "{nome}… as estrelas falaram de você.",
+     "Ah, {nome}. O destino te trouxe."
+    ],
+    [
+     "{nome}, meu aprendiz favorito.",
+     "{nome}! O x da questão chegou."
+    ]
+   ],
+   "ausente": "{dias} dias… eu previ sua volta. Errei por pouco.",
+   "venceu": "Você me venceu. Interessante… muito interessante.",
+   "perdeu": "O resultado de ontem não define o de hoje.",
+   "erro": "{conteudo} ainda te desafia. Hoje o mistério se resolve.",
+   "pet": "Seu {pet} tem uma aura forte.",
+   "insignia": "A insígnia do {ginasio}… eu vi isso numa visão.",
+   "torre": "Andar {andar}. Sobe, aprendiz. Sobe.",
+   "favor_ok": "O destino agradece, {nome}.",
+   "presente": "Isto estava escrito para você."
+  }
+ },
+ "npcs": {
+  "lucas": {
+   "tom": "animado",
+   "personalidade": "Skatista agitado, fala gíria e adora desafio.",
+   "historia": [
+    "Sabia que eu caí 50 vezes antes de acertar a primeira manobra? 50!",
+    "Meu pai consertava bicicleta. Foi ele que montou meu primeiro skate com peça velha.",
+    "Tô juntando moeda pra um skate novo. Já tenho 3/4 do dinheiro!",
+    "Às vezes eu finjo que não ligo pra escola… mas eu ligo. Quero ser professor de educação física.",
+    "Você é tipo meu parceiro de manobra agora. Toma, pra você lembrar de mim!"
+   ],
+   "presente": {
+    "tipo": "tinta",
+    "id": "azul",
+    "texto": "Cor Azul Skate"
+   }
+  },
+  "marcos": {
+   "tom": "animado",
+   "personalidade": "Corredor disciplinado, sempre contando tempo e distância.",
+   "historia": [
+    "Acordo 5h30 todo dia pra correr. Chova ou faça sol.",
+    "Quando era pequeno eu tinha asma. Correr começou como tratamento!",
+    "Meu sonho é correr uma maratona: 42 km e 195 metros.",
+    "Já perdi muitas corridas. Mas nunca perdi pra preguiça.",
+    "Você tem ritmo de campeão. Isso aqui é da minha primeira medalha."
+   ],
+   "presente": {
+    "tipo": "comida",
+    "id": "banana",
+    "qtd": 5,
+    "texto": "5 bananas de corredor"
+   }
+  },
+  "duda": {
+   "tom": "animado",
+   "personalidade": "Menina esperta e competitiva, quer ser engenheira.",
+   "historia": [
+    "Eu conto os segundos que o semáforo fica vermelho. É 45, sempre!",
+    "Minha avó era costureira e fazia conta de cabeça mais rápido que calculadora.",
+    "Quero construir uma ponte enorme um dia. Engenheira Duda!",
+    "Tem gente que diz que menina não é boa em matemática. Eu provo o contrário todo dia.",
+    "Você é a pessoa mais rápida que eu conheço… depois de mim! Toma, é seu."
+   ],
+   "presente": {
+    "tipo": "efeito",
+    "id": "faiscas",
+    "texto": "Efeito faíscas"
+   }
+  },
+  "seu_ze": {
+   "tom": "sabio",
+   "personalidade": "Pescador calmo, fala devagar e cheio de ditados.",
+   "historia": [
+    "Pesco nesse lago faz 40 anos. Já vi ele secar e encher de novo.",
+    "Meu barco se chama Paciência. Nome que meu pai deu.",
+    "Ensinei metade da vila a pescar. A outra metade ainda tá aprendendo.",
+    "Teve um inverno que só peguei 1 peixe. Mas foi o maior que já vi.",
+    "Pescador só divide o lugar secreto com amigo de verdade. Toma essa isca especial."
+   ],
+   "presente": {
+    "tipo": "item",
+    "id": "isca",
+    "qtd": 5,
+    "texto": "5 iscas do Seu Zé"
+   }
+  },
+  "naira": {
+   "tom": "acolhedor",
+   "personalidade": "Moradora da ilha, recebe todo mundo com chocolate quente.",
+   "historia": [
+    "Nasci aqui na Ilha Gelada. Nunca vi uma praia de verdade!",
+    "Minha casa é a de telhado azul. Sempre tem chá esquentando.",
+    "Meu sonho é ver o mar quente um dia. Dizem que a água é morna!",
+    "Quando a nevasca vem, a ilha inteira se junta numa casa só.",
+    "Você aquece meu coração mais que lareira. Leva esse cachecol pro seu pet!"
+   ],
+   "presente": {
+    "tipo": "tinta",
+    "id": "cristal",
+    "texto": "Cor Cristal para o pet"
+   }
+  },
+  "seu_tomas": {
+   "tom": "sabio",
+   "personalidade": "Morador antigo da ilha, resmungão mas carinhoso.",
+   "historia": [
+    "Já vi 70 invernos nessa ilha. E nenhum igual ao outro.",
+    "Meu pai era faroleiro. Eu cresci contando os barcos.",
+    "Parece que eu reclamo de tudo, né? É o frio. Por dentro sou quentinho.",
+    "Perdi meu cachorro numa nevasca. Até hoje deixo a porta entreaberta.",
+    "Você é teimoso que nem eu. Isso é elogio! Toma."
+   ],
+   "presente": {
+    "tipo": "comida",
+    "id": "peixe_fresco",
+    "qtd": 3,
+    "texto": "3 peixes frescos"
+   }
+  },
+  "kaue": {
+   "tom": "animado",
+   "personalidade": "Guia da neve aventureiro, adora trenó.",
+   "historia": [
+    "Desci o morro grande de trenó 100 vezes. Na 101ª eu caí de cara!",
+    "Conheço cada pegada da ilha: raposa, lebre, pinguim…",
+    "Queria ser guia nos Andes um dia. Montanha gigante!",
+    "Uma vez um turista se perdeu. Achei ele pelas pegadas em 20 minutos.",
+    "Você é o melhor parceiro de trilha. Leva meu gorro de presente!"
+   ],
+   "presente": {
+    "tipo": "tinta",
+    "id": "esmeralda",
+    "texto": "Cor Esmeralda da Aurora"
+   }
+  },
+  "lena": {
+   "tom": "curioso",
+   "personalidade": "Pesquisadora polar organizada, anota tudo.",
+   "historia": [
+    "Tenho 12 cadernos só de temperatura. Um por mês!",
+    "Vim da cidade grande estudar o gelo. Nunca mais quis voltar.",
+    "Os pinguins daqui têm nome. O gordinho é o Newton.",
+    "Meu medo é o gelo derreter um dia. Por isso eu meço tudo.",
+    "Vou colocar seu nome na minha pesquisa como assistente! E toma isso."
+   ],
+   "presente": {
+    "tipo": "movel",
+    "id": "estante_livros",
+    "texto": "Estante da Lena"
+   }
+  },
+  "davi": {
+   "tom": "brincalhao",
+   "personalidade": "Operador do porto, fala tudo como se fosse no rádio.",
+   "historia": [
+    "Câmbio! Eu falo assim até em casa. Minha mãe odeia.",
+    "Já guiei 1.000 barcos pelo gelo. Nenhum afundou!",
+    "Na verdade eu tinha medo do mar. Agora o mar tem medo de mim. Hehe.",
+    "Quando tá tudo calmo eu conto os flocos de neve. Já cheguei em 300.",
+    "Câmbio, amigo: você é oficial do porto agora! Desligo."
+   ],
+   "presente": {
+    "tipo": "comida",
+    "id": "biscoito",
+    "qtd": 5,
+    "texto": "5 biscoitos do porto"
+   }
+  },
+  "rui": {
+   "tom": "serio",
+   "personalidade": "Técnico do gelo, preciso e cuidadoso.",
+   "historia": [
+    "Meço o gelo 3 vezes antes de deixar alguém passar.",
+    "Meu avô atravessou um lago com gelo fino. Ele teve sorte. Eu não conto com sorte.",
+    "Tenho uma caixa de ferramentas com 47 peças. Sei onde cada uma está.",
+    "Quem é cuidadoso parece chato. Mas ninguém se machuca perto de mim.",
+    "Confio em você tanto quanto na minha trena. Toma."
+   ],
+   "presente": {
+    "tipo": "item",
+    "id": "segunda_chance",
+    "qtd": 1,
+    "texto": "Uma segunda chance"
+   }
+  },
+  "seu_antonio": {
+   "tom": "sabio",
+   "personalidade": "Jardineiro paciente, compara tudo com plantas.",
+   "historia": [
+    "Esse ipê eu plantei quando tinha a sua idade.",
+    "Tenho 200 mudas no viveiro. Cada uma com nome.",
+    "Planta não cresce porque a gente puxa. Cresce porque a gente cuida.",
+    "Minha esposa adorava girassol. Por isso tem girassol em todo canto aqui.",
+    "Você floresceu bonito. Leva essa plantinha pro seu quarto."
+   ],
+   "presente": {
+    "tipo": "movel",
+    "id": "vaso",
+    "texto": "Vaso do Seu Antônio"
+   }
+  },
+  "joana": {
+   "tom": "acolhedor",
+   "personalidade": "Ama piquenique e reunir os amigos.",
+   "historia": [
+    "Faço piquenique todo domingo. Já são 3 anos sem faltar!",
+    "Meu sanduíche de frango é famoso. A receita é segredo.",
+    "Eu era tímida. O piquenique foi o jeito que achei de fazer amigos.",
+    "Às vezes ninguém aparece. Aí eu como sozinha e olho as nuvens. Também é bom.",
+    "Agora você tem lugar cativo na minha toalha. Leva esse bolo!"
+   ],
+   "presente": {
+    "tipo": "comida",
+    "id": "bolo",
+    "qtd": 2,
+    "texto": "2 bolos da Joana"
+   }
+  },
+  "nina": {
+   "tom": "curioso",
+   "personalidade": "Exploradora destemida, sempre com mapa e bússola.",
+   "historia": [
+    "Já subi essa montanha 8 vezes. Na 9ª vou levar você!",
+    "Meu primeiro mapa eu desenhei com 7 anos. Era do meu quintal.",
+    "Tenho uma bússola que era da minha mãe. Ela também explorava.",
+    "Uma vez me perdi de verdade. Achei o caminho contando os passos de volta.",
+    "Você é explorador de verdade. Toma meu mapa antigo!"
+   ],
+   "presente": {
+    "tipo": "tesouro",
+    "texto": "Um mapa do tesouro especial"
+   }
+  },
+  "hugo": {
+   "tom": "brincalhao",
+   "personalidade": "Fotógrafo engraçado, sempre quer tirar foto.",
+   "historia": [
+    "Já tirei 10 mil fotos. Umas 9 mil ficaram tremidas. Hehe.",
+    "Meu primeiro trabalho foi foto de casamento. Derrubei o bolo.",
+    "Tenho uma foto de cada pôr do sol desse mapa. São mais de 300!",
+    "Gosto de fotografar gente sorrindo. Acho que é porque fui uma criança séria.",
+    "Esse retrato é seu! Sorria! Click!"
+   ],
+   "presente": {
+    "tipo": "movel",
+    "id": "quadro_foto",
+    "texto": "Retrato do Hugo"
+   }
+  },
+  "seu_lauro": {
+   "tom": "acolhedor",
+   "personalidade": "Passeador de cachorro, conhece todos os pets da cidade.",
+   "historia": [
+    "O Pipoca tem 9 anos. É meu melhor amigo.",
+    "Passeio com 6 cachorros por dia. Sei o nome de todos.",
+    "Antes eu era motorista de ônibus. Agora prefiro andar a pé.",
+    "O Pipoca foi resgatado da rua. Hoje ele dorme no sofá.",
+    "O Pipoca gosta de você! Isso é raro. Toma um petisco pro seu pet."
+   ],
+   "presente": {
+    "tipo": "comida",
+    "id": "petisco",
+    "qtd": 5,
+    "texto": "5 petiscos"
+   }
+  },
+  "dra_ana": {
+   "tom": "acolhedor",
+   "personalidade": "Veterinária carinhosa, pergunta sempre do seu pet.",
+   "historia": [
+    "Cuido de mais de 100 bichinhos por mês.",
+    "Decidi ser veterinária quando salvei um passarinho com 8 anos.",
+    "Matemática salva vidas aqui: dose de remédio é conta!",
+    "O dia mais difícil é quando não dá pra salvar. Por isso estudo tanto.",
+    "Seu pet é o mais bem cuidado da cidade. Toma, é um kit de carinho."
+   ],
+   "presente": {
+    "tipo": "comida",
+    "id": "racao",
+    "qtd": 5,
+    "texto": "5 rações premium"
+   }
+  },
+  "dona_cida": {
+   "tom": "acolhedor",
+   "personalidade": "Dona da lojinha, chama todo mundo de \"meu bem\".",
+   "historia": [
+    "Essa banca tem 30 anos, meu bem. Era da minha mãe.",
+    "Sei o preço de tudo de cabeça. Calculadora pra quê?",
+    "Criei 4 filhos com o dinheiro dessa banca. Todos estudaram!",
+    "Quando alguém não tem dinheiro, eu deixo levar e pagar depois. Confiança.",
+    "Você é freguês de ouro, meu bem. Leva essa cesta!"
+   ],
+   "presente": {
+    "tipo": "comida",
+    "id": "morango",
+    "qtd": 5,
+    "texto": "5 morangos da Dona Cida"
+   }
+  },
+  "marta": {
+   "tom": "serio",
+   "personalidade": "Gerente organizada, adora promoção e planilha.",
+   "historia": [
+    "Confiro o caixa 3 vezes por dia. Nunca faltou 1 centavo.",
+    "Comecei como empacotadora. Hoje sou gerente.",
+    "Promoção boa é a que o cliente entende. Por isso explico a conta.",
+    "Meu sonho é abrir minha própria loja.",
+    "Você tem cabeça de negócio! Toma um vale-presente."
+   ],
+   "presente": {
+    "tipo": "moedas",
+    "qtd": 50,
+    "texto": "Vale de 50 moedas"
+   }
+  },
+  "caio": {
+   "tom": "animado",
+   "personalidade": "Bombeiro corajoso e brincalhão.",
+   "historia": [
+    "Já subi uma escada de 30 metros pra salvar um gato. O gato desceu sozinho depois.",
+    "Treino todo dia: subir, descer, carregar. E calcular!",
+    "Ser bombeiro é proteger quem você nem conhece.",
+    "Tenho medo de altura. Sério! Mas subo assim mesmo.",
+    "Você é corajoso também. Toma meu capacete de brinquedo!"
+   ],
+   "presente": {
+    "tipo": "tinta",
+    "id": "laranja",
+    "texto": "Cor Laranja Bombeiro"
+   }
+  },
+  "jorge": {
+   "tom": "brincalhao",
+   "personalidade": "Carteiro falante, sabe a fofoca de toda a cidade.",
+   "historia": [
+    "Entrego cartas há 15 anos. Conheço cada caixa de correio.",
+    "Já fui perseguido por 3 cachorros na mesma rua. Hoje somos amigos.",
+    "Sei quem mandou carta de amor pra quem… mas não conto! Hehe.",
+    "Às vezes eu escrevo cartas pra mim mesmo, só pra ter o que entregar no domingo.",
+    "Agora você recebe carta minha também! E esse presente."
+   ],
+   "presente": {
+    "tipo": "movel",
+    "id": "quadro_imagem",
+    "texto": "Cartão-postal do Jorge"
+   }
+  },
+  "clara": {
+   "tom": "timido",
+   "personalidade": "Leitora tímida, fala baixo e ama histórias.",
+   "historia": [
+    "…já li 300 livros. Desculpa, falei alto?",
+    "Meu livro favorito é sobre uma menina que viaja pelos números.",
+    "Eu não gosto muito de falar com gente nova. Mas com você é fácil.",
+    "Quero escrever um livro um dia. Talvez sobre você!",
+    "Toma… é meu livro favorito. Cuida bem dele, tá?"
+   ],
+   "presente": {
+    "tipo": "movel",
+    "id": "estante_album",
+    "texto": "Estante da Clara"
+   }
+  },
+  "lia": {
+   "tom": "curioso",
+   "personalidade": "Pintora sonhadora, vê arte em tudo.",
+   "historia": [
+    "Misturo 3 cores e faço 100. Matemática das cores!",
+    "Pintei o mural da escola quando tinha 12 anos.",
+    "Às vezes erro a pintura e o erro fica mais bonito.",
+    "Minha mãe não queria que eu fosse pintora. Hoje ela tem 5 quadros meus em casa.",
+    "Fiz um quadro de você! Pendura no seu quarto."
+   ],
+   "presente": {
+    "tipo": "movel",
+    "id": "cavalete",
+    "texto": "Cavalete da Lia"
+   }
+  },
+  "vovo_lurdes": {
+   "tom": "acolhedor",
+   "personalidade": "Vovó do tricô, oferece bolinho a todo mundo.",
+   "historia": [
+    "Faço tricô desde os 8 anos, querido. Já são 70 anos de agulha!",
+    "Meu neto mora longe. Faço um cachecol pra ele todo inverno.",
+    "No meu tempo a gente estudava com lamparina. Vocês têm sorte!",
+    "Quando seu vô… quer dizer, meu marido, era vivo, ele contava as carreiras pra mim.",
+    "Você é como um neto pra mim. Fiz um cachecol pro seu pet!"
+   ],
+   "presente": {
+    "tipo": "tinta",
+    "id": "rosa",
+    "texto": "Cor Rosa Tricô"
+   }
+  },
+  "chef_paulo": {
+   "tom": "brincalhao",
+   "personalidade": "Cozinheiro exagerado, fala como chef de TV.",
+   "historia": [
+    "Magnífico! Já fiz 5 mil pratos. Uns 4 mil e pouco ficaram bons!",
+    "Aprendi a cozinhar com minha avó baiana. O tempero é dela.",
+    "Receita é matemática: dobra a receita, dobra tudo!",
+    "Já queimei um bolo na frente de 100 pessoas. Rimos juntos.",
+    "Você é meu sous-chef oficial! Toma, prato especial."
+   ],
+   "presente": {
+    "tipo": "comida",
+    "id": "carne",
+    "qtd": 3,
+    "texto": "3 carnes do Chef"
+   }
+  },
+  "mago_elias": {
+   "tom": "misterioso",
+   "personalidade": "Mago antigo, fala em enigmas de equação.",
+   "historia": [
+    "Tenho 300 anos… ou 30? O x guarda esse segredo.",
+    "Aprendi magia com um livro de álgebra. Não conte a ninguém.",
+    "Meu cajado é feito de uma árvore que equilibrou a floresta.",
+    "O feitiço mais poderoso é o da paciência. Leva anos.",
+    "Você desvendou o x da nossa amizade. Toma este brilho mágico."
+   ],
+   "presente": {
+    "tipo": "efeito",
+    "id": "estrelas",
+    "texto": "Efeito estrelas"
+   }
+  },
+  "druida_bento": {
+   "tom": "sabio",
+   "personalidade": "Guardião da floresta, fala com os animais.",
+   "historia": [
+    "O Uivo me encontrou filhote. Agora ele que cuida de mim.",
+    "Cada árvore dessa floresta tem idade. A mais velha tem 400 anos.",
+    "Contei os anéis de um tronco caído: 87 anos de história.",
+    "Antes de ser druida eu era carpinteiro. Agora protejo as árvores.",
+    "A floresta te aceitou. Leva esta folha encantada."
+   ],
+   "presente": {
+    "tipo": "efeito",
+    "id": "folhas",
+    "texto": "Efeito folhas"
+   }
+  },
+  "bruxa_iris": {
+   "tom": "brincalhao",
+   "personalidade": "Bruxa atrapalhada das poções, ri de tudo.",
+   "historia": [
+    "Minha primeira poção deixou meu gato azul. Ele gostou!",
+    "Tenho 47 frascos. 12 eu não lembro o que fazem. Hihi.",
+    "Poção é receita: errou a proporção, explode!",
+    "Diziam que bruxa é má. Eu só sou bagunceira.",
+    "Uma poção especial pra você! Não tem efeito colateral… acho."
+   ],
+   "presente": {
+    "tipo": "efeito",
+    "id": "bolhas",
+    "texto": "Efeito bolhas"
+   }
+  },
+  "fada_lume": {
+   "tom": "acolhedor",
+   "personalidade": "Fada gentil que só fala coisas boas.",
+   "historia": [
+    "✨ Eu nasci de uma estrela que caiu no lago.",
+    "✨ Cada acerto seu acende uma luzinha na floresta.",
+    "✨ Eu também já tive medo de voar. Agora voo todo dia.",
+    "✨ Às vezes fico triste quando ninguém acredita em fada. Mas você acredita.",
+    "✨ Um pouquinho da minha luz pra você!"
+   ],
+   "presente": {
+    "tipo": "efeito",
+    "id": "coracoes",
+    "texto": "Efeito corações"
+   }
+  },
+  "zara": {
+   "tom": "misterioso",
+   "personalidade": "Vidente dramática que adora suspense.",
+   "historia": [
+    "Vejo… vejo… que você vai voltar amanhã!",
+    "Minha bola de cristal é de vidro comum. Mas não conta pra ninguém.",
+    "Eu não adivinho o futuro. Eu calculo probabilidade!",
+    "Previ que seríamos amigos. Errei a data, mas acertei!",
+    "O destino mandou entregar isto a você."
+   ],
+   "presente": {
+    "tipo": "tinta",
+    "id": "roxo",
+    "texto": "Cor Roxa Mística"
+   }
+  },
+  "orion": {
+   "tom": "curioso",
+   "personalidade": "Astrônomo sonhador, sabe o nome de todas as estrelas.",
+   "historia": [
+    "Conto estrelas desde criança. Parei em 3.000.",
+    "Meu dragãozinho se chama Plutão. Coitado, ninguém considera ele planeta.",
+    "Já vi um cometa que só volta daqui a 76 anos.",
+    "Às vezes passo a noite inteira acordado só pra ver uma estrela.",
+    "Dei o seu nome a uma estrela! Toma o mapa dela."
+   ],
+   "presente": {
+    "tipo": "tinta",
+    "id": "noite",
+    "texto": "Cor Noite Estrelada"
+   }
+  },
+  "seu_raimundo": {
+   "tom": "serio",
+   "personalidade": "Mestre de obras exigente mas justo.",
+   "historia": [
+    "Já construí 40 casas nessa cidade.",
+    "Comecei carregando tijolo com 14 anos.",
+    "Grito na obra porque o barulho é alto, não porque sou bravo.",
+    "Minha maior obra foi a escola. Meus netos estudam lá.",
+    "Você é trabalhador de verdade. Toma, é seu capacete de honra."
+   ],
+   "presente": {
+    "tipo": "moedas",
+    "qtd": 60,
+    "texto": "60 moedas de pagamento"
+   }
+  },
+  "tiago": {
+   "tom": "animado",
+   "personalidade": "Pedreiro forte e bem-humorado.",
+   "historia": [
+    "Levanto 100 tijolos por hora! Ou quase.",
+    "Meu sonho é construir minha própria casa.",
+    "Aprendi a fazer conta na obra. Na escola eu não ligava.",
+    "Hoje faço supletivo à noite. Quero ser mestre de obras.",
+    "Valeu, parceiro! Toma esse lanche de obra."
+   ],
+   "presente": {
+    "tipo": "comida",
+    "id": "milho",
+    "qtd": 5,
+    "texto": "5 milhos"
+   }
+  },
+  "eng_carla": {
+   "tom": "serio",
+   "personalidade": "Engenheira precisa, adora planta baixa.",
+   "historia": [
+    "Desenho cada parede em escala antes de construir.",
+    "Fui a única menina da minha turma de engenharia.",
+    "Errar uma conta numa ponte pode ser perigoso. Por isso confiro tudo.",
+    "Meu pai era pedreiro. Hoje eu projeto as obras que ele constrói.",
+    "Você pensa como engenheiro. Toma minha régua especial."
+   ],
+   "presente": {
+    "tipo": "movel",
+    "id": "mesa",
+    "texto": "Mesa de projeto da Eng. Carla"
+   }
+  },
+  "seu_beto": {
+   "tom": "sabio",
+   "personalidade": "Carpinteiro tranquilo, mede duas vezes.",
+   "historia": [
+    "Essa régua era do meu avô. Tem 60 anos.",
+    "Faço cadeira, mesa, porta… e brinquedo pros meus netos.",
+    "Madeira boa tem que secar 1 ano antes de usar.",
+    "Já cortei errado muitas vezes. Por isso hoje meço duas vezes.",
+    "Fiz uma caixinha de madeira pra você!"
+   ],
+   "presente": {
+    "tipo": "movel",
+    "id": "caixa_brinquedos",
+    "texto": "Caixa do Seu Beto"
+   }
+  },
+  "rosa": {
+   "tom": "serio",
+   "personalidade": "Eletricista cuidadosa e direta.",
+   "historia": [
+    "Mexo com fio desde os 18 anos. Nunca levei choque. Respeito!",
+    "Sou a única eletricista da cidade. E a melhor, modéstia à parte.",
+    "Luz acesa em casa é felicidade. Gosto de ver o resultado.",
+    "Ainda tem gente que estranha mulher eletricista. Logo para de estranhar.",
+    "Montei umas luzinhas pro seu quarto!"
+   ],
+   "presente": {
+    "tipo": "movel",
+    "id": "luzes",
+    "texto": "Luzes da Rosa"
+   }
+  },
+  "wesley": {
+   "tom": "brincalhao",
+   "personalidade": "Mecânico que dá nome para todas as máquinas.",
+   "historia": [
+    "Essa betoneira se chama Dona Gertrudes.",
+    "Desmonto e monto um motor de olho fechado. Quase.",
+    "Aprendi mecânica consertando a moto do meu tio.",
+    "Quando uma máquina para, eu converso com ela. Funciona!",
+    "Toma, uma peça da sorte da Dona Gertrudes!"
+   ],
+   "presente": {
+    "tipo": "moedas",
+    "qtd": 40,
+    "texto": "40 moedas"
+   }
+  },
+  "fabio": {
+   "tom": "brincalhao",
+   "personalidade": "Encanador piadista.",
+   "historia": [
+    "Já desentupi 1.000 canos. Não pergunta o que achei dentro.",
+    "Água vai sempre pro lugar mais baixo. Igual eu no sofá depois do trabalho.",
+    "Meu trabalho é invisível: ninguém vê cano bem feito.",
+    "Uma vez a cozinha inteira inundou. Virou piscina!",
+    "Você é gente boa! Toma um aquário… sem vazamento, garanto."
+   ],
+   "presente": {
+    "tipo": "movel",
+    "id": "aquario",
+    "texto": "Aquário do Fábio"
+   }
+  },
+  "jorginho": {
+   "tom": "brincalhao",
+   "personalidade": "Pintor alegre, sempre sujo de tinta.",
+   "historia": [
+    "Pintei 200 paredes. E 300 calças sem querer.",
+    "Minha cor favorita é amarelo-ovo. Ninguém deixa eu usar.",
+    "Duas demãos e fica lindo. Uma demão e fica mancha.",
+    "Queria pintar quadro igual a Lia. Ela disse que vai me ensinar.",
+    "Toma, uma cor nova pro seu pet!"
+   ],
+   "presente": {
+    "tipo": "tinta",
+    "id": "verde",
+    "texto": "Cor Verde"
+   }
+  },
+  "dandara": {
+   "tom": "serio",
+   "personalidade": "Técnica de segurança, protetora e firme.",
+   "historia": [
+    "Nenhum acidente nessa obra em 2 anos. Orgulho!",
+    "Meu nome é de uma guerreira do Quilombo dos Palmares.",
+    "Proteger as pessoas é o que me move.",
+    "Já briguei com chefe pra garantir capacete pra todos. Valeu a pena.",
+    "Você cuida dos outros também. Toma esse escudo de honra."
+   ],
+   "presente": {
+    "tipo": "item",
+    "id": "segunda_chance",
+    "qtd": 2,
+    "texto": "2 segundas chances"
+   }
+  },
+  "dra_helena": {
+   "tom": "curioso",
+   "personalidade": "Cientista empolgada com dados e experimentos.",
+   "historia": [
+    "Já fiz 500 experimentos. 400 deram errado. E aprendi com todos!",
+    "Meu laboratório tem 3 microscópios e 1 cafeteira. A cafeteira é a mais usada.",
+    "Ciência é perguntar \"por quê?\" até cansar.",
+    "Quando era pequena, explodi a cozinha com vinagre e bicarbonato.",
+    "Você é cientista também! Toma meu troféu de experimento."
+   ],
+   "presente": {
+    "tipo": "movel",
+    "id": "trofeus",
+    "texto": "Troféu da Dra. Helena"
+   }
+  },
+  "teo": {
+   "tom": "animado",
+   "personalidade": "Atendente do fliperama, viciado em recorde.",
+   "historia": [
+    "Tenho o recorde de 12 máquinas aqui. Mas não conta pra ninguém que eu treino de madrugada.",
+    "Esse fliperama era do meu tio. Eu cresci aqui dentro.",
+    "Meu jogo favorito é o mais antigo. Só tem 3 cores!",
+    "Já perdi um campeonato por 1 ponto. Até hoje sonho com isso.",
+    "Ficha dourada pra você! É rara!"
+   ],
+   "presente": {
+    "tipo": "moedas",
+    "qtd": 40,
+    "texto": "40 moedas de ficha"
+   }
+  },
+  "lia_cientista": {
+   "tom": "curioso",
+   "personalidade": "Cientista de robótica paciente.",
+   "historia": [
+    "Meu primeiro robô só andava pra trás.",
+    "Programar é dar instrução bem clara. Igual receita!",
+    "Montei o Engrenaldo com sucata. Ele é meio convencido.",
+    "Já fiquei 3 dias procurando 1 erro no código. Era um sinal de menos.",
+    "Seu pet programado é o melhor! Toma um presente."
+   ],
+   "presente": {
+    "tipo": "efeito",
+    "id": "faiscas",
+    "texto": "Efeito faíscas"
+   }
+  },
+  "engrenaldo": {
+   "tom": "brincalhao",
+   "personalidade": "Robô convencido que se acha o melhor.",
+   "historia": [
+    "BIP. Eu sou o robô mais inteligente da ilha. Fato.",
+    "BIP. Fui montado com 347 peças. 2 sobraram. Não sei de onde.",
+    "BIP. Às vezes eu… sinto? Não. Erro de sistema.",
+    "BIP. Você é o único humano que eu considero quase tão bom quanto eu.",
+    "BIP. Presente detectado. Entregando. Não se acostume."
+   ],
+   "presente": {
+    "tipo": "tinta",
+    "id": "dourado",
+    "texto": "Cor Dourada Robô"
+   }
+  }
+ }
+}
