@@ -5715,3 +5715,41 @@ html.jr-deitado .jr-mp-info > .jr-mp-balao { font-size: 15px; }
 .mp-neon-cor.sel { border-color: #fff; transform: scale(1.12); }
 #jr-app .mp-chip-balao.trancada:disabled { cursor: default; }
 @media (prefers-reduced-motion: reduce) { #jr-app[class*="jr-balao-"] :is(.jr-pet-fala, .jr-mp-balao, .jr-pet-fala-arena, .jr-fala-vitoria, .aula-balao, .jr-erro-balao, .jr-rel-balao), .jr-bal-amostra { animation: none !important; } }
+
+/* 🎨 PROMPT-234: cores de parede e chão da sala da Exposição (as camadas usam .cs-camada da casinha) */
+#jr-app .ex-camada { width: 100%; height: 100%; }
+#jr-app .ex-cores { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; padding: 6px 4px 10px; grid-column: 1 / -1; }
+#jr-app .ex-cores > b { flex-basis: 100%; text-align: center; font-size: var(--jr-min, 16px); }
+#jr-app .ex-cor-livre { position: relative; width: 30px; height: 30px; border-radius: 50%; border: 2px dashed rgba(255,255,255,.55); display: inline-grid; place-items: center; cursor: pointer; overflow: hidden; }
+#jr-app .ex-cor-livre input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: 0; padding: 0; }
+#jr-app .ex-cor-livre span { font-size: 15px; pointer-events: none; }
+
+/* 🎙️ PROMPT-234: o griô (contador de histórias) e a faixa da legenda */
+#jr-app .ex-grio { position: absolute; transform: translate(-50%, -100%); aspect-ratio: 3 / 5; pointer-events: none; }
+#jr-app .ex-grio img { height: 100%; width: auto; display: block; margin: 0 auto; filter: drop-shadow(0 4px 3px rgba(0,0,0,.35)); }
+#jr-app .ex-grio-som { position: absolute; left: 50%; top: -6px; transform: translate(-50%, -100%); font-size: 30px; line-height: 1;
+  background: #fff; border-radius: 50%; padding: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.35); opacity: 0; }
+#jr-app .ex-grio.falando .ex-grio-som { animation: ex-grio-pisca 1s ease-in-out infinite; }
+@keyframes ex-grio-pisca { 0%, 100% { opacity: .25; transform: translate(-50%, -100%) scale(.92); } 50% { opacity: 1; transform: translate(-50%, -100%) scale(1.06); } }
+#jr-app .ex-grio-ui { position: absolute; left: 50%; bottom: max(10px, var(--sa-b, 0px)); transform: translateX(-50%); z-index: 15;
+  width: min(900px, calc(100% - 24px)); display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+#jr-app .ex-grio-ui > * { pointer-events: auto; }
+#jr-app .ex-grio-legenda { margin: 0; width: 100%; padding: 10px 16px; border-radius: 14px; background: rgba(13,15,26,.78); color: #fff; text-align: center;
+  font-family: 'Inter', sans-serif; line-height: 1.35; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+#jr-app .ex-grio-legenda .ant { display: block; font-size: max(var(--jr-min, 16px), 15px); opacity: .55; }
+#jr-app .ex-grio-legenda .atual { display: block; font-size: clamp(20px, 2.6vw, 28px); font-weight: 700; color: #ffd700; }
+#jr-app .ex-grio-legenda .ant:empty { display: none; }
+#jr-app .ex-grio-botoes { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; padding: 4px 8px; border-radius: 999px; background: rgba(13,15,26,.6); }
+#jr-app .ex-grio-botoes .jr-btn { min-height: 40px; padding: 6px 12px; font-size: 16px; }
+#jr-app .ex-grio-nome { color: #ffd700; font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 17px; padding: 0 4px; }
+#jr-app .ex-grio-cc { font-family: 'Orbitron', sans-serif; font-weight: 900; opacity: .55; }
+#jr-app .ex-grio-cc.on { opacity: 1; border-color: #00d4ff; color: #00d4ff; }
+#jr-app .ex-grio-chama { background: #ff7b2e; color: #fff; border-color: #ff7b2e; font-weight: 700; animation: ex-grio-chama 1.4s ease-in-out infinite; }
+@keyframes ex-grio-chama { 50% { box-shadow: 0 0 0 6px rgba(255,123,46,.3); } }
+/* no celular, o joystick fica embaixo à direita: a faixa sai do caminho dele */
+@media (hover: none) and (pointer: coarse) {
+  #jr-app .ex-grio-ui { left: max(12px, var(--sa-l, 0px)); transform: none; width: auto; right: calc(170px + var(--sa-r, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) { #jr-app .ex-grio.falando .ex-grio-som { animation: none; opacity: 1; } #jr-app .ex-grio-chama { animation: none; } }
+
+#jr-app .ex-grio-ui[hidden], #jr-app .ex-grio-ui [hidden] { display: none !important; }

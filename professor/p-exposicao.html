@@ -34,6 +34,7 @@
     details.sala[open]>summary::before{content:'▾'}
     details.sala>summary b{font-family:'Rajdhani',sans-serif;font-size:1.15rem}
     details.sala>summary .uso{margin-left:auto;font-size:12px;color:var(--text-muted)}
+    details.sala>summary .grio{font-size:13px;white-space:nowrap}
     .corpo{padding:0 14px 14px;display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1fr);gap:14px 22px}
     .corpo h4{margin:0 0 8px;font-size:13px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
     .corpo .larga{grid-column:1/-1}
@@ -130,6 +131,7 @@ import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
+import { temAudioGrio, legendaGrio } from "/js/jogo-revisao/grio.js";   // 🎙️ PROMPT-234
 
 if (!requireProfessor()) throw new Error("sem sessão de professor");
 renderSidebarProfessor("sidebar", "exposicao");
@@ -139,6 +141,7 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const IMG = "/img/jogo";
 let EXPO = null, salas = {}, config = {}, teste = false, abertas = new Set();
+const grioArq = {};   // 🎙️ n → { audio: bool, leg: "txt" | "vtt" | null } (os arquivos que o griô de cada sala tem)
 // 🎵 PROMPT-182: exposicao.json → musicas [{ id, nome, arquivo }] (vazia: o seletor some)
 const musicasExpo = () => (Array.isArray(EXPO?.musicas) ? EXPO.musicas : []).filter(m => m && typeof m.id === "string" && typeof m.arquivo === "string");
 try { teste = localStorage.getItem("expo_prof_teste") === "1"; } catch (_) {}
@@ -217,6 +220,7 @@ async function carregar() {
   try {
     if (!EXPO) EXPO = await fetch("/dados/jogo/exposicao.json").then(r => r.json());
     await migrarStatus();
+    conferirGrio().catch(e => console.warn("griô", e));
     const c = await get(ref(db, no("exposicao_config")));
     config = c.exists() ? c.val() || {} : {};
   } catch (e) {
@@ -367,6 +371,19 @@ document.querySelectorAll(".aba").forEach(a => a.addEventListener("click", () =>
 }));
 $("filtro-status").addEventListener("change", () => render());
 
+// 🎙️ o que falta para o griô: audio/exposicao/sala_{n}.mp3 e dados/exposicao/legendas/sala_{n}.txt (ou .vtt)
+function grioHtml(n) {
+  const a = grioArq[n];
+  if (!a) return '<span class="muted grio">🎙️ …</span>';
+  return `<span class="grio" title="audio/exposicao/sala_${n}.mp3 · dados/exposicao/legendas/sala_${n}.txt">🎙️ áudio ${a.audio ? "✔" : "✖"} · 📝 legenda ${a.leg ? "✔" + (a.leg === "vtt" ? " (vtt)" : "") : "✖"}</span>`;
+}
+async function conferirGrio() {
+  await Promise.all(portas().map(async n => {
+    const [audio, leg] = await Promise.all([temAudioGrio(n), legendaGrio(n)]);
+    grioArq[n] = { audio, leg: leg?.tipo || null };
+  }));
+  render();
+}
 function salaHtml(n, ondeEsta) {
   const s = salas[n] || {}, g = grupoDe(n), itens = Object.entries(s.itens || {}).filter(([, v]) => v?.mv).sort((a, b) => (Number(a[1].x) || 0) - (Number(b[1].x) || 0));
   const nFotos = itens.reduce((t, [, v]) => t + fotosDe(v).length, 0), lim = EXPO.limites || { itens: 40, fotos: 12 };
@@ -385,7 +402,7 @@ function salaHtml(n, ondeEsta) {
   }).join("");
   return `<details class="sala" data-sala="${n}"${abertas.has(n) ? " open" : ""}><summary><b>Sala ${n}</b>${s.nome ? `<span>${esc(s.nome)}</span>` : ""}${s.nome_pendente ? `<span class="muted">⏳ ${esc(s.nome_pendente)}</span>` : ""}
       <span class="muted">${g ? `${esc(g.turma)} · ${membros.length} integrante${membros.length === 1 ? "" : "s"}` : "sem grupo"}</span>
-      <span class="uso">${itens.length}/${lim.itens} itens · ${nFotos}/${lim.fotos} fotos</span></summary>
+      ${grioHtml(n)}<span class="uso">${itens.length}/${lim.itens} itens · ${nFotos}/${lim.fotos} fotos</span></summary>
     <div class="corpo">
       <div>
         <h4>Grupo</h4>

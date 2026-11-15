@@ -13,7 +13,8 @@ import { urlSprite as spriteComCor, coresValidas, semCor, CORES_CABELO, CORES_BL
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE, ALUNOS_POR_TURMA, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
 import { gerarQuestoes, gerarUma, assuntoDe, nPerguntas } from '/js/jogo-revisao/geradores.js';
-import { tocar, somLigado, alternarSom, tocarArquivo, pararEfeitos, musicaPara, musicaLigada, alternarMusica, pausarMusica, musicaBloqueada } from '/js/jogo-revisao/sons.js';
+import { tocar, somLigado, alternarSom, tocarArquivo, pararEfeitos, musicaPara, musicaLigada, alternarMusica, pausarMusica, musicaBloqueada, abaixarMusica } from '/js/jogo-revisao/sons.js';
+import { srcAudioGrio, temAudioGrio, legendaGrio, tempoDasLinhas, fraseNoTempo } from '/js/jogo-revisao/grio.js';   // 🎙️ PROMPT-234
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comMult, multMoedas, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
@@ -916,7 +917,7 @@ export async function iniciarJogo(sess) {
     tamanho: (f) => ({ alt: +altPet(f).toFixed(2), dist: +distPet(f).toFixed(2), rel: +relDuelo(f).toFixed(3) }),   // 🐘 PROMPT-213: conferir a tabela
     torre: (a) => abrirTorre(a), bau: (a) => abrirBau(a), premiosTorre: () => abrirPremiosTorre(), quadroTorre: () => abrirQuadroTorre(), torreTrein: (i) => abrirPerguntaTorre(i), casinha: () => abrirCasinha(), temas: () => abrirTemasCasa(),
     aula: (chave, i = 0) => { abrirAula(chave, 'menu'); irPaginaAula(i); }, aulaPags: (chave) => aulaDe(chave)?.paginas?.length || 0,
-    perguntaPet: (enun, opcoes) => desenharPerguntaPet(enun, opcoes), falaPet: (txt) => mostrarFalaPet([{ texto: txt, espera: 0, fixo: 8000 }]), irPara: (x, y) => posicionarJogador(x, y, 'frente'), loja: (aba) => abrirLoja(aba) };   // 💬 PROMPT-232   // 🔠 PROMPT-231: conferir as letras   // 🏆 PROMPT-230
+    perguntaPet: (enun, opcoes) => desenharPerguntaPet(enun, opcoes), falaPet: (txt) => mostrarFalaPet([{ texto: txt, espera: 0, fixo: 8000 }]), irPara: (x, y) => posicionarJogador(x, y, 'frente'), loja: (aba) => abrirLoja(aba), saguao: () => abrirSaguao(), salaExpo: (n) => abrirSalaExpo(n), cena: () => cena, jog: () => jog, joy: () => joy, expo: () => EXPO, temasExpo: () => abrirTemasExpo(), decorar: () => entrarEdicaoExpo(), grio: () => grio };   // 💬 PROMPT-232   // 🔠 PROMPT-231: conferir as letras   // 🏆 PROMPT-230
 
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
@@ -6637,7 +6638,7 @@ function destinosDoMapa() {
   if (cena.n === 'laboratorio') for (const c of cena.computadores || []) lista.push({ id: 'pc-' + c.id, tipo: 'predio', alvo: 'pc:' + c.id, x: c.x, y: c.y, trilha: c.trilha });
   const ex = ehPraca() && cena.exposicao;   // 🖼️ pavilhão da Exposição
   if (ex) lista.push({ id: 'predio-exposicao', tipo: 'predio', alvo: 'exposicao', x: ex.ponto[0], y: ex.ponto[1], trilha: ex.trilha, largura: 80 });
-  if (ehSaguao()) for (const p of cena.expoPortas || []) lista.push({ id: 'expo-' + p.n, tipo: 'predio', alvo: 'expo:' + p.n, x: p.ponto[0], y: p.ponto[1], trilha: p.trilha, largura: 40 });   // a zona fica no mínimo (70 × a escala ≈ 122 px): mais de 1,5 × a folha da porta (~65–70 px) sem invadir a vizinha
+  if (ehSaguao()) for (const p of cena.expoPortas || []) lista.push({ id: 'expo-' + p.n, tipo: 'predio', alvo: 'expo:' + p.n, x: p.ponto[0], y: p.ponto[1], trilha: p.trilha, largura: 40, parede: p.placa[0] < p.ponto[0] - 60 ? 'esq' : p.placa[0] > p.ponto[0] + 60 ? 'dir' : null });   // a zona fica no mínimo (70 × a escala ≈ 122 px): mais de 1,5 × a folha da porta (~65–70 px) sem invadir a vizinha
   const md = ehPraca() && cena.mesa_damas;
   if (md) lista.push({ id: 'predio-mesa-damas', tipo: 'predio', alvo: 'mesa_damas', x: md.x, y: md.y, trilha: md.trilha, largura: 80 });
   const qe = cena.estudos;
@@ -6691,6 +6692,7 @@ function tocarNoMapa(e) {
   if (ehVila() && tocarCasaVila(p)) return;        // 🏘️ porta: entra · casa: cor do telhado / visitar / deixar (PROMPT-109)
   if (tocouQuadroEstudos(p)) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'estudos')); return; }
   if (ehSaguao()) { const pt = portaExpoEm(p); if (pt) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'expo:' + pt.n)); return; } }   // 🖼️ placa ou porta
+  if (grio && salaExpo() === grio.n && !ex?.editando && tocouGrio(p)) { ouvirGrio(true); return; }   // 🎙️ tocar no griô: ouve de novo
   if (ex && salaExpo()) {   // ✏️ quem decora: tocar num móvel abre só as opções dele (sem o modo decorar) · 🖼️ os outros: foto ou texto no painel grande
     if (podeDecorar(ex.n) && !transicionando) { const id = itemExpoEm(p, true); if (id) { selecionarExpo(id); return; } }
     const id = itemExpoEm(p); if (id) { abrirVisualizador(id); return; }
@@ -6845,9 +6847,11 @@ const naZona = (d) => { const z = zonaEntrada(d); return jog.x >= z.x0 && jog.x 
 const destinoNaZona = () => (cena?.tipo === 'mapa' ? destinosDoMapa().filter(d => entraPorZona(d) && naZona(d))
   .sort((a, b) => Math.abs(jog.x - a.trilha[0]) - Math.abs(jog.x - b.trilha[0]))[0] || null : null);
 function verificarZonaEntrada(vx, vy) {
-  if (!soltouDesdeTroca || !(vy < 0 && Math.abs(vy) > Math.abs(vx))) return;
-  const d = destinoNaZona();
-  if (d) entrarNoDestino(espDe(d));
+  if (!soltouDesdeTroca) return;
+  const cima = vy < 0 && Math.abs(vy) > Math.abs(vx), d = destinoNaZona();
+  // 🖼️ PROMPT-234: as portas das paredes do corredor também entram empurrando para a parede delas (setas e joystick)
+  const lado = d?.parede && Math.abs(vx) > Math.abs(vy) && (d.parede === 'esq' ? vx < 0 : vx > 0);
+  if (d && (cima || lado)) entrarNoDestino(espDe(d));
 }
 // 🐾 O pet não para em cima de portas, saídas e zonas de entrada (PROMPT-155): o ponto (x, y) cai numa delas →
 // um ponto ao lado, na trilha e fora de todas (o mais perto); fora delas → null
@@ -8982,6 +8986,7 @@ const tocouPavilhao = (p) => { const ex = cena?.exposicao; return !!ex && Math.a
 // ── Saguão ──────────────────────────────────────────────────
 // prelúdio comum das duas cenas da Exposição (como o laboratório e a vila)
 function prepararCenaExpo(titulo, voltar) {
+  pararGrio();
   sairPesca(false);
   cena = null;
   esconderBalao();
@@ -9106,6 +9111,8 @@ async function abrirSalaExpo(n) {
   cena = { tipo: 'mapa', n: 'sala-' + n, expoSala: n, tema: tema.id, salao: true, w: LW, alturaPersonagem: Number(S.altura_personagem) || 120,
     cfg: { entrada: S.entrada, saidas: [sd.cfg] }, grade, portas: {}, naTrilha, saidas: [sd.saida] };
   abrirItensSala(n, grade);   // 🖼️ móveis, fotos e textos (PROMPT-EXPOSICAO-2)
+  desenharCamadasExpo(n, tema);   // 🎨 parede e chão na cor do grupo (PROMPT-234)
+  montarGrio(n);                  // 🎙️ o griô conta a história do grupo (sem o áudio, a sala fica sem ele)
   destinoEspecial = null;
   alvoMapa = null;
   pertoSaidaGin = false;
@@ -9115,7 +9122,7 @@ async function abrirSalaExpo(n) {
   $('cena-palco').style.visibility = '';
   atualizarBotaoPet();
   entrarNoMapaOnline('sala-' + n, 'exposicao');
-  ouvirExpo(['tema', 'musica', 'nome', 'nome_pendente', 'nome_motivo'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
+  ouvirExpo(['tema', 'musica', 'nome', 'nome_pendente', 'nome_motivo', 'cores/parede', 'cores/chao'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
 }
 function tituloSala(n) { const nome = nomeSalaVisivel(n); return `🖼️ Sala ${n}${nome ? ' · ' + String(nome).slice(0, 40) : ''}`; }
 // mudou no Firebase com o aluno dentro: nome na faixa, fundo do tema (a música segue em lugarDaMusica)
@@ -9126,13 +9133,14 @@ async function aplicarEstadoSala(n) {
   redesenharLetreiros();   // o nome e o ⏳/❌ (só redesenha o que mudou)
   if (ex?.editando) resumoAprovExpo();
   const tema = temaExpo(estadoSala(n).tema), c = cena;
-  if (tema.id === c.tema) return;
+  if (tema.id === c.tema) { desenharCamadasExpo(n, tema); return; }   // 🎨 só a cor mudou
   c.tema = tema.id;
   const f = $('cena-fundo');
   f.style.transition = 'opacity .18s ease'; f.style.opacity = '0';
   await new Promise(ok => setTimeout(ok, 180));
   if (cena !== c) { f.style.opacity = ''; f.style.transition = ''; return; }
   await trocarFundo(`${IMG}/${tema.imagem}`, c.w);
+  if (cena === c) desenharCamadasExpo(n, temaExpo(estadoSala(n).tema));
   f.style.opacity = '';
   setTimeout(() => { f.style.transition = ''; }, 220);
 }
@@ -9173,6 +9181,7 @@ function musicaDaSala(ignorarMudo = false) {
   return srcMusicaExpo(mu);
 }
 function atualizarHudExpo() {
+  pintarGrio();
   const n = salaExpo(), bd = $('btn-expo-decorar'), semD = !(n && ex && !ex.editando && podeDecorar(n));
   if (bd.hidden !== semD) bd.hidden = semD;
   const bc = $('btn-expo-curtir'), semC = !n;   // ❤️ N: a própria sala (e a professora) só vê o número
@@ -9442,9 +9451,9 @@ function prenderExpo(m, x, y) {
 // exposicao.json → moveis[].apoio[vista] = { y, x: [a, b] }: o tampo em % da imagem. Um objeto pequeno de chão solto em cima
 // encaixa (sobre = id do de baixo, sx = 0..1 ao longo do tampo), fica na frente dele e anda junto. Sem tampo na vista nova
 // (girou) ou grande demais (> 1,5 × o tampo): cai para o chão ao lado. Apagar o de baixo: os de cima caem no mesmo x.
-const NAO_SOBE = new Set(['cordao', 'banco_museu', 'totem_info', 'pulpito', 'poltrona', 'pufe', 'biombo']);   // móveis, não objetos
+// PROMPT-234: lista explícita no JSON ("sobe": true), no lugar da lista negra; as bases são os que têm apoio (o banco também)
 const temApoio = (it) => !!it?.apoio && Object.keys(it.apoio).length > 0;
-const podeSubir = (m) => { const it = catExpo(m?.mv); return it?.tipo === 'chao' && !temApoio(it) && !NAO_SOBE.has(it.id); };
+const podeSubir = (m) => { const it = catExpo(m?.mv); return it?.tipo === 'chao' && it.sobe === true && !temApoio(it); };
 const filhosExpo = (id) => [...ex.itens].filter(([, m]) => m.sobre === id).map(([cid]) => cid);
 // o tampo na cena: { x0, x1, y } (com o espelho); null: a vista não tem tampo
 function tampoExpo(b) {
@@ -9871,9 +9880,12 @@ function ligarEditorExpo() {
   ligarConteudoExpo();
   $('ex-temas').addEventListener('click', (e) => {
     if (e.target === $('ex-temas') || e.target.closest('[data-fechar="ex-temas"]')) { $('ex-temas').hidden = true; return; }
+    const bc = e.target.closest('button[data-ex-camada]');
+    if (bc) { trocarCorSalaExpo(bc.dataset.exCamada, bc.dataset.exCor); tocar('clique'); return; }
     const b = e.target.closest('[data-ex-tema]');
     if (b) escolherTemaExpo(b.dataset.exTema);
   });
+  $('ex-temas').addEventListener('input', (e) => { const i = e.target.closest('input[data-ex-camada]'); if (i) trocarCorSalaExpo(i.dataset.exCamada, i.value); });   // 🎨 a cor livre
   $('ex-ver').addEventListener('click', (e) => {
     if (e.target === $('ex-ver') || e.target.closest('[data-fechar="ex-ver"]')) { $('ex-ver').hidden = true; if (ex) ex.ver = null; return; }
     const b = e.target.closest('[data-ver]');
@@ -9881,11 +9893,169 @@ function ligarEditorExpo() {
   });
 }
 
+// ── 🎙️ Griô: narração com legenda em cada sala (PROMPT-234) ──
+// audio/exposicao/sala_{n}.mp3 + dados/exposicao/legendas/sala_{n}.txt (ou .vtt): veja js/jogo-revisao/grio.js.
+// Ao entrar, o áudio toca uma vez (a música da sala a 20%); 🔊 pisca em cima dele. A legenda fica numa faixa embaixo.
+// Tocar no griô ou "▶️ Ouvir de novo" repete; ⏸️ pausa; CC liga/desliga a legenda (localStorage jr_grio_cc).
+// O navegador bloqueou o som (celular) ou o 🔊 do jogo está desligado: "▶️ Toque para ouvir a história".
+let grio = null;   // { n, audio, leg, frases, x, y, el, timer, fim, bloqueado }
+const IMG_GRIO = `${IMG}/exposicao/grio.webp`, IMG_GRIO_RESERVA = `${IMG}/npcs/seu_antonio.webp`;   // até chegar a imagem do griô: um NPC
+const ccGrio = () => { try { return localStorage.getItem('jr_grio_cc') !== '0'; } catch (_) { return true; } };
+async function montarGrio(n) {
+  if (!(await temAudioGrio(n)) || salaExpo() !== n || grio) return;
+  const leg = await legendaGrio(n);
+  if (salaExpo() !== n || grio) return;
+  const S = EXPO.sala, pos = Array.isArray(S.grio) && S.grio.length === 2 ? S.grio.map(Number) : [S.entrada[0] - 260, S.entrada[1] - 20];
+  const g = grio = { n, audio: new Audio(srcAudioGrio(n)), leg, frases: leg?.tipo === 'vtt' ? leg.frases : null, x: pos[0], y: pos[1], fim: false, bloqueado: false };
+  g.audio.preload = 'auto';
+  const tempos = () => { if (leg?.tipo === 'txt' && Number.isFinite(g.audio.duration) && g.audio.duration > 0) g.frases = tempoDasLinhas(leg.linhas, g.audio.duration); };
+  g.audio.addEventListener('loadedmetadata', tempos);
+  g.audio.addEventListener('durationchange', tempos);
+  g.audio.addEventListener('play', () => { if (grio !== g) return; g.fim = false; g.bloqueado = false; abaixarMusica(0.2); pintarGrio(); });
+  g.audio.addEventListener('pause', () => { if (grio === g) { abaixarMusica(1); pintarGrio(); } });
+  g.audio.addEventListener('ended', () => { if (grio === g) { g.fim = true; abaixarMusica(1); pintarGrio(); } });
+  g.audio.addEventListener('error', () => { if (grio === g) pararGrio(); });   // o arquivo sumiu ou não abre: sem griô
+  // o personagem perto da entrada
+  const el = g.el = document.createElement('div');
+  el.className = 'ex-grio';
+  el.innerHTML = `<img alt="Griô" draggable="false"/><span class="ex-grio-som" aria-hidden="true">🔊</span>`;
+  const img = el.querySelector('img');
+  img.addEventListener('error', () => { if (!img.src.endsWith(IMG_GRIO_RESERVA)) img.src = IMG_GRIO_RESERVA; }, { once: true });
+  img.src = IMG_GRIO;
+  Object.assign(el.style, { left: g.x + 'px', top: g.y + 'px', height: alturaSalao() + 'px', zIndex: Math.round(g.y) });
+  $('cena-atores').appendChild(el);
+  // a faixa embaixo: controles + legenda
+  let ui = $('grio-ui');
+  if (!ui) {
+    ui = document.createElement('div'); ui.id = 'grio-ui'; ui.className = 'ex-grio-ui'; ui.hidden = true;
+    ui.innerHTML = `<p class="ex-grio-legenda" aria-live="polite"><span class="ant"></span><b class="atual"></b></p>
+      <div class="ex-grio-botoes"><span class="ex-grio-nome">🎙️ Griô</span>
+        <button type="button" class="jr-btn jr-btn-sec" data-grio="tocar">▶️ Ouvir de novo</button>
+        <button type="button" class="jr-btn jr-btn-sec" data-grio="continuar" hidden>▶️ Continuar</button>
+        <button type="button" class="jr-btn jr-btn-sec" data-grio="pausar" hidden aria-label="Pausar">⏸️</button>
+        <button type="button" class="jr-btn jr-btn-sec ex-grio-cc" data-grio="cc" aria-label="Legenda">CC</button></div>`;
+    $('tela-cena').appendChild(ui);
+    ui.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-grio]');
+      if (!b || !grio) return;
+      const a = b.dataset.grio;
+      if (a === 'tocar') ouvirGrio(true);
+      else if (a === 'continuar') ouvirGrio(false);
+      else if (a === 'pausar') grio.audio.pause();
+      else if (a === 'cc') { try { localStorage.setItem('jr_grio_cc', ccGrio() ? '0' : '1'); } catch (_) {} pintarGrio(); }
+      tocar('clique');
+    });
+  }
+  g.timer = setInterval(() => {   // a legenda acompanha o áudio; saiu da sala por outro caminho: para tudo
+    if (grio !== g) return;
+    if (salaExpo() !== g.n) { pararGrio(); return; }
+    legendaGrioAgora();
+  }, 120);
+  pintarGrio();
+  // toca uma vez ao entrar (com o 🔊 do jogo desligado, espera o toque)
+  if (somLigado()) ouvirGrio(true); else { g.bloqueado = true; pintarGrio(); }
+}
+function ouvirGrio(doComeco) {
+  const g = grio;
+  if (!g) return;
+  if (doComeco) { try { g.audio.currentTime = 0; } catch (_) {} }
+  g.fim = false;
+  const p = g.audio.play();
+  if (p?.catch) p.catch(() => { if (grio === g) { g.bloqueado = true; pintarGrio(); } });   // bloqueado pelo navegador: o botão grande
+}
+function pararGrio() {
+  const g = grio;
+  if (!g) return;
+  grio = null;
+  clearInterval(g.timer);
+  try { g.audio.pause(); g.audio.removeAttribute('src'); g.audio.load(); } catch (_) {}
+  abaixarMusica(1);
+  g.el?.remove();
+  const ui = $('grio-ui');
+  if (ui) ui.hidden = true;
+}
+function tocouGrio(p) {
+  const g = grio, h = alturaSalao(), w = h * 0.6;
+  return !!g && Math.abs(p.x - g.x) <= w / 2 && p.y >= g.y - h && p.y <= g.y + 10;
+}
+function legendaGrioAgora() {
+  const g = grio, ui = $('grio-ui');
+  if (!g || !ui) return;
+  const tocando = !g.audio.paused && !g.audio.ended, cc = ccGrio(), t = g.audio.currentTime || 0;
+  const f = cc && !g.fim && t > 0 ? fraseNoTempo(g.frases, t) : null;
+  const i = f ? g.frases.indexOf(f) : -1, ant = i > 0 ? g.frases[i - 1].txt : '';
+  const leg = ui.querySelector('.ex-grio-legenda'), b = leg.querySelector('.atual'), a = leg.querySelector('.ant');
+  if (b.textContent !== (f?.txt || '')) b.textContent = f?.txt || '';
+  if (a.textContent !== ant) a.textContent = ant;
+  leg.hidden = !f;
+  g.el?.classList.toggle('falando', tocando);
+}
+function pintarGrio() {
+  const g = grio, ui = $('grio-ui');
+  if (!ui) return;
+  const mostra = !!g && salaExpo() === g.n && !ex?.editando;
+  ui.hidden = !mostra;
+  if (!mostra) return;
+  const tocando = !g.audio.paused && !g.audio.ended, meio = !tocando && !g.fim && (g.audio.currentTime || 0) > 0.3;
+  const bt = ui.querySelector('[data-grio="tocar"]');
+  bt.textContent = g.bloqueado ? '▶️ Toque para ouvir a história' : '▶️ Ouvir de novo';
+  bt.classList.toggle('ex-grio-chama', g.bloqueado);
+  bt.hidden = tocando;
+  ui.querySelector('[data-grio="continuar"]').hidden = !meio || g.bloqueado;
+  ui.querySelector('[data-grio="pausar"]').hidden = !tocando;
+  const cc = ui.querySelector('[data-grio="cc"]');
+  cc.classList.toggle('on', ccGrio()); cc.setAttribute('aria-pressed', String(ccGrio()));
+  cc.title = ccGrio() ? 'Desligar a legenda' : 'Ligar a legenda';
+  legendaGrioAgora();
+}
+
 // ── 🎨 tema da sala ──
+// PROMPT-234: temas em 3 camadas. imagem = a sala em tons de cinza; camadas.parede / camadas.chao = máscaras (branco com
+// transparência). A cor de cada uma é um <i> por cima do fundo com a máscara e multiply (as sombras do desenho continuam), como os
+// temas da casinha. Salvo em exposicao_salas/{n}/cores/{parede|chao} = '#rrggbb'. Tema sem camadas: como antes.
+const COR_HEX = /^#[0-9a-f]{6}$/i;
+const CAMADAS_EXPO = [['parede', '🧱 Cor da parede'], ['chao', '🟫 Cor do chão']];
+const coresSalaExpo = () => (Array.isArray(EXPO?.cores_sala) ? EXPO.cores_sala : []).filter(c => COR_HEX.test(c?.cor || ''));
+const camadasDoTema = (tema) => CAMADAS_EXPO.map(([k]) => k).filter(k => typeof tema?.camadas?.[k] === 'string' && tema.camadas[k]);
+function corCamadaExpo(n, tema, camada) {
+  const v = estadoSala(n)['cores/' + camada], p = tema?.cores_padrao?.[camada];
+  return COR_HEX.test(v || '') ? v : COR_HEX.test(p || '') ? p : '#9a9a9a';
+}
+function desenharCamadasExpo(n, tema) {
+  const at = $('cena-atores'), ks = camadasDoTema(tema);
+  for (const el of at.querySelectorAll('.ex-camada')) if (!ks.includes(el.dataset.camada) || el.dataset.tema !== tema.id) el.remove();
+  for (const k of ks) {
+    let el = at.querySelector(`.ex-camada[data-camada="${k}"]`);
+    if (!el) {
+      el = document.createElement('i');
+      el.className = `cs-camada cs-camada-${k} ex-camada`; el.dataset.camada = k; el.dataset.tema = tema.id; el.setAttribute('aria-hidden', 'true');
+      el.style.setProperty('--m', `url('${IMG}/${tema.camadas[k]}')`);
+      at.prepend(el);
+    }
+    const c = corCamadaExpo(n, tema, k);
+    if (el.style.getPropertyValue('--c') !== c) el.style.setProperty('--c', c);
+  }
+}
+function htmlCoresSalaExpo(n, tema) {
+  return camadasDoTema(tema).map(k => {
+    const atual = corCamadaExpo(n, tema, k).toLowerCase(), nome = CAMADAS_EXPO.find(x => x[0] === k)[1];
+    return `<div class="cs-tema-cores ex-cores"><b>${nome}</b>${coresSalaExpo().map(x =>
+      `<button class="cs-tema-cor${x.cor.toLowerCase() === atual ? ' sel' : ''}" data-ex-camada="${k}" data-ex-cor="${esc(x.cor)}" title="${esc(x.nome || x.cor)}" aria-label="${esc(x.nome || x.cor)}" style="--c:${x.cor}"></button>`).join('')}` +
+      `<label class="ex-cor-livre" title="Outra cor"><input type="color" data-ex-camada="${k}" value="${atual}" aria-label="Outra cor"/><span>🎨</span></label></div>`;
+  }).join('');
+}
+function trocarCorSalaExpo(camada, cor) {
+  if (!ex || !podeDecorar(ex.n) || !COR_HEX.test(cor || '') || !CAMADAS_EXPO.some(([k]) => k === camada)) return;
+  const n = ex.n, tema = temaExpo(estadoSala(n).tema);
+  (expoSalas[n] ||= {})['cores/' + camada] = cor;
+  desenharCamadasExpo(n, tema);
+  for (const b of $('ex-temas-lista').querySelectorAll(`button[data-ex-camada="${camada}"]`)) b.classList.toggle('sel', b.dataset.exCor.toLowerCase() === cor.toLowerCase());
+  salvarExpo(set(ref(db, `${noExpo('exposicao_salas')}/${n}/cores/${camada}`), cor));
+}
 function abrirTemasExpo() {
   if (!ex) return;
-  const atual = temaExpo(estadoSala(ex.n).tema).id;
-  $('ex-temas-lista').innerHTML = (EXPO.temas || []).map(t => `<button class="cs-comida-item cs-tema-item${t.id === atual ? ' atual' : ''}" data-ex-tema="${esc(t.id)}">
+  const tAtual = temaExpo(estadoSala(ex.n).tema), atual = tAtual.id;
+  $('ex-temas-lista').innerHTML = htmlCoresSalaExpo(ex.n, tAtual) + (EXPO.temas || []).map(t => `<button class="cs-comida-item cs-tema-item${t.id === atual ? ' atual' : ''}" data-ex-tema="${esc(t.id)}">
       <span><img src="${IMG}/${t.imagem}" alt="" draggable="false" loading="lazy"/></span><b>${esc(t.emoji || '🎨')} ${esc(t.nome)}</b><small>${t.id === atual ? '✔ Agora' : 'Toque para usar'}</small></button>`).join('');
   $('ex-temas').hidden = false;
 }
@@ -9896,6 +10066,7 @@ function escolherTemaExpo(id) {
   aplicarEstadoSala(ex.n);
   tocar('clique');
   salvarExpo(set(ref(db, `${noExpo('exposicao_salas')}/${ex.n}/tema`), id));
+  if (camadasDoTema(temaExpo(id)).length) abrirTemasExpo();   // 🎨 tema com camadas: a lista volta com as cores em cima
 }
 
 // ── 🎵 música da sala (PROMPT-182): a lista com ▶ (10 s para ouvir antes) e "Sem música" ──

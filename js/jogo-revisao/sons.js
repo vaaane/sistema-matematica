@@ -43,7 +43,7 @@ function desbloquear() {
       saida = teto;
       // arquivos: ganho próprio (não passam pelo teto de 0,15 dos bipes, senão o rugido fica baixo)
       ganhoEfeitos = ctx.createGain(); ganhoEfeitos.gain.value = VOL_EFEITOS; ganhoEfeitos.connect(ctx.destination);
-      ganhoMusica = ctx.createGain(); ganhoMusica.gain.value = VOL_MUSICA; ganhoMusica.connect(ctx.destination);
+      ganhoMusica = ctx.createGain(); ganhoMusica.gain.value = VOL_MUSICA * abaixada; ganhoMusica.connect(ctx.destination);
     } catch (_) { ctx = null; saida = null; return; }
   }
   if (ctx.state === 'suspended' && !document.hidden) ctx.resume().then(atualizarMusica).catch(() => {});
@@ -181,6 +181,16 @@ export function tocarArquivo(nome, { vol = 1, ate_ms = 0, fade = 150 } = {}) {
     } catch (_) { controle.parar(0); }
   });
   return controle;
+}
+// 🎙️ o griô da Exposição fala (PROMPT-234): a música abaixa para f (0,2 = 20%); 1 volta ao normal
+let abaixada = 1;
+export function abaixarMusica(f = 1) {
+  abaixada = Math.max(0, Math.min(1, Number(f) || 0));
+  if (!ctx || !ganhoMusica) return;
+  try {
+    const t = ctx.currentTime, g = ganhoMusica.gain;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(VOL_MUSICA * abaixada, t + 0.4);
+  } catch (_) {}
 }
 export function pararEfeitos(fadeMs = 150) { for (const c of [...tocando.values()]) c.parar(fadeMs); }
 
