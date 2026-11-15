@@ -124,8 +124,12 @@ export function quadrosDe(pet, anim) {
   const lista = a[anim]?.length ? a[anim] : a[reserva]?.length ? a[reserva] : (a.sentado_girando || []);
   return lista.map(q => BASE + q + versaoImg(q));
 }
-// ?v= das imagens que mudaram com o mesmo nome (o navegador guardava as antigas): 🐉 PROMPT-233, dragões adultos redesenhados
-const VERSAO_IMG = [[/^pets\/dragao_[a-z]+_adulto\//, 233]];
+// ?v= das imagens que mudaram com o mesmo nome (o navegador guardava as antigas): 🐉 PROMPT-233, dragões adultos redesenhados;
+// PROMPT-237: fogo laranja e comida com a cor certa no azul, branco, negro e arco-íris (a 1ª regra que casa vale)
+const VERSAO_IMG = [
+  [/^pets\/dragao_(azul|branco|sombra|arcoiris)_adulto\/(ataque_fogo_[123]|andando_fogo_[12]|assar_comida_1|comendo_[12])\.webp$/, 237],
+  [/^pets\/dragao_[a-z]+_adulto\//, 233],
+];
 const versaoImg = (q) => { const v = VERSAO_IMG.find(([re]) => re.test(q)); return v ? '?v=' + v[1] : ''; };
 export const bustoPet = (pet) => quadrosDe(pet, 'busto_sorrindo')[0];
 export const temBusto = (pet) => temAnim(pet, 'busto_sorrindo');
