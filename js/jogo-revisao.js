@@ -19,6 +19,11 @@ import { EMBLEMAS, CORES_EQUIPE, MAX_MEMBROS as MAX_MEMBROS_EQ, NOME_MAX as NOME
   membrosDe as membrosDeEq, naEquipe as naEquipeEq, equipeVale as equipeValeEq, lerAlunos as lerAlunosEq, criarEquipe as criarEquipeEq, editarEquipe as editarEquipeEq, pedirNome as pedirNomeEq,
   convidar as convidarEq, cancelarConvite as cancelarConviteEq, aceitarConvite as aceitarConviteEq, recusarConvite as recusarConviteEq, sairDaEquipe as sairDaEquipeEq,
   expulsar as expulsarEq } from '/js/jogo-revisao/equipes.js';   // 🛡️ PROMPT-235
+import { criarSala as criarSalaDeq, marcarPresenca as marcarPresencaDeq, sairPresenca as sairPresencaDeq, responderConvite as responderConviteDeqFb, responder as responderDeqFb,
+  quemConduz as quemConduzDeq, assumir as assumirDeq, ouvirSala as ouvirSalaDeq, ouvirConvites as ouvirConvitesDeqFb, apagarConvite as apagarConviteDeq, atualizarSala as atualizarSalaDeq,
+  lerSala as lerSalaDeq, Condutor as CondutorDeq, lutadores as lutadoresDeq, podeResponder as podeResponderDeq, inicioTorre as inicioTorreDeq, progressoTorre as progressoTorreDeq,
+  lutaInicial as lutaInicialDeq, fator as fatorDeq, MAX_RODADAS as MAX_RODADAS_DEQ, LIBERA_MS as LIBERA_DEQ_MS, CONVITE_MS as CONVITE_DEQ_MS, VIDA_TORRE as VIDA_TORRE_DEQ,
+  MOEDAS_ANDAR_REPETIDO as MOEDAS_ANDAR_REPETIDO_DEQ } from '/js/jogo-revisao/duelo-equipe.js';   // 🤝 PROMPT-236
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comMult, multMoedas, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
@@ -4242,6 +4247,8 @@ function ouvirEquipe() {
     }, (e) => console.warn('[jogo-revisao] convites de equipe indisponíveis', e?.code || e)));
   } catch (e) { console.warn('[jogo-revisao] equipe indisponível', e?.code || e); }
   pararEquipe = () => { for (const f of fs) try { f(); } catch (_) {} pararEquipeEq?.(); };
+  ouvirConvitesDeq();   // 🤝 PROMPT-236
+  setInterval(atualizarBotaoDueloEquipe, 1500);
 }
 function trocarEquipeId(id) {
   if (id === equipeId) return;
@@ -4269,6 +4276,7 @@ function mudouEquipe(eq) {
     else if (antes.nome !== eq.nome && antes.nome_pedido === eq.nome) avisoPet(`🛡️ A professora aprovou o nome "${eq.nome}"!`, true);
   }
   enviarOnline({ equipe: equipeOnline() });
+  if (eq && !$('equipe-convite').hidden) { $('equipe-convite').hidden = true; filaEquipe.length = 0; }   // já entrou numa equipe: o convite aberto some
   mostrarConviteEquipe();
   if (!$('equipe').hidden) renderEquipe();
 }
@@ -6354,7 +6362,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !!torreModal || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('equipe').hidden || !$('equipe-convite').hidden || !$('amigo-presente').hidden || !$('cs-visitas-escolha').hidden;
+  perguntaAberta || !!torreModal || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('equipe').hidden || !$('equipe-convite').hidden || !$('amigo-presente').hidden || !$('cs-visitas-escolha').hidden || !!deq || ($('deq-convite') && !$('deq-convite').hidden);   // 🤝 PROMPT-236
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -14464,6 +14472,7 @@ function renderDetalheTreinador() {
   const botao = sit === 'descansando'
     ? `<button class="jr-btn bt-det-ir" disabled>😴 volta em ${horasFalta(d.descansa_ate - agora)}</button>`
     : `<button class="jr-btn jr-btn-ouro bt-det-ir" data-ir="${esc(t.id)}"${m ? '' : ' disabled'}>📍 Ir até lá</button>`;
+  const comEquipe = podeDuelarEquipe() ? `<button class="jr-btn bt-det-ir" data-deq-mapa="${esc(t.id)}">🤝 Duelar com a equipe</button>` : '';   // PROMPT-236
   el.innerHTML = `
     <div class="bt-det-topo">
       ${bustoHtml(`${IMG}/npcs/${esc(t.id)}.webp`, 'bt-det-busto', BUSTO_NPC)}
@@ -14479,7 +14488,7 @@ function renderDetalheTreinador() {
       ${contas.length ? `<div>Contas: ${contas.map(esc).join(', ')}</div>` : ''}
       <div class="bt-det-estado ${sit}">${estado}</div>
     </div>
-    ${botao}`;
+    ${botao}${comEquipe}`;
 }
 
 // ── A luta ──────────────────────────────────────────────────
@@ -15238,8 +15247,8 @@ function fecharRevisaoBatalha() {
 }
 
 // Salva o resultado: desafio do treinador, prêmios (dentro do limite do dia) e as contas, para a professora
-function registrarBatalha(resultado) {
-  const { t, d, pet } = bt;
+function registrarBatalha(resultado, b = bt) {   // b: a batalha sozinho (bt) ou a parte deste aluno no duelo em equipe (PROMPT-236)
+  const { t, d, pet } = b;
   if (resultado === 'venceu') { missaoProgresso('batalha'); ganharXPJogo(XP_JOGO.batalha, 'batalha'); }
   const dia = diaBatalhas();
   const c = cuidadosDe(pet);
@@ -15268,8 +15277,8 @@ function registrarBatalha(resultado) {
   }
   const agora = Date.now();
   patch[`respostas/batalha-${agora}`] = {
-    tipo: 'batalha', treinador: t.id, nivel: d.nivel, pet, resultado, data: agora,
-    acertos: bt.contas.filter(x => x.acertou).length, erradas: bt.contas.filter(x => !x.acertou).length, contas: bt.contas,
+    tipo: 'batalha', treinador: t.id, nivel: d.nivel, pet, resultado, data: agora, ...(b.equipe ? { equipe: true } : {}),
+    acertos: b.contas.filter(x => x.acertou).length, erradas: b.contas.filter(x => !x.acertou).length, contas: b.contas,
   };
   gravar(patch);
   if (pr.lealdade) verificarMarcosLealdade(pet);
@@ -15281,6 +15290,523 @@ function sairDaBatalha() {
   if (!bt || bt.fim) return;
   registrarBatalha('saiu');
   fecharBatalha(true);
+}
+
+// ============================================================
+//  🤝 DUELO EM EQUIPE (PROMPT-236) — js/jogo-revisao/duelo-equipe.js (as regras e a sala)
+//  2 ou 3 alunos da mesma equipe, todos online, contra um treinador da Torre ou um treinador dos mapas.
+//  Quem criou conduz; se ele sair, o de vaga mais baixa assume. Cada um grava só os próprios prêmios e o próprio progresso.
+// ============================================================
+let deq = null;   // { id, sala, parar, condutor, criador, evVisto, fimVisto, contas, vistosOn, timerVez, timerConvite, lutaN }
+let convitesDeq = {}, pararConvitesDeq = null;
+const deqTeste = () => teste;
+const podeDuelarEquipe = () => usaAmigos() && !!minhaEquipe && equipeValeEq(minhaEquipe) && podeBatalhar();
+const ocupadoParaDuelo = () => !!deq || !!bt || !!duelo || perguntaAberta || !!pg;
+function atualizarBotaoDueloEquipe() {
+  const b = $('btn-duelo-equipe');
+  if (!b) return;
+  const torre = TORRE && (ehTorre() || (cena?.tipo === 'mapa' && cena.n === TORRE.local?.mapa)) && torreLiberada();
+  b.hidden = !(podeDuelarEquipe() && torre && !deq);
+}
+// o que cada um leva para a sala (o nome e o nome do pet aprovados)
+function meusDadosDeq(tipo, alvoId) {
+  const pet = estado.pets.ativo, te = torreEst(), d = tipo === 'mapa' ? desafioCom(alvoId) : null;
+  return { nome: nomeRanking(), vaga: Number(Object.entries(minhaEquipe?.membros || {}).find(([, u]) => u === sessao.uid)?.[0]) || 9,
+    pet, forma: formaDe(pet), pet_nome: nomePet(pet), tinta: tintaVisivel(pet) || null, extra: vidaExtraLealdade(cuidadosDe(pet)?.lealdade),
+    torre: { andar: te.andar, treinador: te.treinador }, nivel: d ? d.nivel : 1, vitorias: d ? d.vitorias : 0, descansa: d ? situacao(d) === 'descansando' : false };
+}
+// por que não dá para entrar (null: pode)
+function motivoSemDueloEquipe(tipo) {
+  if (!podeDuelarEquipe()) return 'Você precisa de uma equipe com 2 ou 3 alunos.';
+  if (tipo === 'torre' && !torreLiberada()) return 'Vença todos os ginásios para entrar na Torre 🔒';
+  if (tipo === 'mapa' && !ehProfessora() && barrigaDe(estado.pets.ativo) < (cfgBatalha().barriga_minima ?? 25)) return `${nomePet(estado.pets.ativo)} está com fome. Dê comida antes de batalhar.`;
+  return null;
+}
+const nomeAlvoDeq = (tipo, alvoId) => (tipo === 'mapa' ? treinador(alvoId)?.nome || 'o treinador' : 'a Torre dos Campeões');
+
+async function iniciarDueloEquipe(tipo, alvoId = null) {
+  if (ocupadoParaDuelo()) return;
+  const motivo = motivoSemDueloEquipe(tipo);
+  if (motivo) { avisoPet(motivo); tocar('erro'); return; }
+  let regs = {};
+  try { regs = await lerTodos(); } catch (_) {}
+  const agora = Date.now();
+  const online = membrosDeEq(minhaEquipe).filter(u => u !== sessao.uid && regs[u] && agora - (Number(regs[u].ts) || 0) < VALIDADE_MS);
+  if (!online.length) { avisoPet('Nenhum colega da equipe está online agora. 🤝'); tocar('erro'); return; }
+  const vagaDe = (u) => Number(Object.entries(minhaEquipe.membros || {}).find(([, x]) => x === u)?.[0]) || 9;
+  const membros = { [sessao.uid]: { ...meusDadosDeq(tipo, alvoId), status: 'aceitou' } };
+  for (const u of online) membros[u] = { nome: String(regs[u].apelido || nomeAlunoEq(u)).slice(0, 24), vaga: vagaDe(u), status: 'convidado' };
+  const sala = { tipo, criador: sessao.uid, host: sessao.uid, alvo_nome: nomeAlvoDeq(tipo, alvoId), alvo: tipo === 'mapa' ? { treinador: alvoId } : null,
+    equipe: { id: equipeId, ...equipeOnline() }, membros };
+  let id;
+  try { id = await criarSalaDeq(deqTeste(), sala, online); }
+  catch (e) { console.warn('[jogo-revisao] duelo em equipe indisponível', e?.code || e); avisoPet('Não deu para chamar a equipe agora.'); return; }
+  await marcarPresencaDeq(deqTeste(), id, sessao.uid).catch(() => {});
+  entrarSalaDeq(id, true);
+  deq.timerConvite = setTimeout(() => { if (deq?.id === id && deq.sala?.estado === 'convite') comecarDeq(); }, CONVITE_DEQ_MS + 800);
+}
+
+// ── convite ao vivo ──
+function ouvirConvitesDeq() {
+  if (pararConvitesDeq || !usaAmigos()) return;
+  try {
+    pararConvitesDeq = ouvirConvitesDeqFb(deqTeste(), sessao.uid, (v) => {
+      convitesDeq = v;
+      mostrarConviteDeq();
+    });
+  } catch (e) { console.warn('[jogo-revisao] convites do duelo em equipe indisponíveis', e?.code || e); }
+}
+function mostrarConviteDeq() {
+  const el = $('deq-convite');
+  const ids = Object.keys(convitesDeq);
+  if (el && !el.hidden && convitesDeq[el.dataset.id]) return;
+  if (el) el.hidden = true;
+  for (const id of ids) {
+    const c = convitesDeq[id], idade = agoraServ() - (Number(c?.ts) || 0);
+    if (!c || idade > CONVITE_DEQ_MS || idade < -5000) { apagarConviteDeq(deqTeste(), sessao.uid, id); continue; }
+    if (ocupadoParaDuelo() || transicionando) { responderConviteDeqFb(deqTeste(), id, sessao.uid, false).catch(() => {}); continue; }   // ocupado: recusa sozinho
+    const caixa = el || criarConviteDeqEl();
+    caixa.dataset.id = id;
+    caixa.querySelector('.deq-conv-txt').innerHTML = `🤝 <b>${esc(c.de_nome || 'Um colega')}</b> chamou a equipe para duelar com <b>${esc(c.alvo_nome || 'um treinador')}</b>!`;
+    caixa.hidden = false;
+    tocar('vitoria');
+    clearTimeout(mostrarConviteDeq.t);
+    mostrarConviteDeq.t = setTimeout(() => { if (caixa.dataset.id === id) { caixa.hidden = true; responderConviteDeqFb(deqTeste(), id, sessao.uid, false).catch(() => {}); } }, Math.max(1000, CONVITE_DEQ_MS - idade));
+    return;
+  }
+}
+function criarConviteDeqEl() {
+  const el = document.createElement('div');
+  el.id = 'deq-convite'; el.className = 'jr-pet-escolha deq-convite'; el.hidden = true;
+  el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Convite para duelo em equipe');
+  el.innerHTML = '<div class="jr-pet-escolha-caixa pres-caixa"><div class="jr-pet-escolha-titulo deq-conv-txt"></div><div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-deqc="sim">✔ Aceitar</button><button class="jr-btn jr-btn-sec" data-deqc="nao">✖ Recusar</button></div></div>';
+  el.addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-deqc]'); if (b) responderConviteDeq(b.dataset.deqc === 'sim'); });
+  $('jr-app').appendChild(el);
+  return el;
+}
+async function responderConviteDeq(sim) {
+  const el = $('deq-convite'), id = el?.dataset.id;
+  if (!id) return;
+  el.hidden = true; clearTimeout(mostrarConviteDeq.t);
+  const c = convitesDeq[id];
+  if (!sim) { responderConviteDeqFb(deqTeste(), id, sessao.uid, false).catch(() => {}); return; }
+  const motivo = ocupadoParaDuelo() ? 'Termine o que está fazendo primeiro.' : motivoSemDueloEquipe(c?.tipo);
+  if (motivo) {
+    const fome = c?.tipo === 'mapa' && !ehProfessora() && barrigaDe(estado.pets.ativo) < (cfgBatalha().barriga_minima ?? 25);
+    avisoPet(motivo);
+    responderConviteDeqFb(deqTeste(), id, sessao.uid, false, fome ? { motivo: 'fome' } : {}).catch(() => {});   // quem chamou fica sabendo
+    return;
+  }
+  let alvoId = null;
+  try { alvoId = (await lerSalaDeq(deqTeste(), id))?.alvo?.treinador || null; } catch (_) {}
+  try {
+    await marcarPresencaDeq(deqTeste(), id, sessao.uid);
+    const ok = await responderConviteDeqFb(deqTeste(), id, sessao.uid, true, meusDadosDeq(c?.tipo, alvoId));
+    if (!ok) { sairPresencaDeq(deqTeste(), id, sessao.uid); avisoPet('Esse duelo já começou ou foi cancelado.'); return; }
+  } catch (e) { console.warn('[jogo-revisao] duelo em equipe indisponível', e?.code || e); avisoPet('Não deu para entrar no duelo agora.'); return; }
+  entrarSalaDeq(id, false);
+}
+
+// ── a sala ──
+function entrarSalaDeq(id, criador) {
+  if (mp) fecharMeuPet();
+  soltarJoystick();
+  deq = { id, sala: null, parar: null, condutor: null, criador, evVisto: 0, fimVisto: null, contas: [], vistosOn: new Set(), lutaN: 0, animando: false };
+  montarTelaDeq();
+  deq.parar = ouvirSalaDeq(deqTeste(), id, (s) => { if (deq?.id === id) receberSalaDeq(s); });
+  atualizarBotaoDueloEquipe();
+}
+function receberSalaDeq(s) {
+  if (!s) { fecharDeq('O duelo foi encerrado.'); return; }
+  const antes = deq.sala;
+  deq.sala = s;
+  for (const u of Object.keys(s.on || {})) deq.vistosOn.add(u);
+  if (s.estado === 'cancelada') { fecharDeq(s.cancelada_msg || 'Ninguém aceitou o convite. Tente de novo mais tarde.', true); return; }
+  if (s.estado === 'luta' && s.luta?.fora?.[sessao.uid] === 'saiu') { fecharDeq('Você saiu da batalha.'); return; }
+  // quem chamou: o colega não pôde entrar porque o pet está com fome
+  if (deq.criador) for (const [u, m] of Object.entries(s.membros || {})) {
+    if (m?.status !== 'recusou' || m.motivo !== 'fome' || deq.avisadosFome?.has(u)) continue;
+    (deq.avisadosFome ||= new Set()).add(u);
+    alertaDeq(`${nomeMembroDeq(s, u)} está com o pet com fome 🍖`);
+  }
+  // o criador começa quando ninguém mais está para responder
+  if (s.estado === 'convite' && deq.criador && !Object.values(s.membros || {}).some(m => m?.status === 'convidado')) comecarDeq();
+  if (s.luta_n !== deq.lutaN) { deq.lutaN = s.luta_n; deq.evVisto = 0; deq.fimVisto = null; deq.contas = []; }
+  vigiarConducaoDeq(s);
+  renderDeq(antes);
+}
+// quem conduz: assume se o anterior saiu; vigia quem caiu da sala
+async function vigiarConducaoDeq(s) {
+  if (s.estado !== 'luta') return;
+  const c = quemConduzDeq(s);
+  if (c !== sessao.uid) { if (deq.condutor) { deq.condutor.parar(); deq.condutor = null; } return; }
+  if (!deq.condutor) {
+    const antigo = s.host;
+    if (antigo !== sessao.uid) { const ok = await assumirDeq(deqTeste(), deq.id, sessao.uid, antigo).catch(() => false); if (!ok || !deq) return; }
+    if (deq.condutor) return;
+    deq.condutor = new CondutorDeq(deqTeste(), deq.id, condutorCbDeq());
+    if (antigo && antigo !== sessao.uid) await deq.condutor.saiu(antigo);
+    deq.condutor.retomar();
+  }
+  for (const u of lutadoresDeq(s)) if (u !== sessao.uid && deq.vistosOn.has(u) && !s.on?.[u] && s.luta?.fora?.[u] !== 'saiu') deq.condutor.saiu(u);
+}
+function condutorCbDeq() {
+  const c = cfgBatalha();
+  return { T: c.tempo_s || 15, depois: c.depois_s ?? 6, torre: deq.sala?.tipo === 'torre', danoDe: (t) => dano(t), gerar: gerarPerguntaDeq };
+}
+// a pergunta da rodada (só quem conduz sorteia)
+function gerarPerguntaDeq(s) {
+  if (s.tipo === 'mapa') {
+    const t = treinador(s.alvo.treinador), d = desafioDe({ nivel: s.alvo.nivel, vitorias: s.alvo.vitorias }), f = forca(t, d);
+    const p = gerarConta(t.contas, f.contas);
+    const tR = +(f.tempo[0] + Math.random() * (f.tempo[1] - f.tempo[0])).toFixed(2), certo = Math.random() < f.acerto;
+    return { txt: p.conta, opcoes: p.opcoes, resposta: p.resposta, explica: p.explica || '', tipo: p.tipo, dificuldade: p.dificuldade,
+      npc: { ok: certo, v: certo ? p.resposta : sortear(p.opcoes.filter(v => v !== p.resposta)), t: tR } };
+  }
+  const A = andarCfg(s.alvo.andar), pares = MAPAS_LADOS(A?.mapas || [1]), chave = `${s.luta_n}`;
+  if (deq.vistosQ?.chave !== chave) deq.vistosQ = { chave, set: new Set() };   // não repete a mesma questão na mesma luta
+  const vistos = deq.vistosQ.set;
+  for (let k = 0; k < 40; k++) {
+    const [mapa, lado] = sortear(pares), personagem = s.alvo.chefe ? 'lider' : sortear(['treinador1', 'treinador2', 'treinador3']);
+    const q = gerarUma(mapa, lado, personagem, Math.floor(Math.random() * 8), { dificil: !!A?.dificil });
+    if (!q || q.tabela || (vistos.has(q.enunciado) && k < 30)) continue;
+    vistos.add(q.enunciado);
+    return { txt: String(q.enunciado), opcoes: embaralhar([String(q.resposta), ...q.erradas.map(String).filter(v => v !== String(q.resposta)).slice(0, 3)]), resposta: String(q.resposta), explica: q.explicacao || '' };
+  }
+  return { txt: '7 × 8', opcoes: embaralhar(['56', '54', '48', '64']), resposta: '56', explica: '7 × 8 = 56.' };
+}
+// o criador começa a luta (ou cancela, sem ninguém)
+async function comecarDeq() {
+  if (!deq?.criador || deq.comecou) return;
+  deq.comecou = true;
+  clearTimeout(deq.timerConvite);
+  let s;
+  try { s = await lerSalaDeq(deqTeste(), deq.id); } catch (_) { s = deq.sala; }
+  if (!s || s.estado !== 'convite') return;
+  const lut = lutadoresDeq(s);
+  if (lut.length < 2) { await atualizarSalaDeq(deqTeste(), deq.id, { estado: 'cancelada' }).catch(() => {}); return; }
+  const patch = { estado: 'luta', host: sessao.uid, luta_n: 1 };
+  for (const [u, m] of Object.entries(s.membros)) if (m.status === 'convidado') patch[`membros/${u}/status`] = 'recusou';
+  if (s.tipo === 'torre') {
+    const pos = inicioTorreDeq(lut.map(u => s.membros[u].torre));
+    Object.assign(patch, montarTreinadorTorreDeq(pos.andar, pos.treinador, s));
+  } else {
+    const ms = lut.map(u => s.membros[u]), menor = ms.reduce((a, b) => (Number(b.nivel) < Number(a.nivel) ? b : a), ms[0]);
+    patch.alvo = { treinador: s.alvo.treinador, nivel: Number(menor.nivel) || 1, vitorias: Number(menor.vitorias) || 0 };
+    patch.luta = lutaInicialDeq(s, cfgBatalha().vida || 100, cfgBatalha().vida || 100);
+  }
+  await atualizarSalaDeq(deqTeste(), deq.id, patch).catch((e) => console.warn('[jogo-revisao] duelo em equipe', e?.code || e));
+}
+// o treinador i do andar (os mesmos sorteios da torre de quem conduz); andares 1 a 6: um pet sorteado
+function montarTreinadorTorreDeq(andar, i, s) {
+  const t = treinadoresDoAndar(andar)[i] || treinadoresDoAndar(andar)[0];
+  const pet = t.pet || sortear(PETS.filter(p => petValido(p)));
+  const vida = t.chefe ? (andar === N_ANDARES ? VIDA_TORRE_DEQ.campeao : VIDA_TORRE_DEQ.chefe) : VIDA_TORRE_DEQ.treinador;
+  return { alvo: { andar, i, nome: t.nome, chefe: !!t.chefe, sprite: t.pers?.sprite || null, pet, estilo: t.estilo || null, aura: t.aura || null },
+    luta: lutaInicialDeq(s, cfgBatalha().vida || 100, vida), fim: null };
+}
+// torre, depois do fim: quem conduz segue para o próximo treinador (ou tenta de novo)
+async function seguirTorreDeq(acao) {
+  const s = deq?.sala;
+  if (!s || s.estado !== 'fim' || quemConduzDeq(s) !== sessao.uid) return;
+  const { andar, i, chefe } = s.alvo;
+  let a = andar, k = i;
+  if (acao === 'proximo') { if (chefe) return; k = i + 1; }   // depois do chefe a sala termina: cada um abre o seu baú
+  else if (s.fim?.resultado === 'volta') k = 0;
+  const vivosOn = lutadoresDeq(s).filter(u => s.on?.[u] && s.luta?.fora?.[u] !== 'saiu');
+  if (vivosOn.length < 2) { avisoPet('A equipe precisa de pelo menos 2 alunos na sala.'); return; }
+  const base = { ...s, membros: Object.fromEntries(Object.entries(s.membros).map(([u, m]) => [u, vivosOn.includes(u) ? m : { ...m, status: 'recusou' }])) };
+  const patch = { estado: 'luta', luta_n: (Number(s.luta_n) || 1) + 1, ...montarTreinadorTorreDeq(a, k, base) };
+  for (const u of lutadoresDeq(s)) if (!vivosOn.includes(u)) patch[`membros/${u}/status`] = 'recusou';
+  deq.condutor?.parar(); deq.condutor = null;
+  await atualizarSalaDeq(deqTeste(), deq.id, patch).catch(() => {});
+}
+async function seguirMapaDeq() {   // mapa: revanche com a mesma equipe
+  const s = deq?.sala;
+  if (!s || s.estado !== 'fim' || quemConduzDeq(s) !== sessao.uid) return;
+  const vivosOn = lutadoresDeq(s).filter(u => s.on?.[u] && s.luta?.fora?.[u] !== 'saiu');
+  if (vivosOn.length < 2) { avisoPet('A equipe precisa de pelo menos 2 alunos na sala.'); return; }
+  const base = { ...s, membros: Object.fromEntries(Object.entries(s.membros).map(([u, m]) => [u, vivosOn.includes(u) ? m : { ...m, status: 'recusou' }])) };
+  const patch = { estado: 'luta', luta_n: (Number(s.luta_n) || 1) + 1, fim: null, luta: lutaInicialDeq(base, cfgBatalha().vida || 100, cfgBatalha().vida || 100) };
+  for (const u of lutadoresDeq(s)) if (!vivosOn.includes(u)) patch[`membros/${u}/status`] = 'recusou';
+  deq.condutor?.parar(); deq.condutor = null;
+  await atualizarSalaDeq(deqTeste(), deq.id, patch).catch(() => {});
+}
+
+// ── a tela ──
+function montarTelaDeq() {
+  let el = $('deq');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'deq'; el.className = 'deq-tela';
+    el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Duelo em equipe');
+    el.innerHTML = `
+      <div class="deq-topo"><span class="deq-equipe"></span><span class="deq-rodada"></span><button class="jr-btn deq-sair" data-deq="sair">✕ Sair</button></div>
+      <div class="deq-arena"><div class="deq-lado deq-eq"></div><div class="deq-vs">VS</div><div class="deq-lado deq-tr"></div></div>
+      <div class="deq-painel">
+        <div class="deq-tempo"><i></i></div>
+        <div class="deq-q"></div>
+        <div class="deq-ops"></div>
+        <div class="deq-msg" aria-live="polite"></div>
+      </div>
+      <div class="deq-espera" hidden></div>
+      <div class="deq-fim" hidden></div>`;
+    el.addEventListener('click', cliqueDeq);
+    $('jr-app').appendChild(el);
+  }
+  el.hidden = false;
+  el.querySelector('.deq-espera').hidden = false;
+  el.querySelector('.deq-espera').innerHTML = '<p>Chamando a equipe…</p>';
+  el.querySelector('.deq-fim').hidden = true;
+}
+const nomeMembroDeq = (s, u) => s?.membros?.[u]?.nome || nomeAlunoEq(u);
+const imgPetDeq = (forma) => quadrosDe(forma, 'andar_direita')[0] || srcIcone(forma) || '';
+function renderDeq() {
+  const s = deq?.sala, el = $('deq');
+  if (!s || !el) return;
+  const eqx = s.equipe || {};
+  el.querySelector('.deq-equipe').innerHTML = `${htmlEmblema(eqx.e, eqx.c)} <b>${esc(eqx.n || 'Equipe')}</b>`;
+  const espera = el.querySelector('.deq-espera');
+  if (s.estado === 'convite') {
+    espera.hidden = false;
+    const linhas = Object.entries(s.membros || {}).sort((a, b) => (a[1].vaga || 9) - (b[1].vaga || 9)).map(([u, m]) =>
+      `<li>${m.status === 'aceitou' ? '✔' : m.status === 'recusou' ? '✖' : '⏳'} ${esc(nomeMembroDeq(s, u))}${u === s.criador ? ' 👑' : ''}${m.motivo === 'fome' ? ' <small>· está com o pet com fome 🍖</small>' : ''}</li>`).join('');
+    espera.innerHTML = `<h3>🤝 Duelo em equipe contra ${esc(s.alvo_nome || '')}</h3><ul class="deq-lista">${linhas}</ul>
+      <p class="deq-dica">${deq.criador ? 'Começa quando todos aceitarem (ou em 20 s, com pelo menos 2).' : 'Esperando a equipe…'}</p>`;
+    el.querySelector('.deq-rodada').textContent = '';
+    return;
+  }
+  espera.hidden = true;
+  const L = s.luta;
+  if (!L) return;
+  el.querySelector('.deq-rodada').textContent = s.tipo === 'torre' ? `Andar ${s.alvo.andar} · ${s.alvo.nome} · Rodada ${L.rod || 0}` : `Rodada ${L.rod || 0} / ${MAX_RODADAS_DEQ}`;
+  renderLadosDeq(s);
+  if (L.ev && L.ev.rod > deq.evVisto && !deq.animando) animarEvDeq(s, L.ev);
+  else if (!deq.animando) renderPerguntaDeq(s);
+  if (s.estado === 'fim' && !deq.animando) mostrarFimDeq(s);
+  else if (s.estado === 'luta') el.querySelector('.deq-fim').hidden = true;
+}
+function renderLadosDeq(s) {
+  const el = $('deq'), L = s.luta, us = lutadoresDeq(s);
+  const pct = (a, b) => Math.max(0, Math.min(100, b ? a / b * 100 : 0));
+  el.querySelector('.deq-eq').innerHTML = us.map(u => {
+    const m = s.membros[u], fora = L.fora?.[u], hp = Math.max(0, Number(L.hp[u]) || 0);
+    return `<div class="deq-pet${fora ? ' fora ' + fora : ''}${u === sessao.uid ? ' eu' : ''}" data-u="${esc(u)}">
+      <img class="deq-pet-img" src="${esc(imgPetDeq(m.forma))}" alt="" draggable="false" data-tinta="${esc(m.tinta || '')}"/>
+      <div class="deq-pet-info"><b>${esc(nomeMembroDeq(s, u))}</b><small>${esc(m.pet_nome || NOME_PET[m.pet] || '')}</small>
+      <div class="deq-hp"><i style="width:${pct(hp, L.max[u])}%"></i></div><small class="deq-hp-n">${fora === 'saiu' ? 'saiu' : fora ? 'desmaiou 💫' : `${hp} / ${L.max[u]}`}</small></div></div>`;
+  }).join('');
+  for (const img of el.querySelectorAll('.deq-eq img[data-tinta]')) if (img.dataset.tinta) aplicarTinta(img, img.dataset.tinta);
+  const A = s.alvo || {}, tM = s.tipo === 'mapa' ? treinador(A.treinador) : null;
+  const busto = s.tipo === 'mapa' ? `${IMG}/npcs/${A.treinador}.webp` : A.sprite ? `${IMG}/bustos/${A.sprite}.webp` : '';
+  const pet = s.tipo === 'mapa' ? tM?.pet : A.pet, nome = s.tipo === 'mapa' ? tM?.nome || 'Treinador' : A.nome;
+  const bonus = Math.round(((fatorDeq(L.n) - 1) * 100));
+  el.querySelector('.deq-tr').innerHTML = `<div class="deq-pet deq-treinador" data-u="T">
+      ${busto ? `<img class="deq-busto" src="${esc(busto)}" alt="" draggable="false"/>` : ''}
+      <img class="deq-pet-img deq-espelho${s.tipo === 'torre' ? classeEstilo(A.estilo) : ''}" src="${esc(s.tipo === 'torre' ? urlPetTorre(pet) : imgPetDeq(pet))}" alt="" draggable="false"/>
+      <div class="deq-pet-info"><b>${esc(nome)}</b><small>${esc(NOME_PET[pet] || '')}${bonus ? ` · <span class="deq-bonus">+${bonus}%</span>` : ''}</small>
+      <div class="deq-hp"><i style="width:${pct(Math.max(0, L.hp.T), L.max.T)}%"></i></div><small class="deq-hp-n">${Math.max(0, L.hp.T)} / ${L.max.T}</small></div></div>`;
+  if (s.tipo === 'mapa' && tM?.tinta) aplicarTinta(el.querySelector('.deq-tr .deq-pet-img'), tM.tinta);
+}
+function renderPerguntaDeq(s) {
+  const el = $('deq'), L = s.luta, q = L?.q, ops = el.querySelector('.deq-ops'), msg = el.querySelector('.deq-msg');
+  clearTimeout(deq.timerVez); cancelAnimationFrame(deq.raf);
+  if (!q || s.estado !== 'luta' || L.ev?.rod === L.rod) {
+    if (s.estado === 'luta') { el.querySelector('.deq-q').textContent = L.rod ? '' : 'Prepare-se…'; ops.innerHTML = ''; }
+    el.querySelector('.deq-tempo').hidden = true;
+    return;
+  }
+  el.querySelector('.deq-q').textContent = q.txt;
+  el.querySelector('.deq-q').classList.toggle('longa', String(q.txt).length > 40);
+  const pode = podeResponderDeq(s, sessao.uid);
+  if (deq.rodBotoes !== L.rod) { deq.rodBotoes = L.rod; deq.respondi = false; }
+  ops.innerHTML = q.opcoes.map((v, i) => `<button class="bt-op deq-op" data-deq-op="${i}"${pode.ok && !deq.respondi ? '' : ' disabled'}>${esc(v)}</button>`).join('');
+  ops.classList.toggle('vez', pode.motivo === 'vez');
+  const fora = L.fora?.[sessao.uid];
+  msg.textContent = fora === 'desmaiou' ? 'Seu pet desmaiou. Torça pelo seu colega! 📣'
+    : pode.motivo === 'vez' ? 'Deixe um colega responder 😉'
+    : s.tipo === 'mapa' && q.npc_ja ? `${treinador(s.alvo.treinador)?.nome || 'O treinador'} já respondeu!` : '';
+  if (pode.motivo === 'vez') deq.timerVez = setTimeout(() => { if (deq?.sala === s) renderPerguntaDeq(s); }, Math.max(200, (Number(q.inicio) || 0) + LIBERA_DEQ_MS - agoraServ() + 100));
+  // o tempo (só nos mapas; a torre não tem tempo)
+  const barra = el.querySelector('.deq-tempo');
+  barra.hidden = s.tipo !== 'mapa';
+  if (s.tipo === 'mapa') {
+    const T = (cfgBatalha().tempo_s || 15) * 1000;
+    const passo = () => {
+      if (!deq || deq.sala !== s) return;
+      const rest = Math.max(0, (Number(q.lim) || 0) - agoraServ());
+      barra.querySelector('i').style.width = Math.min(100, rest / T * 100) + '%';
+      if (rest > 0) deq.raf = requestAnimationFrame(passo);
+    };
+    passo();
+  }
+}
+async function responderDeq(i) {
+  const s = deq?.sala, L = s?.luta, q = L?.q;
+  if (!q || deq.respondi || !podeResponderDeq(s, sessao.uid).ok) return;
+  deq.respondi = true;
+  const v = q.opcoes[i];
+  for (const b of $('deq').querySelectorAll('.deq-op')) { b.disabled = true; if (Number(b.dataset.deqOp) === i) b.classList.add('escolhida'); }
+  tocar('clique');
+  let ok = false;
+  try { ok = await responderDeqFb(deqTeste(), deq.id, L.rod, sessao.uid, v); } catch (_) {}
+  if (!ok && deq?.sala?.luta?.rod === L.rod) $('deq').querySelector('.deq-msg').textContent = 'Um colega respondeu primeiro!';
+}
+// a rodada fechou: quem respondeu, a certa, e os ataques um por um
+async function animarEvDeq(s, ev) {
+  deq.animando = true; deq.evVisto = ev.rod;
+  const el = $('deq'), L = s.luta, q = L.q, msg = el.querySelector('.deq-msg');
+  clearTimeout(deq.timerVez); cancelAnimationFrame(deq.raf);
+  el.querySelector('.deq-tempo').hidden = true;
+  if (q && q.rod === ev.rod) {
+    el.querySelector('.deq-q').textContent = q.txt;
+    const ops = el.querySelector('.deq-ops');
+    if (!ops.children.length) ops.innerHTML = q.opcoes.map((v, i) => `<button class="bt-op deq-op" data-deq-op="${i}" disabled>${esc(v)}</button>`).join('');
+    for (const b of ops.querySelectorAll('.deq-op')) {
+      const v = q.opcoes[b.dataset.deqOp]; b.disabled = true;
+      if (v === q.resposta) b.classList.add('certa'); else if (v === ev.v) b.classList.add('errada'); else b.classList.add('esmaecida');
+    }
+    if (ev.quem === sessao.uid) deq.contas.push({ treinador: s.tipo === 'mapa' ? s.alvo.treinador : `torre${s.alvo.andar}-${s.alvo.i}`, tipo: q.tipo || 'torre', dificuldade: q.dificuldade || null,
+      conta: q.txt, certa: q.resposta, resposta: ev.v, acertou: ev.ok, tempo_s: ev.t, equipe: true, data: Date.now() });
+    if (ev.quem === sessao.uid && !ev.ok && s.tipo === 'mapa') caixaErrou(`bt-${q.tipo}-${q.dificuldade}`);
+  }
+  const quem = ev.quem ? nomeMembroDeq(s, ev.quem) : null;
+  msg.textContent = !quem ? (s.tipo === 'mapa' ? '⏱ O tempo acabou!' : '') : ev.ok ? `✔ ${quem} acertou!` : `✘ ${quem} errou. A certa era ${q?.resposta ?? ''}.`;
+  tocar(ev.ok ? 'acerto' : 'erro');
+  await esperarDeq(1100);
+  for (const a of ev.acoes || []) {
+    if (!deq) return;
+    const de = el.querySelector(`.deq-pet[data-u="${CSS.escape(a.de)}"]`);
+    de?.classList.add('ataca'); setTimeout(() => de?.classList.remove('ataca'), 500);
+    if (a.de === 'T') { msg.textContent = a.todos ? '💥 Ataque em todos!' : `💥 ${s.tipo === 'mapa' ? treinador(s.alvo.treinador)?.nome || 'O treinador' : s.alvo.nome} atacou ${nomeMembroDeq(s, a.para[0])}!`; tocar('erro'); }
+    else tocarArquivo('impacto');
+    await esperarDeq(350);
+    for (const u of a.para) {
+      const alvo = el.querySelector(`.deq-pet[data-u="${CSS.escape(u)}"]`);
+      if (!alvo) continue;
+      alvo.classList.add('apanha'); setTimeout(() => alvo.classList.remove('apanha'), 600);
+      const n = document.createElement('span'); n.className = 'deq-dano' + (a.crit ? ' crit' : ''); n.textContent = `−${a.n}`;
+      alvo.appendChild(n); setTimeout(() => n.remove(), 1100);
+    }
+    await esperarDeq(750);
+  }
+  if (!deq) return;
+  deq.animando = false;
+  renderLadosDeq(deq.sala);
+  const atual = deq.sala;
+  if (atual.luta?.ev && atual.luta.ev.rod > deq.evVisto) { animarEvDeq(atual, atual.luta.ev); return; }
+  if (atual.estado === 'fim') mostrarFimDeq(atual); else renderPerguntaDeq(atual);
+}
+const esperarDeq = (ms) => new Promise(r => setTimeout(r, ms));
+
+// ── o fim: cada um grava só o que é dele ──
+function mostrarFimDeq(s) {
+  const el = $('deq'), box = el.querySelector('.deq-fim');
+  const chave = `${s.luta_n}`;
+  if (deq.fimVisto === chave) return;
+  deq.fimVisto = chave;
+  clearTimeout(deq.timerVez); cancelAnimationFrame(deq.raf);
+  const r = s.fim?.resultado, nomeT = s.tipo === 'mapa' ? treinador(s.alvo.treinador)?.nome || 'O treinador' : s.alvo.nome;
+  const pr = aplicarFimDeq(s);
+  const conduz = quemConduzDeq(s) === sessao.uid;
+  const chips = (pr.chips || []).join('') || '<span class="bt-premio">Sem prêmios</span>';
+  let botoes = '';
+  if (s.tipo === 'torre') {
+    if (r === 'venceu' && !s.alvo.chefe && conduz) botoes += '<button class="jr-btn jr-btn-ouro" data-deq="proximo">▶ Próximo treinador</button>';
+    if (r !== 'venceu' && conduz) botoes += '<button class="jr-btn jr-btn-ouro" data-deq="denovo">↺ Tentar de novo</button>';
+  } else if (r !== 'venceu' && conduz) botoes += '<button class="jr-btn jr-btn-ouro" data-deq="revanche">↺ Revanche</button>';
+  const continua = s.tipo === 'torre' ? !(r === 'venceu' && s.alvo.chefe) : r !== 'venceu';
+  if (!conduz && continua && quemConduzDeq(s)) botoes += `<p class="deq-dica">${esc(nomeMembroDeq(s, quemConduzDeq(s)))} escolhe se a equipe continua.</p>`;
+  botoes += `<button class="jr-btn" data-deq="fechar">${pr.bau ? '🎁 Abrir o baú' : 'Fechar'}</button>`;
+  box.innerHTML = `<h2 class="${r === 'venceu' ? 'venceu' : ''}">${r === 'venceu' ? 'A equipe venceu! 🎉' : r === 'volta' ? 'Errou metade! A equipe volta para o 1º treinador do andar. 💪' : `${esc(nomeT)} venceu desta vez`}</h2>
+    <div class="bt-premios">${chips}</div>${pr.aviso ? `<p class="deq-dica">${esc(pr.aviso)}</p>` : ''}<div class="deq-fim-bts">${botoes}</div>`;
+  box.hidden = false;
+  tocar(r === 'venceu' ? 'vitoria' : 'erro');
+}
+function aplicarFimDeq(s) {
+  const r = s.fim?.resultado, eu = s.membros?.[sessao.uid], out = { chips: [], bau: false, aviso: '' };
+  if (!eu || eu.status !== 'aceitou' || s.luta?.fora?.[sessao.uid] === 'saiu') return out;
+  if (s.tipo === 'mapa') {
+    const t = treinador(s.alvo.treinador), d = desafioCom(s.alvo.treinador);
+    if (situacao(d) === 'descansando') { out.aviso = 'Você ajudou a equipe! Sem prêmio: este treinador está descansando para você.'; return out; }
+    const pr = registrarBatalha(r === 'venceu' ? 'venceu' : 'perdeu', { t, d, pet: estado.pets.ativo, contas: deq.contas, equipe: true });
+    if (pr.xp) { out.chips.push(`<span class="bt-premio xp">+${pr.xp} XP</span>`); darXP(pr.xp); }
+    if (pr.moedas) out.chips.push(`<span class="bt-premio mo">+${pr.moedas} ${moedaHtml()}</span>`);
+    if (pr.lealdade) out.chips.push(`<span class="bt-premio le">+${Math.round(pr.lealdade * 10) / 10} lealdade</span>`);
+    if (pr.bonusPrimeira) out.chips.push(`<span class="bt-premio mo">🏆 1ª vitória: +${pr.bonusPrimeira} ${moedaHtml()}</span>`);
+    if (pr.cortado) out.aviso = 'Limite de prêmios de hoje atingido — amanhã tem mais!';
+    return out;
+  }
+  // torre
+  const { andar, i, chefe } = s.alvo, te = torreEst(), patch = {}, agora = Date.now();
+  if (r === 'venceu') {
+    let moedas = comMult(chefe ? Number(TORRE.moedas_chefe) || 20 : Number(TORRE.moedas_treinador) || 10);
+    const p = progressoTorreDeq(te, andar, i, chefe, N_ANDARES);
+    if (chefe) {
+      if (p.bau) { out.bau = andar; } else { moedas += comMult(MOEDAS_ANDAR_REPETIDO_DEQ); out.aviso = 'Andar que você já tinha vencido: +30 moedas, sem baú.'; }
+    }
+    if (p.andar !== te.andar || p.treinador !== te.treinador || p.venceuAndar) {
+      te.andar = p.andar; te.treinador = p.treinador; patch['torre/andar'] = te.andar; patch['torre/treinador'] = te.treinador;
+      if (p.venceuAndar) {
+        const novo = !te.vencidos[andar];
+        te.vencidos[andar] = te.vencidos[andar] || agora; patch[`torre/andares_vencidos/${andar}`] = te.vencidos[andar];
+        if (andar === 5 && !te.insignias.andar5) { te.insignias.andar5 = agora; patch['torre/insignias/andar5'] = agora; }
+        if (andar === N_ANDARES && !te.insignias.campeao) { te.insignias.campeao = agora; patch['torre/insignias/campeao'] = agora; }
+        if (novo) publicarCampeaoTorre(andar);
+      }
+    }
+    estado.pets.moedas = (Number(estado.pets.moedas) || 0) + moedas;
+    patch['pets/moedas'] = estado.pets.moedas;
+    registrarGanho('torre', moedas, patch);
+    out.chips.push(`<span class="bt-premio mo">+${moedas} ${moedaHtml()}</span>`);
+    registrarDiaJogado();
+  } else if (r === 'volta' && te.andar === andar && te.treinador !== 0) { te.treinador = 0; patch['torre/treinador'] = 0; }
+  if (deq.contas.length) patch[`respostas/torre-equipe-${agora}`] = { tipo: 'torre_equipe', andar, treinador: i, resultado: r, data: agora, contas: deq.contas };
+  if (Object.keys(patch).length) gravar(patch);
+  if (ehTorre()) atualizarTreinadoresTorre();
+  return out;
+}
+
+function cliqueDeq(e) {
+  e.stopPropagation();
+  const op = e.target.closest('[data-deq-op]');
+  if (op && !op.disabled) { responderDeq(Number(op.dataset.deqOp)); return; }
+  const b = e.target.closest('[data-deq]');
+  if (!b) return;
+  const a = b.dataset.deq;
+  if (a === 'proximo' || a === 'denovo') seguirTorreDeq(a);
+  else if (a === 'revanche') seguirMapaDeq();
+  else if (a === 'fechar') { const bau = deq?.sala?.estado === 'fim' && b.textContent.includes('baú') ? deq.sala.alvo.andar : 0; fecharDeq(); if (bau) setTimeout(() => abrirBau(bau), 400); }
+  else if (a === 'sair') {
+    const s = deq?.sala;
+    if (s?.estado === 'luta' && !b.dataset.certeza) { b.dataset.certeza = '1'; b.textContent = 'Sair mesmo? Você não ganha nada'; setTimeout(() => { if (b.isConnected) { delete b.dataset.certeza; b.textContent = '✕ Sair'; } }, 3500); return; }
+    if (s?.estado === 'convite' && deq.criador) atualizarSalaDeq(deqTeste(), deq.id, { estado: 'cancelada', cancelada_msg: 'Quem chamou cancelou o duelo.' }).catch(() => {});
+    if (s?.estado === 'luta' && s.tipo === 'mapa') {   // sair no meio: derrota sem prêmio, como sozinho (quem está descansando não registra)
+      const d = desafioCom(s.alvo.treinador);
+      if (situacao(d) !== 'descansando') registrarBatalha('saiu', { t: treinador(s.alvo.treinador), d, pet: estado.pets.ativo, contas: deq.contas, equipe: true });
+    }
+    fecharDeq('Você saiu do duelo em equipe.');
+  }
+}
+// aviso para quem chamou (o colega com fome): por cima de tudo, 5 s, mesmo se a sala fechar ou a luta começar
+function alertaDeq(texto) {
+  const el = document.createElement('div');
+  el.className = 'deq-alerta'; el.setAttribute('role', 'status'); el.textContent = texto;
+  $('jr-app').appendChild(el);
+  tocar('erro');
+  setTimeout(() => el.remove(), 5000);
+}
+function fecharDeq(aviso = '', naHora = false) {   // naHora: no topo, sem esperar a fila dos avisos do pet
+  if (!deq) return;
+  const { id } = deq;
+  clearTimeout(deq.timerVez); clearTimeout(deq.timerConvite); cancelAnimationFrame(deq.raf);
+  deq.condutor?.parar();
+  try { deq.parar?.(); } catch (_) {}
+  sairPresencaDeq(deqTeste(), id, sessao.uid);
+  deq = null;
+  const el = $('deq'); if (el) el.hidden = true;
+  if (aviso) (naHora ? avisoTopo : avisoPet)(aviso);
+  atualizarBotaoDueloEquipe();
 }
 
 // ============================================================
@@ -15491,7 +16017,10 @@ function falarCom(o, convite = false) {   // convite: tocou no Engrenaldo → pe
     const d = desafioCom(o.p.id);
     if (situacao(d) === 'descansando') aviso = `<div class="jr-pessoa-descansa">Estou descansando. Volta em ${Math.max(1, Math.ceil((d.descansa_ate - Date.now()) / 3600e3))} h!</div>`;
     else if (podeBatalhar() && !ehProfessora() && barrigaDe(estado.pets.ativo) < (cfgBatalha().barriga_minima ?? 25)) { seguidor?.reagir('triste_fome', 2000); aviso = `<div class="jr-pessoa-descansa">${esc(nomePet(estado.pets.ativo))} está com fome. Dê comida antes de batalhar.</div>`; }
-    else if (podeBatalhar()) botoes.push(`<button class="jr-btn ${ped ? '' : 'jr-btn-ouro'}" data-acao="batalhar">⚔️ Batalhar</button>`);
+    else if (podeBatalhar()) {
+      botoes.push(`<button class="jr-btn ${ped ? '' : 'jr-btn-ouro'}" data-acao="batalhar">⚔️ Batalhar</button>`);
+      if (podeDuelarEquipe()) botoes.push('<button class="jr-btn" data-acao="duelo-equipe">🤝 Duelar com a equipe</button>');   // PROMPT-236
+    }
     else aviso = `<div class="jr-pessoa-descansa">${motivoSemBatalha()}</div>`;   // nunca um treinador sem botão e sem motivo (PROMPT-155)
   }
   if (botoes.length) botoes.push('<button class="jr-btn jr-btn-sec" data-acao="nao">Agora não</button>');
@@ -15530,7 +16059,8 @@ function acaoBalaoPessoa(e) {
   if (!b || !balaoPessoa) return;
   const o = balaoPessoa.o, id = o.p.id;
   fecharBalaoPessoa();
-  if (b.dataset.acao === 'batalhar') iniciarBatalha(id, 'pessoa');   // revanche/descanso/fome conferidos lá
+  if (b.dataset.acao === 'batalhar') iniciarBatalha(id, 'pessoa');
+  if (b.dataset.acao === 'duelo-equipe') iniciarDueloEquipe('mapa', id);   // 🤝 PROMPT-236   // revanche/descanso/fome conferidos lá
   if (b.dataset.acao === 'ajudar') abrirPedido(o);
   if (b.dataset.acao === 'loja') abrirLoja(LOJA?.vendedora?.aba || 'comidas');
   if (b.dataset.acao === 'recordes') mostrarRecordes();
@@ -19114,12 +19644,14 @@ function ligarEventos() {
   $('gin-fechado-fechar').addEventListener('click', () => { $('gin-fechado').hidden = true; });
   $('perg-ajuda').addEventListener('click', pedirAjuda);
   $('btn-batalhar').addEventListener('click', abrirListaBatalha);
+  $('btn-duelo-equipe').addEventListener('click', (e) => { e.stopPropagation(); iniciarDueloEquipe('torre'); });   // 🤝 PROMPT-236
   $('bt-lista-fechar').addEventListener('click', (e) => { e.stopPropagation(); $('bt-lista').hidden = true; });
   $('bt-lista').addEventListener('click', (e) => { if (e.target === $('bt-lista')) $('bt-lista').hidden = true; });   // fora da caixa: fecha
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('bt-lista').hidden) { e.stopPropagation(); $('bt-lista').hidden = true; } }, true);   // ⎋ Esc fecha os Duelos (PROMPT-209)
   $('bt-cards').addEventListener('click', (e) => { const b = e.target.closest('[data-sel]'); if (b) { btSel = b.dataset.sel; renderListaBatalha(); } });
   $('bt-det').addEventListener('click', (e) => {
     const b = e.target.closest('[data-ir]'); if (b && !b.disabled) { irAteTreinador(b.dataset.ir); return; }
+    const q = e.target.closest('[data-deq-mapa]'); if (q) { $('bt-lista').hidden = true; iniciarDueloEquipe('mapa', q.dataset.deqMapa); return; }   // 🤝 PROMPT-236
     const c = e.target.closest('[data-chamar],[data-desafiar-online],[data-presentear-online],[data-visitar-online]');   // ⚔️ Duelos: um colega online
     if (c && !c.disabled) { $('bt-lista').hidden = true; cliqueListaOnline(e); }
   });
