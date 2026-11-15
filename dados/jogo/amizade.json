@@ -36,8 +36,8 @@
      "{nome}! Sabia que ia aparecer!"
     ],
     [
-     "{nome}, meu parceiro! Tava te esperando!",
-     "Meu amigo {nome} chegou! Agora sim!"
+     "{nome}, minha dupla favorita! Tava te esperando!",
+     "{nome} chegou! Agora sim!"
     ]
    ],
    "ausente": "{nome}! Sumiu {dias} dias! Achei que tinha desistido de mim!",
@@ -47,21 +47,21 @@
    "pet": "Que {pet} lindo! Tá cada vez maior!",
    "insignia": "Vi que você ganhou a insígnia do {ginasio}! Mandou bem demais!",
    "torre": "Andar {andar} da torre?! Você é fera!",
-   "favor_ok": "Valeu demais, {nome}! Você é o cara!",
+   "favor_ok": "Valeu demais, {nome}! Você é demais!",
    "presente": "Toma, é pra você!"
   },
   "sabio": {
    "oi": [
     [
      "Bom dia, jovem.",
-     "Seja bem-vindo."
+     "Que bom que você veio."
     ],
     [
      "Olá, {nome}. Que bom te ver.",
      "{nome}, sente-se um pouco."
     ],
     [
-     "Meu amigo {nome}. O dia ficou melhor.",
+     "{nome}, que alegria. O dia ficou melhor.",
      "{nome}… sabia que vinha hoje."
     ]
    ],
@@ -78,7 +78,7 @@
   "acolhedor": {
    "oi": [
     [
-     "Oi, querido! Seja bem-vindo!",
+     "Oi, meu bem! Que bom que você veio!",
      "Que bom ver gente nova!"
     ],
     [
@@ -87,17 +87,17 @@
     ],
     [
      "{nome}! Vem cá, me dá um abraço!",
-     "Meu {nome} querido chegou!"
+     "Que alegria, {nome} chegou!"
     ]
    ],
    "ausente": "Ai, {nome}, {dias} dias! Fiquei preocupada! Tá tudo bem?",
-   "venceu": "Você me venceu, meu bem! Fiquei orgulhosa!",
+   "venceu": "Você me venceu, meu bem! Que orgulho!",
    "perdeu": "Não fica triste por ontem, tá? Hoje é outro dia.",
    "erro": "Lembra daquela de {conteudo}? Vamos ver juntinhos?",
    "pet": "Ai, que {pet} fofo! Tá bem cuidado!",
    "insignia": "Vi sua insígnia do {ginasio}! Que orgulho!",
    "torre": "Andar {andar} da torre! Cuidado lá em cima, viu?",
-   "favor_ok": "Obrigada, meu bem! Você é um anjo!",
+   "favor_ok": "Valeu, meu bem! Você é um anjo!",
    "presente": "Fiz com carinho, é seu!"
   },
   "brincalhao": {
@@ -111,8 +111,8 @@
      "Ei, {nome}! Saudade das suas risadas!"
     ],
     [
-     "{nome}!!! Meu favorito! (Não conta pros outros.)",
-     "O grande {nome} chegou! Palmas!"
+     "{nome}!!! Minha pessoa favorita! (Não conta pros outros.)",
+     "Olha quem chegou: {nome}! Palmas!"
     ]
    ],
    "ausente": "{nome}! {dias} dias! Já ia pendurar cartaz de \"procura-se\"!",
@@ -137,7 +137,7 @@
     ],
     [
      "{nome}! Bom te ver. De verdade.",
-     "Meu amigo {nome}. Sempre bem-vindo."
+     "{nome}. A porta está sempre aberta pra você."
     ]
    ],
    "ausente": "{dias} dias fora, {nome}. Notei.",
@@ -153,7 +153,7 @@
   "curioso": {
    "oi": [
     [
-     "Oh! Olá! Você é novo por aqui?",
+     "Oh! Olá! Primeira vez por aqui?",
      "Oi! Já viu isso aqui?"
     ],
     [
@@ -161,7 +161,7 @@
      "Oi, {nome}! Que bom, tenho uma pergunta!"
     ],
     [
-     "{nome}! Meu parceiro de descobertas!",
+     "{nome}! Minha dupla de descobertas!",
      "{nome}, precisava te contar uma coisa!"
     ]
    ],
@@ -196,7 +196,7 @@
    "erro": "Aquela de {conteudo}… quer tentar de novo? Sem pressa.",
    "pet": "Seu {pet} é tão fofo…",
    "insignia": "Vi sua insígnia do {ginasio}… parabéns.",
-   "torre": "Andar {andar}… você é corajoso.",
+   "torre": "Andar {andar}… quanta coragem.",
    "favor_ok": "Obrigada… de verdade.",
    "presente": "…é pra você."
   },
@@ -211,7 +211,7 @@
      "Ah, {nome}. O destino te trouxe."
     ],
     [
-     "{nome}, meu aprendiz favorito.",
+     "{nome}. As estrelas avisaram que você vinha.",
      "{nome}! O x da questão chegou."
     ]
    ],
@@ -235,7 +235,7 @@
     "Meu pai consertava bicicleta. Foi ele que montou meu primeiro skate com peça velha.",
     "Tô juntando moeda pra um skate novo. Já tenho 3/4 do dinheiro!",
     "Às vezes eu finjo que não ligo pra escola… mas eu ligo. Quero ser professor de educação física.",
-    "Você é tipo meu parceiro de manobra agora. Toma, pra você lembrar de mim!"
+    "Agora você é tipo minha dupla de manobra. Toma, pra você lembrar de mim!"
    ],
    "presente": {
     "tipo": "tinta",
@@ -251,7 +251,7 @@
     "Quando era pequeno eu tinha asma. Correr começou como tratamento!",
     "Meu sonho é correr uma maratona: 42 km e 195 metros.",
     "Já perdi muitas corridas. Mas nunca perdi pra preguiça.",
-    "Você tem ritmo de campeão. Isso aqui é da minha primeira medalha."
+    "Você tem ritmo de pódio. Isso aqui é da minha primeira medalha."
    ],
    "presente": {
     "tipo": "comida",
@@ -317,7 +317,7 @@
     "Meu pai era faroleiro. Eu cresci contando os barcos.",
     "Parece que eu reclamo de tudo, né? É o frio. Por dentro sou quentinho.",
     "Perdi meu cachorro numa nevasca. Até hoje deixo a porta entreaberta.",
-    "Você é teimoso que nem eu. Isso é elogio! Toma."
+    "Você é teimosia pura, que nem eu. E isso é elogio! Toma."
    ],
    "presente": {
     "tipo": "comida",
@@ -334,7 +334,7 @@
     "Conheço cada pegada da ilha: raposa, lebre, pinguim…",
     "Queria ser guia nos Andes um dia. Montanha gigante!",
     "Uma vez um turista se perdeu. Achei ele pelas pegadas em 20 minutos.",
-    "Você é o melhor parceiro de trilha. Leva meu gorro de presente!"
+    "Você é a melhor dupla de trilha. Leva meu gorro de presente!"
    ],
    "presente": {
     "tipo": "tinta",
@@ -366,7 +366,7 @@
     "Já guiei 1.000 barcos pelo gelo. Nenhum afundou!",
     "Na verdade eu tinha medo do mar. Agora o mar tem medo de mim. Hehe.",
     "Quando tá tudo calmo eu conto os flocos de neve. Já cheguei em 300.",
-    "Câmbio, amigo: você é oficial do porto agora! Desligo."
+    "Câmbio: agora você faz parte da tripulação do porto! Desligo."
    ],
    "presente": {
     "tipo": "comida",
@@ -433,7 +433,7 @@
     "Meu primeiro mapa eu desenhei com 7 anos. Era do meu quintal.",
     "Tenho uma bússola que era da minha mãe. Ela também explorava.",
     "Uma vez me perdi de verdade. Achei o caminho contando os passos de volta.",
-    "Você é explorador de verdade. Toma meu mapa antigo!"
+    "Você tem alma de exploração. Toma meu mapa antigo!"
    ],
    "presente": {
     "tipo": "tesouro",
@@ -498,7 +498,7 @@
     "Sei o preço de tudo de cabeça. Calculadora pra quê?",
     "Criei 4 filhos com o dinheiro dessa banca. Todos estudaram!",
     "Quando alguém não tem dinheiro, eu deixo levar e pagar depois. Confiança.",
-    "Você é freguês de ouro, meu bem. Leva essa cesta!"
+    "Você é freguesia de ouro, meu bem. Leva essa cesta!"
    ],
    "presente": {
     "tipo": "comida",
@@ -531,7 +531,7 @@
     "Treino todo dia: subir, descer, carregar. E calcular!",
     "Ser bombeiro é proteger quem você nem conhece.",
     "Tenho medo de altura. Sério! Mas subo assim mesmo.",
-    "Você é corajoso também. Toma meu capacete de brinquedo!"
+    "Você tem coragem também. Toma meu capacete de brinquedo!"
    ],
    "presente": {
     "tipo": "tinta",
@@ -595,7 +595,7 @@
     "Meu neto mora longe. Faço um cachecol pra ele todo inverno.",
     "No meu tempo a gente estudava com lamparina. Vocês têm sorte!",
     "Quando seu vô… quer dizer, meu marido, era vivo, ele contava as carreiras pra mim.",
-    "Você é como um neto pra mim. Fiz um cachecol pro seu pet!"
+    "Você é da família agora. Fiz um cachecol pro seu pet!"
    ],
    "presente": {
     "tipo": "tinta",
@@ -611,7 +611,7 @@
     "Aprendi a cozinhar com minha avó baiana. O tempero é dela.",
     "Receita é matemática: dobra a receita, dobra tudo!",
     "Já queimei um bolo na frente de 100 pessoas. Rimos juntos.",
-    "Você é meu sous-chef oficial! Toma, prato especial."
+    "Agora você é sous-chef oficial da minha cozinha! Toma, prato especial."
    ],
    "presente": {
     "tipo": "comida",
@@ -724,7 +724,7 @@
     "Comecei carregando tijolo com 14 anos.",
     "Grito na obra porque o barulho é alto, não porque sou bravo.",
     "Minha maior obra foi a escola. Meus netos estudam lá.",
-    "Você é trabalhador de verdade. Toma, é seu capacete de honra."
+    "Você dá duro de verdade. Toma, é seu capacete de honra."
    ],
    "presente": {
     "tipo": "moedas",
@@ -757,7 +757,7 @@
     "Fui a única menina da minha turma de engenharia.",
     "Errar uma conta numa ponte pode ser perigoso. Por isso confiro tudo.",
     "Meu pai era pedreiro. Hoje eu projeto as obras que ele constrói.",
-    "Você pensa como engenheiro. Toma minha régua especial."
+    "Você tem cabeça de engenharia. Toma minha régua especial."
    ],
    "presente": {
     "tipo": "movel",
@@ -917,7 +917,7 @@
     "BIP. Eu sou o robô mais inteligente da ilha. Fato.",
     "BIP. Fui montado com 347 peças. 2 sobraram. Não sei de onde.",
     "BIP. Às vezes eu… sinto? Não. Erro de sistema.",
-    "BIP. Você é o único humano que eu considero quase tão bom quanto eu.",
+    "BIP. Você é a única pessoa que eu considero quase tão boa quanto eu.",
     "BIP. Presente detectado. Entregando. Não se acostume."
    ],
    "presente": {

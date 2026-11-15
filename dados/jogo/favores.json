@@ -49,7 +49,7 @@
    "tipo": "entrega",
    "npc": "vovo_lurdes",
    "nivel_min": 0,
-   "texto": "Querido, leva esse bolo de fubá pro Seu Antônio? Ele adora!",
+   "texto": "Meu bem, leva esse bolo de fubá pro Seu Antônio? Ele adora!",
    "para": "seu_antonio",
    "item": "🍰 Bolo de fubá",
    "agradece": "Bolo da Lurdes! Ela lembrou de mim… obrigado, jovem."
@@ -209,7 +209,7 @@
    "tipo": "achado",
    "npc": "vovo_lurdes",
    "nivel_min": 0,
-   "texto": "Cadê meus óculos, querido? Devo ter deixado por aí…",
+   "texto": "Cadê meus óculos, meu bem? Devo ter deixado por aí…",
    "mapa": "proprio",
    "item": "👓 Óculos",
    "agradece": "Ah, agora enxergo você direito! Obrigada!"
@@ -232,7 +232,7 @@
    "texto": "Chutei minha bola longe demais! Me ajuda a achar?",
    "mapa": "proprio",
    "item": "⚽ Bola",
-   "agradece": "Achou! Você é o melhor!"
+   "agradece": "Achou! Você é demais!"
   },
   {
    "id": "ach_varinha",
@@ -636,7 +636,7 @@
      "para": "lena",
      "item": "🐧 Newton",
      "texto": "Achei o Newton perto do gelo fino. Leva ele de volta pra Lena!",
-     "agradece": "Newton! Você é o herói da ilha!"
+     "agradece": "Newton! Você salvou a ilha!"
     }
    ]
   },
