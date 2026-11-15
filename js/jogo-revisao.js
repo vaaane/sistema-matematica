@@ -26,6 +26,8 @@ import { criarSala as criarSalaDeq, marcarPresenca as marcarPresencaDeq, sairPre
   MOEDAS_ANDAR_REPETIDO as MOEDAS_ANDAR_REPETIDO_DEQ } from '/js/jogo-revisao/duelo-equipe.js';   // 🤝 PROMPT-236
 import { definirAmizade, amizadePronta, npcAmizade, ganhoAmizade, nomeNivel, nivelDe, progresso as progressoAmz, coracoes, saudacao, memoria, falaTom, historia, presenteDe,
   diasEntre as diasEntreAmz, NIVEL_MAX as NIVEL_MAX_AMZ } from '/js/jogo-revisao/amizade.js';   // ❤️ PROMPT-238
+import { definirFavores, favoresProntos, cfgFavores, favorDef, TIPOS_PARTE_A, favoresDoDia, sortearOfertas, sortearConta, fmtReais, explicarConta, textoFavor, confereValor,
+  moedasFavor, amizadeFavor, amizadeDestino, sortearPremio, diasEntre as diasEntreFv } from '/js/jogo-revisao/favores.js';   // 📜 PROMPT-239
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comMult, multMoedas, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
@@ -549,6 +551,7 @@ async function carregarEstado() {
     estado.torre = lerTorre(v.torre);   // 🏆 Torre dos Campeões (PROMPT-230)
     estado.amizade = v.amizade && typeof v.amizade === 'object' ? JSON.parse(JSON.stringify(v.amizade)) : {};   // ❤️ { npc: { p, conversa, t, viu, presente, bat } } (PROMPT-238)
     estado.errosMapa = v.erros_mapa && typeof v.erros_mapa === 'object' ? { ...v.erros_mapa } : {};   // { n: { dia, lado } }: a fala de erro do NPC do mapa
+    estado.favores = lerFavores(v.favores);   // 📜 PROMPT-239
     estado.casinha = lerCasinha(v.casinha);   // 🏠 { guardados, moveis, cama_gratis } (PROMPT-105)
     estado.pescaEspecies = v.pesca_especies && typeof v.pesca_especies === 'object' ? { ...v.pesca_especies } : null;   // 🐠 { peixe: vezes } (PROMPT-106)
     estado.desafiosDia = v.desafios_dia || null;
@@ -924,6 +927,7 @@ export async function iniciarJogo(sess) {
   // só para a professora testar pelo console (?dev=1 no modo teste): jogoRevisaoDev.somarTurma('ZZ_DEV', 'insignias')
   if (modoDev) window.jogoRevisaoDev = { somarTurma, batalha: () => bt, pesca: () => pesca,   // batalha/pesca em andamento (testes)
     amizade: (id, n) => ganharAmizade(id, n), amizades: () => estado.amizade, falar: (id) => falarCom(pessoasMapa.find(o => o.p.id === id)),   // ❤️ PROMPT-238
+    favores: () => estado.favores, renovarFavores: () => { estado.favores.dia = null; renovarFavores(); }, caderno: (aba) => abrirCaderno(aba), rumo: (id) => ligarRumo(id),   // 📜 PROMPT-239
     praca: () => abrirPraca(), laboratorio: () => abrirLaboratorio(), computador: (id) => abrirComputador(id), fantasma: () => abrirFantasma(), fase: (n) => abrirFasePrograme(n), escolherPet: (p) => escolherPet(p),
     desafiar: (uid, modo, aposta) => desafiarColega(colegas.get(uid), modo, aposta), colegas: () => [...colegas.keys()],
     mapa: (n) => abrirMapa(n, 'entrada'), pescar: () => { const p = pontosDoMapa(cena.n)[0]; if (p) sentarPesca(p); return !!p; }, pergunta: (chave, p) => abrirPergunta(chave, p),
@@ -975,6 +979,8 @@ export async function iniciarJogo(sess) {
   catch (e) { console.warn('[jogo-revisao] interior da loja indisponível', e); }
   await carregarTorre();   // 🏆 PROMPT-230: Torre dos Campeões
   await carregarAmizade();   // ❤️ PROMPT-238
+  await carregarFavores();   // 📜 PROMPT-239
+  atualizarBotaoFavores();
   try {   // 🏠 Casinha (PROMPT-105); ?casinha=cheia (modo teste): 1 de cada móvel nos guardados, sem gastar e sem gravar
     CASA = await fetch(`${DADOS}/casinha.json`).then(r => { if (!r.ok) throw new Error('casinha.json'); return r.json(); });
     acrescentarTrofeusOuro();   // 🏆 PROMPT-230: "Troféu dourado do mapa N", só ganhando no Difícil
@@ -6368,7 +6374,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !!torreModal || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('equipe').hidden || !$('equipe-convite').hidden || !$('amigos').hidden || !$('amigo-presente').hidden || !$('cs-visitas-escolha').hidden || !!deq || ($('deq-convite') && !$('deq-convite').hidden);   // 🤝 PROMPT-236
+  perguntaAberta || !!torreModal || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('equipe').hidden || !$('equipe-convite').hidden || !$('favores').hidden || !$('fv-conta').hidden || !$('amigo-presente').hidden || !$('cs-visitas-escolha').hidden || !!deq || ($('deq-convite') && !$('deq-convite').hidden);   // 🤝 PROMPT-236
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -12988,8 +12994,9 @@ function ligarVila() {
   });
   $('equipe').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && e.target.id === 'equipe-nome') $('equipe').querySelector('[data-eq-acao="pedir"]')?.click(); });
   $('btn-equipe').addEventListener('click', (e) => { e.stopPropagation(); abrirEquipe(); });
-  $('btn-amigos').addEventListener('click', (e) => { e.stopPropagation(); abrirCadernoAmigos(); });   // ❤️ PROMPT-238
-  $('amigos').addEventListener('click', cliqueCadernoAmigos);
+  $('btn-favores').addEventListener('click', (e) => { e.stopPropagation(); abrirCaderno(); });   // 📜 PROMPT-239 (os amigos ❤️ são uma aba)
+  $('favores').addEventListener('click', cliqueCaderno);
+  $('fv-conta').addEventListener('click', cliqueContaFavor);
   $('amigo-presente').addEventListener('click', (e) => { e.stopPropagation(); cliquePresenteAmigo(e); });
   $('cs-arquivo').addEventListener('change', (e) => { const f = e.target.files?.[0]; if (f) enviarFotoCasa(f); });   // 📷 (PROMPT-184)
   $('visita-pedido').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-ped]'); if (b) responderPedidoVisita(b.dataset.ped === 'deixar'); });   // 🚪 (PROMPT-168)
@@ -15311,7 +15318,6 @@ const MOEDAS_PRESENTE_REPETIDO_AMZ = 50;
 async function carregarAmizade() {
   try { definirAmizade(await fetch(`${DADOS}/amizade.json`).then(r => { if (!r.ok) throw new Error('amizade.json'); return r.json(); })); }
   catch (e) { console.warn('[jogo-revisao] amizade indisponível', e); }
-  $('btn-amigos').hidden = !amizadePronta();
 }
 const amizadeLigada = () => amizadePronta() && carregouProgresso && !!estado;
 const amzLer = (id) => estado?.amizade?.[id] || {};
@@ -15382,6 +15388,8 @@ function darPresenteAmizade(id) {
 function motivosMemoriaAmz(id, o, r0) {
   const out = [], hoje = diaLocal(), desde = Number(r0.t) || 0;
   if (r0.conversa) { const d = diasEntreAmz(r0.conversa, hoje); if (d >= 4) out.push({ tipo: 'ausente', vars: { dias: d } }); }
+  const fm = estado.favores?.memoria?.[id];   // 📜 PROMPT-239: "Você me salvou com…" por 3 dias
+  if (fm?.txt && Date.now() - Number(fm.t) < MS_FAVOR_MEMORIA) out.push({ tipo: 'favor', texto: fm.txt, vars: {} });
   const mapa = Number(o?.p?.mapa) || 0, em = estado.errosMapa?.[mapa];
   if (mapa && em?.dia && diasEntreAmz(em.dia, hoje) <= 7) {
     const c = D.questoes[mapa]?.ginasios?.[em.lado]?.conteudo;
@@ -15447,25 +15455,384 @@ function amizadeDaBatalha(id, resultado, patch) {
   ganharAmizade(id, (ganhoAmizade('batalhar') || 1) + (resultado === 'venceu' ? ganhoAmizade('vencer_treinador') || 2 : 0), patch);
 }
 
-// ── 📔 Caderno de amigos (no estojo) ──
-let amzSel = null;
-function abrirCadernoAmigos() {
+// ============================================================
+//  📜 FAVORES DOS NPCs (PROMPT-239) — dados/jogo/favores.json; regras em js/jogo-revisao/favores.js
+//  favores = { dia, ofertas: [{ id, npc, vals, resp }], abertos: { id: { id, tipo, npc, alvo, item, etapa, aceito, ate, vals, resp,
+//    tent, errou, metade } }, feitos: [{ id, npc, tipo, t, moedas }] (20), recentes: { id: dia }, memoria: { npc: { t, txt } },
+//    stats: { total, semanas: { segunda: n }, cobranca_1a, compra_1a }, ultima_corrente }
+//  Parte A: entrega, recado, cobrança e compra. Etapas: levar (entrega) · ir → voltar (recado) · cobrar → voltar · comprar → troco.
+// ============================================================
+const MS_FAVOR_MEMORIA = 3 * 864e5;
+async function carregarFavores() {
+  try { definirFavores(await fetch(`${DADOS}/favores.json`).then(r => { if (!r.ok) throw new Error('favores.json'); return r.json(); })); }
+  catch (e) { console.warn('[jogo-revisao] favores indisponíveis', e); }
+}
+function lerFavores(v) {
+  const f = v && typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : {};
+  const ob = (x) => (x && typeof x === 'object' && !Array.isArray(x) ? x : {});
+  const ar = (x) => (Array.isArray(x) ? x : Object.values(ob(x))).filter(Boolean);
+  return { dia: typeof f.dia === 'string' ? f.dia : null, ofertas: ar(f.ofertas), abertos: ob(f.abertos), feitos: ar(f.feitos).slice(0, 20),
+    recentes: ob(f.recentes), memoria: ob(f.memoria), stats: { total: 0, cobranca_1a: 0, compra_1a: 0, ...ob(f.stats), semanas: ob(f.stats?.semanas) },
+    ultima_corrente: f.ultima_corrente || null };
+}
+const favoresLigados = () => favoresProntos() && amizadeLigada() && NPCS.length > 0;
+const fv = () => (estado.favores ||= lerFavores(null));
+const npcDe = (id) => NPCS.find(p => p.id === id) || null;
+const nomeNpc = (id) => npcDe(id)?.nome || id;
+const niveisAmz = () => Object.fromEntries(NPCS.map(p => [p.id, nivelDe(amzLer(p.id).p)]));
+const alvoDe = (f) => f.para || f.devedor || f.loja || null;
+function gravarFavores(patch = {}) {
+  patch.favores = JSON.parse(JSON.stringify(fv()));   // o nó inteiro (pequeno); sem undefined
+  gravar(patch);
+}
+// virou o dia: novas ofertas (as não aceitas somem); favor aceito que passou de 24 h: some (sem prêmio)
+function renovarFavores() {
+  if (!favoresLigados()) return;
+  const F = fv(), hoje = diaLocal(), agora = Date.now();
+  let mudou = false;
+  for (const [id, a] of Object.entries(F.abertos)) if (!a || Number(a.ate) < agora) {
+    delete F.abertos[id]; mudou = true;
+    if (a) avisoTopo(`⌛ O favor de ${nomeNpc(a.npc)} passou do prazo.`);
+  }
+  for (const [k, m] of Object.entries(F.memoria)) if (!m || agora - Number(m.t) > MS_FAVOR_MEMORIA) { delete F.memoria[k]; mudou = true; }
+  if (F.dia !== hoje) {
+    const niveis = niveisAmz();
+    const pode = (f) => TIPOS_PARTE_A.includes(f.tipo) && npcDe(f.npc) && npcDe(alvoDe(f)) && alvoDe(f) !== f.npc;
+    F.ofertas = sortearOfertas({ niveis, recentes: F.recentes, abertos: F.abertos, hoje, n: favoresDoDia(niveis), pode }).map(o => {
+      const d = favorDef(o.id);
+      if (d.tipo !== 'cobranca' && d.tipo !== 'compra') return o;
+      const c = sortearConta(d);   // os valores ficam salvos desde já (não mudam se sair e voltar)
+      return c ? { ...o, vals: c.vals, resp: c.resp } : null;
+    }).filter(Boolean);
+    for (const [id, d] of Object.entries(F.recentes)) if (diasEntreFv(d, hoje) >= 3) delete F.recentes[id];
+    F.dia = hoje; mudou = true;
+  }
+  if (mudou) gravarFavores();
+}
+const ofertaDe = (npc) => fv().ofertas.find(o => o.npc === npc) || null;
+const destinoAtual = (a) => (a.etapa === 'voltar' || a.etapa === 'troco' ? a.npc : a.alvo);
+const abertoPara = (npc) => Object.values(fv().abertos).find(a => destinoAtual(a) === npc) || null;
+const nomesFavor = (d) => ({ devedor: nomeNpc(d.devedor), loja: nomeNpc(d.loja), para: nomeNpc(d.para) });
+const textoDaOferta = (o) => { const d = favorDef(o.id); return textoFavor(d.texto, o.vals, nomesFavor(d)); };
+function localNpc(id) {   // "4. Vale das Frações", "Loja da Dona Cida (mapa 7 ou Praça)"…
+  const p = npcDe(id);
+  if (!p) return '';
+  if (p.interior === 'loja') return 'Loja da Dona Cida';
+  if (p.interior === 'fliperama') return 'Fliperama, na Praça';
+  if (p.interior === 'laboratorio') return 'Laboratório, na Praça';
+  return nomeMapaAmz(p);
+}
+function oQueFalta(a) {
+  const n = (id) => `${nomeNpc(id)} (${localNpc(id)})`;
+  if (a.tipo === 'entrega') return `Leve ${a.item} para ${n(a.alvo)}`;
+  if (a.tipo === 'recado') return a.etapa === 'voltar' ? `Volte a ${n(a.npc)} e conte a resposta` : `Dê o recado para ${n(a.alvo)}`;
+  if (a.tipo === 'cobranca') return a.etapa === 'voltar' ? `Leve o dinheiro para ${n(a.npc)}` : `Cobre ${n(a.alvo)}`;
+  if (a.tipo === 'compra') return a.etapa === 'troco' ? `Leve a compra e o troco para ${n(a.npc)}` : `Faça a compra com ${n(a.alvo)}`;
+  return '';
+}
+const tempoQueResta = (a) => { const h = Math.max(0, Number(a.ate) - Date.now()) / 36e5; return h >= 1 ? `${Math.floor(h)} h` : `${Math.max(1, Math.round(h * 60))} min`; };
+
+// ── no balão do NPC: o pedido (❗) ou a etapa do favor aberto com ele ──
+function favorNoBalao(o) {
+  if (!favoresLigados()) return null;
+  renovarFavores();
+  const id = o.p.id, a = abertoPara(id);
+  if (a) {
+    const d = favorDef(a.id);
+    const rot = a.tipo === 'entrega' ? `📦 Entregar ${a.item}` : a.tipo === 'recado' ? (a.etapa === 'voltar' ? '💬 Contar a resposta' : '💬 Dar o recado')
+      : a.tipo === 'cobranca' ? (a.etapa === 'voltar' ? '💰 Entregar o dinheiro' : '💰 Cobrar') : a.etapa === 'troco' ? '🪙 Entregar o troco' : '🛒 Comprar';
+    return { caixa: '', botoes: [`<button class="jr-btn jr-btn-ouro" data-acao="fv-etapa" data-fv="${esc(a.id)}">${esc(rot)}</button>`], d };
+  }
+  const of = ofertaDe(id);
+  if (of && !fv().abertos[of.id]) return {
+    caixa: `<div class="fv-balao-pedido">📜 ${esc(textoDaOferta(of))}</div>`,
+    botoes: [`<button class="jr-btn jr-btn-ouro" data-acao="fv-aceitar" data-fv="${esc(of.id)}">✅ Aceitar</button>`],
+  };
+  return null;
+}
+// mostra uma fala no balão do NPC (resposta do favor), com botões opcionais
+function falaFavor(o, texto, botoes = [], extraHtml = '') {
+  if (!o?.img?.isConnected) { avisoTopo(`${nomeNpc(o?.p?.id)}: ${texto}`); return; }
+  const el = $('pessoa-balao');
+  const bts = botoes.length ? `<div class="jr-pessoa-botoes">${botoes.join('')}</div>` : '';
+  el.innerHTML = `<b>${esc(o.p.nome)}</b>${htmlCoracoes(nivelDe(amzLer(o.p.id).p))}<span>${esc(texto)}</span>${extraHtml}${bts}`;
+  el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  if (balaoPessoa) clearTimeout(balaoPessoa.timer);
+  balaoPessoa = { o, timer: setTimeout(fecharBalaoPessoa, botoes.length ? 12000 : 7000) };
+  posicionarBalaoPessoa();
+}
+function acaoFavor(o, acao, fid) {
+  const F = fv();
+  if (acao === 'fv-aceitar') {
+    const of = F.ofertas.find(x => x.id === fid), d = favorDef(fid);
+    if (!of || !d || F.abertos[fid]) return;
+    const agora = Date.now(), a = { id: fid, tipo: d.tipo, npc: d.npc, alvo: alvoDe(d), etapa: { entrega: 'levar', recado: 'ir', cobranca: 'cobrar', compra: 'comprar' }[d.tipo],
+      aceito: agora, ate: agora + (Number(cfgFavores().validade_horas) || 24) * 36e5, tent: 0, errou: false, metade: false };
+    if (d.item) a.item = d.item;
+    const conta = of.vals ? { vals: of.vals, resp: of.resp } : d.vars ? sortearConta(d) : null;   // sem valores salvos (não deveria): sorteia agora
+    if (conta) { a.vals = conta.vals; a.resp = conta.resp; }
+    F.abertos[fid] = a;
+    F.ofertas = F.ofertas.filter(x => x.id !== fid);
+    gravarFavores();
+    atualizarIconesPessoas(); atualizarBotaoFavores();
+    tocar('acerto');
+    falaFavor(o, d.tipo === 'entrega' ? `Valeu! Toma: ${d.item}. Anotei no seu caderno de favores 📜.` : d.tipo === 'compra' ? `Valeu! Toma ${fmtReais(a.vals.nota)}. Anotei no seu caderno de favores 📜.` : 'Valeu! Anotei no seu caderno de favores 📜.');
+    return;
+  }
+  if (acao !== 'fv-etapa') return;
+  const a = F.abertos[fid], d = favorDef(fid);
+  if (!a || !d || destinoAtual(a) !== o.p.id) return;
+  if (a.tipo === 'entrega') { concluirFavor(a, o, d.agradece || falaTom(a.npc, 'favor_ok', { nome: primeiroNomeAmz() }, NIVEL_MAX_AMZ)); return; }
+  if (a.tipo === 'recado') {
+    if (a.etapa === 'ir') {
+      if (!d.volta) { concluirFavor(a, o, d.resposta_npc); return; }
+      a.etapa = 'voltar'; gravarFavores(); atualizarIconesPessoas();
+      falaFavor(o, d.resposta_npc, [], `<div class="fv-balao-pedido">📜 Agora volte a ${esc(nomeNpc(a.npc))} e conte!</div>`);
+      return;
+    }
+    concluirFavor(a, o, `"${d.resposta_npc}" Hehe! ${falaTom(a.npc, 'favor_ok', { nome: primeiroNomeAmz() }, nivelDe(amzLer(a.npc).p)) || 'Valeu!'}`);
+    return;
+  }
+  if (a.tipo === 'cobranca' && a.etapa === 'voltar') { concluirFavor(a, o, a.metade ? 'Ah, pelo menos agora a conta está certa. Valeu por cobrar!' : `${fmtReais(a.resp)}, certinho! Valeu por cobrar pra mim!`); return; }
+  if (a.tipo === 'compra' && a.etapa === 'comprar') {
+    a.etapa = 'troco'; gravarFavores(); atualizarIconesPessoas();
+    falaFavor(o, `Aqui está a compra! Recebi ${fmtReais(a.vals.nota)}. Confira o troco direitinho.`, [], `<div class="fv-balao-pedido">📜 Leve a compra e o troco para ${esc(nomeNpc(a.npc))}.</div>`);
+    return;
+  }
+  abrirContaFavor(a, o);   // cobrar o devedor · entregar o troco
+}
+
+// ── 💰 a conta (cobrança e troco): teclado com vírgula; 3 tentativas, na 3ª errada a explicação e metade do prêmio ──
+let fvc = null;   // { a, o, num }
+function abrirContaFavor(a, o) {
+  const d = favorDef(a.id);
+  fvc = { a, o, num: '' };
+  const pergunta = a.tipo === 'cobranca' ? `${nomeNpc(a.alvo)}: "Quanto eu devo mesmo?"` : `${nomeNpc(a.npc)}: "Qual é o meu troco?"`;
+  $('fvc-titulo').textContent = a.tipo === 'cobranca' ? '💰 Cobrança' : '🪙 Troco';
+  $('fvc-busto').innerHTML = bustoHtml(`${IMG}/npcs/${esc(o.p.id)}.webp`, 'fvc-rosto', BUSTO_NPC);
+  $('fvc-texto').textContent = textoFavor(d.texto, a.vals, nomesFavor(d));
+  $('fvc-pergunta').textContent = pergunta;
+  $('fvc-msg').textContent = ''; $('fvc-msg').className = 'fvc-msg';
+  $('fvc-teclado').hidden = false; $('fvc-ok').hidden = true;
+  renderContaFavor();
+  $('fv-conta').hidden = false;
+}
+const renderContaFavor = () => { $('fvc-resp').textContent = `R$ ${fvc.num || '…'}`; };
+function teclaContaFavor(k) {
+  if (!fvc) return;
+  if (k === '⌫') fvc.num = fvc.num.slice(0, -1);
+  else if (k === ',') { if (!fvc.num.includes(',')) fvc.num = (fvc.num || '0') + ','; }
+  else if (k === 'ok') { responderContaFavor(); return; }
+  else if (/^\d$/.test(k) && fvc.num.length < 8 && !/,\d\d$/.test(fvc.num)) fvc.num += k;
+  renderContaFavor();
+}
+function responderContaFavor() {
+  const { a, o } = fvc, d = favorDef(a.id), max = Number(cfgFavores().tentativas_conta) || 3;
+  if (!fvc.num) return;
+  const ok = confereValor(fvc.num, a.resp), msg = $('fvc-msg');
+  if (ok) {
+    tocar('acerto');
+    msg.textContent = d.certo || 'Isso mesmo!'; msg.className = 'fvc-msg ok';
+    terminarContaFavor(true);
+    return;
+  }
+  a.tent = (Number(a.tent) || 0) + 1; a.errou = true;
+  tocar('erro');
+  if (a.tent >= max) {
+    a.metade = true;
+    msg.innerHTML = `${esc(d.errado || 'Não é isso.')}<br>Olha a conta: <b>${esc(explicarConta(d, a.vals, a.resp))}</b>`; msg.className = 'fvc-msg erro';
+    terminarContaFavor(false);
+    return;
+  }
+  gravarFavores();
+  msg.textContent = `${d.errado || 'Não é isso.'} (tentativa ${a.tent + 1} de ${max})`; msg.className = 'fvc-msg erro';
+  fvc.num = ''; renderContaFavor();
+}
+function terminarContaFavor() {
+  const { a } = fvc;
+  $('fvc-teclado').hidden = true; $('fvc-ok').hidden = false;
+  if (a.tipo === 'cobranca') { a.etapa = 'voltar'; gravarFavores(); atualizarIconesPessoas(); }
+  else fvc.concluir = true;   // troco: conclui ao fechar
+}
+function fecharContaFavor() {
+  $('fv-conta').hidden = true;
+  const c = fvc; fvc = null;
+  if (!c) return;
+  const { a, o } = c, d = favorDef(a.id);
+  if (c.concluir) concluirFavor(a, o, a.metade ? 'Tudo bem, agora a gente sabe a conta. Valeu pela compra!' : (d.certo || 'Valeu pela compra!'));
+  else if (a.tipo === 'cobranca' && a.etapa === 'voltar') falaFavor(o, a.metade ? 'Tá bom, tá bom… toma o dinheiro.' : (d.certo || 'Toma aqui.'), [], `<div class="fv-balao-pedido">📜 Leve o dinheiro para ${esc(nomeNpc(a.npc))}.</div>`);
+}
+
+// ── concluir: moedas (base × nível de amizade, depois o multiplicador do jogo), amizade com os dois, brinde, memória ──
+function concluirFavor(a, o, fala) {
+  const F = fv(), d = favorDef(a.id), nivel = nivelDe(amzLer(a.npc).p), patch = {}, ps = estado.pets;
+  let moedas = moedasFavor(a.tipo, nivel);
+  if (a.metade) moedas = Math.floor(moedas / 2);
+  moedas = comMult(moedas);
+  if (moedas) { ps.moedas = (Number(ps.moedas) || 0) + moedas; patch['pets/moedas'] = ps.moedas; registrarGanho('favor', moedas, patch); }
+  const cb = cfgFavores().chance_brinde || {};
+  let brinde = null;
+  if (nivel >= (cb.nivel ?? 3) && Math.random() < (cb.chance ?? 0.2)) { const p = sortearPremio(cb.sorteio || 'comum'); if (p) brinde = darPremioFavor(p, patch); }
+  delete F.abertos[a.id];
+  const agora = Date.now(), sem = semanaPesca();
+  F.feitos.unshift({ id: a.id, npc: a.npc, tipo: a.tipo, t: agora, moedas, ...(a.metade ? { metade: true } : {}) });
+  F.feitos = F.feitos.slice(0, 20);
+  F.recentes[a.id] = diaLocal();
+  F.stats.total = (Number(F.stats.total) || 0) + 1;
+  F.stats.semanas = { [sem]: (Number(F.stats.semanas?.[sem]) || 0) + 1 };   // só a semana atual (a professora lê esta semana)
+  if ((a.tipo === 'cobranca' || a.tipo === 'compra') && !a.errou) F.stats[`${a.tipo}_1a`] = (Number(F.stats[`${a.tipo}_1a`]) || 0) + 1;
+  const txt = a.item ? `Você me salvou com ${a.item}!` : { recado: 'Valeu pelo recado!', cobranca: 'Valeu por cobrar pra mim!', compra: 'Valeu pela compra!' }[a.tipo] || 'Valeu pela ajuda!';
+  F.memoria[a.npc] = { t: agora, txt };
+  gravarFavores(patch);
+  ganharAmizade(a.npc, amizadeFavor(a.tipo));
+  if (a.alvo && a.alvo !== a.npc) ganharAmizade(a.alvo, amizadeDestino());
+  if (rumoFv === a.id) pararRumo();
+  atualizarIconesPessoas(); atualizarBotaoFavores();
+  tocar('vitoria');
+  const extra = `<div class="fv-premio">📜 Favor feito! ${moedas ? `<b class="ouro">+${moedas} ${moedaHtml()}</b>` : ''} <b class="fv-cor">❤️ +${amizadeFavor(a.tipo)}</b>${brinde ? `<br>🎁 Brinde: ${esc(brinde)}` : ''}</div>`;
+  falaFavor(o, fala || 'Valeu!', [], extra);
+  flutuarFavor(`+${moedas} 🪙  ❤️`);
+}
+// um prêmio do baú (brinde; os tesouros da parte B): devolve o texto
+function darPremioFavor(p, patch) {
+  const ps = estado.pets, q = Math.max(1, Number(p.qtd) || 1);
+  const jaTem = () => { ps.moedas = (Number(ps.moedas) || 0) + MOEDAS_PRESENTE_REPETIDO_AMZ; patch['pets/moedas'] = ps.moedas; registrarGanho('favor', MOEDAS_PRESENTE_REPETIDO_AMZ, patch); return `${MOEDAS_PRESENTE_REPETIDO_AMZ} moedas (você já tinha)`; };
+  if (p.tipo === 'moedas') { const m = comMult(q); ps.moedas = (Number(ps.moedas) || 0) + m; patch['pets/moedas'] = ps.moedas; registrarGanho('favor', m, patch); return `${m} moedas`; }
+  if (p.tipo === 'comida') { ps.bolsa = { ...(ps.bolsa || {}), [p.id]: (Number(ps.bolsa?.[p.id]) || 0) + q }; patch[`pets/bolsa/${p.id}`] = ps.bolsa[p.id]; return `${q} × ${comidas().find(c => c.id === p.id)?.nome || p.id}`; }
+  if (p.tipo === 'item') {
+    if (p.id === 'isca') { ps.iscas = (Number(ps.iscas) || 0) + q; patch['pets/iscas'] = ps.iscas; return `${q} iscas`; }
+    ps.itens = { ...(ps.itens || {}), [p.id]: (Number(ps.itens?.[p.id]) || 0) + q }; patch[`pets/itens/${p.id}`] = ps.itens[p.id]; return `${q} × ${p.id === 'segunda_chance' ? 'Segunda chance' : p.id}`;
+  }
+  if (p.tipo === 'tinta' || p.tipo === 'efeito') {
+    const k = p.tipo === 'tinta' ? 'tintas' : 'efeitos';
+    if (ps[k]?.[p.id]) return jaTem();
+    ps[k] = { ...(ps[k] || {}), [p.id]: true }; patch[`pets/${k}/${p.id}`] = true;
+    return `${p.tipo === 'tinta' ? 'Tinta' : 'Efeito'} ${(p.tipo === 'tinta' ? tinta(p.id) : efeito(p.id))?.nome || p.id}`;
+  }
+  if (p.tipo === 'movel') {
+    const c = estado.casinha ||= lerCasinha(null);
+    if ((Number(c.guardados[p.id]) || 0) > 0 || c.moveis.some(m => m.id === p.id)) return jaTem();
+    c.guardados[p.id] = 1; patch[`casinha/guardados/${p.id}`] = 1;
+    return `${itemCasa(p.id)?.nome || p.id} (nos guardados da 🏠 Casinha)`;
+  }
+  return '';
+}
+function flutuarFavor(texto) {
+  if (cena?.tipo !== 'mapa') return;
+  const el = document.createElement('div');
+  el.className = 'fv-flutua';
+  el.textContent = texto;
+  Object.assign(el.style, { left: jog.x + 'px', top: (jog.y - (cena.salao ? alturaSalao() : ALT_JOGADOR_MAPA) - 20) + 'px', fontSize: 18 * escalaAtoresCena() + 'px' });
+  $('cena-atores').appendChild(el);
+  setTimeout(() => el.remove(), 1600);
+}
+
+// ── 📍 Mostrar caminho: a setinha na cabeça do personagem aponta o destino (ou a saída / a porta); no mapa geral, o mapa certo pisca ──
+let rumoFv = null, rumoTimer = 0;
+function ligarRumo(id) {
+  rumoFv = id;
+  clearInterval(rumoTimer);
+  rumoTimer = setInterval(atualizarRumo, 250);
+  atualizarRumo();
+}
+function pararRumo() {
+  rumoFv = null;
+  clearInterval(rumoTimer);
+  $('cena-atores')?.querySelector('.fv-seta')?.remove();
+  document.querySelectorAll('.jr-marcador.fv-alvo').forEach(m => m.classList.remove('fv-alvo'));
+}
+function alvoDoRumo() {   // { x, y, rotulo } na cena atual, ou { mapa } (para o mapa geral)
+  const a = fv().abertos[rumoFv];
+  if (!a) return null;
+  const id = destinoAtual(a), p = npcDe(id);
+  if (!p) return null;
+  const mapaAlvo = p.interior === 'loja' ? 7 : p.interior || p.mapa === 'praca' ? 'praca' : Number(p.mapa);
+  if (cena?.tipo !== 'mapa') return { mapa: mapaAlvo };
+  const o = pessoasMapa.find(x => x.p.id === id);
+  if (o) return { x: o.p.x, y: o.p.y - o.alt * 0.6, rotulo: p.nome, perto: true };
+  if (p.interior) {   // a porta do prédio onde a pessoa está (a loja: no Mercado ou na Praça)
+    const porta = destinosDoMapa().find(d => d.tipo === 'predio' && (d.alvo === p.interior || d.alvo === p.interior + '-mercado'));
+    if (porta) return { x: porta.x, y: porta.y, rotulo: `Entre: ${localNpc(id)}` };
+  }
+  const s = cena.saidas?.[0];
+  const ondeIr = mapaAlvo === 'praca' ? 'a Praça' : `o mapa ${mapaAlvo}`;
+  return s ? { x: s.x, y: s.y, rotulo: `Saia e vá para ${ondeIr}` } : { mapa: mapaAlvo };
+}
+function atualizarRumo() {
+  if (!rumoFv) return;
+  if (!fv().abertos[rumoFv]) { pararRumo(); return; }
+  const r = alvoDoRumo(), geral = !$('tela-geral').hidden;
+  document.querySelectorAll('.jr-marcador').forEach(m => m.classList.toggle('fv-alvo', !!(geral && r && String(r.mapa) === m.dataset.mapa)));
+  const palco = $('cena-atores');
+  let el = palco?.querySelector('.fv-seta');
+  if (!r || r.x == null || geral || cena?.tipo !== 'mapa') { el?.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.className = 'fv-seta'; el.innerHTML = '<i>➜</i><span></span>'; palco.appendChild(el); }
+  const altJ = cena.salao ? alturaSalao() : ALT_JOGADOR_MAPA, s = escalaAtoresCena();
+  const cx = jog.x, cy = jog.y - altJ - 34 * s, dx = r.x - jog.x, dy = r.y - jog.y, dist = Math.hypot(dx, dy);
+  const chegou = r.perto && dist < 90 * s;
+  el.classList.toggle('chegou', chegou);
+  el.style.left = cx + 'px'; el.style.top = cy + 'px'; el.style.fontSize = 22 * s + 'px'; el.style.zIndex = 9000;
+  el.querySelector('i').style.transform = chegou ? 'rotate(90deg)' : `rotate(${Math.atan2(dy, dx)}rad)`;
+  const sp = el.querySelector('span');
+  if (sp.textContent !== r.rotulo) sp.textContent = r.rotulo;
+}
+
+// ── 📜 Caderno de favores (no estojo): Abertos · Feitos · Amigos ❤️ ──
+let cadAba = 'abertos', amzSel = null, desistindo = null;
+function atualizarBotaoFavores() {
+  const b = $('btn-favores');
+  if (!b) return;
+  b.hidden = !amizadePronta();
+  const n = favoresLigados() ? Object.keys(fv().abertos).length : 0;
+  let badge = b.querySelector('.fv-badge');
+  if (!n) { badge?.remove(); return; }
+  if (!badge) { badge = document.createElement('span'); badge.className = 'fv-badge'; b.appendChild(badge); }
+  badge.textContent = n;
+}
+function abrirCaderno(aba = null) {
   if (!amizadeLigada()) return;
+  renovarFavores();
   $('estojo').hidden = true;
-  amzSel = null;
-  $('amigos').hidden = false;
-  renderCadernoAmigos();
+  amzSel = null; desistindo = null;
+  cadAba = aba || (favoresLigados() ? 'abertos' : 'amigos');
+  $('favores').hidden = false;
+  renderCaderno();
   tocar('clique');
 }
-function renderCadernoAmigos() {
-  const el = $('amigos-corpo');
+function renderCaderno() {
+  for (const b of document.querySelectorAll('#favores [data-cad-aba]')) { const sel = b.dataset.cadAba === cadAba; b.classList.toggle('sel', sel); b.setAttribute('aria-selected', sel); }
+  const n = favoresLigados() ? Object.keys(fv().abertos).length : 0;
+  const ba = document.querySelector('#favores [data-cad-aba="abertos"]');
+  if (ba) ba.textContent = n ? `Abertos (${n})` : 'Abertos';
+  const el = $('favores-corpo');
+  if (cadAba === 'amigos') { renderAbaAmigos(el); return; }
+  if (!favoresLigados()) { el.innerHTML = '<p class="amz-vazio">Os favores ainda não carregaram.</p>'; return; }
+  const F = fv();
+  if (cadAba === 'feitos') {
+    el.innerHTML = F.feitos.length ? `<ul class="fv-lista">${F.feitos.map(f => `<li class="fv-item feito">${bustoHtml(`${IMG}/npcs/${esc(f.npc)}.webp`, 'amz-rosto', ROSTO_NPC)}
+      <span class="fv-txt"><b>${esc(nomeNpc(f.npc))}</b><small>${esc({ entrega: '📦 Entrega', recado: '💬 Recado', cobranca: '💰 Cobrança', compra: '🛒 Compra' }[f.tipo] || f.tipo)} · ${new Date(f.t).toLocaleDateString('pt-BR')}</small></span>
+      <span class="fv-moedas">+${Number(f.moedas) || 0} ${moedaHtml()}</span></li>`).join('')}</ul>` : '<p class="amz-vazio">Nenhum favor feito ainda.</p>';
+    return;
+  }
+  const abertos = Object.values(F.abertos).sort((x, y) => x.aceito - y.aceito);
+  const ofertas = F.ofertas.filter(o => !F.abertos[o.id]);
+  el.innerHTML = (abertos.length ? `<ul class="fv-lista">${abertos.map(a => `<li class="fv-item">${bustoHtml(`${IMG}/npcs/${esc(a.npc)}.webp`, 'amz-rosto', ROSTO_NPC)}
+      <span class="fv-txt"><b>${esc(nomeNpc(a.npc))}</b><span>${esc(oQueFalta(a))}</span><small>⏳ faltam ${esc(tempoQueResta(a))}${a.tent ? ` · ${a.tent} ${a.tent === 1 ? 'erro' : 'erros'} na conta` : ''}</small>
+        <span class="fv-bts"><button class="jr-btn ${rumoFv === a.id ? 'jr-btn-ouro' : ''}" data-fv-rumo="${esc(a.id)}">📍 ${rumoFv === a.id ? 'Mostrando o caminho' : 'Mostrar caminho'}</button>
+        ${desistindo === a.id ? `<button class="jr-btn jr-btn-sec" data-fv-desistir-ok="${esc(a.id)}">Desistir mesmo?</button>` : `<button class="jr-btn jr-btn-sec" data-fv-desistir="${esc(a.id)}">Desistir</button>`}</span></span></li>`).join('')}</ul>`
+    : '<p class="amz-vazio">Nenhum favor aceito. Procure quem tem ❗ nos mapas!</p>')
+    + (ofertas.length ? `<h4 class="fv-sub">❗ Pedem ajuda hoje</h4><ul class="fv-lista fv-ofertas">${ofertas.map(o => `<li class="fv-item oferta">${bustoHtml(`${IMG}/npcs/${esc(o.npc)}.webp`, 'amz-rosto', ROSTO_NPC)}
+      <span class="fv-txt"><b>${esc(nomeNpc(o.npc))}</b><small>${esc(localNpc(o.npc))}</small></span></li>`).join('')}</ul>` : '');
+}
+function renderAbaAmigos(el) {
   if (amzSel) {
-    const id = amzSel, a = npcAmizade(id), r = amzLer(id), n = nivelDe(r.p), p = NPCS.find(x => x.id === id);
+    const id = amzSel, a = npcAmizade(id), r = amzLer(id), n = nivelDe(r.p), p = npcDe(id);
     const hist = (a?.historia || []).map((h, i) => (i < n
       ? `<li class="amz-hist">❤️ ${esc(h)}</li>` : `<li class="amz-hist tranca">🔒 ${'❤️'.repeat(i + 1)}</li>`)).join('');
     el.innerHTML = `<button class="jr-btn jr-btn-sec amz-voltar" data-amz-voltar>← Voltar</button>
       <div class="amz-topo">${bustoHtml(`${IMG}/npcs/${esc(id)}.webp`, 'amz-busto', BUSTO_NPC)}
-        <div><b>${esc(p?.nome || id)}</b><small>${esc(p?.quem || '')}${p?.mapa ? ` · ${esc(nomeMapaAmz(p))}` : ''}</small>${htmlCoracoes(n)}<small class="amz-nivel">${esc(nomeNivel(n))}</small></div></div>
+        <div><b>${esc(p?.nome || id)}</b><small>${esc(p?.quem || '')}${localNpc(id) ? ` · ${esc(localNpc(id))}` : ''}</small>${htmlCoracoes(n)}<small class="amz-nivel">${esc(nomeNivel(n))}</small></div></div>
       <p class="amz-pers">${esc(a?.personalidade || '')}</p>
       <ul class="amz-historias">${hist}</ul>
       ${r.presente ? `<p class="amz-presente">🎁 Presente recebido: ${esc(presenteDe(id)?.texto || '')}</p>` : ''}`;
@@ -15476,17 +15843,39 @@ function renderCadernoAmigos() {
   el.innerHTML = conhecidos.length ? `<ul class="amz-lista">${conhecidos.map(p => {
     const r = amzLer(p.id), pg = progressoAmz(r.p);
     return `<li><button class="amz-linha" data-amz="${esc(p.id)}">${bustoHtml(`${IMG}/npcs/${esc(p.id)}.webp`, 'amz-rosto', ROSTO_NPC)}
-      <span class="amz-quem"><b>${esc(p.nome)}</b><small>${esc(nomeMapaAmz(p))}</small></span>
+      <span class="amz-quem"><b>${esc(p.nome)}</b><small>${esc(localNpc(p.id))}</small></span>
       <span class="amz-dir">${htmlCoracoes(pg.nivel)}<span class="amz-barra" title="${pg.ate == null ? 'nível máximo' : `${Number(r.p) || 0} de ${pg.ate} pontos`}"><i style="width:${Math.round(pg.frac * 100)}%"></i></span></span></button></li>`;
   }).join('')}</ul>` : '<p class="amz-vazio">Converse com as pessoas dos mapas para fazer amizade! 💬</p>';
 }
 const nomeMapaAmz = (p) => (p?.interior === 'loja' ? 'Loja da Dona Cida' : Number(p?.mapa) > 0 ? `${p.mapa}. ${D.questoes[p.mapa]?.nome || ''}` : p?.mapa === 'praca' ? 'Praça' : '');
-function cliqueCadernoAmigos(e) {
+function cliqueCaderno(e) {
   e.stopPropagation();
-  if (e.target === $('amigos') || e.target.closest('[data-fechar="amigos"]')) { $('amigos').hidden = true; return; }
-  if (e.target.closest('[data-amz-voltar]')) { amzSel = null; renderCadernoAmigos(); return; }
+  if (e.target === $('favores') || e.target.closest('[data-fechar="favores"]')) { $('favores').hidden = true; return; }
+  const ab = e.target.closest('[data-cad-aba]');
+  if (ab) { cadAba = ab.dataset.cadAba; amzSel = null; desistindo = null; renderCaderno(); tocar('clique'); return; }
+  if (e.target.closest('[data-amz-voltar]')) { amzSel = null; renderCaderno(); return; }
   const b = e.target.closest('[data-amz]');
-  if (b) { amzSel = b.dataset.amz; renderCadernoAmigos(); tocar('clique'); }
+  if (b) { amzSel = b.dataset.amz; renderCaderno(); tocar('clique'); return; }
+  const r = e.target.closest('[data-fv-rumo]');
+  if (r) {
+    if (rumoFv === r.dataset.fvRumo) pararRumo(); else { ligarRumo(r.dataset.fvRumo); $('favores').hidden = true; }
+    renderCaderno(); tocar('clique'); return;
+  }
+  const ds = e.target.closest('[data-fv-desistir]');
+  if (ds) { desistindo = ds.dataset.fvDesistir; renderCaderno(); return; }
+  const dk = e.target.closest('[data-fv-desistir-ok]');
+  if (dk) {   // sem prêmio e sem perder amizade
+    const id = dk.dataset.fvDesistirOk;
+    delete fv().abertos[id]; fv().recentes[id] = diaLocal();
+    if (rumoFv === id) pararRumo();
+    desistindo = null; gravarFavores(); atualizarIconesPessoas(); atualizarBotaoFavores(); renderCaderno();
+  }
+}
+function cliqueContaFavor(e) {
+  e.stopPropagation();
+  if (e.target.closest('[data-fechar="fv-conta"]') || e.target.closest('#fvc-ok')) { fecharContaFavor(); return; }
+  const k = e.target.closest('[data-fvk]');
+  if (k) teclaContaFavor(k.dataset.fvk);
 }
 
 // ============================================================
@@ -16132,10 +16521,14 @@ function agendarPiscar(o) {
 
 // Acima da cabeça: treinadora ⚔️ (descansando: 😴) e ❗ quando a pessoa tem pedido de ajuda
 function atualizarIconesPessoas() {
+  const fvLig = favoresLigados();
+  if (fvLig) renovarFavores();
   for (const o of pessoasMapa) {
     const descansa = o.treinador && situacao(desafioCom(o.p.id)) === 'descansando';
     const ped = !!pedidoDe(o.p.id) || (o.p.id === 'engrenaldo' && !estado.avisos?.lab_visto);   // Engrenaldo: ! até entrar no laboratório
-    o.icone.innerHTML = (o.treinador ? `<span>${descansa ? '😴' : '⚔️'}</span>` : '') + (ped ? '<span class="jr-pedido-exc" aria-label="Pedido de ajuda">!</span>' : '');
+    const fvOf = fvLig && ofertaDe(o.p.id) && !fv().abertos[ofertaDe(o.p.id).id], fvAlvo = fvLig && abertoPara(o.p.id);   // 📜 PROMPT-239
+    o.icone.innerHTML = (o.treinador ? `<span>${descansa ? '😴' : '⚔️'}</span>` : '') + (ped ? '<span class="jr-pedido-exc" aria-label="Pedido de ajuda">!</span>' : '')
+      + (fvOf ? '<span class="fv-exc" aria-label="Pedido de favor">!</span>' : fvAlvo ? '<span class="fv-exc fv-alvo-ic" aria-label="Favor aberto">📜</span>' : '');
     o.icone.classList.toggle('descansa', descansa && !ped);
     o.temIcone = !!o.icone.innerHTML;
     o.icone.hidden = !o.temIcone;
@@ -16213,6 +16606,8 @@ function falarCom(o, convite = false) {   // convite: tocou no Engrenaldo → pe
     botoes.push(ilhaOk ? '<button class="jr-btn jr-btn-ouro" data-acao="ilha">Vamos!</button>' : '<button class="jr-btn jr-btn-ouro" data-acao="lab">Ir ao Laboratório</button>');
   }
   if (o.p.id === 'lia_cientista' && PROG) botoes.push('<button class="jr-btn jr-btn-ouro" data-acao="recordes-lab">🏆 Recordes</button>', '<button class="jr-btn" data-acao="como-lab">❓ Como funciona</button>');
+  const fvb = favorNoBalao(o);   // 📜 PROMPT-239: o pedido de favor (❗) ou a etapa do favor com esta pessoa
+  if (fvb) botoes.unshift(...fvb.botoes);
   if (ped) botoes.push(`<button class="jr-btn ${botoes.length ? '' : 'jr-btn-ouro'}" data-acao="ajudar">🙋 Ajudar</button>`);
   if (o.treinador) {
     const d = desafioCom(o.p.id);
@@ -16227,7 +16622,7 @@ function falarCom(o, convite = false) {   // convite: tocou no Engrenaldo → pe
   if (botoes.length) botoes.push('<button class="jr-btn jr-btn-sec" data-acao="nao">Agora não</button>');
   const extra = aviso + (botoes.length ? `<div class="jr-pessoa-botoes">${botoes.join('')}</div>` : '');
   const hist = amz?.hist ? `<div class="amz-balao-hist">❤️ ${esc(amz.hist)}</div>` : '';
-  el.innerHTML = `<b>${esc(o.p.nome)}</b>${amz ? htmlCoracoes(amz.nivel) : ''}<span>${esc(saudacao || falas[i] || '')}</span>${hist}${extra}`;
+  el.innerHTML = `<b>${esc(o.p.nome)}</b>${amz ? htmlCoracoes(amz.nivel) : ''}<span>${esc(saudacao || falas[i] || '')}</span>${hist}${fvb?.caixa || ''}${extra}`;
   el.hidden = false;
   el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
   balaoPessoa = { o, timer: setTimeout(fecharBalaoPessoa, hist ? 12000 : extra.includes('data-acao') ? 9000 : 5000) };
@@ -16264,6 +16659,7 @@ function acaoBalaoPessoa(e) {
   if (b.dataset.acao === 'batalhar') iniciarBatalha(id, 'pessoa');
   if (b.dataset.acao === 'duelo-equipe') iniciarDueloEquipe('mapa', id);   // 🤝 PROMPT-236   // revanche/descanso/fome conferidos lá
   if (b.dataset.acao === 'ajudar') abrirPedido(o);
+  if (b.dataset.acao.startsWith('fv-')) acaoFavor(o, b.dataset.acao, b.dataset.fv);   // 📜 PROMPT-239
   if (b.dataset.acao === 'loja') abrirLoja(LOJA?.vendedora?.aba || 'comidas');
   if (b.dataset.acao === 'recordes') mostrarRecordes();
   if (b.dataset.acao === 'recordes-lab') mostrarRecordesLab();
@@ -18359,6 +18755,8 @@ const FONTES_MOEDA = {
   missao: { nome: 'Missões do dia' },
   programe: { nome: 'Programe o pet' },
   torre: { nome: '🏆 Torre dos Campeões' },
+  amizade: { nome: '❤️ Presentes dos amigos' },
+  favor: { nome: '📜 Favores' },
   bonus: { nome: '🎁 Bônus (moedas valendo mais)' },
 };
 

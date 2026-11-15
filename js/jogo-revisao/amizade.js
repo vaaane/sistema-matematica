@@ -57,7 +57,7 @@ export function memoria(npc, nivel, motivos, varsBase) {
   const tom = tomDe(npc);
   if (!tom) return null;
   for (const m of motivos) {
-    const t = preencher(tom[m.tipo], { ...varsBase, ...m.vars }, nivel);
+    const t = preencher(m.texto ?? tom[m.tipo], { ...varsBase, ...m.vars }, nivel);   // m.texto: a fala pronta (o favor, PROMPT-239)
     if (t) return { tipo: m.tipo, texto: t };
   }
   return null;

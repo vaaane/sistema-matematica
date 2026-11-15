@@ -593,7 +593,7 @@ function renderPraca() {
 // ── Aba — Pesca: pontos da semana (segunda a domingo) e presentes dados/recebidos por aluno ──
 // ── Aba — Moedas: o que cada aluno ganhou na semana, por fonte (jogo_revisao/{uid}/moedas_semana/{segunda}) ──
 const FONTES_MOEDA = [["ginasio", "Ginásios"], ["insignia", "Insígnias"], ["batalha", "Batalhas"], ["batalha_primeira", "1ª vitória"], ["pedido", "Pedidos"],
-  ["cavar", "Cavar/mato"], ["colecao", "Coleção"], ["fliperama", "Fliperama"], ["desafio", "Desafios"], ["aposta", "💰 Apostas"], ["damas", "♟️ Damas"], ["pesca", "Peixes"], ["aovivo", "Ao vivo"], ["missao", "Missões"], ["programe", "Programe"], ["amizade", "❤️ Amizade"], ["bonus", "🎁 Bônus"]];
+  ["cavar", "Cavar/mato"], ["colecao", "Coleção"], ["fliperama", "Fliperama"], ["desafio", "Desafios"], ["aposta", "💰 Apostas"], ["damas", "♟️ Damas"], ["pesca", "Peixes"], ["aovivo", "Ao vivo"], ["missao", "Missões"], ["programe", "Programe"], ["amizade", "❤️ Amizade"], ["favor", "📜 Favores"], ["bonus", "🎁 Bônus"]];
 // ── Aba — Programe o pet (PROMPT-69): mapa da turma (alunos × capítulos), por fase (calor das batidas, programas errados) e por aluno ──
 let PROG = null;
 const CONCEITO = { sequencia: "Sequência", repeticao: "Repetição", angulos: "Ângulos 45°", funcoes: "Funções", condicionais: "Condicionais", repita_ate: "Repita até" };
@@ -818,6 +818,14 @@ function amigosAluno(l) {
   const nivel = (p) => NIVEIS_AMZ.reduce((n, lim, i) => (p >= lim ? i : n), 0);
   return `<div class="amigos-aluno">❤️ Amigos: ${top.map(([id, p]) => `${esc(NOMES_NPC[id])} (${nivel(p)})`).join(", ")}</div>`;
 }
+// 📜 PROMPT-239: favores feitos (total e nesta semana) e as contas certas de primeira
+function favoresAluno(l) {
+  const st = l.n?.favores?.stats;
+  const total = Number(st?.total) || 0;
+  if (!total) return "";
+  const sem = Number(st?.semanas?.[semanaPesca()]) || 0;
+  return `<div class="amigos-aluno">📜 Favores feitos: ${total} (esta semana: ${sem}) · contas certas de primeira: cobrança ${Number(st.cobranca_1a) || 0}, compra ${Number(st.compra_1a) || 0}</div>`;
+}
 function gradeAluno(l) {
   const cab = `<div></div><div class="g-cab">A</div><div class="g-cab">B</div>`;
   let html = "";
@@ -838,7 +846,7 @@ function gradeAluno(l) {
       html += `<div class="cel ${cls}" title="${esc(nomeG)} — ${esc(Q[m]?.ginasios?.[G]?.conteudo || "")}">${conteudo}</div>`;
     }
   }
-  return `${amigosAluno(l)}<div class="grade-wrap"><div class="grade">${cab}${html}</div>
+  return `${amigosAluno(l)}${favoresAluno(l)}<div class="grade-wrap"><div class="grade">${cab}${html}</div>
     <div class="legenda">🔒 nada · ●○○○ treinadores e líder vencidos · 🏅 insígnia · 🌟 dourada — passe o mouse (ou toque) para ver o ginásio</div></div>`;
 }
 

@@ -297,7 +297,7 @@
           <button class="ins-btn" id="btn-album" hidden><span class="ico">📒</span>Álbum</button>
           <button class="ins-btn" id="btn-premios-torre" hidden><span class="ico">🏆</span>Prêmios da Torre</button>
           <button class="ins-btn" id="btn-equipe" hidden><span class="ico">🛡️</span>Equipe</button>
-          <button class="ins-btn" id="btn-amigos" hidden><span class="ico">📔</span>Amigos</button>
+          <button class="ins-btn" id="btn-favores" hidden><span class="ico">📜</span>Favores</button>
         </nav>
         <div class="ins-selo" id="estojo-especial" hidden></div>
         <div class="ins-placar" id="estojo-placar"></div>
@@ -368,11 +368,27 @@
       <div class="eq-corpo" id="equipe-corpo"></div>
     </div>
   </div>
-  <!-- ❤️ Caderno de amigos (PROMPT-238) -->
-  <div id="amigos" class="al-fundo" hidden role="dialog" aria-label="Caderno de amigos">
+  <!-- 📜 Caderno de favores (PROMPT-239): Abertos · Feitos · Amigos ❤️ (PROMPT-238) -->
+  <div id="favores" class="al-fundo" hidden role="dialog" aria-label="Caderno de favores">
     <div class="al-caixa cs-menu-caixa amz-caixa">
-      <div class="al-topo"><b>📔 Caderno de amigos</b><button class="bt-lista-x" data-fechar="amigos" aria-label="Fechar">✕</button></div>
-      <div class="amz-corpo" id="amigos-corpo"></div>
+      <div class="al-topo"><b>📜 Favores</b><button class="bt-lista-x" data-fechar="favores" aria-label="Fechar">✕</button></div>
+      <div class="fv-abas" role="tablist"><button data-cad-aba="abertos" role="tab">Abertos</button><button data-cad-aba="feitos" role="tab">Feitos</button><button data-cad-aba="amigos" role="tab">Amigos ❤️</button></div>
+      <div class="amz-corpo" id="favores-corpo"></div>
+    </div>
+  </div>
+  <!-- 💰 a conta do favor (cobrança e troco) -->
+  <div id="fv-conta" class="al-fundo" hidden role="dialog" aria-label="Conta do favor">
+    <div class="al-caixa cs-menu-caixa fvc-caixa">
+      <div class="al-topo"><b id="fvc-titulo">💰 Cobrança</b><button class="bt-lista-x" data-fechar="fv-conta" aria-label="Fechar">✕</button></div>
+      <div class="fvc-topo"><span id="fvc-busto"></span><div><p class="fvc-texto" id="fvc-texto"></p><p class="fvc-pergunta" id="fvc-pergunta"></p></div></div>
+      <div class="fvc-resp" id="fvc-resp">R$ …</div>
+      <div class="fvc-msg" id="fvc-msg" aria-live="polite"></div>
+      <div class="fvc-teclado" id="fvc-teclado">
+        <button data-fvk="1">1</button><button data-fvk="2">2</button><button data-fvk="3">3</button><button data-fvk="4">4</button><button data-fvk="5">5</button><button data-fvk="6">6</button>
+        <button data-fvk="7">7</button><button data-fvk="8">8</button><button data-fvk="9">9</button><button data-fvk="0">0</button><button data-fvk=",">,</button><button data-fvk="⌫" aria-label="Apagar">⌫</button>
+        <button data-fvk="ok" class="fvc-ok-tecla">Responder</button>
+      </div>
+      <button class="jr-btn jr-btn-ouro fvc-fechar" id="fvc-ok" hidden>Continuar</button>
     </div>
   </div>
   <div id="equipe-convite" class="jr-pet-escolha" hidden role="dialog" aria-label="Convite de equipe">

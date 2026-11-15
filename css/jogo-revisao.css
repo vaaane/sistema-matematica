@@ -5890,3 +5890,50 @@ html.jr-deitado .jr-mp-info > .jr-mp-balao { font-size: 15px; }
 .amz-hist { padding: 8px 10px; border-radius: 10px; background: #1b1b36; border: 1px solid #2e2e52; }
 .amz-hist.tranca { color: #8a88b0; }
 .amz-presente { margin: 10px 0 0; color: #ffd700; }
+
+/* ── 📜 Favores dos NPCs (PROMPT-239) ── */
+.jr-pessoa-icone .fv-exc { display: inline-flex; align-items: center; justify-content: center; width: 1em; height: 1em; border-radius: 50%; background: #ff4d4d; color: #fff;
+  font-family: 'Inter', sans-serif; font-weight: 900; font-size: .8em; line-height: 1; box-shadow: 0 0 0 .08em #5a0000, 0 0 .4em rgba(255, 77, 77, .8); animation: jr-pedido-pulsa 1s ease-in-out infinite alternate; }
+.jr-pessoa-icone .fv-alvo-ic { background: #7c5cfc; box-shadow: 0 0 0 .08em #2a1a6a, 0 0 .4em rgba(124, 92, 252, .8); font-size: .7em; }
+@media (prefers-reduced-motion: reduce) { .jr-pessoa-icone .fv-exc, .fv-seta.chegou i { animation: none; } }
+@keyframes fv-pula { 50% { transform: translateY(-4px); } }
+.fv-balao-pedido { margin-top: 6px; padding: 6px 8px; border-radius: 10px; background: rgba(124, 92, 252, .12); border: 1px solid rgba(124, 92, 252, .5); }
+.fv-premio { margin-top: 6px; font-weight: 600; }
+.fv-cor { color: #ff5c7a; }
+.fv-flutua { position: absolute; transform: translate(-50%, -100%); font-weight: 800; color: #ffd700; text-shadow: 0 2px 4px rgba(0, 0, 0, .7); pointer-events: none; z-index: 9001; animation: fv-sobe 1.6s ease-out forwards; white-space: nowrap; }
+@keyframes fv-sobe { to { opacity: 0; transform: translate(-50%, -220%); } }
+.fv-seta { position: absolute; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+.fv-seta i { font-style: normal; color: #ffd700; text-shadow: 0 0 6px rgba(0, 0, 0, .8); line-height: 1; transition: transform .2s; }
+.fv-seta span { font-size: .55em; background: rgba(13, 15, 26, .85); color: #fff; padding: 2px 6px; border-radius: 8px; white-space: nowrap; margin-top: 2px; }
+.fv-seta.chegou i { animation: fv-pula .8s ease-in-out infinite; }
+.jr-marcador.fv-alvo { animation: fv-marca 1s ease-in-out infinite; z-index: 5; }
+@keyframes fv-marca { 50% { transform: translate(-50%, -50%) scale(1.25); filter: drop-shadow(0 0 10px #ffd700); } }
+#btn-favores { position: relative; }
+.fv-badge { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #ff4d4d; color: #fff; font: 700 .72rem/18px Inter, sans-serif; text-align: center; }
+.fv-abas { display: flex; gap: 6px; margin: 0 0 8px; }
+.fv-abas button { flex: 1; padding: 7px 6px; border-radius: 10px; border: 1px solid #2e2e52; background: #1b1b36; color: #d8d6ff; font: 600 .9rem Rajdhani, sans-serif; cursor: pointer; }
+.fv-abas button.sel { background: #7c5cfc; border-color: #7c5cfc; color: #fff; }
+.fv-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.fv-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 12px; border: 1px solid #2e2e52; background: #1b1b36; }
+.fv-item.oferta, .fv-item.feito { align-items: center; }
+.fv-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fv-txt b { font-family: Rajdhani, sans-serif; font-size: 1.05rem; }
+.fv-txt small { color: #a3a1c9; font-size: .78rem; }
+.fv-bts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.fv-bts .jr-btn { padding: 4px 10px; font-size: .82rem; }
+.fv-moedas { white-space: nowrap; color: #ffd700; font-weight: 700; }
+.fv-sub { margin: 12px 0 6px; font: 700 1rem Rajdhani, sans-serif; color: #ff7b2e; }
+.fvc-caixa { max-width: 420px; }
+.fvc-topo { display: flex; gap: 10px; align-items: center; }
+.fvc-rosto { width: 64px; height: 64px; flex: none; }
+.fvc-texto { margin: 0 0 4px; color: #d8d6ff; font-size: .9rem; }
+.fvc-pergunta { margin: 0; font-weight: 700; }
+.fvc-resp { margin: 10px 0 4px; text-align: center; font: 700 1.6rem Orbitron, sans-serif; color: #00d4ff; }
+.fvc-msg { min-height: 1.2em; text-align: center; font-size: .9rem; margin-bottom: 6px; }
+.fvc-msg.ok { color: #00e676; }
+.fvc-msg.erro { color: #ff7b2e; }
+.fvc-msg b { color: #ffd700; }
+.fvc-teclado { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.fvc-teclado button { padding: 10px 0; border-radius: 10px; border: 1px solid #2e2e52; background: #1b1b36; color: #fff; font: 700 1.1rem Orbitron, sans-serif; cursor: pointer; }
+.fvc-teclado .fvc-ok-tecla { grid-column: 1 / -1; background: #7c5cfc; border-color: #7c5cfc; font-family: Rajdhani, sans-serif; }
+.fvc-fechar { width: 100%; margin-top: 6px; }
