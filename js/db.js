@@ -1,8 +1,9 @@
 import { db } from "./firebase-config.js";
 import {
   ref, push, set, update, get, remove, onValue,
-  query, orderByChild, limitToLast, equalTo, serverTimestamp
+  query, orderByChild, limitToLast, equalTo, serverTimestamp, orderByKey, startAt
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ALUNOS_TESTE, bimestreJogos } from "./constants.js";
 
 // ── Histórico exclusivo do Modo Teste ────────────────────────
 const _UID_PT = 'PROFESSOR_TESTE';
@@ -72,27 +73,54 @@ export async function getDetalhes(resultadoId) {
   return snap.exists() ? snap.val().questoes : [];
 }
 
-// ── Tabuada sessões ─────────────────────────────────────────
-export async function contarSessoesTabuadaHoje() {
-  const hoje   = new Date().toISOString().slice(0, 10);          // "2026-05-28" (novo formato)
-  const hojeBR = new Date().toLocaleDateString('pt-BR');          // "28/05/2026" (legado)
-  const snap = await get(ref(db, 'tabuada_sessoes')).catch(() => null);
-  if (!snap?.exists()) return 0;
-  let count = 0;
-  snap.forEach(child => {
-    const v = child.val();
-    if (!v?.data) return;
-    if (v.data === hoje || v.data.startsWith(hojeBR)) count++;
-  });
-  return count;
+// ── Tabuada: contagens da tela de login (PROMPT-247) ──────────
+// Contas de teste e da professora nunca entram (uid ou nome com PROFESSOR/TESTE, e ALUNOS_TESTE).
+const _contaTeste = (uid, v) => ALUNOS_TESTE.includes(uid) || /PROFESSOR|TESTE/i.test(`${uid} ${v?.nome || ''}`);
+// meia-noite de hoje no horário de Brasília (ms); o Brasil não tem horário de verão desde 2019: UTC−3
+function _inicioHojeBrasilia() {
+  const d = new Date(Date.now() - 3 * 3600000);
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) + 3 * 3600000;
+}
+// filhos de um nó de níveis ({ uid: { total_partidas, ultima_partida, nome } })
+async function _niveis(path) {
+  const snap = await get(ref(db, path)).catch(() => null);
+  return snap?.exists() ? Object.entries(snap.val() || {}) : [];
+}
+// um nó por bimestre ({ bim: { uid: {...} } }): todos os bimestres que existirem
+async function _niveisPorBimestre(path) {
+  const snap = await get(ref(db, path)).catch(() => null);
+  if (!snap?.exists()) return [];
+  return Object.values(snap.val() || {}).flatMap(b => (b && typeof b === 'object' ? Object.entries(b) : []));
 }
 
-// ── Tabuada: total de partidas (soma total_partidas de tabuada_niveis) ──
+// Hoje (horário de Brasília): as sessões da tabuada (a chave é o timestamp; lê só as de hoje)
+// + 1 por aluno que jogou a tabuada de negativos hoje (ela não grava sessões: conta pelo ultima_partida)
+export async function contarSessoesTabuadaHoje() {
+  const ini = _inicioHojeBrasilia(), bim = bimestreJogos();
+  const [sessoes, neg12, negB] = await Promise.all([
+    get(query(ref(db, 'tabuada_sessoes'), orderByKey(), startAt(String(ini)))).catch(() => null),
+    _niveis('tabuada_negativos_niveis'),
+    bim > 2 ? _niveis(`tabuada_negativos_niveis_b/${bim}`) : Promise.resolve([]),
+  ]);
+  let count = 0;
+  sessoes?.forEach(child => {
+    const ts = parseInt(child.key, 10), v = child.val();
+    if (ts >= ini && !_contaTeste(v?.uid || '', v)) count++;
+  });
+  const negHoje = new Set();
+  for (const [uid, v] of [...neg12, ...negB]) if (Number(v?.ultima_partida) >= ini && !_contaTeste(uid, v)) negHoje.add(uid);
+  return count + negHoje.size;
+}
+
+// Total: total_partidas de todos os bimestres, da tabuada normal e da de negativos
+// (tabuada_niveis e tabuada_negativos_niveis: 1º e 2º bimestres; ..._b/{bim}: do 3º em diante)
 export async function somarPartidasTabuadaTotal() {
-  const snap = await get(ref(db, 'tabuada_niveis')).catch(() => null);
-  if (!snap?.exists()) return 0;
+  const grupos = await Promise.all([
+    _niveis('tabuada_niveis'), _niveisPorBimestre('tabuada_niveis_b'),
+    _niveis('tabuada_negativos_niveis'), _niveisPorBimestre('tabuada_negativos_niveis_b'),
+  ]);
   let total = 0;
-  snap.forEach(child => { total += child.val()?.total_partidas || 0; });
+  for (const lista of grupos) for (const [uid, v] of lista) if (!_contaTeste(uid, v)) total += Number(v?.total_partidas) || 0;
   return total;
 }
 
