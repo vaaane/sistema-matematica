@@ -9183,6 +9183,10 @@ const curtidasSala = (n) => expoCurtidas[n]?.size || 0;
 const curtiSala = (n) => !!expoCurtidas[n]?.has(sessao.uid);
 const podeCurtirSala = (n) => !!n && !ehProfessora() && !contaEscondida(sessao.uid, sessao.nome) && !souDaSala(n);
 const maisCurtida = (n) => { const c = curtidasSala(n); return c > 0 && Object.keys(expoCurtidas).every(k => curtidasSala(k) <= c); };
+// 🖼️ PROMPT-242: o fundo da sala: tema_professora (a página dela) > tema_fixo (exposicao.json → salas) > tema (o grupo) > tema_padrao
+const temaValido = (id) => typeof id === 'string' && (EXPO?.temas || []).some(t => t.id === id);
+const temaTravado = (n) => temaValido(estadoSala(n).tema_professora) || temaValido(EXPO?.salas?.[n]?.tema_fixo);   // o grupo não troca
+const temaDaSala = (n) => { const st = estadoSala(n); return temaExpo([st.tema_professora, EXPO?.salas?.[n]?.tema_fixo, st.tema].find(temaValido)); };
 const temaExpo = (id) => (EXPO.temas || []).find(t => t.id === id) || (EXPO.temas || []).find(t => t.id === EXPO.tema_padrao) || EXPO.temas[0];
 
 // 🚪 PROMPT-240: a porta k (o k-ésimo item de saguao.portas, na ordem da visita) abre a sala ordemSalasExpo()[k-1].
@@ -9398,7 +9402,7 @@ function balaoExpo(p, txt) {   // o balão das portas do ginásio, sem botões
 // ── Salas ───────────────────────────────────────────────────
 async function abrirSalaExpo(n) {
   if (!EXPO || !grupoSala(n)) return;
-  const S = EXPO.sala, LW = Number(S.tamanho?.w) || 2176, st = estadoSala(n), tema = temaExpo(st.tema);
+  const S = EXPO.sala, LW = Number(S.tamanho?.w) || 2176, tema = temaDaSala(n);
   prepararCenaExpo(tituloSala(n), '⟵ Saguão');
   const [grade] = await Promise.all([
     carregarGrade(S.trilha, Math.round(LW / CEL), GH).catch(() => { const g = new Uint8Array(LW / CEL * GH); g.gw = LW / CEL; g.gh = GH; for (let i = 86 * g.gw; i < g.length; i++) g[i] = 1; return g; }),
@@ -9419,7 +9423,7 @@ async function abrirSalaExpo(n) {
   $('cena-palco').style.visibility = '';
   atualizarBotaoPet();
   entrarNoMapaOnline('sala-' + n, 'exposicao');
-  ouvirExpo(['tema', 'musica', 'nome', 'nome_pendente', 'nome_motivo', 'cores/parede', 'cores/chao'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
+  ouvirExpo(['tema', 'tema_professora', 'musica', 'nome', 'nome_pendente', 'nome_motivo', 'cores/parede', 'cores/chao'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
 }
 function tituloSala(n) { const nome = nomeSalaVisivel(n); return `🖼️ Porta ${portaDaSala(n)}${nome ? ' · ' + String(nome).slice(0, 40) : ''}`; }
 // mudou no Firebase com o aluno dentro: nome na faixa, fundo do tema (a música segue em lugarDaMusica)
@@ -9429,7 +9433,8 @@ async function aplicarEstadoSala(n) {
   if ($('cena-titulo').textContent !== t) $('cena-titulo').textContent = t;
   redesenharLetreiros();   // o nome e o ⏳/❌ (só redesenha o que mudou)
   if (ex?.editando) resumoAprovExpo();
-  const tema = temaExpo(estadoSala(n).tema), c = cena;
+  const tema = temaDaSala(n), c = cena;
+  if (ex?.editando) $('ex-tema').hidden = temaTravado(n);   // 🖼️ a professora travou o fundo com o aluno decorando
   if (tema.id === c.tema) { desenharCamadasExpo(n, tema); return; }   // 🎨 só a cor mudou
   c.tema = tema.id;
   const f = $('cena-fundo');
@@ -9437,7 +9442,7 @@ async function aplicarEstadoSala(n) {
   await new Promise(ok => setTimeout(ok, 180));
   if (cena !== c) { f.style.opacity = ''; f.style.transition = ''; return; }
   await trocarFundo(`${IMG}/${tema.imagem}`, c.w);
-  if (cena === c) desenharCamadasExpo(n, temaExpo(estadoSala(n).tema));
+  if (cena === c) desenharCamadasExpo(n, temaDaSala(n));
   f.style.opacity = '';
   setTimeout(() => { f.style.transition = ''; }, 220);
 }
@@ -9899,6 +9904,7 @@ function renderCatalogoExpo() {
   }).join('');
   $('ex-uso').textContent = `${ex.itens.size}/${limiteExpo('itens', 100)} itens · ${fotosNaSala()}/${limiteExpo('fotos', 12)} fotos`;
   $('ex-musica').hidden = !musicasExpo().length;   // 🎵 sem músicas na lista: o seletor some
+  $('ex-tema').hidden = temaTravado(ex.n);   // 🖼️ PROMPT-242: sala com fundo fixo, sem 🎨 Tema (nem as cores de parede e chão)
 }
 async function colocarItemExpo(mv) {
   const it = catExpo(mv);
@@ -10387,22 +10393,22 @@ function htmlCoresSalaExpo(n, tema) {
 }
 function trocarCorSalaExpo(camada, cor) {
   if (!ex || !podeDecorar(ex.n) || !COR_HEX.test(cor || '') || !CAMADAS_EXPO.some(([k]) => k === camada)) return;
-  const n = ex.n, tema = temaExpo(estadoSala(n).tema);
+  const n = ex.n, tema = temaDaSala(n);
   (expoSalas[n] ||= {})['cores/' + camada] = cor;
   desenharCamadasExpo(n, tema);
   for (const b of $('ex-temas-lista').querySelectorAll(`button[data-ex-camada="${camada}"]`)) b.classList.toggle('sel', b.dataset.exCor.toLowerCase() === cor.toLowerCase());
   salvarExpo(set(ref(db, `${noExpo('exposicao_salas')}/${n}/cores/${camada}`), cor));
 }
 function abrirTemasExpo() {
-  if (!ex) return;
-  const tAtual = temaExpo(estadoSala(ex.n).tema), atual = tAtual.id;
+  if (!ex || temaTravado(ex.n)) return;   // 🖼️ fundo fixo: sem troca de tema nem de cor
+  const tAtual = temaDaSala(ex.n), atual = tAtual.id;
   $('ex-temas-lista').innerHTML = htmlCoresSalaExpo(ex.n, tAtual) + (EXPO.temas || []).map(t => `<button class="cs-comida-item cs-tema-item${t.id === atual ? ' atual' : ''}" data-ex-tema="${esc(t.id)}">
       <span><img src="${IMG}/${t.imagem}" alt="" draggable="false" loading="lazy"/></span><b>${esc(t.emoji || '🎨')} ${esc(t.nome)}</b><small>${t.id === atual ? '✔ Agora' : 'Toque para usar'}</small></button>`).join('');
   $('ex-temas').hidden = false;
 }
 function escolherTemaExpo(id) {
   $('ex-temas').hidden = true;
-  if (!ex || !podeDecorar(ex.n) || !(EXPO.temas || []).some(t => t.id === id)) return;
+  if (!ex || !podeDecorar(ex.n) || temaTravado(ex.n) || !(EXPO.temas || []).some(t => t.id === id)) return;
   (expoSalas[ex.n] ||= {}).tema = id;
   aplicarEstadoSala(ex.n);
   tocar('clique');

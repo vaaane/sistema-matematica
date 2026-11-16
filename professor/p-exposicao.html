@@ -188,7 +188,12 @@ const fotosCache = new Map();
 const fotoDados = (id) => { if (!fotosCache.has(id)) fotosCache.set(id, get(ref(db, `${no("exposicao_imagens")}/${id}/dados`)).then(s => (s.exists() && String(s.val()).startsWith("data:image/") ? s.val() : null)).catch(() => { fotosCache.delete(id); return null; })); return fotosCache.get(id); };
 const grupoFb = (n) => { const g = salas[n]?.grupo; return g ? { turma: String(g.turma || ""), membros: Object.values(g.membros || {}).filter(x => typeof x === "string") } : null; };
 // o grupo valendo: o do banco; sem o nó, o do JSON (como no jogo)
-const grupoDe = (n) => grupoFb(n) || EXPO?.salas?.[n] || null;
+const grupoJson = (n) => (EXPO?.salas?.[n]?.membros?.length ? EXPO.salas[n] : null);   // PROMPT-242: salas[n] também tem tema_fixo (sem grupo)
+const grupoDe = (n) => grupoFb(n) || grupoJson(n);
+// 🖼️ PROMPT-242: o fundo valendo: tema_professora > tema_fixo (exposicao.json) > tema (o grupo) > tema_padrao
+const temaDe = (id) => (EXPO?.temas || []).find(t => t.id === id) || null;
+const temaFixo = (n) => temaDe(EXPO?.salas?.[n]?.tema_fixo);
+const temaValendo = (n) => { const s = salas[n] || {}; return temaDe(s.tema_professora) || temaFixo(n) || temaDe(s.tema) || temaDe(EXPO?.tema_padrao); };
 async function gravar(p, msgOk) {
   try { await p; if (msgOk) aviso(msgOk); return true; }
   catch (e) { console.error(e); aviso("⚠️ Não foi possível gravar (" + (e?.code || e?.message || e) + ")"); return false; }
@@ -290,7 +295,7 @@ async function migrarStatus() {
 }
 
 function render() {
-  $("btn-importar").hidden = portas().some(n => salas[n]?.grupo) || !Object.keys(EXPO?.salas || {}).length;
+  $("btn-importar").hidden = portas().some(n => salas[n]?.grupo) || !Object.keys(EXPO?.salas || {}).some(n => grupoJson(n));
   // quem está em qual sala (para o aviso de aluno repetido)
   const ondeEsta = {};
   for (const n of portas()) { const g = grupoDe(n); for (const m of g?.membros || []) ondeEsta[g.turma + "|" + m] = n; }
@@ -416,7 +421,7 @@ async function conferirGrio() {
 function salaHtml(n, ondeEsta) {
   const s = salas[n] || {}, g = grupoDe(n), itens = Object.entries(s.itens || {}).filter(([, v]) => v?.mv).sort((a, b) => (Number(a[1].x) || 0) - (Number(b[1].x) || 0));
   const nFotos = itens.reduce((t, [, v]) => t + fotosDe(v).length, 0), lim = EXPO.limites || { itens: 40, fotos: 12 };
-  const turma = g?.turma || "8F", tema = (EXPO.temas || []).find(t => t.id === s.tema) || (EXPO.temas || []).find(t => t.id === EXPO.tema_padrao);
+  const turma = g?.turma || "8F", tema = temaValendo(n), fixo = temaFixo(n), doGrupo = temaDe(s.tema) || temaDe(EXPO?.tema_padrao), prof = temaDe(s.tema_professora);
   const membros = g?.membros || [];
   const alunos = (ALUNOS_POR_TURMA[turma] || []).filter(a => visivel(turma, a)).map(a => {
     const outra = ondeEsta[turma + "|" + a], minha = membros.includes(a);
@@ -443,7 +448,7 @@ function salaHtml(n, ondeEsta) {
       <div>
         <h4>Sala</h4>
         <label class="campo">Nome da sala<span class="linha"><input data-nome maxlength="30" value="${esc(s.nome || "")}" style="flex:1"/><button class="btn-sec" data-salvar-nome>Salvar</button></span></label>
-        <label class="campo">Tema<span class="linha"><select data-tema>${(EXPO.temas || []).map(t => `<option value="${esc(t.id)}"${t.id === tema?.id ? " selected" : ""}>${esc(t.emoji || "")} ${esc(t.nome)}</option>`).join("")}</select>
+        <label class="campo">Fundo da sala<span class="linha"><select data-tema><option value=""${prof ? "" : " selected"}>${fixo ? `Fixo da sala: ${esc(fixo.nome)}` : `Escolha do grupo: ${esc(doGrupo?.nome || "")}`}</option>${(EXPO.temas || []).map(t => `<option value="${esc(t.id)}"${t.id === prof?.id ? " selected" : ""}>${esc(t.emoji || "")} ${esc(t.nome)}</option>`).join("")}</select>
           ${tema ? `<img class="tema-mini" src="${IMG}/${esc(tema.imagem)}" alt="" loading="lazy"/>` : ""}</span></label>
         ${musicasExpo().length ? `<label class="campo">Música<select data-musica><option value="">Sem música</option>${musicasExpo().map(m => `<option value="${esc(m.id)}"${m.id === s.musica ? " selected" : ""}>${esc(m.nome || m.id)}</option>`).join("")}</select></label>` : ""}
         <a class="btn-sec" href="/aluno/jogo-revisao.html?sala=${n}${teste ? "&teste=1" : ""}" target="_blank" rel="noopener">👀 Ver sala</a>
@@ -494,8 +499,8 @@ $("ordem-portas").addEventListener("click", async (e) => {
 });
 $("btn-importar").addEventListener("click", async () => {
   const patch = {};
-  for (const [n, g] of Object.entries(EXPO.salas || {})) patch[`${n}/grupo`] = { turma: g.turma, membros: g.membros };
-  if (await gravar(update(ref(db, no("exposicao_salas")), patch), `Grupos importados (${Object.keys(EXPO.salas || {}).length}).`)) render();
+  for (const n of Object.keys(EXPO.salas || {})) { const g = grupoJson(n); if (g) patch[`${n}/grupo`] = { turma: g.turma, membros: g.membros }; }
+  if (await gravar(update(ref(db, no("exposicao_salas")), patch), `Grupos importados (${Object.keys(patch).length}).`)) render();
 });
 $("salas").addEventListener("toggle", (e) => {
   const d = e.target.closest?.("details.sala");
@@ -512,7 +517,8 @@ $("salas").addEventListener("change", async (e) => {
     const outra = portas().find(k => k !== n && (grupoDe(k)?.turma === turma) && (grupoDe(k)?.membros || []).includes(nome));
     if (outra) { e.target.checked = false; aviso(`⚠️ ${nome} já está no grupo da sala ${outra}. Tire de lá primeiro.`); }
   } else if (e.target.matches("[data-tema]")) {
-    if (await gravar(set(ref(db, `${no("exposicao_salas")}/${n}/tema`), e.target.value), `Sala ${n}: tema trocado.`)) { (salas[n] ||= {}).tema = e.target.value; render(); }
+    const v = e.target.value || null;   // 🖼️ PROMPT-242: a escolha da professora vale acima do fundo fixo; vazio: volta ao fixo (ou ao do grupo)
+    if (await gravar(set(ref(db, `${no("exposicao_salas")}/${n}/tema_professora`), v), v ? `Sala ${n}: fundo ${temaDe(v)?.nome}.` : `Sala ${n}: fundo de volta ao ${temaFixo(n) ? "fixo" : "do grupo"}.`)) { (salas[n] ||= {}).tema_professora = v; render(); }
   } else if (e.target.matches("[data-musica]")) {
     const v = e.target.value || null;
     const nomeM = musicasExpo().find(m => m.id === v)?.nome || v;
