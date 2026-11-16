@@ -69,80 +69,74 @@ function tentar(fn, vezes = 400) { for (let i = 0; i < vezes; i++) { const g = f
 
 // ── Os 20 tipos de conta. d = dificuldade 1–5 (muda o tamanho dos números, não o tipo) ──
 // Cada um devolve { conta, resp, erradas: [mais plausíveis primeiro], explica, passo?, semNeg?, mostra? }
+// ⚔️ PROMPT-249: toda conta dá para fazer de cabeça, em poucos segundos: no máximo 2 operações e números pequenos
+const casasDe = (v) => { const s = String(R6(Math.abs(v))); return s.includes('.') ? s.split('.')[1].length : 0; };
+const ate1Casa = (xs) => xs.filter(v => v != null && Number.isFinite(v) && v > 1e-6 && casasDe(v) <= 1).map(R6);
 const GERA = {
   tabuada: (d, rnd) => {
-    const m = [5, 7, 9, 10, 12][d - 1], a = r(2, m, rnd), b = r(2, m, rnd), p = a * b;
+    const m = [5, 7, 9, 10, 10][d - 1], a = r(2, m, rnd), b = r(2, m, rnd), p = a * b;
     const soma = a <= 5 ? Array(a).fill(b).join(' + ') : `${b} + ${b} + … + ${b} (${a} vezes)`;
     return { conta: `${a} × ${b}`, resp: p, semNeg: true, erradas: [p + b, p - b, p + a, p - a, p + 1, p - 1, p + 10],
       explica: `${a} × ${b} = ${p} (${a} × ${b} é o mesmo que ${soma}).` };
   },
 
+  // sempre 2 operações (uma de vezes/dividir e uma de mais/menos); números até 10 (nível 5: até 12); ÷ a partir do nível 3
   expressao_sem_parenteses: (d, rnd) => tentar(() => {
-    const max = [10, 12, 15, 15, 20][d - 1], nOps = d >= 4 ? 3 : 2;
-    const ops = Array.from({ length: nOps }, () => um(d === 1 ? ['+', '−', '×'] : ['+', '−', '×', '÷'], rnd));
-    const mult = (o) => o === '×' || o === '÷';
-    if (!ops.some(mult) || ops.every(mult) || ops.some((o, i) => i && mult(o) && mult(ops[i - 1]))) return null;
-    const ns = Array.from({ length: nOps + 1 }, () => r(1, max, rnd));
-    ops.forEach((o, i) => {
-      if (o === '÷') { const q = r(2, Math.min(9, Math.max(2, Math.floor(max / 2))), rnd); ns[i + 1] = q; ns[i] = q * r(2, Math.max(2, Math.floor(max / q)), rnd); }
-      if (o === '×') { ns[i] = r(2, Math.min(max, 12), rnd); ns[i + 1] = r(2, Math.min(max, 12), rnd); }
-    });
-    const tk = ns.flatMap((n, i) => (i ? [ops[i - 1], n] : [n]));
+    const max = d >= 5 ? 12 : 10;
+    const m = um(d >= 3 ? ['×', '×', '÷'] : ['×'], rnd), s = um(['+', '−'], rnd);
+    const ops = rnd() < 0.5 ? [m, s] : [s, m];
+    const ns = [r(1, max, rnd), r(1, max, rnd), r(1, max, rnd)];
+    const i = ops.indexOf(m);
+    if (m === '×') { ns[i] = r(2, max, rnd); ns[i + 1] = r(2, max, rnd); }
+    else { const q = r(2, 5, rnd); ns[i + 1] = q; ns[i] = q * r(2, Math.min(max, 10), rnd); }   // 36 ÷ 4: a tabuada ao contrário
+    const tk = ns.flatMap((n, k) => (k ? [ops[k - 1], n] : [n]));
     const certo = resolver(tk), errado = resolver(tk, { precedencia: false });
     if (!certo || (errado && errado.v === certo.v)) return null;
     return { conta: textoConta(tk), resp: certo.v, semNeg: true, erradas: [errado?.v, certo.v + 1, certo.v - 1, certo.v + 2, certo.v + 10], explica: explicaExpr(certo) };
   }),
 
+  // só a forma curta: (a ± b) × c ou c × (a ± b); números até 10 e resultado até 100
   expressao_com_parenteses: (d, rnd) => tentar(() => {
-    const max = [10, 10, 12, 15, 20][d - 1], n = () => r(1, max, rnd), pm = () => um(['+', '−'], rnd);
-    const fora = um(d >= 2 ? ['×', '×', '÷', '−'] : ['×', '×', '−'], rnd);
-    let tk;
-    if (d <= 3) tk = rnd() < 0.5 ? ['(', n(), pm(), n(), ')', fora, n()] : [n(), fora === '÷' ? '×' : fora, '(', n(), pm(), n(), ')'];
-    else {
-      const f = r(0, 2, rnd);
-      tk = f === 0 ? ['(', n(), pm(), n(), ')', '×', r(2, 9, rnd), pm(), n()]
-        : f === 1 ? [n(), '+', '(', n(), pm(), n(), ')', '×', r(2, 9, rnd)]
-          : ['(', n(), '+', n(), ')', '×', '(', n(), '−', n(), ')'];
-    }
+    const max = [5, 6, 8, 10, 10][d - 1], n = () => r(1, max, rnd), pm = um(['+', '−'], rnd), c = r(2, Math.min(max, 9), rnd);
+    const tk = rnd() < 0.5 ? ['(', n(), pm, n(), ')', '×', c] : [c, '×', '(', n(), pm, n(), ')'];
     const certo = resolver(tk), errado = resolver(tk, { semParenteses: true });
-    if (!certo || certo.v > 200 || certo.dentro.some(p => /= [01]$/.test(p.txt)) || (errado && errado.v === certo.v)) return null;   // nada de (7 − 7) ou × 1
-    return { conta: textoConta(tk), resp: certo.v, semNeg: true, erradas: [errado?.v, resolver(tk, { semParenteses: true, precedencia: false })?.v, certo.v + 1, certo.v - 1, certo.v + 2],
+    if (!certo || certo.v > 100 || certo.dentro.some(p => /= [01]$/.test(p.txt)) || (errado && errado.v === certo.v)) return null;   // nada de (7 − 7) ou × 1
+    return { conta: textoConta(tk), resp: certo.v, semNeg: true, erradas: [errado?.v, resolver(tk, { semParenteses: true, precedencia: false })?.v, certo.v + 1, certo.v - 1, certo.v + c],
       explica: explicaExpr(certo) };
   }),
 
-  vezes_10_100_1000: (d, rnd) => {
-    let a, f, mult;
-    if (d === 1) { a = r(2, 99, rnd); f = 10; mult = true; }
-    else if (d === 2) { mult = rnd() < 0.6; f = um([10, 100], rnd); a = mult ? r(2, 99, rnd) : 10 * r(2, 99, rnd); }
-    else if (d === 3) { mult = rnd() < 0.5; f = um([10, 100], rnd); a = mult ? r(11, 99, rnd) / 10 : r(2, 999, rnd); }
-    else if (d === 4) { mult = rnd() < 0.5; f = mult ? um([10, 100, 1000], rnd) : um([10, 100], rnd); a = mult ? r(101, 999, rnd) / 100 : r(11, 999, rnd) / 10; }
-    else { mult = rnd() < 0.35; f = mult ? 1000 : um([10, 100, 1000], rnd); a = mult ? r(101, 999, rnd) / 100 : r(11, 9999, rnd) / 10; }
+  // inteiros ou uma casa decimal (na conta e na resposta); × 1000 e ÷ 1000 só nos níveis 4 e 5
+  vezes_10_100_1000: (d, rnd) => tentar(() => {
+    const fs = d >= 4 ? [10, 100, 1000] : d >= 2 ? [10, 100] : [10];
+    const f = um(fs, rnd), mult = d === 1 || rnd() < 0.55;
+    let a;
+    if (mult) a = d <= 2 ? r(2, 99, rnd) : (rnd() < 0.5 ? r(2, 99, rnd) : r(11, 99, rnd) / 10);   // 34 ou 3,4
+    else a = d === 1 ? 10 * r(2, 99, rnd) : f * r(1, 99, rnd) / (d <= 2 ? 1 : um([1, 10], rnd));   // 250 ÷ 10; 340 ÷ 100 = 3,4
     a = R6(a);
     const resp = R6(mult ? a * f : a / f), casas = String(f).length - 1;
+    if (casasDe(a) > 1 || casasDe(resp) > 1 || resp < 0.1) return null;
     return { conta: `${fmt(a)} ${mult ? '×' : '÷'} ${f}`, resp, semNeg: true,
-      erradas: [R6(resp * 10), R6(resp / 10), R6(mult ? a / f : a * f), R6(resp * 100), R6(resp / 100)].filter(v => v >= 1e-6),
+      erradas: ate1Casa([resp * 10, resp / 10, mult ? a / f : a * f, resp * 100, resp / 100]),
       explica: `${mult ? 'Multiplicar' : 'Dividir'} por ${f} anda a vírgula ${casas} casa${casas > 1 ? 's' : ''} para a ${mult ? 'direita' : 'esquerda'}: ${fmt(a)} → ${fmt(resp)}.` };
-  },
+  }),
 
-  medidas: (d, rnd) => {
-    const U = d === 1 ? [['m', 'cm', 100], ['kg', 'g', 1000], ['L', 'mL', 1000]]
+  // inteiros e meios (2,5 m = 250 cm; 1500 g = 1,5 kg)
+  medidas: (d, rnd) => tentar(() => {
+    const U = d <= 2 ? [['m', 'cm', 100], ['kg', 'g', 1000], ['L', 'mL', 1000]]
       : [['m', 'cm', 100], ['kg', 'g', 1000], ['L', 'mL', 1000], ['cm', 'mm', 10], ['km', 'm', 1000]];
     const [g, p, f] = um(U, rnd);
-    let a, desce;   // desce: unidade grande → pequena (multiplica)
-    if (d === 1) { desce = true; a = r(2, 9, rnd); }
-    else if (d === 2) { desce = rnd() < 0.5; a = desce ? r(2, 20, rnd) : f * r(2, 9, rnd); }
-    else if (d === 3) { desce = true; a = r(11, 99, rnd) / 10; }
-    else if (d === 4) { desce = rnd() < 0.4; a = desce ? r(11, 99, rnd) / 10 : f * r(11, 99, rnd) / 10; }
-    else { desce = rnd() < 0.5; a = desce ? r(101, 999, rnd) / 100 : f * r(1, 999, rnd) / 1000; }
-    a = R6(a);
-    const resp = R6(desce ? a * f : a / f), [de, para] = desce ? [g, p] : [p, g];
+    const desce = d === 1 || d === 3 || rnd() < 0.5;   // desce: unidade grande → pequena (multiplica)
+    const grande = d <= 2 ? r(2, 9, rnd) : r(1, 9, rnd) + (rnd() < 0.6 ? 0.5 : 0);   // a medida na unidade grande: 3 ou 2,5
+    if (grande < 1) return null;
+    const a = R6(desce ? grande : grande * f), resp = R6(desce ? grande * f : grande), [de, para] = desce ? [g, p] : [p, g];
     return { conta: `${fmt(a)} ${de} = ? ${para}`, resp, semNeg: true, mostra: (v) => `${fmt(v)} ${para}`,
-      erradas: [R6(resp * 10), R6(resp / 10), R6(desce ? a / f : a * f), R6(resp * 100), R6(resp / 100)].filter(v => v >= 1e-6),
+      erradas: ate1Casa([resp * 10, resp / 10, desce ? a / f : a * f, resp * 100, resp / 100]),
       explica: desce ? `1 ${g} = ${f} ${p}, então ${fmt(a)} × ${f} = ${fmt(resp)} ${p}.` : `${f} ${p} = 1 ${g}, então ${fmt(a)} ÷ ${f} = ${fmt(resp)} ${g}.` };
-  },
+  }),
 
+  // números até 10 nos níveis 1 a 4; até 20 no 5
   negativos_soma: (d, rnd) => {
-    const R = [10, 15, 20, 25, 30][d - 1];
+    const R = d >= 5 ? 20 : 10;
     const nz = () => { let x = 0; while (!x) x = r(-R, R, rnd); return x; };
     let a = nz(), b = nz();
     if (a > 0 && b > 0) { if (rnd() < 0.5) a = -a; else b = -b; }
@@ -155,10 +149,11 @@ const GERA = {
     return { conta: `${par(a)} ${sub ? '−' : '+'} ${par(b)}`, resp, erradas: [-resp, sub ? a + b : a - b, -(A + Y), A + Y, resp + 2, resp - 2], explica: pre + regra };
   },
 
+  // fatores até 9 (o resultado fica dentro da tabuada)
   negativos_mult: (d, rnd) => {
-    const R = [10, 12, 15, 20, 30][d - 1], R2 = d >= 3 ? 9 : R;
-    const nz = (m) => r(2, m, rnd) * (rnd() < 0.5 ? -1 : 1);
-    let a = nz(R), b = nz(R2);
+    const R = [5, 7, 9, 9, 9][d - 1];
+    const nz = () => r(2, R, rnd) * (rnd() < 0.5 ? -1 : 1);
+    let a = nz(), b = nz();
     if (a > 0 && b > 0) { if (rnd() < 0.5) a = -a; else b = -b; }
     const div = d >= 2 && rnd() < 0.4;
     const [x, y, op, resp] = div ? [a * b, b, '÷', a] : [a, b, '×', a * b];
@@ -167,67 +162,75 @@ const GERA = {
       explica: `${regra}: ${Math.abs(x)} ${op} ${Math.abs(y)} = ${Math.abs(resp)}, então ${resp < 0 ? MENOS : '+'}${Math.abs(resp)}.` };
   },
 
-  fracoes: (d, rnd) => {
-    if (d >= 4 && rnd() < 0.5) {   // soma (d5: ou subtração) de frações de mesmo denominador
-      return tentar(() => {
-        const n = r(5, d >= 5 ? 12 : 9, rnd), a = r(1, n - 1, rnd), b = r(1, n - 1, rnd), sub = d >= 5 && rnd() < 0.4;
-        const s = sub ? a - b : a + b;
-        if (s < 1 || s >= n || mdc(s, n) !== 1 || a === b) return null;
-        const op = sub ? '−' : '+';
-        return { conta: `${a}/${n} ${op} ${b}/${n}`, resp: `${s}/${n}`,
-          erradas: (sub ? [`${a + b}/${n}`, `${s + 1}/${n}`, `${s}/${n + 1}`, `${s - 1}/${n}`] : [`${s}/${2 * n}`, `${s + 1}/${n}`, `${s - 1}/${n}`, `${s}/${n + 1}`]).filter(x => !/^0\//.test(x)),
-          explica: `Mesmo denominador: ${sub ? 'subtrai' : 'soma'} os numeradores ${a} ${op} ${b} = ${s} e mantém o ${n}: ${s}/${n}.` };
-      });
+  // 1/n de N nos níveis 1 a 3 (N até 60); m/n de N e a soma de mesmo denominador só nos níveis 4 e 5
+  fracoes: (d, rnd) => tentar(() => {
+    if (d >= 4 && rnd() < 0.4) {   // soma (nível 5: ou subtração) de frações de mesmo denominador
+      const n = r(3, d >= 5 ? 10 : 8, rnd), a = r(1, n - 1, rnd), b = r(1, n - 1, rnd), sub = d >= 5 && rnd() < 0.4;
+      const s = sub ? a - b : a + b;
+      if (s < 1 || s >= n || mdc(s, n) !== 1 || a === b) return null;
+      const op = sub ? '−' : '+';
+      return { conta: `${a}/${n} ${op} ${b}/${n}`, resp: `${s}/${n}`,
+        erradas: (sub ? [`${a + b}/${n}`, `${s + 1}/${n}`, `${s}/${n + 1}`, `${s - 1}/${n}`] : [`${s}/${2 * n}`, `${s + 1}/${n}`, `${s - 1}/${n}`, `${s}/${n + 1}`]).filter(x => !/^0\//.test(x)),
+        explica: `Mesmo denominador: ${sub ? 'subtrai' : 'soma'} os numeradores ${a} ${op} ${b} = ${s} e mantém o ${n}: ${s}/${n}.` };
     }
-    const n = r(2, [5, 10, 8, 10, 12][d - 1], rnd), k = r(2, [10, 10, 10, 12, 15][d - 1], rnd), N = n * k;
-    let m = d >= 3 && n > 2 ? r(2, n - 1, rnd) : 1;
+    const n = r(2, [5, 8, 10, 10, 10][d - 1], rnd), k = r(2, Math.floor(60 / n), rnd), N = n * k;
+    let m = d >= 4 && n > 2 ? r(2, n - 1, rnd) : 1;
     if (mdc(m, n) !== 1) m = 1;   // nada de 4/8
     const resp = m * k;
     return { conta: `${m}/${n} de ${N}`, resp, semNeg: true,
       erradas: m === 1 ? [N - n, k + 1, k - 1, 2 * k, N] : [k, resp + k, resp - k, N - resp, resp + 1],
       explica: `Divide ${N} em ${n} partes: ${N} ÷ ${n} = ${k}` + (m === 1 ? '.' : `; pega ${m} partes: ${m} × ${k} = ${resp}.`) };
-  },
-
-  decimais: (d, rnd) => tentar(() => {
-    // em centésimos (inteiros), para não errar conta com vírgula
-    const casas = d <= 2 ? [1, 1] : d === 5 ? (rnd() < 0.6 ? [2, 2] : [1, 2]) : (rnd() < 0.5 ? [1, 2] : [2, 1]);
-    const gera = (c) => { if (c === 1) { let v = r(11, d >= 3 ? 199 : 99, rnd); if (v % 10 === 0) v++; return v * 10; } let v = r(101, d >= 5 ? 1999 : 999, rnd); if (v % 10 === 0) v++; return v; };
-    let A = gera(casas[0]), B = gera(casas[1]);
-    const sub = d >= 2 && rnd() < 0.45;
-    if (sub && A < B) { [A, B] = [B, A]; casas.reverse(); }
-    if (A === B) return null;
-    const C = sub ? A - B : A + B, cmax = Math.max(...casas), op = sub ? '−' : '+';
-    const mostra = (v, c) => (v / 100).toFixed(c).replace('.', ',');
-    // erro de alinhar a vírgula: 1,5 vira 1,05
-    const desalinha = (v, c) => (c === 1 ? Math.floor(v / 100) * 100 + (v % 100) / 10 : v);
-    const erradas = [];
-    if (casas[0] !== casas[1]) erradas.push((sub ? desalinha(A, casas[0]) - desalinha(B, casas[1]) : desalinha(A, casas[0]) + desalinha(B, casas[1])) / 100);
-    erradas.push((C + 10) / 100, (C - 10) / 100, (C + 100) / 100, (C - 100) / 100, (C + 1) / 100);
-    return { conta: `${mostra(A, casas[0])} ${op} ${mostra(B, casas[1])}`, resp: C / 100, semNeg: true, passo: cmax === 2 ? 0.01 : 0.1,
-      erradas: erradas.filter(v => v > 0).map(R6),
-      explica: `Alinha as vírgulas: ${mostra(A, cmax)} ${op} ${mostra(B, cmax)} = ${fmt(C / 100)}.` };
   }),
 
-  potencia: (d, rnd) => tentar(() => {
-    const [bmax, emin, emax] = [[5, 2, 3], [6, 2, 3], [10, 2, 3], [10, 2, 4], [10, 2, 5]][d - 1];
-    const b = r(2, bmax, rnd), e = d >= 3 && rnd() < 0.2 ? r(0, 1, rnd) : r(emin, emax, rnd), resp = b ** e;
-    if (resp > 1000) return null;
-    const erradas = e === 0 ? [0, b, 10, 2 * b] : e === 1 ? [1, b * b, 0, 2 * b] : [b * e, b ** (e - 1), b ** (e + 1) <= 5000 ? b ** (e + 1) : null, b + e, resp + b];
+  // as duas parcelas com o mesmo número de casas: uma casa nos níveis 1 a 4 (sem "vai um" nos 1 e 2); duas só no 5, até 10
+  decimais: (d, rnd) => tentar(() => {
+    const c = d >= 5 ? 2 : 1, um10 = c === 1 ? 10 : 1;   // em centésimos (inteiros), para não errar conta com vírgula
+    const sub = d >= 2 && rnd() < 0.45;
+    const gera = () => {
+      if (c === 2) { let v = r(101, 999, rnd); if (v % 10 === 0) v++; return v; }   // 1,01 a 9,99
+      const inteiro = r(0, d <= 2 ? 9 : 19, rnd), dec = r(1, 9, rnd);
+      return (inteiro * 10 + dec) * 10;
+    };
+    let A = gera(), B = gera();
+    if (sub && A < B) [A, B] = [B, A];
+    if (A === B) return null;
+    const dA = (A / um10) % 10, dB = (B / um10) % 10;   // o último algarismo de cada um
+    if (d <= 2 && (sub ? dA < dB : dA + dB >= 10)) return null;   // sem "vai um" nem "empresta"
+    const C = sub ? A - B : A + B, op = sub ? '−' : '+';
+    if (C <= 0) return null;
+    const mostra = (v) => (v / 100).toFixed(c).replace('.', ',');
+    const vaiUm = sub ? dA < dB : dA + dB >= 10;   // erro típico: esquecer o "vai um" (ou o empresta)
+    const erradas = [vaiUm ? (sub ? C + 10 * um10 : C - 10 * um10) / 100 : null, (C + um10) / 100, (C - um10) / 100, (C + 100) / 100, (C - 100) / 100, (C + 10 * um10) / 100];
+    return { conta: `${mostra(A)} ${op} ${mostra(B)}`, resp: C / 100, semNeg: true, passo: c === 2 ? 0.01 : 0.1,
+      erradas: erradas.filter(v => v != null && v > 0).map(R6),
+      explica: `Alinha as vírgulas: ${mostra(A)} ${op} ${mostra(B)} = ${fmt(C / 100)}.` };
+  }),
+
+  // base até 10 com expoente 2; base até 5 com expoente 3; 2⁴ e 2⁵; expoentes 0 e 1 a partir do nível 3
+  potencia: (d, rnd) => {
+    const formas = [[[2, 5, 2]], [[2, 10, 2], [2, 3, 3]], [[2, 10, 2], [2, 5, 3]], [[2, 10, 2], [2, 5, 3], [2, 2, 4]], [[2, 10, 2], [2, 5, 3], [2, 2, 4], [2, 2, 5]]][d - 1];
+    let b, e;
+    if (d >= 3 && rnd() < 0.2) { b = r(2, 10, rnd); e = r(0, 1, rnd); }
+    else { const [b0, b1, ee] = um(formas, rnd); b = r(b0, b1, rnd); e = ee; }
+    const resp = b ** e;
+    const erradas = e === 0 ? [0, b, 10, 2 * b] : e === 1 ? [1, b * b, 0, 2 * b] : [b * e, b ** (e - 1), b ** (e + 1), b + e, resp + b];
     const explica = e === 0 ? `Todo número (diferente de 0) elevado a 0 dá 1: ${b}⁰ = 1.`
       : e === 1 ? `Expoente 1 é o próprio número: ${b}¹ = ${b}.` : `${b}${SUP[e]} = ${Array(e).fill(b).join(' × ')} = ${resp}.`;
-    return { conta: `${b}${SUP[e]}`, resp, semNeg: true, erradas: erradas.filter(v => v != null), explica };
-  }),
+    return { conta: `${b}${SUP[e]}`, resp, semNeg: true, erradas, explica };
+  },
 
+  // até √144 em todos os níveis
   raiz: (d, rnd) => {
-    const k = r(2, [7, 10, 12, 15, 20][d - 1], rnd), q = k * k;
+    const k = r(2, [7, 9, 12, 12, 12][d - 1], rnd), q = k * k;
     return { conta: `√${q}`, resp: k, semNeg: true, erradas: [q % 2 === 0 ? q / 2 : null, k + 1, k - 1, 2 * k, k + 2].filter(v => v != null && v > 0),
       explica: `Que número vezes ele mesmo dá ${q}? ${k} × ${k} = ${q}, então √${q} = ${k}.` };
   },
 
+  // números até 60
   multiplos_divisores: (d, rnd) => {
-    const nmax = [5, 7, 9, 10, 12][d - 1];
+    const nmax = [5, 7, 9, 10, 10][d - 1];
     if (d >= 2 && rnd() < 0.5) {   // divisor
-      const Nmax = [30, 40, 60, 80, 100][d - 1];
+      const Nmax = [30, 40, 60, 60, 60][d - 1];
       return tentar(() => {
         const n = r(2, nmax, rnd), q = r(2, Math.floor(Nmax / n), rnd), N = n * q;
         if (q < 2) return null;
@@ -237,24 +240,26 @@ const GERA = {
           explica: `Divisor de ${N} divide sem sobrar: ${N} ÷ ${n} = ${q} → ${n}.` };
       });
     }
-    const n = r(2, nmax, rnd), m = n * r(2, d <= 2 ? 6 : 10, rnd), errs = [];
+    const n = r(2, nmax, rnd), m = n * r(2, Math.min(d <= 2 ? 6 : 10, Math.floor(60 / n)), rnd), errs = [];
     for (let k = 1; k < 30 && errs.length < 6; k++) for (const v of [m + k, m - k]) if (v > 1 && v % n !== 0 && !errs.includes(v)) errs.push(v);
     return { conta: `Qual é múltiplo de ${n}?`, resp: m, erradas: errs, unicas: true,
       explica: `Múltiplo de ${n} está na tabuada do ${n}: ${[1, 2, 3, 4].map(i => n * i).join(', ')}… → ${m}.` };
   },
 
+  // 10%, 50% e 25% de números redondos nos níveis 1 a 4; 20%, 75% e 5% só no 5
   porcentagem: (d, rnd) => {
-    const p = um([[10, 50], [10, 50, 25], [10, 50, 25, 20], [10, 50, 25, 20, 75], [10, 50, 25, 20, 75, 5]][d - 1], rnd);
-    const base = [10, 50, 20].includes(p) ? 10 : 20, N = base * r(p === 10 || p === 50 ? 2 : 1, [10, 15, 15, 20, 20][d - 1], rnd);
+    const p = um([[10, 50], [10, 50], [10, 50, 25], [10, 50, 25], [10, 50, 25, 20, 75, 5]][d - 1], rnd);
+    const N = (p === 10 || p === 50 ? 10 : 20) * r(p === 10 || p === 50 ? 2 : 1, [10, 10, 10, 10, 10][d - 1], rnd);   // 20 a 100; 25%, 75%, 20% e 5%: de 20 em 20 até 200
     const resp = N * p / 100;
     const ex = { 10: `10% é dividir por 10: ${N} ÷ 10 = ${resp}.`, 50: `50% é a metade: ${N} ÷ 2 = ${resp}.`, 25: `25% é 1/4: ${N} ÷ 4 = ${resp}.`,
       20: `20% é 1/5: ${N} ÷ 5 = ${resp}.`, 75: `75% é 3/4: ${N} ÷ 4 = ${N / 4} e 3 × ${N / 4} = ${resp}.`, 5: `5% é a metade de 10%: ${N} ÷ 10 = ${N / 10} e ${N / 10} ÷ 2 = ${resp}.` }[p];
     return { conta: `${p}% de ${N}`, resp, semNeg: true, erradas: [N - resp, N / 10, N / 2, N / 4, N / 5, N * 3 / 4, N / 20].filter(Number.isInteger), explica: ex };
   },
 
+  // ax ± b com a e x até 5 e b até 10; x negativo só no nível 5 (−1 a −3)
   valor_numerico: (d, rnd) => tentar(() => {
-    const a = r(2, [5, 6, 9, 9, 9][d - 1], rnd), b = r(1, [9, 9, 12, 15, 15][d - 1], rnd);
-    const x = d >= 5 ? -r(1, 5, rnd) : r(1, [5, 6, 10, 10, 10][d - 1], rnd);
+    const a = r(2, [3, 4, 5, 5, 5][d - 1], rnd), b = r(1, [5, 8, 10, 10, 10][d - 1], rnd);
+    const x = d >= 5 && rnd() < 0.5 ? -r(1, 3, rnd) : r(1, [3, 4, 5, 5, 5][d - 1], rnd);
     const menos = d >= 2 && rnd() < 0.45, op = menos ? '−' : '+', resp = menos ? a * x - b : a * x + b;
     if (d < 5 && resp < 0) return null;
     const com = (ax) => (menos ? ax - b : ax + b);
@@ -263,23 +268,17 @@ const GERA = {
       explica: `Troca x por ${fmt(x)}: ${a} × ${par(x)} ${op} ${b} = ${fmt(a * x)} ${op} ${b} = ${fmt(resp)}.` };
   }),
 
+  // coeficientes até 10; nível 5: ax + bx − cx (sem termo solto)
   termos_semelhantes: (d, rnd) => tentar(() => {
     const T = (c) => (c === 1 ? 'x' : c === -1 ? `${MENOS}x` : `${fmt(c)}x`);
-    const a = r(2, 9 + d, rnd), b = r(2, 9 + d, rnd);
+    const a = r(2, 10, rnd), b = r(2, 10, rnd);
     if (d === 1) { const s = a + b; return { conta: `${a}x + ${b}x`, resp: T(s), erradas: [`${s}x²`, T(a * b), T(s + 1), T(s - 1), String(s)],
       explica: `Mesma letra: soma os números da frente: ${a} + ${b} = ${s} → ${T(s)}.` }; }
-    if (d === 3) {
-      const c = r(2, 9, rnd), s = a + b - c;
-      if (s < 2) return null;
-      return { conta: `${a}x + ${b}x − ${c}x`, resp: T(s), erradas: [T(a + b + c), `${s}x²`, T(s + 1), T(s - 1), String(s)],
-        explica: `Mesma letra: faz a conta com os números da frente: ${a} + ${b} − ${c} = ${s} → ${T(s)}.` };
-    }
-    if (d === 5) {
-      const c = r(2, 12, rnd), s = a - c;
-      if (Math.abs(s) < 2) return null;
-      const ok = `${T(s)} + ${b}`;
-      return { conta: `${a}x + ${b} − ${c}x`, resp: ok, erradas: [T(a + b - c), `${T(a + c)} + ${b}`, `${T(-s)} + ${b}`, `${T(s)} − ${b}`, T(s + b)],
-        explica: `Junta só os termos com x: ${a} − ${c} = ${fmt(s)} → ${T(s)}; o ${b} fica sozinho: ${ok}.` };
+    if (d === 3 || d === 5) {
+      const c = r(2, 10, rnd), s = a + b - c;
+      if (d === 3 ? s < 2 : Math.abs(s) < 2) return null;
+      return { conta: `${a}x + ${b}x − ${c}x`, resp: T(s), erradas: [T(a + b + c), `${fmt(s)}x²`, T(-s), T(s + 1), T(s - 1), String(s)],
+        explica: `Mesma letra: faz a conta com os números da frente: ${a} + ${b} − ${c} = ${fmt(s)} → ${T(s)}.` };
     }
     // d2: resultado positivo · d4: pode dar negativo
     const sub = d === 4 || rnd() < 0.6, s = sub ? a - b : a + b;
@@ -289,34 +288,36 @@ const GERA = {
       explica: `Mesma letra: faz a conta com os números da frente: ${a} ${op} ${b} = ${fmt(s)} → ${T(s)}.` };
   }),
 
+  // um passo nos níveis 1 a 3; dois passos só nos 4 e 5 (a até 5, x de 1 a 10, sem negativos)
   equacao: (d, rnd) => tentar(() => {
     const regra = 'O que faz de um lado faz do outro';
-    if (d === 1 || (d === 2 && rnd() < 0.5)) {
-      const x = r(1, 15, rnd), a = r(1, 15, rnd), b = x + a;
-      return { conta: `x + ${a} = ${b}`, resp: x, semNeg: true, erradas: [b + a, -x, x + 1, x - 1, a], explica: `${regra}: x = ${b} − ${a} = ${x}.` };
+    const forma = d === 1 ? 'mais' : d === 2 ? um(['mais', 'menos'], rnd) : d === 3 ? um(['mais', 'menos', 'vezes'], rnd) : 'dois';
+    if (forma === 'mais') {
+      const x = r(1, 10, rnd), a = r(1, 10, rnd), b = x + a;
+      return { conta: `x + ${a} = ${b}`, resp: x, semNeg: true, erradas: [b + a, x + 1, x - 1, a], explica: `${regra}: x = ${b} − ${a} = ${x}.` };
     }
-    if (d === 2) {
-      const x = r(5, 20, rnd), a = r(1, x - 1, rnd), b = x - a;
-      return { conta: `x − ${a} = ${b}`, resp: x, semNeg: true, erradas: [b - a, x + 1, x - 1, -x, a], explica: `${regra}: x = ${b} + ${a} = ${x}.` };
+    if (forma === 'menos') {
+      const x = r(5, 15, rnd), a = r(1, Math.min(10, x - 1), rnd), b = x - a;
+      return { conta: `x − ${a} = ${b}`, resp: x, semNeg: true, erradas: [b - a, x + 1, x - 1, a], explica: `${regra}: x = ${b} + ${a} = ${x}.` };
     }
-    if (d === 3) {
+    if (forma === 'vezes') {
       const a = r(2, 9, rnd), x = r(2, 10, rnd), b = a * x;
       return { conta: `${a}x = ${b}`, resp: x, semNeg: true, erradas: [b - a, x + 1, x - 1, b + a, a], explica: `${regra}: x = ${b} ÷ ${a} = ${x}.` };
     }
-    const a = r(2, d === 4 ? 6 : 9, rnd), x = d === 4 ? r(1, 10, rnd) : r(-5, 10, rnd), b = r(1, 15, rnd);
-    if (!x) return null;
+    const a = r(2, 5, rnd), x = r(1, 10, rnd), b = r(1, 10, rnd);
     const menos = d === 5 && rnd() < 0.5, c = menos ? a * x - b : a * x + b;
-    if (d === 4 && c < 0) return null;
+    if (c <= 0) return null;
     const k = menos ? c + b : c - b, op = menos ? '−' : '+';
-    const passo1 = menos ? `Soma ${b} dos dois lados: ${a}x = ${fmt(c)} + ${b} = ${fmt(k)}` : `Tira ${b} dos dois lados: ${a}x = ${fmt(c)} − ${b} = ${fmt(k)}`;
+    const passo1 = menos ? `Soma ${b} dos dois lados: ${a}x = ${c} + ${b} = ${k}` : `Tira ${b} dos dois lados: ${a}x = ${c} − ${b} = ${k}`;
     const errado = (menos ? c - b : c + b) / a;
-    return { conta: `${a}x ${op} ${b} = ${fmt(c)}`, resp: x, semNeg: d < 5, erradas: [Number.isInteger(errado) ? errado : null, k, -x, x + 1, x - 1].filter(v => v != null),
-      explica: `${passo1}; divide por ${a}: x = ${fmt(k)} ÷ ${a} = ${fmt(x)}.` };
+    return { conta: `${a}x ${op} ${b} = ${c}`, resp: x, semNeg: true, erradas: [Number.isInteger(errado) ? errado : null, k, x + 1, x - 1, c / a].filter(v => v != null && Number.isInteger(v)),
+      explica: `${passo1}; divide por ${a}: x = ${k} ÷ ${a} = ${x}.` };
   }),
 
+  // preço por unidade até 6, quantidades até 10
   regra_de_tres: (d, rnd) => {
-    const a = r(2, [4, 5, 6, 8, 8][d - 1], rnd), u = r(2, [5, 6, 8, 10, 12][d - 1], rnd);
-    let b = r(2, [9, 10, 12, 15, 15][d - 1], rnd); if (b === a) b++;
+    const a = r(2, [3, 4, 5, 5, 5][d - 1], rnd), u = r(2, [4, 5, 6, 6, 6][d - 1], rnd);
+    let b = r(2, [6, 8, 10, 10, 10][d - 1], rnd); if (b === a) b = b < 10 ? b + 1 : b - 1;
     const c = a * u, v = b * u;
     if (rnd() < 0.25) {
       return { conta: `${a} bolos levam ${c} ovos. ${b} bolos?`, resp: v, semNeg: true, mostra: (n) => `${fmt(n)} ovos`,
@@ -327,8 +328,9 @@ const GERA = {
       erradas: [c + (b - a), c * b, v + u, v - u, a * b], explica: `1 ${sg} custa ${c} ÷ ${a} = ${u} reais; ${b} ${pl}: ${b} × ${u} = ${v} reais.` };
   },
 
+  // lados até 10
   perimetro_area: (d, rnd) => tentar(() => {
-    const L = [10, 12, 15, 18, 20][d - 1], area = rnd() < 0.5;
+    const L = [6, 8, 10, 10, 10][d - 1], area = rnd() < 0.5;
     if (rnd() < 0.35) {
       const l = r(2, L, rnd), A = l * l, P = 4 * l;
       return area ? { conta: `Área do quadrado de lado ${l}`, resp: A, semNeg: true, erradas: [P, 2 * l, A + l, A - l], explica: `Área = lado × lado = ${l} × ${l} = ${A}.` }
@@ -353,13 +355,13 @@ const GERA = {
       explica: `Primeiro o x (${dx} → ${fmt(x)}), depois o y (${dy} → ${fmt(y)}): ${P(x, y)}.` };
   }),
 
+  // média de 3 números em todos os níveis (resultado inteiro); mediana e moda só nos 4 e 5, com 5 números até 10
   media: (d, rnd) => tentar(() => {
-    const n = [3, 3, 4, 4, 5][d - 1], vmax = [10, 12, 15, 18, 20][d - 1];
-    const qual = d >= 3 ? um(['media', 'media', 'mediana', 'moda'], rnd) : 'media';
+    const qual = d >= 4 ? um(['media', 'media', 'mediana', 'moda'], rnd) : 'media';
     if (qual === 'mediana') {
-      const k = n % 2 ? n : n + 1, xs = [];
-      while (xs.length < k) { const v = r(1, vmax, rnd); if (!xs.includes(v)) xs.push(v); }
-      const ord = [...xs].sort((a, b) => a - b), med = ord[(k - 1) / 2], meio = xs[(k - 1) / 2];
+      const k = 5, xs = [];
+      while (xs.length < k) { const v = r(1, 10, rnd); if (!xs.includes(v)) xs.push(v); }
+      const ord = [...xs].sort((a, b) => a - b), med = ord[2], meio = xs[2];
       if (meio === med) return null;   // na ordem mostrada, o do meio não pode ser a resposta
       const soma = xs.reduce((a, b) => a + b, 0);
       return { conta: `Mediana de ${eLista(xs)}`, resp: med, semNeg: true, erradas: [meio, Number.isInteger(soma / k) ? soma / k : null, ord[0], ord[k - 1], med + 1].filter(v => v != null),
@@ -367,18 +369,18 @@ const GERA = {
     }
     if (qual === 'moda') {
       const xs = [];
-      while (xs.length < n - 1) { const v = r(1, vmax, rnd); if (!xs.includes(v)) xs.push(v); }
+      while (xs.length < 4) { const v = r(1, 10, rnd); if (!xs.includes(v)) xs.push(v); }
       const mo = um(xs, rnd);
       xs.splice(r(0, xs.length, rnd), 0, mo);
       if (xs[0] === mo && xs[1] === mo) return null;
       return { conta: `Moda de ${eLista(xs)}`, resp: mo, semNeg: true, erradas: xs.filter(v => v !== mo).concat([mo + 1, 2]),
         explica: `Moda é o número que mais aparece: ${mo} aparece 2 vezes.` };
     }
-    const xs = Array.from({ length: n }, () => r(1, vmax, rnd)), S = xs.reduce((a, b) => a + b, 0);
-    if (S % n) return null;
-    const m = S / n;
-    return { conta: `Média de ${eLista(xs)}`, resp: m, semNeg: true, erradas: [S, Number.isInteger(S / (n - 1)) ? S / (n - 1) : null, m + 1, m - 1, Math.max(...xs), m + 2].filter(v => v != null),
-      explica: `Soma ${xs.join(' + ')} = ${S} e divide por ${n}: ${S} ÷ ${n} = ${m}.` };
+    const vmax = [10, 10, 12, 15, 15][d - 1], xs = Array.from({ length: 3 }, () => r(1, vmax, rnd)), S = xs.reduce((a, b) => a + b, 0);
+    if (S % 3 || new Set(xs).size === 1) return null;
+    const m = S / 3;
+    return { conta: `Média de ${eLista(xs)}`, resp: m, semNeg: true, erradas: [S, Number.isInteger(S / 2) ? S / 2 : null, m + 1, m - 1, Math.max(...xs), m + 2].filter(v => v != null),
+      explica: `Soma ${xs.join(' + ')} = ${S} e divide por 3: ${S} ÷ 3 = ${m}.` };
   }),
 };
 export const tiposDeConta = () => B?.tipos_contas || {};

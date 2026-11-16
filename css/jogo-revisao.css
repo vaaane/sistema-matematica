@@ -5649,7 +5649,7 @@ html.jr-deitado #aula.aula-quadro .aula-nav #aula-ok { flex: 1 1 100%; }
    ============================================================ */
 .jr-pet-fala, .jr-mp-balao, .jr-pet-fala-arena, .jr-fala-vitoria, .aula-balao, .jr-erro-balao, .jr-rel-balao {
   overflow-wrap: anywhere; word-break: normal; white-space: normal; hyphens: manual; box-sizing: border-box; }
-.jr-pet-fala { max-width: min(340px, 86%); font-size: calc(16px * var(--letra, 1)); }
+.jr-pet-fala { max-width: min(260px, 80%); font-size: calc(14px * var(--letra, 1)); }   /* 💬 PROMPT-249: a fala curta do pet, 14 px (a pergunta continua em 16) */
 .jr-pet-fala.largo, .jr-pet-pergunta { max-width: min(340px, 86%); }
 .jr-pet-pergunta { font-size: calc(16px * var(--letra, 1)); }
 .jr-pet-pergunta .pp-conta { white-space: normal; }   /* era nowrap: a conta inteira numa linha passava da borda */
@@ -5979,3 +5979,92 @@ html.jr-deitado .jr-mp-info > .jr-mp-balao { font-size: 15px; }
 /* 🔒 PROMPT-240: o nome da sala é da professora */
 .ex-nome-trava { margin: 4px 0; padding: 10px 12px; border-radius: 10px; background: rgba(124, 92, 252, .12); border: 1px solid rgba(124, 92, 252, .45); color: #e8e6ff; font: 600 14px Inter, sans-serif; }
 .ex-nome-atual { margin: 8px 0 0; color: #ffd700; font: 700 16px Rajdhani, sans-serif; }
+
+/* ══ 🚪 PROMPT-246: Exposição aberta ao público ══ */
+/* o visitante: só sair, votar, curtir, reação, música e configuração */
+html.jr-visitante #btn-praca, html.jr-visitante #btn-casa, html.jr-visitante #btn-online, html.jr-visitante #btn-missoes,
+html.jr-visitante #btn-pet, html.jr-visitante #btn-batalhar, html.jr-visitante #btn-duelo-equipe, html.jr-visitante #btn-ajuda,
+html.jr-visitante #btn-insignias-2, html.jr-visitante [data-moedas-topo], html.jr-visitante #btn-relembre,
+html.jr-visitante #btn-expo-decorar, html.jr-visitante #btn-expo-pend { display: none !important; }
+.expo-caixa { max-width: min(520px, calc(100vw - 32px)); text-align: center; }
+.expo-topo { justify-content: center; }
+.expo-topo b, .expo-larga .al-topo b { white-space: normal; line-height: 1.15; text-align: center; }
+.expo-larga { max-width: min(760px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); overflow-y: auto; }
+.expo-txt { margin: 6px 0 12px; font-family: 'Inter', sans-serif; font-size: 15px; color: #c9cbe0; }
+.expo-pers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+.expo-pers-b { background: rgba(255,255,255,.06); border: 2px solid transparent; border-radius: 12px; padding: 6px; cursor: pointer; aspect-ratio: 3 / 4; display: flex; align-items: center; justify-content: center; }
+.expo-pers-b img { max-width: 100%; max-height: 100%; }
+.expo-pers-b.sel { border-color: #ffd700; background: rgba(255,215,0,.12); }
+.expo-entrar { font-size: 18px; padding: 10px 28px; }
+.expo-aviso-txt { display: flex; flex-direction: column; gap: 10px; align-items: center; padding: 18px 8px; font-family: 'Inter', sans-serif; color: #e6e7f2; font-size: 16px; }
+.expo-aviso-txt b { font-family: 'Rajdhani', sans-serif; font-size: 24px; color: #ffd700; }
+.expo-num { font-family: 'Orbitron', sans-serif; color: #00d4ff; }
+.expo-cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.expo-cartao { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 0 0 8px; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,.12);
+  background: #1a1d30; color: #fff; cursor: pointer; text-align: center; font-family: 'Inter', sans-serif; }
+.expo-cartao img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; margin-bottom: 4px; }
+.expo-cartao b { font-family: 'Rajdhani', sans-serif; font-size: 15px; color: #00d4ff; }
+.expo-cartao span { font-size: 13px; padding: 0 6px; line-height: 1.2; }
+.expo-cartao em { font-style: normal; font-size: 12px; color: #ffd700; }
+.expo-cartao.votada { border-color: #ffd700; box-shadow: 0 0 0 2px rgba(255,215,0,.35); }
+.expo-cartao.off { filter: grayscale(1); opacity: .5; cursor: default; }
+.expo-cartao.votada.off { filter: none; opacity: 1; }
+.expo-rodape { margin-top: 12px; }
+.expo-vazio { padding: 16px; color: #9a9cb5; font-family: 'Inter', sans-serif; font-size: 14px; }
+.expo-reacoes { display: flex; justify-content: center; gap: 10px; margin: 6px 0 14px; }
+.expo-reac { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 64px; padding: 8px; border-radius: 12px; border: 2px solid rgba(255,255,255,.12);
+  background: #1a1d30; color: #fff; cursor: pointer; }
+.expo-reac span { font-size: 26px; line-height: 1; }
+.expo-reac b { font-family: 'Orbitron', sans-serif; font-size: 13px; color: #c9cbe0; }
+.expo-reac.sel { border-color: #ffd700; background: rgba(255,215,0,.12); }
+.expo-reac:disabled { cursor: default; }
+.expo-recado { text-align: left; margin-bottom: 12px; font-family: 'Inter', sans-serif; }
+.expo-rotulo { display: block; font-size: 13px; color: #c9cbe0; margin-bottom: 4px; }
+.expo-recado textarea { width: 100%; box-sizing: border-box; resize: none; border-radius: 10px; border: 1px solid rgba(255,255,255,.18); background: #11131f; color: #fff; padding: 8px 10px; font: 15px 'Inter', sans-serif; }
+.expo-linha { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; color: #9a9cb5; }
+.expo-obs { color: #9a9cb5; font-size: 12px; }
+.expo-meu { margin: 0; font-size: 14px; color: #e6e7f2; }
+.expo-meu em { font-style: normal; color: #ffd700; font-size: 12px; margin-left: 4px; }
+.expo-recados { display: flex; flex-direction: column; gap: 8px; text-align: left; font-family: 'Inter', sans-serif; }
+.expo-rec { background: #1a1d30; border-radius: 10px; padding: 8px 12px; }
+.expo-rec p { margin: 0 0 2px; color: #fff; font-size: 14px; overflow-wrap: anywhere; }
+.expo-rec small { color: #9a9cb5; }
+/* o livro no saguão (desenhado por código: o pedestal com 📖) */
+.expo-livro-ped { position: absolute; width: 60px; transform: translate(-50%, -100%); pointer-events: none; display: flex; flex-direction: column; align-items: center; }
+.expo-livro-ped img { width: 100%; display: block; }
+.expo-livro-ped span { position: absolute; top: -18px; font-size: 30px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
+.expo-livro-ped b { position: absolute; top: -44px; white-space: nowrap; font: 700 12px 'Rajdhani', sans-serif; color: #fff; background: rgba(13,15,26,.72); padding: 1px 8px; border-radius: 8px; }
+/* placa de créditos (canto de baixo, à esquerda; o joystick fica à direita) */
+.ex-creditos { position: fixed; z-index: 15; left: max(12px, var(--sa-l, 0px)); bottom: max(12px, var(--sa-b, 0px)); max-width: min(300px, 60vw);
+  background: rgba(13,15,26,.82); border: 1px solid rgba(255,215,0,.45); border-radius: 12px; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px;
+  font-family: 'Inter', sans-serif; color: #e6e7f2; font-size: 13px; pointer-events: none; }
+.ex-creditos b { font-family: 'Rajdhani', sans-serif; font-size: 16px; color: #ffd700; line-height: 1.1; }
+.ex-creditos .nomes { color: #c9cbe0; font-size: 12px; line-height: 1.3; }
+/* 👣 contador no saguão */
+.expo-contador { position: fixed; z-index: 15; left: max(12px, var(--sa-l, 0px)); bottom: max(12px, var(--sa-b, 0px)); background: rgba(13,15,26,.82);
+  border: 1px solid rgba(0,212,255,.45); border-radius: 999px; padding: 6px 14px; font: 700 15px 'Rajdhani', sans-serif; color: #00d4ff; pointer-events: none; }
+/* 🏆 pódio no saguão */
+.expo-podio { position: fixed; z-index: 30; top: 70px; left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 24px)); box-sizing: border-box;
+  background: rgba(13,15,26,.92); border: 2px solid #ffd700; border-radius: 16px; padding: 12px 14px 14px; text-align: center; color: #fff; font-family: 'Inter', sans-serif; }
+.expo-podio > b { font-family: 'Rajdhani', sans-serif; font-size: 20px; color: #ffd700; }
+.expo-podio .bt-lista-x { position: absolute; right: 8px; top: 6px; }
+.expo-podio-l { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin-top: 8px; }
+.expo-podio-l .pos { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; background: #1a1d30; border-radius: 10px; padding: 8px 6px; }
+.expo-podio-l .p1 { order: 2; padding-top: 18px; border: 1px solid #ffd700; }
+.expo-podio-l .p2 { order: 1; }
+.expo-podio-l .p3 { order: 3; }
+.expo-podio-l span { font-size: 28px; line-height: 1; }
+.expo-podio-l b { font-family: 'Rajdhani', sans-serif; font-size: 15px; line-height: 1.15; }
+.expo-podio-l small { color: #9a9cb5; font-size: 12px; }
+.expo-confete { position: fixed; inset: 0; z-index: 60; pointer-events: none; overflow: hidden; }
+.expo-confete i { position: absolute; top: -12px; width: 8px; height: 14px; border-radius: 2px; animation: expoConfete linear forwards; }
+@keyframes expoConfete { to { transform: translateY(110dvh) rotate(720deg); opacity: .9; } }
+@media (max-width: 767px) { .expo-cartoes { grid-template-columns: repeat(2, 1fr); } .expo-reac { min-width: 56px; } }
+
+/* 📏 PROMPT-248: P / M / G do quadro ajustável */
+.ex-qt button { min-width: 40px; font: 700 16px 'Rajdhani', sans-serif; }
+.ex-qt button.sel { border-color: #ffd700; color: #ffd700; background: rgba(255,215,0,.14); }
+
+/* 💬 PROMPT-249: no Neon, as falas e a pergunta do pet (mapa e casinha) com a letra mais fina: peso 600 e um brilho só, de 4 px.
+   (Quadrinho, Galáxia e Doce conferidos: a fala curta não fica maior que no Clássico.) */
+#jr-app.jr-balao-neon .jr-pet-fala { font-weight: 600; text-shadow: 0 0 4px var(--neon, #3ee8ff); }

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Exposição Virtual da Consciência Negra</title>
+<meta name="robots" content="noindex"/>
+<style>html,body{margin:0;height:100%;background:#0d0f1a;color:#00d4ff;font-family:Rajdhani,system-ui,sans-serif;display:flex;align-items:center;justify-content:center}</style>
+<!-- 🚪 PROMPT-246: o endereço público (QR Code). Abre o jogo no modo exposição: quem está logado entra com o nome dele;
+     quem não está entra como Visitante. ?teste=1 passa adiante (usa os nós *_teste). -->
+<script>
+  var q = new URLSearchParams(location.search), d = new URLSearchParams({ exposicao: '1' });
+  if (q.get('teste') === '1') d.set('teste', '1');
+  location.replace('/aluno/jogo-revisao.html?' + d.toString());
+</script>
+</head>
+<body>Abrindo a exposição…</body>
+</html>

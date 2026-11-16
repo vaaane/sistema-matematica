@@ -93,6 +93,7 @@
       <button class="jr-btn-hud ex-curtir" id="btn-expo-curtir" hidden aria-label="Curtir a sala" aria-pressed="false">❤️ 0</button>
       <button class="jr-btn-hud" id="btn-expo-musica" hidden aria-label="Silenciar a música da sala">🔈</button>
       <button class="jr-btn-hud jr-btn-decorar" id="btn-expo-decorar" hidden aria-label="Decorar a sala">✏️<span>Decorar</span></button>
+      <button class="jr-btn-hud jr-btn-decorar" id="btn-expo-votar" hidden aria-label="Votar na sala favorita">🗳️<span>Votar</span></button>
       <button class="jr-btn-hud jr-btn-missoes" id="btn-missoes" hidden aria-label="Missões do dia">📜<span id="missoes-cont">0/3</span></button>
       <button class="jr-btn-pet" id="btn-pet" hidden aria-label="Meus pets"><img alt="" draggable="false"/></button>
       <button class="jr-btn-hud jr-btn-batalhar" id="btn-batalhar" hidden aria-label="Duelos">⚔️<span>Duelos</span></button>
@@ -162,7 +163,7 @@
     <div id="cs-ferr" class="cs-ferr" hidden><div class="cs-cores" id="cs-cores" hidden></div><div class="cs-cores ex-tam" id="cs-tam" hidden><button class="jr-btn" data-cs-tam="-1" aria-label="Menor">➖</button><b id="cs-tam-v">100%</b><button class="jr-btn" data-cs-tam="1" aria-label="Maior">➕</button></div><button class="jr-btn" data-cs="cor">🎨 Cor</button><button class="jr-btn" data-cs="tam">📏 Tamanho</button><button class="jr-btn" data-cs="girar">🔄 Girar</button><button class="jr-btn" data-cs="imagem" hidden>📷 Escolher imagem</button><button class="jr-btn" data-cs="guardar">📦 Guardar</button><button class="jr-btn" data-cs="vender" hidden>💰 Vender</button><div class="cs-venda" id="cs-venda" hidden></div></div>
     <input type="file" id="cs-arquivo" accept="image/*" hidden/>
     <!-- 🖼️ editor da sala da Exposição (PROMPT-EXPOSICAO-2) -->
-    <div id="ex-ferr" class="cs-ferr ex-ferr" hidden><div class="cs-cores ex-cores" id="ex-cores" hidden></div><div class="cs-cores ex-tam" id="ex-tam" hidden><button class="jr-btn" data-ex-tam="-1" aria-label="Menor">➖</button><b id="ex-tam-v">100%</b><button class="jr-btn" data-ex-tam="1" aria-label="Maior">➕</button></div><button class="jr-btn" data-exf="subir" aria-label="Subir na parede">⬆️</button><button class="jr-btn" data-exf="descer" aria-label="Descer na parede">⬇️</button><button class="jr-btn" data-exf="girar" aria-label="Girar">🔄</button><button class="jr-btn" data-exf="espelhar" aria-label="Espelhar">↔️</button><button class="jr-btn" data-exf="tam" aria-label="Tamanho">📏</button><button class="jr-btn" data-exf="cor" aria-label="Cor">🎨</button><button class="jr-btn" data-exf="conteudo" aria-label="Conteúdo">✏️</button><button class="jr-btn" data-exf="apagar" aria-label="Apagar">🗑️</button></div>
+    <div id="ex-ferr" class="cs-ferr ex-ferr" hidden><div class="cs-cores ex-cores" id="ex-cores" hidden></div><div class="cs-cores ex-tam" id="ex-tam" hidden><button class="jr-btn" data-ex-tam="-1" aria-label="Menor">➖</button><b id="ex-tam-v">100%</b><button class="jr-btn" data-ex-tam="1" aria-label="Maior">➕</button></div><div class="cs-cores ex-tam ex-qt" id="ex-qt" hidden><button class="jr-btn" data-ex-qt="P" aria-label="Pequeno">P</button><button class="jr-btn" data-ex-qt="M" aria-label="Médio">M</button><button class="jr-btn" data-ex-qt="G" aria-label="Grande">G</button></div><button class="jr-btn" data-exf="subir" aria-label="Subir na parede">⬆️</button><button class="jr-btn" data-exf="descer" aria-label="Descer na parede">⬇️</button><button class="jr-btn" data-exf="girar" aria-label="Girar">🔄</button><button class="jr-btn" data-exf="espelhar" aria-label="Espelhar">↔️</button><button class="jr-btn" data-exf="tam" aria-label="Tamanho">📏</button><button class="jr-btn" data-exf="cor" aria-label="Cor">🎨</button><button class="jr-btn" data-exf="conteudo" aria-label="Conteúdo">✏️</button><button class="jr-btn" data-exf="apagar" aria-label="Apagar">🗑️</button></div>
     <button id="ex-resumo" class="ex-resumo" hidden></button>
     <div id="ex-faixa" class="cs-faixa ex-faixa" hidden>
       <div class="ex-faixa-esq"><div class="ex-abas" id="ex-abas"></div><div class="cs-guardados ex-catalogo" id="ex-catalogo"></div></div>
@@ -426,6 +427,37 @@
   </div>
   <!-- 🎨 Reformas (PROMPT-112): trocar o tema do quarto (só os comprados) -->
   <!-- 🖼️ Exposição (PROMPT-EXPOSICAO-2): tema da sala, conteúdo do item e o visualizador -->
+  <!-- 🚪 PROMPT-246: Exposição aberta ao público -->
+  <div id="expo-entrada" class="al-fundo expo-modal" hidden role="dialog" aria-label="Escolha seu personagem">
+    <div class="al-caixa expo-caixa">
+      <div class="al-topo expo-topo"><b>🖼️ Exposição Virtual da Consciência Negra</b></div>
+      <p class="expo-txt">Escolha seu personagem e entre</p>
+      <div class="expo-pers" id="expo-pers"></div>
+      <button class="jr-btn jr-btn-ouro expo-entrar" id="expo-entrar">Entrar ➜</button>
+    </div>
+  </div>
+  <div id="expo-aviso" class="al-fundo expo-modal" hidden role="dialog" aria-live="polite">
+    <div class="al-caixa expo-caixa"><div class="expo-aviso-txt" id="expo-aviso-txt"></div></div>
+  </div>
+  <div id="expo-voto" class="al-fundo expo-modal" hidden role="dialog" aria-label="Votar na sala favorita">
+    <div class="al-caixa expo-caixa expo-larga">
+      <div class="al-topo"><b id="expo-voto-tit">🗳️ Qual sala você mais gostou?</b><button class="bt-lista-x" id="expo-voto-x" aria-label="Fechar">✕</button></div>
+      <p class="expo-txt" id="expo-voto-msg"></p>
+      <div class="expo-cartoes" id="expo-cartoes"></div>
+      <div class="expo-rodape" id="expo-voto-rodape"></div>
+    </div>
+  </div>
+  <div id="expo-livro" class="al-fundo expo-modal" hidden role="dialog" aria-label="Livro de visitas">
+    <div class="al-caixa expo-caixa expo-larga">
+      <div class="al-topo"><b>📖 Livro de visitas</b><button class="bt-lista-x" id="expo-livro-x" aria-label="Fechar">✕</button></div>
+      <div class="expo-reacoes" id="expo-reacoes"></div>
+      <div class="expo-recado" id="expo-recado"></div>
+      <div class="expo-recados" id="expo-recados"></div>
+    </div>
+  </div>
+  <div id="expo-podio" class="expo-podio" hidden aria-live="polite"></div>
+  <div id="expo-contador" class="expo-contador" hidden></div>
+  <div id="ex-creditos" class="ex-creditos" hidden></div>
   <div id="ex-temas" class="al-fundo" hidden role="dialog" aria-label="Tema da sala">
     <div class="al-caixa cs-comida-caixa">
       <div class="al-topo"><b>🎨 Tema da sala</b><button class="bt-lista-x" data-fechar="ex-temas" aria-label="Fechar">✕</button></div>
@@ -1164,10 +1196,26 @@ import { db } from '/js/firebase-config.js';
 import { ref, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { iniciarJogo, UID_PROFESSORA } from '/js/jogo-revisao.js';
 
+// 🚪 PROMPT-246: ?exposicao=1 (o endereço público /exposicao, pelo QR Code): começa no saguão da Exposição.
+// Logado: entra com a identidade dele. Sem login: Visitante (um id guardado no aparelho), sem ir para a tela de login.
+const _expoPub = new URLSearchParams(location.search).get('exposicao') === '1';
+const _s0 = getSession();
+const _logado = _s0?.modo === 'professor' || (_s0?.modo === 'aluno' && Array.isArray(_s0.alunos) && _s0.alunos.length);
+if (_expoPub && !_logado) {
+  let id = null;
+  try { id = localStorage.getItem('expo_visitante'); } catch (_) {}
+  if (!/^V_[a-z0-9]{12}$/.test(id || '')) {
+    const r = new Uint8Array(12); crypto.getRandomValues(r);
+    id = 'V_' + Array.from(r, b => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
+    try { localStorage.setItem('expo_visitante', id); } catch (_) {}   // sem guardar: vale só nesta visita
+  }
+  iniciarJogo({ uid: id, turma: '', nome: 'Visitante', visitante: true, exposicao: true });
+}
 // A professora entra pelo menu dela e joga como aluna (sem presença de duelos)
-const sess = getSession()?.modo === 'professor' ? null : requireAluno('/index.html');
-if (getSession()?.modo === 'professor') {
-  iniciarJogo({ uid: UID_PROFESSORA, turma: '', nome: 'Professora' });
+const sess = _expoPub && !_logado ? null : getSession()?.modo === 'professor' ? null : requireAluno('/index.html');
+if (_expoPub && !_logado) { /* visitante: já começou acima */ }
+else if (getSession()?.modo === 'professor') {
+  iniciarJogo({ uid: UID_PROFESSORA, turma: '', nome: 'Professora', exposicao: _expoPub });
 } else if (sess) {
   const { alunos, turma } = sess;
   const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
@@ -1183,7 +1231,7 @@ if (getSession()?.modo === 'professor') {
   } catch(e) {} })();
   iniciarNotifDueloGlobal();
 
-  iniciarJogo({ uid, turma, nome: alunos[0] });
+  iniciarJogo({ uid, turma, nome: alunos[0], exposicao: _expoPub });
 }
 </script>
 </body>

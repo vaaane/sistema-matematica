@@ -8,7 +8,7 @@
 // nó só com x/y/dir e o colega aparecia sem nome e sem pet).
 // Tudo aqui falha em silêncio: sem permissão ou sem internet, o jogo continua normal (só sem colegas).
 import { db } from '/js/firebase-config.js';
-import { ref, get, set, update, remove, onValue, onDisconnect, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { ref, get, set, update, remove, onValue, onDisconnect, query, orderByChild, equalTo, limitToLast } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
 export const VALIDADE_MS = 30000;   // registro mais velho que isso é ignorado
 const VIDA_MS = 10000;              // ts é renovado pelo menos a cada 10 s
@@ -80,7 +80,8 @@ function ouvir(q, cb) {
     cb(v);
   }, () => cb({}));
 }
-export const ouvirMapa = (n, cb) => ouvir(query(ref(db, base), orderByChild('mapa'), equalTo(n)), cb);
+// lim (PROMPT-246, a Exposição aberta ao público): no máximo lim registros (o Firebase não sabe "os mais perto")
+export const ouvirMapa = (n, cb, lim = 0) => ouvir(lim ? query(ref(db, base), orderByChild('mapa'), equalTo(n), limitToLast(lim)) : query(ref(db, base), orderByChild('mapa'), equalTo(n)), cb);
 export const ouvirTodos = (cb) => ouvir(ref(db, base), cb);
 export const onlineAtivo = () => ativo;
 // leitura única (a lista "👥 Online" fora do mapa geral: lida a cada 20 s, sem ouvir as posições de todo mundo ao vivo)

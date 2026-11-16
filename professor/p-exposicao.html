@@ -56,6 +56,34 @@
     table.it td.mini img{width:54px;height:40px;object-fit:contain;display:block}
     table.it td.acoes{white-space:nowrap}
     .vazio{color:var(--text-muted);font-size:13px;padding:8px 0}
+    /* 🚪 PROMPT-246: aba Público */
+    .pub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+    .pub-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+    .pub-card h3{margin:0 0 10px;font-family:'Rajdhani',sans-serif;font-size:1.15rem}
+    .pub-card .num{font-family:'Orbitron',sans-serif;font-size:1.6rem;color:var(--cyan,#00d4ff)}
+    .pub-lista{display:flex;flex-direction:column;gap:6px;font-size:13px}
+    .pub-lista .l{display:flex;gap:8px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding:4px 0}
+    .pub-lista .l b{font-family:'Orbitron',sans-serif;font-size:.9rem}
+    .pub-modo{display:flex;gap:6px;flex-wrap:wrap}
+    .pub-modo button.ativo{border-color:var(--gold,#ffd700);color:var(--gold,#ffd700)}
+    .recado{background:var(--bg,#0d0f1a);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:14px}
+    .recado small{color:var(--text-muted)}
+    .recado .linha{margin-top:6px}
+    .qr-fundo{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+    .qr-caixa{background:#fff;color:#111;border-radius:16px;padding:20px;text-align:center;max-width:min(440px,100%)}
+    .qr-caixa svg{width:min(320px,70vw);height:auto;display:block;margin:0 auto}
+    .qr-caixa p{margin:8px 0;font-family:'Inter',sans-serif;word-break:break-all}
+    #cartaz{display:none}
+    @media print{
+      body *{visibility:hidden}
+      #cartaz,#cartaz *{visibility:visible}
+      #cartaz{display:flex;position:fixed;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:10mm;background:#fff;color:#111;font-family:'Inter',sans-serif;text-align:center}
+      #cartaz h1{font-family:'Rajdhani',sans-serif;font-size:34pt;margin:0 18mm;line-height:1.1}
+      #cartaz svg{width:120mm;height:120mm}
+      #cartaz .end{font-size:16pt}
+      #cartaz .cam{font-size:22pt;font-weight:700}
+      @page{size:A4;margin:12mm}
+    }
     .abas{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
     .abas::-webkit-scrollbar{display:none}
     .aba{flex:none;background:var(--card);color:var(--text-muted);border:1px solid var(--border);border-radius:999px;padding:8px 16px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;white-space:nowrap}
@@ -113,6 +141,7 @@
       <div class="abas" role="tablist">
         <button class="aba ativa" data-aba="pend">⏳ Pendentes (<span id="n-pend">…</span>)</button>
         <button class="aba" data-aba="salas">🖼️ Salas</button>
+        <button class="aba" data-aba="pub">🚪 Público</button>
       </div>
       <div class="painel" id="aba-pend">
         <p class="muted" style="font-size:13px;margin:0 0 12px">Fotos e textos enviados pelos alunos só aparecem para quem é de fora do grupo depois que você aprova. O nome de cada sala é você que define, na aba Salas.</p>
@@ -134,11 +163,35 @@
       <div id="ordem-portas" class="ordem-portas" hidden></div>
       <div id="salas"><div class="vazio">Carregando…</div></div>
       </div>
+      <!-- 🚪 PROMPT-246: a exposição aberta ao público -->
+      <div class="painel" id="aba-pub" hidden>
+        <div class="filtros" style="margin-bottom:12px">
+          <button class="btn-sec" id="pub-atualizar">↻ Atualizar</button>
+          <button class="btn-pri" id="pub-qr">📱 QR Code da exposição</button>
+        </div>
+        <div class="pub-grid">
+          <div class="pub-card"><h3>Modo da exposição</h3>
+            <div class="pub-modo" id="pub-modo">
+              <button class="btn-sec" data-modo="montagem">🚧 Montagem</button><button class="btn-sec" data-modo="aberto">🚪 Aberto</button><button class="btn-sec" data-modo="encerrado">🎉 Encerrado</button>
+            </div>
+            <p class="muted" style="font-size:13px;margin:10px 0 0" id="pub-modo-txt"></p></div>
+          <div class="pub-card"><h3>👣 Visitantes</h3><div class="num" id="pub-total">…</div>
+            <p class="muted" style="font-size:13px;margin:4px 0 10px" id="pub-online"></p><div class="pub-lista" id="pub-salas"></div></div>
+          <div class="pub-card"><h3>🗳️ Votos do público</h3><div class="pub-lista" id="pub-votos"></div>
+            <div class="linha" style="margin-top:12px"><button class="btn-pri" id="pub-revelar">🏆 Revelar no saguão</button></div>
+            <p class="muted" style="font-size:12px;margin:8px 0 0">Só você vê os votos. “Revelar” mostra o pódio (1º, 2º e 3º) no saguão do jogo.</p></div>
+          <div class="pub-card"><h3>📖 Recados para aprovar</h3><div id="pub-recados-pend"></div>
+            <h3 style="margin-top:14px">📖 Recados no livro</h3><div id="pub-recados-ok"></div>
+            <p class="muted" style="font-size:13px;margin:8px 0 0" id="pub-reacoes"></p></div>
+        </div>
+      </div>
+      <div id="cartaz"><h1>Exposição Virtual da Consciência Negra</h1><div id="cartaz-qr"></div><div class="cam">📱 Aponte a câmera do celular</div><div class="end" id="cartaz-end"></div></div>
       <p class="aviso" id="aviso" style="position:sticky;bottom:8px;margin:0"></p>
     </div>
   </div>
 </div>
 
+<script src="/js/vendor/qrcode.min.js"></script>
 <script type="module">
 import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
@@ -413,6 +466,7 @@ document.querySelectorAll(".aba").forEach(a => a.addEventListener("click", () =>
   document.querySelectorAll(".aba").forEach(x => x.classList.toggle("ativa", x === a));
   document.querySelectorAll(".painel").forEach(p => { p.hidden = p.id !== "aba-" + a.dataset.aba; });
   if (abaAtual === "salas") render();
+  if (abaAtual === "pub") carregarPublico();
 }));
 $("filtro-status").addEventListener("change", () => render());
 
@@ -563,6 +617,90 @@ $("salas").addEventListener("click", async (e) => {
       : await gravar(Promise.all([update(ref(db, base), { foto: null, fotos: null }), ...fotos]), "Foto apagada.");
     if (ok) render();
   }
+});
+
+// ══ 🚪 PROMPT-246: a exposição aberta ao público ══
+const URL_PUBLICA = "https://quizdematematica.com/exposicao";
+const MODOS = { montagem: "🚧 Montagem: só os alunos entram e os grupos decoram. O endereço público mostra “sendo montada”.",
+  aberto: "🚪 Aberto: os visitantes entram pelo QR Code; os alunos não decoram mais (só você).",
+  encerrado: "🎉 Encerrado: os visitantes veem a mensagem de fim; os alunos só olham." };
+const contaTeste = (uid, nome) => uid === "PROFESSORA" || ALUNOS_TESTE.includes(uid) || /PROFESSOR|TESTE/i.test(`${uid} ${nome || ""}`);
+let pub = { votos: {}, visitas: {}, recados: {}, reacoes: {}, online: 0 };
+const nomeSala = (n) => salas[n]?.nome || EXPO?.salas?.[n]?.nome || `Sala ${n}`;
+function contarVotos() {
+  const c = {};
+  for (const [uid, n] of Object.entries(pub.votos || {})) { const k = Number(n); if (k >= 1 && k <= 13 && !contaTeste(uid)) c[k] = (c[k] || 0) + 1; }
+  return Object.entries(c).map(([n, v]) => [Number(n), v]).sort((a, b) => b[1] - a[1] || portaDe(a[0]) - portaDe(b[0]));
+}
+async function carregarPublico() {
+  const falhou = [];
+  try {
+    const [c, v, vi, lr, on] = await Promise.all([no("exposicao_config"), no("exposicao_votos"), no("exposicao_visitas"), no("exposicao_livro"), teste ? "jogo_revisao_online_teste" : "jogo_revisao_online"]
+      .map(p => get(ref(db, p)).then(s => (s.exists() ? s.val() || {} : {})).catch(e => { console.warn(p, e?.code || e); falhou.push(p); return {}; })));
+    config = c; pub.votos = v; pub.visitas = vi; pub.recados = lr.recados || {}; pub.reacoes = lr.reacoes || {};
+    pub.online = Object.values(on).filter(r => r?.local === "exposicao" && Date.now() - (Number(r.ts) || 0) < 30000).length;
+  } catch (e) { console.error(e); }
+  if (falhou.length) aviso("⚠️ Não foi possível ler: " + falhou.join(", ") + " (as regras novas já foram publicadas?)");
+  renderPublico();
+}
+function renderPublico() {
+  const modo = ["montagem", "aberto", "encerrado"].includes(config?.modo) ? config.modo : "montagem";
+  document.querySelectorAll("#pub-modo [data-modo]").forEach(b => b.classList.toggle("ativo", b.dataset.modo === modo));
+  $("pub-modo-txt").textContent = MODOS[modo];
+  // visitas: o total contado pelos registros (o número do saguão é o total/+1)
+  const geral = Object.keys(pub.visitas?.geral || {}).filter(u => !contaTeste(u));
+  $("pub-total").textContent = geral.length;
+  $("pub-online").textContent = `🟢 ${pub.online} na exposição agora · contador do saguão: ${Number(pub.visitas?.total) || 0}`;
+  $("pub-salas").innerHTML = ordemSalas().map((n, i) => {
+    const q = Object.keys(pub.visitas?.salas?.[n] || {}).filter(u => !contaTeste(u)).length;
+    return `<div class="l"><span>Porta ${i + 1} · ${esc(nomeSala(n))}</span><b>${q}</b></div>`;
+  }).join("");
+  const rk = contarVotos();
+  $("pub-votos").innerHTML = rk.length ? rk.map(([n, q], i) => `<div class="l"><span>${i < 3 ? ["🥇", "🥈", "🥉"][i] : `${i + 1}º`} Porta ${portaDe(n)} · ${esc(nomeSala(n))}</span><b>${q}</b></div>`).join("")
+    : '<div class="vazio">Ainda sem votos.</div>';
+  $("pub-revelar").textContent = config?.resultado_visivel ? "🙈 Esconder o pódio do saguão" : "🏆 Revelar no saguão";
+  const recs = Object.entries(pub.recados || {}).filter(([, r]) => r && typeof r.texto === "string").sort((a, b) => (Number(b[1].ts) || 0) - (Number(a[1].ts) || 0));
+  const linha = ([uid, r], ok) => `<div class="recado" data-uid="${esc(uid)}">“${esc(r.texto)}”<br><small>— ${esc(r.nome || "Visitante")} · ${fmt(r.ts)}</small>
+    <div class="linha">${ok ? '<button class="btn-perigo" data-rec-apagar>Apagar</button>' : '<button class="btn-pri" data-rec-ok>✔ Aprovar</button><button class="btn-perigo" data-rec-apagar>✖ Recusar</button>'}</div></div>`;
+  const pend = recs.filter(([, r]) => r.ok !== true), oks = recs.filter(([, r]) => r.ok === true);
+  $("pub-recados-pend").innerHTML = pend.length ? pend.map(x => linha(x, false)).join("") : '<div class="vazio">Nenhum recado esperando.</div>';
+  $("pub-recados-ok").innerHTML = oks.length ? oks.map(x => linha(x, true)).join("") : '<div class="vazio">Nenhum recado aprovado.</div>';
+  const nr = {}; for (const e of Object.values(pub.reacoes || {})) nr[e] = (nr[e] || 0) + 1;
+  $("pub-reacoes").textContent = "Reações: " + ["❤️", "👏", "✊🏾", "🌟"].map(e => `${e} ${nr[e] || 0}`).join("  ");
+}
+$("pub-atualizar").addEventListener("click", carregarPublico);
+$("pub-modo").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-modo]");
+  if (!b) return;
+  if (await gravar(set(ref(db, `${no("exposicao_config")}/modo`), b.dataset.modo), `Modo da exposição: ${b.textContent}`)) { config.modo = b.dataset.modo; renderPublico(); }
+});
+$("pub-revelar").addEventListener("click", async () => {
+  const ligar = !config?.resultado_visivel, podio = contarVotos().slice(0, 3).map(([n]) => n);
+  if (ligar && !podio.length) { aviso("Ainda não há votos para revelar."); return; }
+  if (await gravar(update(ref(db, no("exposicao_config")), ligar ? { resultado_visivel: true, podio } : { resultado_visivel: false }), ligar ? "🏆 Pódio revelado no saguão." : "Pódio escondido.")) {
+    config.resultado_visivel = ligar; if (ligar) config.podio = podio; renderPublico();
+  }
+});
+$("aba-pub").addEventListener("click", async (e) => {
+  const r = e.target.closest(".recado"), uid = r?.dataset.uid;
+  if (!uid) return;
+  const base = `${no("exposicao_livro")}/recados/${uid}`;
+  if (e.target.closest("[data-rec-ok]")) { if (await gravar(set(ref(db, `${base}/ok`), true), "Recado aprovado: já aparece no livro.")) { pub.recados[uid].ok = true; renderPublico(); } }
+  else if (e.target.closest("[data-rec-apagar]")) { if (await gravar(remove(ref(db, base)), "Recado apagado.")) { delete pub.recados[uid]; renderPublico(); } }
+});
+// 📱 QR Code (qrcode-generator, no próprio navegador) e o cartaz A4
+function svgQr(texto) { const q = qrcode(0, "M"); q.addData(texto); q.make(); return q.createSvgTag({ cellSize: 8, margin: 2, scalable: true }); }
+$("pub-qr").addEventListener("click", () => {
+  const url = URL_PUBLICA + (teste ? "/?teste=1" : "");
+  const fundo = document.createElement("div");
+  fundo.className = "qr-fundo";
+  fundo.innerHTML = `<div class="qr-caixa">${svgQr(url)}<p><b>${esc(url)}</b></p>${teste ? '<p style="color:#b45309">Modo teste: este QR usa os dados de teste.</p>' : ""}
+    <div class="linha" style="justify-content:center"><button class="btn-pri" data-imprimir>🖨️ Imprimir cartaz</button><button class="btn-sec" data-fechar-qr>Fechar</button></div></div>`;
+  fundo.addEventListener("click", (e) => {
+    if (e.target === fundo || e.target.closest("[data-fechar-qr]")) fundo.remove();
+    if (e.target.closest("[data-imprimir]")) { $("cartaz-qr").innerHTML = svgQr(url); $("cartaz-end").textContent = url; window.print(); }
+  });
+  document.body.append(fundo);
 });
 
 carregar();
