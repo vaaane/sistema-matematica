@@ -35,6 +35,8 @@
     details.sala>summary b{font-family:'Rajdhani',sans-serif;font-size:1.15rem}
     details.sala>summary .uso{margin-left:auto;font-size:12px;color:var(--text-muted)}
     details.sala>summary .grio{font-size:13px;white-space:nowrap}
+    details.sala>summary .obrig{font-size:13px;white-space:nowrap}
+    details.sala>summary .obrig.falta{color:var(--orange, #ff7b2e)}
     .corpo{padding:0 14px 14px;display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1fr);gap:14px 22px}
     .corpo h4{margin:0 0 8px;font-size:13px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
     .corpo .larga{grid-column:1/-1}
@@ -191,6 +193,15 @@ const grupoFb = (n) => { const g = salas[n]?.grupo; return g ? { turma: String(g
 const grupoJson = (n) => (EXPO?.salas?.[n]?.membros?.length ? EXPO.salas[n] : null);   // PROMPT-242: salas[n] também tem tema_fixo (sem grupo)
 const grupoDe = (n) => grupoFb(n) || grupoJson(n);
 // 🖼️ PROMPT-242: o fundo valendo: tema_professora > tema_fixo (exposicao.json) > tema (o grupo) > tema_padrao
+// ⭐ PROMPT-244: os objetos obrigatórios do tema (moveis[].sala_tema = n)
+const obrigDe = (n) => (EXPO?.moveis || []).filter(it => Number(it.sala_tema) === Number(n));
+function obrigHtml(n, s) {
+  const l = obrigDe(n);
+  if (!l.length) return "";
+  const itens = Object.values(s.itens || {}), tem = l.filter(it => itens.some(v => v?.mv === it.id && v.obrig === true)).length;
+  const rem = Object.keys(s.obrig_removido || {}).filter(k => s.obrig_removido[k]).length;
+  return `<span class="obrig${tem < l.length ? " falta" : ""}" title="${esc(l.map(it => it.nome).join(", "))}">⭐ Obrigatórios: ${tem}/${l.length} na sala${rem ? ` · ${rem} removido${rem > 1 ? "s" : ""}` : ""}</span>`;
+}
 const temaDe = (id) => (EXPO?.temas || []).find(t => t.id === id) || null;
 const temaFixo = (n) => temaDe(EXPO?.salas?.[n]?.tema_fixo);
 const temaValendo = (n) => { const s = salas[n] || {}; return temaDe(s.tema_professora) || temaFixo(n) || temaDe(s.tema) || temaDe(EXPO?.tema_padrao); };
@@ -431,12 +442,12 @@ function salaHtml(n, ondeEsta) {
   const linhas = itens.filter(([, v]) => !filtro || (statusDe(v) || "-") === filtro).map(([id, v]) => {
     const it = catDe(v.mv), fs = fotosDe(v), st = statusDe(v);
     return `<tr><td class="st" title="${esc(st || "")}${v.motivo ? ": " + esc(v.motivo) : ""}">${st ? ICONE[st] : ""}</td><td class="mini"><img src="${IMG}/exposicao/moveis/${esc(it?.ajustavel ? "moldura_paisagem" : v.mv)}_${esc(v.vista || it?.vistas?.[0] || "f")}.webp" alt="" style="${filtroDe(it, Number(v.cor) || 0) ? "filter:" + filtroDe(it, Number(v.cor) || 0) : ""}" loading="lazy"/></td>
-      <td>${esc(it?.nome || v.mv)}${fs.length ? ` <span class="muted">· 📷 ${fs.length}</span>` : ""}</td><td>${esc(v.titulo || "")}</td><td>${esc(nomePor(v.por))}</td><td>${fmt(v.ts)}</td>
+      <td>${v.obrig === true ? '<span title="Objeto obrigatório do tema">⭐ </span>' : ""}${esc(it?.nome || v.mv)}${fs.length ? ` <span class="muted">· 📷 ${fs.length}</span>` : ""}</td><td>${esc(v.titulo || "")}</td><td>${esc(nomePor(v.por))}</td><td>${fmt(v.ts)}</td>
       <td class="acoes">${fs.length ? `<button class="btn-perigo" data-so-foto="${esc(id)}">Apagar só a foto</button> ` : ""}<button class="btn-perigo" data-apagar="${esc(id)}">🗑️</button></td></tr>`;
   }).join("");
   return `<details class="sala" data-sala="${n}"${abertas.has(n) ? " open" : ""}><summary><b>Porta ${portaDe(n)}</b><span class="muted">Sala ${n}</span>${s.nome ? `<span>${esc(s.nome)}</span>` : ""}
       <span class="muted">${g ? `${esc(g.turma)} · ${membros.length} integrante${membros.length === 1 ? "" : "s"}` : "sem grupo"}</span>
-      ${grioHtml(n)}<span class="uso">${itens.length}/${lim.itens} itens · ${nFotos}/${lim.fotos} fotos</span></summary>
+      ${grioHtml(n)}${obrigHtml(n, s)}<span class="uso">${itens.length}/${lim.itens} itens · ${nFotos}/${lim.fotos} fotos</span></summary>
     <div class="corpo">
       <div>
         <h4>Grupo</h4>
@@ -451,6 +462,7 @@ function salaHtml(n, ondeEsta) {
         <label class="campo">Fundo da sala<span class="linha"><select data-tema><option value=""${prof ? "" : " selected"}>${fixo ? `Fixo da sala: ${esc(fixo.nome)}` : `Escolha do grupo: ${esc(doGrupo?.nome || "")}`}</option>${(EXPO.temas || []).map(t => `<option value="${esc(t.id)}"${t.id === prof?.id ? " selected" : ""}>${esc(t.emoji || "")} ${esc(t.nome)}</option>`).join("")}</select>
           ${tema ? `<img class="tema-mini" src="${IMG}/${esc(tema.imagem)}" alt="" loading="lazy"/>` : ""}</span></label>
         ${musicasExpo().length ? `<label class="campo">Música<select data-musica><option value="">Sem música</option>${musicasExpo().map(m => `<option value="${esc(m.id)}"${m.id === s.musica ? " selected" : ""}>${esc(m.nome || m.id)}</option>`).join("")}</select></label>` : ""}
+        ${obrigDe(n).length ? `<button class="btn-sec" data-recolocar-obrig>⭐ Recolocar obrigatórios</button>` : ""}
         <a class="btn-sec" href="/aluno/jogo-revisao.html?sala=${n}${teste ? "&teste=1" : ""}" target="_blank" rel="noopener">👀 Ver sala</a>
       </div>
       <div class="larga">
@@ -475,7 +487,7 @@ function renderOrdem() {
   if (!ordemEdit) { el.hidden = true; return; }
   const doFb = !!ordemValida(config?.ordem_salas);
   el.hidden = false;
-  el.innerHTML = `<p class="muted">A porta 1 é a primeira da visita (embaixo, à esquerda); a 15 é a porta grande do fundo. Use ▲ e ▼ e salve: o corredor do jogo muda na hora.</p>
+  el.innerHTML = `<p class="muted">A porta 1 é a primeira da visita (a da esquerda); a 13, a última da direita. Use ▲ e ▼ e salve: o saguão do jogo muda na hora.</p>
     <ol>${ordemEdit.map((n, i) => { const nome = salas[n]?.nome || EXPO?.salas?.[n]?.nome || ""; const g = grupoDe(n);
       return `<li><b>Porta ${i + 1}</b><span>Sala ${n}${nome ? " · " + esc(nome) : ""}${g ? "" : ' <span class="muted">(🔜 em breve)</span>'}</span>
         <button class="btn-sec" data-ordem-sobe="${i}"${i ? "" : " disabled"} aria-label="Subir">▲</button><button class="btn-sec" data-ordem-desce="${i}"${i < ordemEdit.length - 1 ? "" : " disabled"} aria-label="Descer">▼</button></li>`; }).join("")}</ol>
@@ -533,6 +545,8 @@ $("salas").addEventListener("click", async (e) => {
     const repetido = membros.find(m => portas().some(k => k !== n && grupoDe(k)?.turma === turma && (grupoDe(k)?.membros || []).includes(m)));
     if (repetido) { aviso(`⚠️ ${repetido} já está em outro grupo.`); return; }
     if (await gravar(set(ref(db, `${no("exposicao_salas")}/${n}/grupo`), { turma, membros }), `Sala ${n}: grupo salvo (${membros.length}).`)) { (salas[n] ||= {}).grupo = { turma, membros }; render(); }
+  } else if (e.target.closest("[data-recolocar-obrig]")) {   // ⭐ apaga as marcas: os que faltam voltam quando você ou o grupo abrir a sala
+    if (await gravar(remove(ref(db, `${no("exposicao_salas")}/${n}/obrig_removido`)), `Sala ${n}: os obrigatórios que faltam voltam quando você (👀 Ver sala) ou alguém do grupo abrir a sala.`)) { if (salas[n]) delete salas[n].obrig_removido; render(); }
   } else if (e.target.closest("[data-salvar-nome]")) {
     const nome = d.querySelector("[data-nome]").value.replace(/\s+/g, " ").trim().slice(0, 30) || null;
     if (await gravar(update(ref(db, `${no("exposicao_salas")}/${n}`), { nome, nome_pendente: null, nome_motivo: null }), `Sala ${n}: nome salvo.`)) { const o = (salas[n] ||= {}); o.nome = nome; delete o.nome_pendente; delete o.nome_motivo; render(); }
@@ -544,7 +558,8 @@ $("salas").addEventListener("click", async (e) => {
     if (!v) return;
     const fotos = fotosDe(v).map(f => remove(ref(db, `${no("exposicao_imagens")}/${f}`)));
     const base = `${no("exposicao_salas")}/${n}/itens/${id}`;
-    const ok = b.dataset.apagar ? await gravar(Promise.all([remove(ref(db, base)), ...fotos]), "Item apagado.")
+    const tirouObrig = b.dataset.apagar && v.obrig === true ? [set(ref(db, `${no("exposicao_salas")}/${n}/obrig_removido/${v.mv}`), true)] : [];   // ⭐ não volta sozinho
+    const ok = b.dataset.apagar ? await gravar(Promise.all([remove(ref(db, base)), ...fotos, ...tirouObrig]), tirouObrig.length ? "Objeto obrigatório apagado (não volta sozinho)." : "Item apagado.")
       : await gravar(Promise.all([update(ref(db, base), { foto: null, fotos: null }), ...fotos]), "Foto apagada.");
     if (ok) render();
   }

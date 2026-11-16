@@ -6451,6 +6451,10 @@ function ligarControles() {
   const MOVER = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'KeyS'];
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    // 🖼️ PROMPT-245: decorando, com um item de parede selecionado, ⬆️ e ⬇️ mudam a altura dele
+    if (ex?.editando && ex.sel && ['ArrowUp', 'ArrowDown', 'KeyW', 'KeyS'].includes(e.code) && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || '')) {
+      if (catExpo(ex.itens.get(ex.sel)?.mv)?.tipo === 'parede') { e.preventDefault(); alturaExpo(e.code === 'ArrowUp' || e.code === 'KeyW' ? -1 : 1); return; }
+    }
     if (MOVER.includes(e.code)) {
       if ($('tela-cena').hidden || sobreposicaoAberta()) return;
       teclas.add(e.code);
@@ -6913,7 +6917,7 @@ function destinosDoMapa() {
   if (cena.n === 'laboratorio') for (const c of cena.computadores || []) lista.push({ id: 'pc-' + c.id, tipo: 'predio', alvo: 'pc:' + c.id, x: c.x, y: c.y, trilha: c.trilha });
   const ex = ehPraca() && cena.exposicao;   // 🖼️ pavilhão da Exposição
   if (ex) lista.push({ id: 'predio-exposicao', tipo: 'predio', alvo: 'exposicao', x: ex.ponto[0], y: ex.ponto[1], trilha: ex.trilha, largura: 80 });
-  if (ehSaguao()) for (const p of cena.expoPortas || []) lista.push({ id: 'expo-' + p.n, tipo: 'predio', alvo: 'expo:' + p.n, x: p.ponto[0], y: p.ponto[1], trilha: p.trilha, largura: 40, parede: p.placa[0] < p.ponto[0] - 60 ? 'esq' : p.placa[0] > p.ponto[0] + 60 ? 'dir' : null });   // a zona fica no mínimo (70 × a escala ≈ 122 px): mais de 1,5 × a folha da porta (~65–70 px) sem invadir a vizinha
+  if (ehSaguao()) for (const p of cena.expoPortas || []) lista.push({ id: 'expo-' + p.n, tipo: 'predio', alvo: 'expo:' + p.n, x: p.ponto[0], y: p.ponto[1], trilha: p.trilha, largura: 40, parede: ladoDaPorta(p) });   // a zona fica no mínimo (70 × a escala ≈ 122 px): mais de 1,5 × a folha da porta (~65–70 px) sem invadir a vizinha
   const md = ehPraca() && cena.mesa_damas;
   if (md) lista.push({ id: 'predio-mesa-damas', tipo: 'predio', alvo: 'mesa_damas', x: md.x, y: md.y, trilha: md.trilha, largura: 80 });
   const qe = cena.estudos;
@@ -7124,7 +7128,7 @@ const destinoNaZona = () => (cena?.tipo === 'mapa' ? destinosDoMapa().filter(d =
 function verificarZonaEntrada(vx, vy) {
   if (!soltouDesdeTroca) return;
   const cima = vy < 0 && Math.abs(vy) > Math.abs(vx), d = destinoNaZona();
-  // 🖼️ PROMPT-234: as portas das paredes do corredor também entram empurrando para a parede delas (setas e joystick)
+  // 🖼️ PROMPT-234: as portas das paredes laterais (do saguão) também entram empurrando para a parede delas (setas e joystick)
   const lado = d?.parede && Math.abs(vx) > Math.abs(vy) && (d.parede === 'esq' ? vx < 0 : vx > 0);
   if (d && (cima || lado)) entrarNoDestino(espDe(d));
 }
@@ -9151,7 +9155,7 @@ function ligarEdicaoPraca() {
 }
 
 // ============================================================
-//  🖼️ EXPOSIÇÃO VIRTUAL (PROMPT-EXPOSICAO-1) — dados/jogo/exposicao.json. Pavilhão na Praça → saguão: o corredor (852 × 2368, 15 portas, câmera vertical)
+//  🖼️ EXPOSIÇÃO VIRTUAL (PROMPT-EXPOSICAO-1) — dados/jogo/exposicao.json. Pavilhão na Praça → saguão (1593 × 768, 13 portas, câmera na horizontal; PROMPT-245)
 //  → salas (2176 × 768, câmera na horizontal). Pavilhão, saguão e salas com grupo: todos (os de fora do grupo
 //  só veem fotos e textos aprovados; decorar: o grupo e a professora). Firebase (modo
 //  teste: *_teste): exposicao_salas/{n} { tema, musica, nome, itens (parte 2) };
@@ -9200,7 +9204,7 @@ function ordemValidaExpo(o) {
 }
 const ordemSalasExpo = () => ordemValidaExpo(expoOrdemFb) || ordemValidaExpo(EXPO?.saguao?.ordem_salas) || (EXPO?.saguao?.portas || []).map(p => p.n);
 const portaDaSala = (n) => { const k = ordemSalasExpo().indexOf(Number(n)); return k >= 0 ? k + 1 : n; };
-// as portas do corredor: { k (o número da porta), n (a sala que ela abre), placa, ponto, trilha }
+// as portas do saguão: { k (o número da porta), n (a sala que ela abre), placa, ponto, trilha }
 function mapearPortasExpo() {
   if (!ehSaguao()) return;
   const ordem = ordemSalasExpo();
@@ -9312,7 +9316,7 @@ function saidaFaixa(f, entrada, naTrilha, alt = H) {
 }
 async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (aparece na porta dela)
   if (!EXPO) return;
-  // o corredor (PROMPT-EXPOSICAO-17): 852 × 2368, câmera para cima e para baixo
+  // PROMPT-245: o saguão na horizontal (1593 × 768); cena.h só muda a câmera se o JSON tiver uma altura maior que 768
   const S = EXPO.saguao, LW = Number(S.tamanho?.w) || W, LH = Number(S.tamanho?.h) || H, gw = Math.round(LW / CEL), gh = Math.round(LH / CEL);
   prepararCenaExpo('🖼️ Exposição', '⟵ Praça');
   const [grade] = await Promise.all([
@@ -9327,7 +9331,7 @@ async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (ap
   alvoMapa = null;
   pertoSaidaGin = false;
   const pd = deSala && cena.expoPortas.find(p => p.n === deSala);
-  if (pd) posicionarJogador(pd.trilha[0], pd.trilha[1], viradoDaPorta(pd.k));   // no capacho da porta daquela sala
+  if (pd) posicionarJogador(pd.trilha[0], pd.trilha[1], viradoDaPorta(pd));   // no capacho da porta daquela sala
   else posicionarJogador(S.entrada[0], S.entrada[1], 'costas');
   soltouDesdeTroca = false;
   ajustarCamera();
@@ -9337,8 +9341,10 @@ async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (ap
   pararExpo();
   if (privilegioExpo()) ouvirPendentesExpo();   // ⏳ {n} para aprovar
 }
-// voltando de uma sala, virado para o corredor (pela posição da porta): ímpares na parede da esquerda, pares na da direita, a 15 no fundo
-const viradoDaPorta = (n) => (n >= 15 ? 'frente' : n % 2 ? 'direita' : 'esquerda');
+// voltando de uma sala, virado para o saguão (PROMPT-245, pela posição da placa): parede da esquerda (portas 1–3) para a direita,
+// fundo (4–10) de frente, parede da direita (11–13) para a esquerda
+const ladoDaPorta = (p) => { const dx = p.ponto[0] - p.placa[0]; return dx > 15 ? 'esq' : dx < -15 ? 'dir' : null; };
+const viradoDaPorta = (p) => ({ esq: 'direita', dir: 'esquerda' })[ladoDaPorta(p)] || 'frente';
 // professora e modo teste, no saguão: quantos itens e nomes esperam aprovação (todas as salas, sem as fotos)
 let expoPendN = 0, expoPendSalas = 0, expoPendCasas = 0;
 function ouvirPendentesExpo() {
@@ -9424,6 +9430,7 @@ async function abrirSalaExpo(n) {
   $('cena-palco').style.visibility = '';
   atualizarBotaoPet();
   entrarNoMapaOnline('sala-' + n, 'exposicao');
+  colocarObrigatoriosExpo(n);   // ⭐ PROMPT-244
   ouvirExpo(['tema', 'tema_professora', 'musica', 'nome', 'nome_pendente', 'nome_motivo', 'cores/parede', 'cores/chao'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
 }
 function tituloSala(n) { const nome = nomeSalaVisivel(n); return `🖼️ Porta ${portaDaSala(n)}${nome ? ' · ' + String(nome).slice(0, 40) : ''}`; }
@@ -9613,7 +9620,8 @@ function lerItemExpo(v) {
     foto: typeof v.foto === 'string' ? v.foto : null, fotos: v.fotos && typeof v.fotos === 'object' ? { ...v.fotos } : null,
     por: typeof v.por === 'string' ? v.por : '', ts: Number(v.ts) || 0, mexendo: Number(v.mexendo) || 0, mexendo_por: typeof v.mexendo_por === 'string' ? v.mexendo_por : '',
     env_por: typeof v.env_por === 'string' ? v.env_por : '', env_ts: Number(v.env_ts) || 0, motivo: txt(v.motivo, 80), rev_ts: Number(v.rev_ts) || 0,
-    sobre: typeof v.sobre === 'string' && v.sobre ? v.sobre : null, sx: Number.isFinite(Number(v.sx)) ? clamp(Number(v.sx), 0, 1) : 0.5 };   // 🏛️ em cima de outro (PROMPT-182)
+    sobre: typeof v.sobre === 'string' && v.sobre ? v.sobre : null, sx: Number.isFinite(Number(v.sx)) ? clamp(Number(v.sx), 0, 1) : 0.5,   // 🏛️ em cima de outro (PROMPT-182)
+    obrig: v.obrig === true };   // ⭐ objeto do tema da sala (PROMPT-244)
   // sem status (itens de antes da aprovação): com conteúdo conta como pendente
   m.status = !precisaAprov(it) ? null : STATUS_EXPO.includes(v.status) ? v.status : temAlgoExpo(m) ? 'pendente' : null;
   if (it.ajustavel) { m.prop = Number(v.prop) > 0 ? clamp(Number(v.prop), 0.05, 20) : 0; m.y += tamExpo(m)[1] / 2; }   // 🖼️ o banco guarda o centro
@@ -9623,6 +9631,7 @@ function lerItemExpo(v) {
 function gravavelExpo(m) {
   const o = { mv: m.mv, x: Math.round(m.x), y: Math.round(yBanco(m)), vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, por: sessao.uid, ts: Date.now() };
   if (m.tam && m.tam !== 1) o.tam = m.tam;
+  if (m.obrig) o.obrig = true;   // ⭐ PROMPT-244
   if (m.sobre) { o.sobre = m.sobre; o.sx = +(m.sx ?? 0.5).toFixed(3); }
   if (m.titulo) o.titulo = m.titulo;
   if (m.texto) o.texto = m.texto;
@@ -9708,6 +9717,78 @@ function itemExpoMudou(id, v) {
     desenharItemExpo(id); refazerGradeExpo(); if (ex.editando) { renderCatalogoExpo(); resumoAprovExpo(); }
   });
   if (ex.ver) renderVisualizador();
+}
+
+// ── ⭐ objetos obrigatórios do tema (PROMPT-244) ──
+// moveis[].sala_tema = n. Na primeira vez que o grupo (ou a professora, ou o modo teste) abre a sala, cada um que falta é
+// colocado num lugar livre do chão (da frente para o fundo, do meio para os lados, longe da porta, da faixa de entrada e do griô, sem cobrir
+// nada), com a chave obrig_{id} (dois abrindo juntos gravam o mesmo item) e obrig: true. Uma cópia que o grupo já tinha
+// vira a obrigatória. exposicao_salas/{n}/obrig_removido/{id}: a professora tirou, não volta. Visitantes não gravam.
+const obrigDaSala = (n) => (Array.isArray(EXPO?.moveis) ? EXPO.moveis : []).filter(it => Number(it.sala_tema) === Number(n));
+const itensQueContam = () => [...ex.itens.values()].filter(m => !m.obrig).length;   // os obrigatórios não contam no limite
+const posGrioExpo = () => { const S = EXPO.sala; return Array.isArray(S.grio) && S.grio.length === 2 ? S.grio.map(Number) : [S.entrada[0] - 260, S.entrada[1] - 20]; };
+// o retângulo que o item ocupa na tela (parede e os de cima de outro não contam: não disputam o chão)
+function caixaExpo(m) {
+  const it = catExpo(m.mv);
+  if (!it || it.tipo === 'parede' || m.sobre) return null;
+  const [w, h] = tamExpo(m);
+  return { x0: m.x - w / 2, x1: m.x + w / 2, y0: m.y - h, y1: m.y };
+}
+const cruza = (a, b, folga = 6) => a.x0 < b.x1 + folga && b.x0 < a.x1 + folga && a.y0 < b.y1 + folga && b.y0 < a.y1 + folga;
+function lugarLivreExpo(m, ocup) {
+  const S = EXPO.sala, [w, h] = tamExpo(m), ch = chaoYExpo(), [ex0, ey0] = S.entrada, [gx, gy] = posGrioExpo();
+  const proibido = [{ x0: ex0 - 170, x1: ex0 + 170, y0: ey0 - 260, y1: ch[1] + 20 },   // a porta e a faixa de entrada
+    { x0: gx - 80, x1: gx + 80, y0: gy - alturaSalao() - 10, y1: gy + 20 }];          // o griô
+  const base = (mm) => { const b = baseDeChao(mm, w, h); return { x0: b.x0, x1: b.x1, y0: b.y0, y1: b.y1 }; };
+  const tenta = (cobrir) => {
+    for (let y = ch[1] - 110; y >= ch[0] + 6; y -= 14) {   // a borda da frente fica atrás da barra do Decorar e fora da câmera
+      const [a, b] = larguraDoChao(y);
+      const xs = [];
+      for (let x = a + w * 0.45; x <= b - w * 0.45; x += 22) xs.push(x);
+      xs.sort((p, q) => Math.abs(p - S.entrada[0]) - Math.abs(q - S.entrada[0]));   // do meio (ao lado da entrada) para os lados
+      for (const x of xs) {
+        const t = { ...m }; prenderExpo(t, x, y);
+        if (Math.abs(t.x - x) > 1 || Math.abs(t.y - y) > 1) continue;   // fora do chão
+        const r = { x0: t.x - w / 2, x1: t.x + w / 2, y0: t.y - h, y1: t.y };
+        if (proibido.some(p => cruza(r, p, 0))) continue;
+        if (cobrir ? ocup.some(o => cruza(r, o)) : ocup.some(o => cruza(base(t), { x0: o.x0, x1: o.x1, y0: o.y1 - 30, y1: o.y1 }, 2))) continue;
+        return { x: t.x, y: t.y };
+      }
+    }
+    return null;
+  };
+  const p = tenta(true) || tenta(false);   // sem cobrir nada; sala cheia: pelo menos sem pisar na base de outro
+  if (p) return p;
+  const t = { ...m }; prenderExpo(t, S.entrada[0] + 300, (ch[0] + ch[1]) / 2); return { x: t.x, y: t.y };
+}
+async function colocarObrigatoriosExpo(n) {
+  const lista = obrigDaSala(n);
+  if (!lista.length || !(souDaSala(n) || privilegioExpo())) return;   // visitantes não gravam nada
+  let st;
+  try { const s = await get(ref(db, `${noExpo('exposicao_salas')}/${n}`)); st = s.exists() ? s.val() || {} : {}; }
+  catch (e) { console.warn('[jogo-revisao] obrigatórios da sala', e?.code || e); return; }
+  if (!ex || ex.n !== n || salaExpo() !== n) return;
+  const itens = st.itens && typeof st.itens === 'object' ? st.itens : {}, removidos = st.obrig_removido || {};
+  const patch = {}, faltam = [];
+  for (const it of lista) {
+    if (removidos[it.id]) continue;
+    const doTipo = Object.entries(itens).filter(([, v]) => v?.mv === it.id).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+    if (doTipo.some(([, v]) => v.obrig === true)) continue;
+    if (doTipo.length) patch[`itens/${doTipo[0][0]}/obrig`] = true;   // o grupo já tinha posto um: ele vira o obrigatório
+    else faltam.push(it);
+  }
+  if (!faltam.length && !Object.keys(patch).length) return;
+  const tipos = new Set([...faltam.map(it => it.id), ...Object.values(itens).map(v => v?.mv)]);
+  await Promise.all([...tipos].map(id => catExpo(id)).filter(Boolean).map(medirItemExpo));
+  if (!ex || ex.n !== n || salaExpo() !== n) return;
+  const ocup = Object.values(itens).map(v => v && lerItemExpo(v)).filter(Boolean).map(caixaExpo).filter(Boolean);
+  for (const it of faltam) {
+    const m = { mv: it.id, x: 0, y: 0, vista: it.vistas.includes('f') ? 'f' : it.vistas[0], espelho: false, tam: 1, cor: 0, titulo: '', texto: '', foto: null, fotos: null, obrig: true, por: sessao.uid, ts: Date.now() };
+    Object.assign(m, lugarLivreExpo(m, ocup));
+    ocup.push(caixaExpo(m));
+    patch[`itens/obrig_${it.id}`] = gravavelExpo(m);
+  }
+  salvarExpo(update(ref(db, `${noExpo('exposicao_salas')}/${n}`), patch));
 }
 
 // ── desenho ──
@@ -9927,14 +10008,14 @@ function renderCatalogoExpo() {
     return `<button class="cs-guardado ex-cat" data-ex-mv="${esc(it.id)}" title="${esc(it.nome)}">
       <img src="${srcExpo(it.id, it.vistas[0])}" alt="" draggable="false" loading="lazy"/>${n ? `<b>${n}</b>` : ''}<span>${esc(it.nome)}</span></button>`;
   }).join('');
-  $('ex-uso').textContent = `${ex.itens.size}/${limiteExpo('itens', 100)} itens · ${fotosNaSala()}/${limiteExpo('fotos', 12)} fotos`;
+  $('ex-uso').textContent = `${itensQueContam()}/${limiteExpo('itens', 100)} itens · ${fotosNaSala()}/${limiteExpo('fotos', 12)} fotos`;
   $('ex-musica').hidden = !musicasExpo().length;   // 🎵 sem músicas na lista: o seletor some
   $('ex-tema').hidden = temaTravado(ex.n);   // 🖼️ PROMPT-242: sala com fundo fixo, sem 🎨 Tema (nem as cores de parede e chão)
 }
 async function colocarItemExpo(mv) {
   const it = catExpo(mv);
   if (!ex?.editando || !it) return;
-  if (ex.itens.size >= limiteExpo('itens', 100)) { avisoExpo(`Esta sala já tem o máximo de itens (${limiteExpo('itens', 100)}).`); return; }
+  if (itensQueContam() >= limiteExpo('itens', 100)) { avisoExpo(`Esta sala já tem o máximo de itens (${limiteExpo('itens', 100)}).`); return; }
   await medirItemExpo(it);
   if (!ex?.editando) return;
   // nasce no centro da parte visível da sala
@@ -9944,6 +10025,7 @@ async function colocarItemExpo(mv) {
   let id;
   try { id = push(refItens()).key; } catch (_) { semConexaoExpo(); return; }
   ex.itens.set(id, m);
+  if (quadroParede(m)) { const q = livreNaParede(id, m.x, m.y); if (q) { m.x = q[0]; m.y = q[1]; } }   // 🖼️ PROMPT-245: não nasce em cima de outro quadro
   desenharItemExpo(id);
   selecionarExpo(id);
   refazerGradeExpo();
@@ -9973,8 +10055,12 @@ function abrirFerrExpo() {
   el.querySelector('[data-exf="espelhar"]').hidden = !!it.ajustavel;   // 🖼️ o quadro ajustável é igual dos dois lados
   el.querySelector('[data-exf="tam"]').hidden = it.tipo !== 'chao';   // parede e tapete não mudam de tamanho (não cobrem molduras e fotos)
   el.querySelector('[data-exf="conteudo"]').hidden = !it.conteudo;
+  for (const k of ['subir', 'descer']) el.querySelector(`[data-exf="${k}"]`).hidden = it.tipo !== 'parede';   // 🖼️ PROMPT-245: a altura na parede
   const apagar = el.querySelector('[data-exf="apagar"]');
   apagar.textContent = '🗑️'; apagar.classList.remove('confirmar');
+  const trava = !!m.obrig && !ehProfessora();   // ⭐ PROMPT-244: o objeto do tema não sai (a professora pode)
+  apagar.classList.toggle('ex-travado', trava);
+  apagar.title = trava ? '⭐ Este objeto é do tema da sala e não pode sair' : 'Apagar';
   $('ex-cores').hidden = true;
   $('ex-tam').hidden = true;
   el.hidden = false;
@@ -10076,6 +10162,8 @@ function corExpo(i) {
 // 🗑️ com confirmação (o segundo toque apaga); as fotos do item saem do banco junto
 function apagarExpo(btn) {
   if (!ex.sel) return;
+  const mo = ex.itens.get(ex.sel);
+  if (mo?.obrig && !ehProfessora()) { avisoExpo('⭐ Este objeto é do tema da sala e não pode sair'); tocar('erro'); return; }
   if (!btn.classList.contains('confirmar')) {
     btn.classList.add('confirmar'); btn.textContent = '🗑️ Apagar?';
     clearTimeout(ex.conf); ex.conf = setTimeout(() => { btn.classList.remove('confirmar'); btn.textContent = '🗑️'; }, 3000);
@@ -10090,6 +10178,7 @@ function apagarExpo(btn) {
   renderCatalogoExpo();
   tocar('clique');
   salvarExpo(Promise.all([remove(refItem(id)), ...fotosDoItem(m || {}).map(f => remove(refImagem(f)))]));
+  if (m?.obrig) salvarExpo(set(ref(db, `${noExpo('exposicao_salas')}/${ex.n}/obrig_removido/${m.mv}`), true));   // ⭐ a professora tirou: não volta sozinho
 }
 
 // arrastar um item (grava ao soltar; enquanto isso os outros veem o contorno)
@@ -10120,6 +10209,7 @@ function arrastarExpo(e, id) {
       const mm = ex.itens.get(id);
       realceApoio(null);
       if (mm) {
+        if (quadroParede(mm)) { const q = livreNaParede(id, mm.x, mm.y); if (q) { mm.x = q[0]; mm.y = q[1]; desenharItemExpo(id); } }   // 🖼️ PROMPT-245
         mm.por = sessao.uid; mm.ts = Date.now();
         salvarExpo(update(refItem(id), { x: Math.round(mm.x), y: Math.round(yBanco(mm)), por: sessao.uid, ts: mm.ts, mexendo: null, mexendo_por: null,
           sobre: mm.sobre || null, sx: mm.sobre ? +(mm.sx ?? 0.5).toFixed(3) : null }));
@@ -10148,6 +10238,58 @@ function seguirDedoExpo() {
   }
   desenharItemExpo(a.id);
 }
+// ── 🖼️ PROMPT-245: os quadros em qualquer altura da parede do fundo (sala.parede_fundo), sem um cobrir o outro ──
+// fundo_parede (trilho de luz, tecido) pode ficar junto. Solto por cima de outro: vai para o lugar livre mais perto.
+const quadroParede = (m) => { const it = catExpo(m?.mv); return !!it && it.tipo === 'parede' && !it.fundo_parede; };
+function caixaParede(m, x = m.x, y = m.y) {
+  const [w, h] = tamExpo(m), b = catExpo(m.mv)?.ajustavel ? bordaQuadro() : 0;
+  return { x0: x - w / 2 - b, x1: x + w / 2 + b, y0: y - h - b, y1: y + b };
+}
+function cobreQuadro(id, m, x, y) {
+  const a = caixaParede(m, x, y);
+  for (const [oid, o] of ex.itens) {
+    if (oid === id || !quadroParede(o)) continue;
+    const b = caixaParede(o);
+    if (a.x0 < b.x1 - 2 && b.x0 < a.x1 - 2 && a.y0 < b.y1 - 2 && b.y0 < a.y1 - 2) return true;
+  }
+  return false;
+}
+// o lugar livre mais perto de (x, y), dentro da parede; null: já está livre (ou não há lugar)
+function livreNaParede(id, x, y) {
+  const m = ex.itens.get(id);
+  if (!m || !cobreQuadro(id, m, x, y)) return null;
+  const t = { ...m }, PASSO = 8;
+  let melhor = null, md = Infinity;
+  for (let dy = -300; dy <= 300; dy += PASSO) for (let dx = -1400; dx <= 1400; dx += PASSO) {
+    const d = Math.hypot(dx, dy * 1.2);   // de lado ou para cima/baixo: o mais perto
+    if (d >= md) continue;
+    prenderExpo(t, x + dx, y + dy);
+    if (Math.abs(t.x - (x + dx)) > 0.5 || Math.abs(t.y - (y + dy)) > 0.5 || cobreQuadro(id, t, t.x, t.y)) continue;
+    md = d; melhor = [t.x, t.y];
+  }
+  return melhor;
+}
+// ⬆️ ⬇️ (barra e setas): sobe ou desce o item de parede selecionado; pula o quadro que estiver no caminho
+// (sem lugar livre do outro lado: anda só um passo, para dar para desgrudar dois que já estavam juntos)
+function alturaExpo(dir) {
+  const id = ex?.sel, m = id && ex.itens.get(id);
+  if (!m || catExpo(m.mv)?.tipo !== 'parede') return;
+  const t = { ...m }, PASSO = 10;
+  prenderExpo(t, m.x, m.y + dir * PASSO);
+  if (Math.abs(t.y - m.y) < 0.5) { tocar('erro'); return; }   // já está no teto ou no rodapé
+  const passo = [t.x, t.y];
+  if (quadroParede(m) && cobreQuadro(id, m, t.x, t.y)) {
+    for (let y = t.y + dir * PASSO; ; y += dir * PASSO) {
+      prenderExpo(t, m.x, y);
+      if (Math.abs(t.y - y) > 0.5) { [t.x, t.y] = passo; break; }   // chegou na borda sem achar lugar
+      if (!cobreQuadro(id, m, t.x, t.y)) break;
+    }
+  }
+  m.x = t.x; m.y = t.y;
+  desenharItemExpo(id); posicionarFerrExpo();
+  clearTimeout(ex.tAlt); ex.tAlt = setTimeout(() => { if (ex?.itens.has(id)) mudouItemExpo(id); }, 350);   // grava quando parar de apertar
+}
+
 // ── emendar os cordões (PROMPT-123) ──
 // a base de cada poste na cena (catálogo "postes": fração da imagem por vista); [] para quem não tem postes
 function postesExpo(m) {
@@ -10227,7 +10369,7 @@ function ligarEditorExpo() {
     if (b.dataset.exf !== 'cor') $('ex-cores').hidden = true;
     if (b.dataset.exf !== 'tam') $('ex-tam').hidden = true;
     if (b.dataset.exf !== 'apagar') { const ap = $('ex-ferr').querySelector('[data-exf="apagar"]'); ap.classList.remove('confirmar'); ap.textContent = '🗑️'; }
-    ({ girar: girarExpo, espelhar: espelharExpo, cor: abrirCoresExpo, tam: abrirTamExpo, conteudo: () => abrirConteudoExpo(ex.sel), apagar: () => apagarExpo(b) })[b.dataset.exf]?.();
+    ({ subir: () => alturaExpo(-1), descer: () => alturaExpo(1), girar: girarExpo, espelhar: espelharExpo, cor: abrirCoresExpo, tam: abrirTamExpo, conteudo: () => abrirConteudoExpo(ex.sel), apagar: () => apagarExpo(b) })[b.dataset.exf]?.();
   });
   $('cena-atores').addEventListener('pointerdown', (e) => {
     if (!ex?.editando) return;

@@ -3679,6 +3679,7 @@ html.jr-deitado .venc-corpo { grid-template-columns: repeat(3, minmax(0, 1fr)); 
 .ex-fotos.espelho, .ex-fotos.espelho .ex-foto, .ex-fotos.espelho .ex-area > span { transform: scaleX(-1); }
 .ex-area { position: absolute; overflow: hidden; background: #f3e9d2; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
   display: flex; align-items: center; justify-content: center; }
+.ex-ferr .jr-btn.ex-travado { filter: grayscale(1); opacity: .45; }   /* ⭐ PROMPT-244: o objeto do tema não sai */
 /* 🖼️ PROMPT-241: o quadro ajustável (a foto no tamanho exato e a moldura de madeira por fora, em 9-slice) */
 .ex-quadro-foto { position: absolute; inset: 0; overflow: hidden; background: #f3e9d2; display: flex; align-items: center; justify-content: center; }
 .ex-quadro-foto > .ex-foto { width: 100%; height: 100%; object-fit: cover; display: block; }
