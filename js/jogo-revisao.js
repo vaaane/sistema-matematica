@@ -9405,13 +9405,14 @@ async function abrirSalaExpo(n) {
   const S = EXPO.sala, LW = Number(S.tamanho?.w) || 2176, tema = temaDaSala(n);
   prepararCenaExpo(tituloSala(n), '⟵ Saguão');
   const [grade] = await Promise.all([
-    carregarGrade(S.trilha, Math.round(LW / CEL), GH).catch(() => { const g = new Uint8Array(LW / CEL * GH); g.gw = LW / CEL; g.gh = GH; for (let i = 86 * g.gw; i < g.length; i++) g[i] = 1; return g; }),
+    carregarGrade(tema.trilha || S.trilha, Math.round(LW / CEL), GH).catch(() => { const g = new Uint8Array(LW / CEL * GH); g.gw = LW / CEL; g.gh = GH; for (let i = 86 * g.gw; i < g.length; i++) g[i] = 1; return g; }),
     trocarFundo(`${IMG}/${tema.imagem}`, LW)]);
   const naTrilha = (x, y) => centroCelula(celulaMaisProxima(cena.grade, x, y), cena.grade);   // a grade muda com os móveis
   const sd = saidaFaixa(S.saida_saguao, S.entrada, (x, y) => centroCelula(celulaMaisProxima(grade, x, y), grade));
   cena = { tipo: 'mapa', n: 'sala-' + n, expoSala: n, tema: tema.id, salao: true, w: LW, alturaPersonagem: Number(S.altura_personagem) || 120,
     cfg: { entrada: S.entrada, saidas: [sd.cfg] }, grade, portas: {}, naTrilha, saidas: [sd.saida] };
   abrirItensSala(n, grade);   // 🖼️ móveis, fotos e textos (PROMPT-EXPOSICAO-2)
+  ex.trilha = tema.trilha || S.trilha;
   desenharCamadasExpo(n, tema);   // 🎨 parede e chão na cor do grupo (PROMPT-234)
   montarGrio(n);                  // 🎙️ o griô conta a história do grupo (sem o áudio, a sala fica sem ele)
   destinoEspecial = null;
@@ -9441,12 +9442,25 @@ async function aplicarEstadoSala(n) {
   f.style.transition = 'opacity .18s ease'; f.style.opacity = '0';
   await new Promise(ok => setTimeout(ok, 180));
   if (cena !== c) { f.style.opacity = ''; f.style.transition = ''; return; }
-  await trocarFundo(`${IMG}/${tema.imagem}`, c.w);
+  await Promise.all([trocarFundo(`${IMG}/${tema.imagem}`, c.w), trocarGradeExpo(n, tema)]);
   if (cena === c) desenharCamadasExpo(n, temaDaSala(n));
   f.style.opacity = '';
   setTimeout(() => { f.style.transition = ''; }, 220);
 }
 
+// 🖼️ PROMPT-242: a grade de caminhada do fundo (temas[].trilha); os móveis de chão que ficaram fora do chão novo entram nele
+async function trocarGradeExpo(n, tema) {
+  const S = EXPO.sala, arq = tema.trilha || S.trilha;
+  if (!ex || ex.n !== n || ex.trilha === arq) return;
+  let g;
+  try { g = await carregarGrade(arq, Math.round((Number(S.tamanho?.w) || 2176) / CEL), GH); } catch (_) { return; }
+  if (!ex || ex.n !== n || salaExpo() !== n) return;
+  ex.gradeBase = g; ex.trilha = arq;
+  for (const [id, m] of ex.itens) if (ajustarNoChaoExpo(m)) desenharItemExpo(id);
+  refazerGradeExpo();
+  const p = centroCelula(celulaMaisProxima(g, jog.x, jog.y), g);   // o personagem, se ficou fora do chão
+  if (Math.hypot(p[0] - jog.x, p[1] - jog.y) > CEL * 2) posicionarJogador(p[0], p[1], jog.dir);
+}
 // ouve campos de exposicao_salas/{n} ([n, campo]) e, numa sala, os itens dela; cb a cada mudança
 function ouvirExpo(campos, cb, salaItens = null) {
   pararExpo();
@@ -9690,6 +9704,7 @@ function itemExpoMudou(id, v) {
     if (!ex) return;
     const mm = ex.itens.get(id);   // 📐 salvo maior que a tela: fica no limite (e vai assim no próximo salvar)
     if (mm && it?.tipo === 'chao') mm.tam = tamQueCabe(mm.tam, (t) => tamExpo({ ...mm, tam: t }));
+    if (mm && ex.arr?.id !== id) ajustarNoChaoExpo(mm);   // 🖼️ PROMPT-242: fundo com o chão mais embaixo
     desenharItemExpo(id); refazerGradeExpo(); if (ex.editando) { renderCatalogoExpo(); resumoAprovExpo(); }
   });
   if (ex.ver) renderVisualizador();
@@ -9783,12 +9798,22 @@ function larguraDoChao(y) {
   for (let cx = 0; cx < gw; cx++) if (g[cy * gw + cx]) { if (a < 0) a = cx; b = cx; }
   return a < 0 ? [0, larguraCena()] : [a * CEL, (b + 1) * CEL];
 }
+// 🖼️ PROMPT-242: onde o chão começa: temas[].chao_y (fundos com a parede mais baixa) ou sala.chao.y
+const chaoYExpo = () => { const ch = EXPO.sala.chao.y, t = ex ? temaDaSala(ex.n) : null; return [Math.max(ch[0], Number(t?.chao_y) || 0), ch[1]]; };
+// um móvel de chão (solto) fora do chão deste fundo: entra nele (só na tela; vai assim no próximo salvar). true: mudou
+function ajustarNoChaoExpo(m) {
+  const it = catExpo(m?.mv);
+  if (!it || (it.tipo !== 'chao' && it.tipo !== 'tapete') || m.sobre) return false;
+  const x = m.x, y = m.y;
+  prenderExpo(m, x, y);
+  return Math.abs(m.x - x) > 0.5 || Math.abs(m.y - y) > 0.5;
+}
 // parede: parede_fundo; chão e tapete: sala.chao (na largura do chão naquela altura)
 function prenderExpo(m, x, y) {
   const it = catExpo(m.mv), [w, h] = tamExpo(m), S = EXPO.sala;
   if (it.ajustavel) { const b = bordaQuadro(), P = S.parede_fundo; prenderEmArea(m, x, y, 'parede', w + 2 * b, h, { x: P.x, y: [P.y[0] + b, P.y[1] - b] }); return; }   // 🖼️ a moldura fica por fora
   if (it.tipo === 'parede') { prenderEmArea(m, x, y, 'parede', w, h, S.parede_fundo); return; }
-  const ch = S.chao.y, yy = entreLim(y, ch[0] + (it.tipo === 'tapete' ? h * 0.55 : 6), ch[1]);
+  const ch = chaoYExpo(), yy = entreLim(y, ch[0] + (it.tipo === 'tapete' ? h * 0.55 : 6), ch[1]);
   prenderEmArea(m, x, yy, it.tipo, w, h, { x: larguraDoChao(yy), y: ch });
 }
 
