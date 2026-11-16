@@ -122,3 +122,68 @@ export function diasEntre(a, b) {
   if (!a || !b) return 99;
   return Math.round((d(b) - d(a)) / 864e5);
 }
+
+// ── Parte B: achado, pet perdido, tesouro e correntes ──
+export const TIPOS_PARTE_B = ['achado', 'pet_perdido', 'tesouro'];
+export const TIPOS_FAVOR = [...TIPOS_PARTE_A, ...TIPOS_PARTE_B];
+export const correntes = () => (Array.isArray(F?.correntes) ? F.correntes : []);
+export const correnteDef = (id) => correntes().find(c => c.id === id) || null;
+// a corrente da semana: uma das que o aluno pode (nível com o NPC inicial ≥ nivel_min)
+export function sortearCorrente(niveis, pode = () => true, rnd = Math.random) {
+  const l = correntes().filter(c => (niveis[c.npc] || 0) >= (c.nivel_min || 0) && pode(c));
+  return l.length ? l[Math.floor(rnd() * l.length)] : null;
+}
+// a faixa do baú pelo nível de amizade com quem deu o mapa (por_nivel: "2": ["comum"], "3": ["comum","bom"]…)
+export function faixaTesouro(nivel, rnd = Math.random) {
+  const pn = F?.tesouro?.por_nivel || {};
+  const ks = Object.keys(pn).map(Number).filter(k => k <= nivel).sort((a, b) => b - a);
+  const l = pn[ks[0] ?? Math.min(...Object.keys(pn).map(Number))] || ['comum'];
+  return l[Math.floor(rnd() * l.length)] || 'comum';
+}
+
+// ── onde fica um ponto do mapa, em palavras ──
+// 3 × 3: "na parte de cima, à esquerda", "no meio do mapa", "na parte de baixo, no centro"…
+export function quadrante(x, y, W, H) {
+  const c = x < W / 3 ? 0 : x < 2 * W / 3 ? 1 : 2, l = y < H / 3 ? 0 : y < 2 * H / 3 ? 1 : 2;
+  if (c === 1 && l === 1) return 'no meio do mapa';
+  const lin = ['na parte de cima', 'na parte do meio', 'na parte de baixo'][l];
+  return `${lin}, ${['à esquerda', 'no centro', 'à direita'][c]}`;
+}
+// "para a direita", "para cima e para a esquerda" (y da tela: cresce para baixo)
+export function direcaoTexto(dx, dy) {
+  const h = Math.abs(dx) > 40 ? (dx > 0 ? 'para a direita' : 'para a esquerda') : '';
+  const v = Math.abs(dy) > 40 ? (dy > 0 ? 'para baixo' : 'para cima') : '';
+  if (h && v) return Math.abs(dx) > 2.2 * Math.abs(dy) ? h : Math.abs(dy) > 2.2 * Math.abs(dx) ? v : `${v} e ${h}`;
+  return h || v || 'bem ali';
+}
+// a pista de direção do achado: o quadrante e o marco mais perto (porta, saída, pessoa), se estiver perto
+// marcos: [{ x, y, perto: 'perto do ginásio B' }]
+export function pistaDirecao(x, y, W, H, marcos = [], raio = 260) {
+  let m = null, md = Infinity;
+  for (const k of marcos) { const d = Math.hypot(k.x - x, k.y - y); if (d < md) { md = d; m = k; } }
+  const q = quadrante(x, y, W, H);
+  return m && md < raio ? `${q.charAt(0).toUpperCase()}${q.slice(1)}, ${m.perto}.` : `${q.charAt(0).toUpperCase()}${q.slice(1)}.`;
+}
+// passos (~40 px cada) de um ponto a outro
+export const passosAte = (dx, dy) => Math.max(2, Math.round(Math.hypot(dx, dy) / 40));
+// grade 10 × 10 do tesouro com coordenadas: x de 1 a 10 (da esquerda), y de 1 a 10 (de baixo para cima, como no plano cartesiano)
+export const N_GRADE_TESOURO = 10;
+export function celulaCoord(x, y, W, H, n = N_GRADE_TESOURO) {
+  const cx = Math.min(n - 1, Math.max(0, Math.floor(x / (W / n)))), cy = Math.min(n - 1, Math.max(0, Math.floor(y / (H / n))));
+  return [cx + 1, n - cy];
+}
+// n pontos espaçados igualmente ao longo de um caminho (o 1º e o último inclusos)
+export function amostrarCaminho(pts, n) {
+  if (pts.length < 2 || n < 2) return pts.slice(0, n);
+  const acum = [0];
+  for (let i = 1; i < pts.length; i++) acum.push(acum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const tot = acum[acum.length - 1], out = [];
+  for (let k = 0; k < n; k++) {
+    const alvo = tot * k / (n - 1);
+    let i = 1;
+    while (i < pts.length - 1 && acum[i] < alvo) i++;
+    const seg = acum[i] - acum[i - 1] || 1, t = Math.max(0, Math.min(1, (alvo - acum[i - 1]) / seg));
+    out.push([Math.round(pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * t), Math.round(pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * t)]);
+  }
+  return out;
+}

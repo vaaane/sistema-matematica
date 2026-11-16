@@ -5937,3 +5937,34 @@ html.jr-deitado .jr-mp-info > .jr-mp-balao { font-size: 15px; }
 .fvc-teclado button { padding: 10px 0; border-radius: 10px; border: 1px solid #2e2e52; background: #1b1b36; color: #fff; font: 700 1.1rem Orbitron, sans-serif; cursor: pointer; }
 .fvc-teclado .fvc-ok-tecla { grid-column: 1 / -1; background: #7c5cfc; border-color: #7c5cfc; font-family: Rajdhani, sans-serif; }
 .fvc-fechar { width: 100%; margin-top: 6px; }
+
+/* 📜 PROMPT-239 parte B: brilho do achado, pegadas, o bichinho, a grade 10 × 10 e o ❌ do tesouro, o pergaminho */
+.fv-brilho { position: absolute; transform: translate(-50%, -50%); pointer-events: none; opacity: 0; transition: opacity .4s; font-size: 26px; }
+.fv-brilho.perto { opacity: 1; }
+.fv-brilho i { font-style: normal; display: block; filter: drop-shadow(0 0 8px #fff6a8); animation: fv-cintila 1.1s ease-in-out infinite; }
+.fv-brilho:not(.perto) i { animation: none; }
+@keyframes fv-cintila { 0%, 100% { transform: scale(.8) rotate(0); opacity: .7; } 50% { transform: scale(1.15) rotate(20deg); opacity: 1; } }
+.fv-pegada { position: absolute; pointer-events: none; opacity: 0; transition: opacity .6s; filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 5px rgba(255, 236, 160, .95)); }
+.fv-pegada.vista { opacity: 1; }
+.fv-bicho { position: absolute; transform: translate(-50%, -100%); pointer-events: none; line-height: 1; }
+.fv-bicho img { height: 1.6em; width: auto; display: block; }
+.fv-bicho.escondido { display: none; }
+.fv-bicho:not(.seguindo) { animation: fv-pula-b 1s ease-in-out infinite; }
+@keyframes fv-pula-b { 0%, 100% { transform: translate(-50%, -100%); } 50% { transform: translate(-50%, calc(-100% - 6px)); } }
+.fv-bicho.seguindo.esq > * { transform: scaleX(-1); }
+.fv-grade { position: absolute; pointer-events: none; transform: none;
+  background-image: linear-gradient(to right, rgba(255, 255, 255, .28) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, .28) 1px, transparent 1px); }
+.fv-eixo-x, .fv-eixo-y { position: absolute; inset: 0; }
+.fv-eixo-x b, .fv-eixo-y b { position: absolute; font: 700 15px Orbitron, sans-serif; color: #ffd700; text-shadow: 0 1px 3px #000, 0 0 2px #000; }
+.fv-eixo-x b { bottom: 4px; transform: translateX(-50%); }
+.fv-eixo-y b { left: 6px; transform: translateY(-50%); }
+.fv-coord { position: absolute; transform: translate(-50%, -100%); pointer-events: none; background: rgba(13, 15, 26, .85); color: #ffd700; font-family: Orbitron, sans-serif; font-weight: 700; padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+.fv-xis { position: absolute; transform: translate(-50%, -50%); pointer-events: none; font-size: 26px; opacity: 0; transition: opacity .4s; filter: drop-shadow(0 0 4px #000); }
+.fv-xis.perto { opacity: 1; animation: fv-pula-x 1s ease-in-out infinite; }
+@keyframes fv-pula-x { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.2); } }
+.fv-corr { color: #c9b8ff !important; font-weight: 600; }
+.fv-pergaminho { margin: 4px 0; padding: 8px 10px; border-radius: 8px; background: linear-gradient(#f3e2b8, #e2c98f); color: #4a3418; font-size: .85rem; box-shadow: inset 0 0 12px rgba(120, 80, 20, .35); }
+.fv-pergaminho b { font-family: Rajdhani, sans-serif; color: #4a3418; }
+.fv-pergaminho ol { margin: 4px 0 0; padding-left: 20px; }
+.fv-pergaminho li.ok { text-decoration: line-through; opacity: .6; }
+.fv-pergaminho small { display: block; margin-top: 4px; color: #6b4e22 !important; }
