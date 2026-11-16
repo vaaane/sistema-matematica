@@ -76,6 +76,8 @@
     {"id": "moldura_retrato", "nome": "Moldura em pé", "emoji": "🖼️", "tipo": "parede", "largura": 90, "vistas": ["f"], "cat": "molduras", "conteudo": "foto", "cor": "madeira"},
     {"id": "moldura_paisagem", "nome": "Moldura deitada", "emoji": "🖼️", "tipo": "parede", "largura": 130, "vistas": ["f"], "cat": "molduras", "conteudo": "foto", "cor": "madeira"},
     {"id": "moldura_grande", "nome": "Painel grande", "emoji": "🖼️", "tipo": "parede", "largura": 300, "vistas": ["f"], "cat": "molduras", "conteudo": "foto", "cor": "madeira"},
+    { "id": "quadro_ajustavel", "nome": "Quadro ajustável", "emoji": "🖼️", "tipo": "parede", "largura": 320,
+      "vistas": ["f"], "cat": "molduras", "conteudo": "foto", "cor": "madeira", "ajustavel": { "max_w": 320, "max_h": 230, "min": 60 } },
     {"id": "moldura_oval", "nome": "Moldura oval", "emoji": "🖼️", "tipo": "parede", "largura": 90, "vistas": ["f"], "cat": "molduras", "conteudo": "foto", "cor": "madeira"},
     {"id": "varal_fotos", "nome": "Varal de fotos", "emoji": "📸", "tipo": "parede", "largura": 220, "vistas": ["f"], "cat": "molduras", "conteudo": "fotos4", "cor": null},
     {"id": "mapa_africa", "nome": "Mapa da África", "emoji": "🌍", "tipo": "parede", "largura": 120, "vistas": ["f"], "cat": "molduras", "conteudo": null, "cor": null},

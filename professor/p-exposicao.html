@@ -425,7 +425,7 @@ function salaHtml(n, ondeEsta) {
   const filtro = $("filtro-status").value;
   const linhas = itens.filter(([, v]) => !filtro || (statusDe(v) || "-") === filtro).map(([id, v]) => {
     const it = catDe(v.mv), fs = fotosDe(v), st = statusDe(v);
-    return `<tr><td class="st" title="${esc(st || "")}${v.motivo ? ": " + esc(v.motivo) : ""}">${st ? ICONE[st] : ""}</td><td class="mini"><img src="${IMG}/exposicao/moveis/${esc(v.mv)}_${esc(v.vista || it?.vistas?.[0] || "f")}.webp" alt="" style="${filtroDe(it, Number(v.cor) || 0) ? "filter:" + filtroDe(it, Number(v.cor) || 0) : ""}" loading="lazy"/></td>
+    return `<tr><td class="st" title="${esc(st || "")}${v.motivo ? ": " + esc(v.motivo) : ""}">${st ? ICONE[st] : ""}</td><td class="mini"><img src="${IMG}/exposicao/moveis/${esc(it?.ajustavel ? "moldura_paisagem" : v.mv)}_${esc(v.vista || it?.vistas?.[0] || "f")}.webp" alt="" style="${filtroDe(it, Number(v.cor) || 0) ? "filter:" + filtroDe(it, Number(v.cor) || 0) : ""}" loading="lazy"/></td>
       <td>${esc(it?.nome || v.mv)}${fs.length ? ` <span class="muted">· 📷 ${fs.length}</span>` : ""}</td><td>${esc(v.titulo || "")}</td><td>${esc(nomePor(v.por))}</td><td>${fmt(v.ts)}</td>
       <td class="acoes">${fs.length ? `<button class="btn-perigo" data-so-foto="${esc(id)}">Apagar só a foto</button> ` : ""}<button class="btn-perigo" data-apagar="${esc(id)}">🗑️</button></td></tr>`;
   }).join("");

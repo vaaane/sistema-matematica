@@ -9525,7 +9525,7 @@ function ligarExposicao() {
 let ex = null;   // a sala aberta: { n, itens: Map, els: Map, gradeBase, editando, sel, cat, arr, pan, camX, ver, conf }
 const fotosExpo = new Map();   // id da foto → Promise<dataURL | null>
 const catExpo = (mv) => (Array.isArray(EXPO?.moveis) ? EXPO.moveis : []).find(i => i.id === mv) || null;
-const srcExpo = (mv, vista) => `${IMG}/exposicao/moveis/${mv}_${vista}.webp`;
+const srcExpo = (mv, vista) => `${IMG}/exposicao/moveis/${catExpo(mv)?.ajustavel ? 'moldura_paisagem' : mv}_${vista}.webp`;   // 🖼️ o quadro ajustável não tem imagem própria (PROMPT-241)
 const escalaExpo = () => Number(EXPO?.escala_moveis) || 1;
 const limiteExpo = (k, padrao) => Number(EXPO?.limites?.[k]) || padrao;
 const filtroExpo = (it, cor) => (it?.cor && EXPO?.cores?.[it.cor]?.[cor]) || '';
@@ -9559,8 +9559,30 @@ const podeCrescer = (t, medir) => { const i = TAMS_EXPO.indexOf(t); return i >= 
 const tamValido = (it, t) => (it?.tipo === 'chao' && TAMS_EXPO.includes(Number(t)) ? Number(t) : 1);
 function tamExpo(m) {
   const it = catExpo(m.mv);
+  if (it?.ajustavel) return tamQuadro(m, it);
   return tamPelaLargura((Number(it?.largura) || 100) * escalaExpo() * tamValido(it, m.tam), srcExpo(m.mv, it?.vistas?.[0] || 'f'), srcExpo(m.mv, m.vista));
 }
+// 🖼️ PROMPT-241: o quadro ajustável tem o formato da foto: o maior tamanho com a proporção dela (m.prop = w/h) dentro de
+// max_w × max_h; nenhum lado menor que min (foto muito comprida: corta o excesso, no centro). Sem foto (ou não aprovada,
+// para os de fora): o papel creme deitado, no tamanho máximo. A moldura de madeira fica por fora deste tamanho.
+const BORDA_QUADRO = 12;
+function tamQuadro(m, it = catExpo(m.mv)) {
+  const a = it.ajustavel, k = escalaExpo(), W = Number(a.max_w) || 320, H = Number(a.max_h) || 230, mn = Number(a.min) || 60;
+  const r = m.foto && m.prop > 0 && visivelExpo(m) ? m.prop : W / H;
+  const w = Math.min(W, H * r), h = w / r;
+  return [Math.max(w, mn) * k, Math.max(h, mn) * k];
+}
+const bordaQuadro = () => BORDA_QUADRO * escalaExpo();
+// no banco, o y do quadro é o centro (mudar de formato cresce para os lados); aqui, como os outros, é a base
+const yBanco = (m) => (catExpo(m.mv)?.ajustavel ? m.y - tamExpo(m)[1] / 2 : m.y);
+// muda o formato (foto nova, foto tirada) mantendo o centro; encostou no teto ou no rodapé: desce ou sobe
+function mudarFormatoQuadro(m, f) {
+  const c = m.y - tamExpo(m)[1] / 2;
+  f();
+  prenderExpo(m, m.x, c + tamExpo(m)[1] / 2);
+}
+// a proporção de uma imagem (dataURL)
+const propDaImagem = (src) => new Promise(ok => { const im = new Image(); im.onload = () => ok(im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 0); im.onerror = () => ok(0); im.src = src; });
 const medirItemExpo = (it) => Promise.all(it.vistas.map(v => medirImg(srcExpo(it.id, v))));
 // um item lido do banco (o que não for válido some)
 function lerItemExpo(v) {
@@ -9575,16 +9597,18 @@ function lerItemExpo(v) {
     sobre: typeof v.sobre === 'string' && v.sobre ? v.sobre : null, sx: Number.isFinite(Number(v.sx)) ? clamp(Number(v.sx), 0, 1) : 0.5 };   // 🏛️ em cima de outro (PROMPT-182)
   // sem status (itens de antes da aprovação): com conteúdo conta como pendente
   m.status = !precisaAprov(it) ? null : STATUS_EXPO.includes(v.status) ? v.status : temAlgoExpo(m) ? 'pendente' : null;
+  if (it.ajustavel) { m.prop = Number(v.prop) > 0 ? clamp(Number(v.prop), 0.05, 20) : 0; m.y += tamExpo(m)[1] / 2; }   // 🖼️ o banco guarda o centro
   return m;
 }
 // o que vai para o banco (sem undefined; textos vazios e fotos ausentes não vão)
 function gravavelExpo(m) {
-  const o = { mv: m.mv, x: Math.round(m.x), y: Math.round(m.y), vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, por: sessao.uid, ts: Date.now() };
+  const o = { mv: m.mv, x: Math.round(m.x), y: Math.round(yBanco(m)), vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, por: sessao.uid, ts: Date.now() };
   if (m.tam && m.tam !== 1) o.tam = m.tam;
   if (m.sobre) { o.sobre = m.sobre; o.sx = +(m.sx ?? 0.5).toFixed(3); }
   if (m.titulo) o.titulo = m.titulo;
   if (m.texto) o.texto = m.texto;
   if (m.foto) o.foto = m.foto;
+  if (m.foto && m.prop > 0) o.prop = +m.prop.toFixed(4);   // 🖼️ o formato do quadro antes de a foto baixar
   const f = fotosLista(m);
   if (f.some(Boolean)) o.fotos = Object.fromEntries(f.map((id, i) => [i, id]).filter(([, id]) => id));
   if (m.status) o.status = m.status === 'aprovado' || m.status === 'recusado' ? m.status : 'pendente';   // o editor nunca aprova: só mantém o que a professora gravou
@@ -9681,9 +9705,10 @@ function desenharItemExpo(id) {
   if (temApoio(it)) for (const cid of filhosExpo(id)) desenharItemExpo(cid);   // os de cima andam junto
   const selo = it.conteudo === 'nome_sala' ? seloNomeExpo(ex.n) : seloExpo(m);
   const etq = it.etiqueta?.[m.vista] && m.titulo && visivelExpo(m) ? m.titulo : '';   // 🏷️ o título na frente do pedestal (PROMPT-182)
-  const chave = JSON.stringify([m.vista, m.espelho, m.cor, fotosDoItem(m), m.foto, ex.editando, it.conteudo === 'nome_sala' ? nomeDaSala() : '', Math.round(w), visivelExpo(m), selo, etq]);
+  const chave = JSON.stringify([m.vista, m.espelho, m.cor, fotosDoItem(m), m.foto, ex.editando, it.conteudo === 'nome_sala' ? nomeDaSala() : '', Math.round(w), Math.round(h), visivelExpo(m), selo, etq]);
   if (el.dataset.k === chave) return;
   el.dataset.k = chave;
+  if (it.ajustavel) { desenharQuadro(id, el, m, it, w, h, selo); return; }
   const src = srcExpo(m.mv, m.vista), comFoto = it.conteudo === 'foto' || it.conteudo === 'fotos4';
   el.innerHTML = `${comFoto ? `<div class="ex-fotos${m.espelho ? ' espelho' : ''}"></div>` : ''}<img class="ex-img${m.espelho ? ' espelho' : ''}" src="${src}" alt="" draggable="false" style="${filtroExpo(it, m.cor) ? `filter:${filtroExpo(it, m.cor)};` : ''}${comFoto ? 'visibility:hidden' : ''}"/>` +
     (it.conteudo === 'nome_sala' ? letreiroHtml(w, h) : '') + (etq ? etiquetaHtml(it, m, w, etq) : '') + (selo ? `<span class="ex-selo" title="${selo === '⏳' ? 'Aguardando aprovação' : 'Recusado'}">${selo}</span>` : '');
@@ -9717,6 +9742,23 @@ async function montarFotosExpo(el, m, it, chave) {
   }).join('');
   for (const f of caixa.querySelectorAll('img[data-foto]')) fotoExpo(f.dataset.foto).then(d => { if (d) f.src = d; else f.remove(); });
 }
+// 🖼️ PROMPT-241: o quadro ajustável, por código: a foto inteira no tamanho exato (cover: só corta se passou do mínimo) e a
+// moldura de madeira por fora, em 9-slice da borda da moldura deitada (a cor da madeira no filtro, só na moldura)
+function desenharQuadro(id, el, m, it, w, h, selo) {
+  const b = bordaQuadro(), f = filtroExpo(it, m.cor), foto = visivelExpo(m) ? m.foto : null;
+  el.innerHTML = `<div class="ex-quadro-foto">${foto ? `<img class="ex-foto" alt="" draggable="false"/>` : ex?.editando ? vazioFotoHtml(w, h) : ''}</div>` +
+    `<div class="ex-quadro-borda" style="inset:-${b.toFixed(1)}px;border-width:${b.toFixed(1)}px;border-image-source:url('${srcExpo(m.mv, 'f')}')${f ? `;filter:${f} drop-shadow(0 2px 2px rgba(0,0,0,.3))` : ''}"></div>` +
+    (selo ? `<span class="ex-selo" title="${selo === '⏳' ? 'Aguardando aprovação' : 'Recusado'}">${selo}</span>` : '');
+  const img = el.querySelector('img.ex-foto');
+  if (img) fotoExpo(foto).then(async d => {
+    if (!d) { img.remove(); return; }
+    img.src = d;
+    if (!(m.prop > 0) && ex?.itens.get(id) === m && m.foto === foto) {   // item sem a proporção guardada: mede a foto (só na tela)
+      const p = await propDaImagem(d);
+      if (p > 0 && ex?.itens.get(id) === m && m.foto === foto) { mudarFormatoQuadro(m, () => { m.prop = p; }); desenharItemExpo(id); }
+    }
+  });
+}
 // a grade da sala sem a base dos móveis de chão (o personagem e o pet desviam)
 let gradeExpoT = 0;
 function refazerGradeExpo() {
@@ -9739,6 +9781,7 @@ function larguraDoChao(y) {
 // parede: parede_fundo; chão e tapete: sala.chao (na largura do chão naquela altura)
 function prenderExpo(m, x, y) {
   const it = catExpo(m.mv), [w, h] = tamExpo(m), S = EXPO.sala;
+  if (it.ajustavel) { const b = bordaQuadro(), P = S.parede_fundo; prenderEmArea(m, x, y, 'parede', w + 2 * b, h, { x: P.x, y: [P.y[0] + b, P.y[1] - b] }); return; }   // 🖼️ a moldura fica por fora
   if (it.tipo === 'parede') { prenderEmArea(m, x, y, 'parede', w, h, S.parede_fundo); return; }
   const ch = S.chao.y, yy = entreLim(y, ch[0] + (it.tipo === 'tapete' ? h * 0.55 : 6), ch[1]);
   prenderEmArea(m, x, yy, it.tipo, w, h, { x: larguraDoChao(yy), y: ch });
@@ -9896,6 +9939,7 @@ function abrirFerrExpo() {
   const m = ex?.itens.get(ex.sel), it = m && catExpo(m.mv), el = $('ex-ferr');
   if (!it) { el.hidden = true; return; }
   el.querySelector('[data-exf="cor"]').hidden = !nCoresExpo(it);
+  el.querySelector('[data-exf="espelhar"]').hidden = !!it.ajustavel;   // 🖼️ o quadro ajustável é igual dos dois lados
   el.querySelector('[data-exf="tam"]').hidden = it.tipo !== 'chao';   // parede e tapete não mudam de tamanho (não cobrem molduras e fotos)
   el.querySelector('[data-exf="conteudo"]').hidden = !it.conteudo;
   const apagar = el.querySelector('[data-exf="apagar"]');
@@ -9926,7 +9970,7 @@ function mudouItemExpo(id, conteudo = false) {
   if (ex.editando) { renderCatalogoExpo(); resumoAprovExpo(); }   // o uso (itens e fotos) e o ⏳/❌
   if (ex.ver) renderVisualizador();
   if (conteudo) return salvarExpo(set(refItem(id), gravavelExpo(m)));
-  return salvarExpo(update(refItem(id), { vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, tam: m.tam && m.tam !== 1 ? m.tam : null, x: Math.round(m.x), y: Math.round(m.y), por: m.por, ts: m.ts,
+  return salvarExpo(update(refItem(id), { vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, tam: m.tam && m.tam !== 1 ? m.tam : null, x: Math.round(m.x), y: Math.round(yBanco(m)), por: m.por, ts: m.ts,
     sobre: m.sobre || null, sx: m.sobre ? +(m.sx ?? 0.5).toFixed(3) : null }));
 }
 // 🔄 girar: a próxima vista que existe; com uma vista só, espelha
@@ -10046,7 +10090,7 @@ function arrastarExpo(e, id) {
       realceApoio(null);
       if (mm) {
         mm.por = sessao.uid; mm.ts = Date.now();
-        salvarExpo(update(refItem(id), { x: Math.round(mm.x), y: Math.round(mm.y), por: sessao.uid, ts: mm.ts, mexendo: null, mexendo_por: null,
+        salvarExpo(update(refItem(id), { x: Math.round(mm.x), y: Math.round(yBanco(mm)), por: sessao.uid, ts: mm.ts, mexendo: null, mexendo_por: null,
           sobre: mm.sobre || null, sx: mm.sobre ? +(mm.sx ?? 0.5).toFixed(3) : null }));
         if (mm.sobre) tocar('clique');
         for (const cid of filhosExpo(id)) { const c = ex.itens.get(cid); salvarExpo(update(refItem(cid), { x: Math.round(c.x), y: Math.round(c.y) })); }   // os de cima andaram junto
@@ -10482,7 +10526,10 @@ async function enviarFotoExpo(file) {
   const ok = await salvarExpo(set(refImagem(novo), { dados: foto.dados, sala: ex.n, por: sessao.uid, ts: Date.now() }));
   if (!ok || !ex || ex.itens.get(c.id) !== m) { msg.textContent = 'Sem conexão, as mudanças não foram salvas'; return; }
   fotosExpo.set(novo, Promise.resolve(foto.dados));
-  if (it.conteudo === 'foto') m.foto = novo; else m.fotos = { ...(m.fotos || {}), [c.slot]: novo };
+  const prop = it.ajustavel ? await propDaImagem(foto.dados) : 0;
+  if (!ex || ex.itens.get(c.id) !== m) return;
+  const troca = () => { if (it.conteudo === 'foto') { m.foto = novo; if (it.ajustavel) m.prop = prop; } else m.fotos = { ...(m.fotos || {}), [c.slot]: novo }; };
+  if (it.ajustavel) mudarFormatoQuadro(m, troca); else troca();   // 🖼️ o quadro ajustável muda de formato no mesmo centro
   await mudouItemExpo(c.id, true);
   if (velho) { fotosExpo.delete(velho); salvarExpo(remove(refImagem(velho))); }
   msg.textContent = `✔ Foto enviada (${Math.round(foto.bytes / 1024)} KB)`;
@@ -10493,7 +10540,8 @@ function tirarFotoExpo(slot) {
   if (!it) return;
   const velho = it.conteudo === 'foto' ? m.foto : fotosLista(m)[slot];
   if (!velho) return;
-  if (it.conteudo === 'foto') m.foto = null; else { const f = { ...(m.fotos || {}) }; delete f[slot]; m.fotos = f; }
+  const tira = () => { if (it.conteudo === 'foto') { m.foto = null; m.prop = 0; } else { const f = { ...(m.fotos || {}) }; delete f[slot]; m.fotos = f; } };
+  if (it.ajustavel) mudarFormatoQuadro(m, tira); else tira();
   mudouItemExpo(contExpo.id, true);
   fotosExpo.delete(velho);
   salvarExpo(remove(refImagem(velho)));
