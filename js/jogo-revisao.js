@@ -10376,6 +10376,7 @@ function pintarGrio() {
   ui.querySelector('[data-grio="continuar"]').hidden = !meio || g.bloqueado;
   ui.querySelector('[data-grio="pausar"]').hidden = !tocando;
   const cc = ui.querySelector('[data-grio="cc"]');
+  cc.hidden = !g.leg;   // 🎙️ PROMPT-243: sala ainda sem legenda: sem o botão CC
   cc.classList.toggle('on', ccGrio()); cc.setAttribute('aria-pressed', String(ccGrio()));
   cc.title = ccGrio() ? 'Desligar a legenda' : 'Ligar a legenda';
   legendaGrioAgora();
