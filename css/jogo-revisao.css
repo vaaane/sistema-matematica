@@ -5968,3 +5968,7 @@ html.jr-deitado .jr-mp-info > .jr-mp-balao { font-size: 15px; }
 .fv-pergaminho ol { margin: 4px 0 0; padding-left: 20px; }
 .fv-pergaminho li.ok { text-decoration: line-through; opacity: .6; }
 .fv-pergaminho small { display: block; margin-top: 4px; color: #6b4e22 !important; }
+
+/* 🔒 PROMPT-240: o nome da sala é da professora */
+.ex-nome-trava { margin: 4px 0; padding: 10px 12px; border-radius: 10px; background: rgba(124, 92, 252, .12); border: 1px solid rgba(124, 92, 252, .45); color: #e8e6ff; font: 600 14px Inter, sans-serif; }
+.ex-nome-atual { margin: 8px 0 0; color: #ffd700; font: 700 16px Rajdhani, sans-serif; }

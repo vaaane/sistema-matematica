@@ -22,7 +22,9 @@
       {"n": 13, "placa": [66, 361], "ponto": [220, 456]},
       {"n": 14, "placa": [786, 349], "ponto": [632, 444]},
       {"n": 15, "placa": [425, 75], "ponto": [425, 312]}
-    ]
+    ],
+    "_nota_ordem_salas": "PROMPT-240: a porta k (o k-ésimo item de portas, na ordem da visita) abre a sala ordem_salas[k-1]. exposicao_config/ordem_salas no Firebase vale no lugar desta.",
+    "ordem_salas": [3, 13, 2, 5, 11, 7, 6, 1, 10, 8, 9, 12, 4, 14, 15]
   },
   "sala": {
     "tamanho": { "w": 2176, "h": 768 }, "trilha": "trilha-exposicao-sala.png", "altura_personagem": 120,

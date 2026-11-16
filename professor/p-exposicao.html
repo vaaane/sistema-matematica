@@ -86,6 +86,14 @@
     .nome-pend{font-size:1.4rem;font-family:'Rajdhani',sans-serif;font-weight:700}
     .st{font-size:15px}
     @media(max-width:760px){ .corpo{grid-template-columns:1fr} .pend{grid-template-columns:1fr} }
+    /* 🚪 PROMPT-240: a ordem das portas */
+    .ordem-portas{background:#151830;border:1px solid #2e2e52;border-radius:12px;padding:12px 14px;margin-bottom:18px}
+    .ordem-portas ol{list-style:none;margin:8px 0 12px;padding:0;display:flex;flex-direction:column;gap:6px}
+    .ordem-portas li{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:8px;background:#1b1b36}
+    .ordem-portas li b{min-width:64px;color:#ffd700;font-family:Rajdhani,sans-serif}
+    .ordem-portas li > span{flex:1;min-width:0}
+    .ordem-portas li .btn-sec{padding:4px 10px}
+    .ordem-portas .linha{display:flex;gap:8px;flex-wrap:wrap}
   </style>
 </head>
 <body>
@@ -105,7 +113,7 @@
         <button class="aba" data-aba="salas">🖼️ Salas</button>
       </div>
       <div class="painel" id="aba-pend">
-        <p class="muted" style="font-size:13px;margin:0 0 12px">Fotos, textos e nomes de sala enviados pelos alunos só aparecem para quem é de fora do grupo depois que você aprova.</p>
+        <p class="muted" style="font-size:13px;margin:0 0 12px">Fotos e textos enviados pelos alunos só aparecem para quem é de fora do grupo depois que você aprova. O nome de cada sala é você que define, na aba Salas.</p>
         <div id="pendentes"><div class="vazio">Carregando…</div></div>
         <!-- 🏠 PROMPT-184: quadros com foto das casinhas -->
         <section class="pend-sala" id="pend-casas-sec"><div class="pend-cab"><b>🏠 Casinhas</b><span class="muted">quadros com foto</span></div>
@@ -116,9 +124,12 @@
       <div class="filtros">
         <button class="btn-sec" id="btn-atualizar">↻ Atualizar</button>
         <button class="btn-pri" id="btn-importar" hidden>📥 Importar grupos do JSON</button>
+        <button class="btn-sec" id="btn-ordem">↕ Ordem das portas</button>
         <label class="chave">Status: <select id="filtro-status" class="btn-sec" style="padding:6px 8px">
           <option value="">Todos</option><option value="pendente">⏳ Pendentes</option><option value="aprovado">✅ Aprovados</option><option value="recusado">❌ Recusados</option><option value="-">Sem conteúdo</option></select></label>
       </div>
+      <!-- 🚪 PROMPT-240: a ordem da visita (porta k abre a sala ordem[k-1]); grava em exposicao_config/ordem_salas -->
+      <div id="ordem-portas" class="ordem-portas" hidden></div>
       <div id="salas"><div class="vazio">Carregando…</div></div>
       </div>
       <p class="aviso" id="aviso" style="position:sticky;bottom:8px;margin:0"></p>
@@ -155,6 +166,16 @@ const nomePor = (uid) => uid === "PROFESSORA" ? "Professora" : String(uid || "�
 const fmt = (ms) => ms ? new Date(ms).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
 const aviso = (t) => { $("aviso").textContent = t; clearTimeout(aviso.t); aviso.t = setTimeout(() => { $("aviso").textContent = ""; }, 5000); };
 const portas = () => (EXPO?.saguao?.portas || []).map(p => p.n);
+// 🚪 PROMPT-240: a ordem das portas (a visita): exposicao_config/ordem_salas > exposicao.json → saguao.ordem_salas > porta k = sala k
+function ordemValida(o) {
+  const ns = portas(), l = Array.isArray(o) ? o : o && typeof o === "object" ? Object.values(o) : null;
+  if (!l || l.length !== ns.length) return null;
+  const v = l.map(Number);
+  return v.every(n => ns.includes(n)) && new Set(v).size === v.length ? v : null;
+}
+const ordemSalas = () => ordemValida(config?.ordem_salas) || ordemValida(EXPO?.saguao?.ordem_salas) || portas();
+const portaDe = (n) => ordemSalas().indexOf(n) + 1;
+let ordemEdit = null;   // a lista sendo arrumada (antes de salvar)
 // ✅ aprovação (PROMPT-EXPOSICAO-3): molduras, varal, totem e púlpito; sem status (itens antigos) com conteúdo = pendente
 const precisa = (it) => it?.conteudo === "foto" || it?.conteudo === "fotos4" || it?.conteudo === "texto";
 const temAlgo = (v) => !!(v.titulo || v.texto || fotosDe(v).length);
@@ -234,12 +255,21 @@ async function carregar() {
   try {
     pararSalas = onValue(ref(db, no("exposicao_salas")), (s) => {
       salas = s.exists() ? s.val() || {} : {};
+      limparPedidosNome();
       renderPendentes();
       // a aba das salas: refeita na primeira vez, ao trocar de aba e depois das ações (não apaga o que está sendo marcado)
       if (primeira || abaAtual !== "salas") render();
       primeira = false;
     }, (e) => { console.error(e); $("pendentes").innerHTML = `<div class="vazio">Não foi possível ler a exposição: ${esc(e?.code || e?.message || e)}</div>`; });
   } catch (e) { console.error(e); }
+}
+// 🔒 PROMPT-240: os alunos não pedem mais nome de sala; os pedidos que sobraram (nome_pendente, nome_motivo) são apagados
+async function limparPedidosNome() {
+  const patch = {};
+  for (const [n, v] of Object.entries(salas)) {
+    if (v && typeof v === "object" && (v.nome_pendente !== undefined || v.nome_motivo !== undefined)) { patch[`${n}/nome_pendente`] = null; patch[`${n}/nome_motivo`] = null; }
+  }
+  if (Object.keys(patch).length) await gravar(update(ref(db, no("exposicao_salas")), patch), "Pedidos de nome de sala apagados (agora o nome é só seu).");
 }
 // uma vez só (o selo migracao_status em exposicao_config, nos dois nós): os itens com conteúdo sem status viram pendentes.
 // Só grava o campo status, e só em itens que existem e ainda não têm status
@@ -264,12 +294,11 @@ function render() {
   // quem está em qual sala (para o aviso de aluno repetido)
   const ondeEsta = {};
   for (const n of portas()) { const g = grupoDe(n); for (const m of g?.membros || []) ondeEsta[g.turma + "|" + m] = n; }
-  $("salas").innerHTML = portas().map(n => salaHtml(n, ondeEsta)).join("");
+  $("salas").innerHTML = ordemSalas().map(n => salaHtml(n, ondeEsta)).join("");
 }
 
 function pendentesDe(n) {
   const s = salas[n] || {}, l = [];
-  if (typeof s.nome_pendente === "string" && s.nome_pendente) l.push({ nome: true, ts: 0 });
   for (const [id, v] of Object.entries(s.itens || {})) if (v?.mv && statusDe(v) === "pendente") l.push({ id, v, ts: Number(v.env_ts || v.ts) || 0 });
   return l.sort((a, b) => a.ts - b.ts);
 }
@@ -400,7 +429,7 @@ function salaHtml(n, ondeEsta) {
       <td>${esc(it?.nome || v.mv)}${fs.length ? ` <span class="muted">· 📷 ${fs.length}</span>` : ""}</td><td>${esc(v.titulo || "")}</td><td>${esc(nomePor(v.por))}</td><td>${fmt(v.ts)}</td>
       <td class="acoes">${fs.length ? `<button class="btn-perigo" data-so-foto="${esc(id)}">Apagar só a foto</button> ` : ""}<button class="btn-perigo" data-apagar="${esc(id)}">🗑️</button></td></tr>`;
   }).join("");
-  return `<details class="sala" data-sala="${n}"${abertas.has(n) ? " open" : ""}><summary><b>Sala ${n}</b>${s.nome ? `<span>${esc(s.nome)}</span>` : ""}${s.nome_pendente ? `<span class="muted">⏳ ${esc(s.nome_pendente)}</span>` : ""}
+  return `<details class="sala" data-sala="${n}"${abertas.has(n) ? " open" : ""}><summary><b>Porta ${portaDe(n)}</b><span class="muted">Sala ${n}</span>${s.nome ? `<span>${esc(s.nome)}</span>` : ""}
       <span class="muted">${g ? `${esc(g.turma)} · ${membros.length} integrante${membros.length === 1 ? "" : "s"}` : "sem grupo"}</span>
       ${grioHtml(n)}<span class="uso">${itens.length}/${lim.itens} itens · ${nFotos}/${lim.fotos} fotos</span></summary>
     <div class="corpo">
@@ -436,6 +465,33 @@ $("modo-teste").addEventListener("change", (e) => {
   carregar();
 });
 $("btn-atualizar").addEventListener("click", () => render());
+function renderOrdem() {
+  const el = $("ordem-portas");
+  if (!ordemEdit) { el.hidden = true; return; }
+  const doFb = !!ordemValida(config?.ordem_salas);
+  el.hidden = false;
+  el.innerHTML = `<p class="muted">A porta 1 é a primeira da visita (embaixo, à esquerda); a 15 é a porta grande do fundo. Use ▲ e ▼ e salve: o corredor do jogo muda na hora.</p>
+    <ol>${ordemEdit.map((n, i) => { const nome = salas[n]?.nome || EXPO?.salas?.[n]?.nome || ""; const g = grupoDe(n);
+      return `<li><b>Porta ${i + 1}</b><span>Sala ${n}${nome ? " · " + esc(nome) : ""}${g ? "" : ' <span class="muted">(🔜 em breve)</span>'}</span>
+        <button class="btn-sec" data-ordem-sobe="${i}"${i ? "" : " disabled"} aria-label="Subir">▲</button><button class="btn-sec" data-ordem-desce="${i}"${i < ordemEdit.length - 1 ? "" : " disabled"} aria-label="Descer">▼</button></li>`; }).join("")}</ol>
+    <div class="linha"><button class="btn-pri" data-ordem-salvar>Salvar ordem</button><button class="btn-sec" data-ordem-cancelar>Cancelar</button>
+      ${doFb ? '<button class="btn-sec" data-ordem-json>Voltar à ordem do arquivo</button>' : ""}</div>`;
+}
+$("btn-ordem").addEventListener("click", () => { ordemEdit = ordemEdit ? null : ordemSalas().slice(); renderOrdem(); });
+$("ordem-portas").addEventListener("click", async (e) => {
+  const b = e.target.closest("button");
+  if (!b || !ordemEdit) return;
+  const troca = (i, j) => { [ordemEdit[i], ordemEdit[j]] = [ordemEdit[j], ordemEdit[i]]; renderOrdem(); };
+  if (b.dataset.ordemSobe !== undefined) troca(Number(b.dataset.ordemSobe), Number(b.dataset.ordemSobe) - 1);
+  else if (b.dataset.ordemDesce !== undefined) troca(Number(b.dataset.ordemDesce), Number(b.dataset.ordemDesce) + 1);
+  else if (b.matches("[data-ordem-cancelar]")) { ordemEdit = null; renderOrdem(); }
+  else if (b.matches("[data-ordem-salvar]")) {
+    const v = ordemValida(ordemEdit);
+    if (v && await gravar(set(ref(db, `${no("exposicao_config")}/ordem_salas`), v), "Ordem das portas salva.")) { config.ordem_salas = v; ordemEdit = null; renderOrdem(); render(); }
+  } else if (b.matches("[data-ordem-json]")) {
+    if (await gravar(remove(ref(db, `${no("exposicao_config")}/ordem_salas`)), "Voltou à ordem do arquivo exposicao.json.")) { delete config.ordem_salas; ordemEdit = null; renderOrdem(); render(); }
+  }
+});
 $("btn-importar").addEventListener("click", async () => {
   const patch = {};
   for (const [n, g] of Object.entries(EXPO.salas || {})) patch[`${n}/grupo`] = { turma: g.turma, membros: g.membros };

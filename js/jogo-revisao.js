@@ -940,7 +940,7 @@ export async function iniciarJogo(sess) {
     tamanho: (f) => ({ alt: +altPet(f).toFixed(2), dist: +distPet(f).toFixed(2), rel: +relDuelo(f).toFixed(3) }),   // 🐘 PROMPT-213: conferir a tabela
     torre: (a) => abrirTorre(a), bau: (a) => abrirBau(a), premiosTorre: () => abrirPremiosTorre(), quadroTorre: () => abrirQuadroTorre(), torreTrein: (i) => abrirPerguntaTorre(i), casinha: () => abrirCasinha(), temas: () => abrirTemasCasa(),
     aula: (chave, i = 0) => { abrirAula(chave, 'menu'); irPaginaAula(i); }, aulaPags: (chave) => aulaDe(chave)?.paginas?.length || 0,
-    perguntaPet: (enun, opcoes) => desenharPerguntaPet(enun, opcoes), falaPet: (txt) => mostrarFalaPet([{ texto: txt, espera: 0, fixo: 8000 }]), irPara: (x, y) => posicionarJogador(x, y, 'frente'), loja: (aba) => abrirLoja(aba), saguao: () => abrirSaguao(), salaExpo: (n) => abrirSalaExpo(n), cena: () => cena, jog: () => jog, joy: () => joy, expo: () => EXPO, temasExpo: () => abrirTemasExpo(), decorar: () => entrarEdicaoExpo(), grio: () => grio };   // 💬 PROMPT-232   // 🔠 PROMPT-231: conferir as letras   // 🏆 PROMPT-230
+    perguntaPet: (enun, opcoes) => desenharPerguntaPet(enun, opcoes), falaPet: (txt) => mostrarFalaPet([{ texto: txt, espera: 0, fixo: 8000 }]), irPara: (x, y) => posicionarJogador(x, y, 'frente'), loja: (aba) => abrirLoja(aba), saguao: () => abrirSaguao(), salaExpo: (n) => abrirSalaExpo(n), porta: (k) => entrarSalaExpo(cena.expoPortas[k - 1].n), portasExpo: () => cena?.expoPortas?.map(p => [p.k, p.n]), cena: () => cena, jog: () => jog, joy: () => joy, expo: () => EXPO, temasExpo: () => abrirTemasExpo(), decorar: () => entrarEdicaoExpo(), conteudoExpo: (id) => abrirConteudoExpo(id), grio: () => grio };   // 💬 PROMPT-232   // 🔠 PROMPT-231: conferir as letras   // 🏆 PROMPT-230
 
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
@@ -5037,7 +5037,7 @@ function lugarDe(r) {
   if (extra) return Number(r.mapa) > 0 ? `Mapa ${r.mapa} · ${extra}` : r.mapa === 'praca' && r.onde !== 'laboratorio' ? `Praça · ${extra}` : extra;
   if (r.mapa === 'praca') return r.local === 'laboratorio' ? 'Laboratório' : r.local === 'casinha' ? 'Praça · na casinha' : r.local === 'vila' ? 'Praça · na vila' : 'Praça';
   if (r.mapa === 'vila') return 'Vila das Casinhas';
-  if (r.local === 'exposicao') return String(r.mapa).startsWith('sala-') ? `Exposição · Sala ${String(r.mapa).slice(5)}` : 'Exposição';
+  if (r.local === 'exposicao') return String(r.mapa).startsWith('sala-') ? `Exposição · Porta ${portaDaSala(String(r.mapa).slice(5))}` : 'Exposição';
   if (Number(r.mapa) > 0) return `Mapa ${r.mapa}${r.local === 'ginasio' ? ' · no ginásio' : ''}`;
   return 'Mapa geral';
 }
@@ -9185,6 +9185,24 @@ const podeCurtirSala = (n) => !!n && !ehProfessora() && !contaEscondida(sessao.u
 const maisCurtida = (n) => { const c = curtidasSala(n); return c > 0 && Object.keys(expoCurtidas).every(k => curtidasSala(k) <= c); };
 const temaExpo = (id) => (EXPO.temas || []).find(t => t.id === id) || (EXPO.temas || []).find(t => t.id === EXPO.tema_padrao) || EXPO.temas[0];
 
+// 🚪 PROMPT-240: a porta k (o k-ésimo item de saguao.portas, na ordem da visita) abre a sala ordemSalasExpo()[k-1].
+// As salas não mudam de número (grupo, itens, curtidas, griô e áudio são da sala); a placa mostra o número da porta.
+let expoOrdemFb = null;
+function ordemValidaExpo(o) {
+  const ns = (EXPO?.saguao?.portas || []).map(p => p.n), l = Array.isArray(o) ? o : o && typeof o === 'object' ? Object.values(o) : null;
+  if (!l || l.length !== ns.length) return null;
+  const v = l.map(Number);
+  return v.every(n => ns.includes(n)) && new Set(v).size === v.length ? v : null;
+}
+const ordemSalasExpo = () => ordemValidaExpo(expoOrdemFb) || ordemValidaExpo(EXPO?.saguao?.ordem_salas) || (EXPO?.saguao?.portas || []).map(p => p.n);
+const portaDaSala = (n) => { const k = ordemSalasExpo().indexOf(Number(n)); return k >= 0 ? k + 1 : n; };
+// as portas do corredor: { k (o número da porta), n (a sala que ela abre), placa, ponto, trilha }
+function mapearPortasExpo() {
+  if (!ehSaguao()) return;
+  const ordem = ordemSalasExpo();
+  cena.expoPortas = (EXPO.saguao.portas || []).map((p, i) => ({ ...p, k: i + 1, n: ordem[i] ?? p.n, trilha: cena.naTrilha(...p.ponto) }));
+}
+
 function iniciarExposicao(j) {
   if (!j?.saguao || !j?.sala || !(j.temas || []).length) return;
   EXPO = j;
@@ -9197,6 +9215,10 @@ function iniciarExposicao(j) {
       conferirAprovadosExpo(p.n);   // ⭐ (PROMPT-156)
       if (ehSaguao()) desenharPlacasExpo();
     }, () => {});
+    onValue(ref(db, `${noExpo('exposicao_config')}/ordem_salas`), (s) => {   // 🚪 a ordem das portas que a professora mudou
+      expoOrdemFb = s.exists() ? s.val() : null;
+      if (ehSaguao()) { mapearPortasExpo(); desenharPlacasExpo(); }
+    }, (e) => console.warn('[jogo-revisao] exposicao_config/ordem_salas indisponível', e?.code || e));
     onValue(ref(db, noExpo('exposicao_curtidas')), (s) => {   // ❤️
       for (const k of Object.keys(expoCurtidas)) delete expoCurtidas[k];
       for (const [n, us] of Object.entries(s.exists() ? s.val() || {} : {})) {
@@ -9295,13 +9317,13 @@ async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (ap
   const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y), grade);
   const sd = saidaFaixa(S.saida_praca, S.entrada, naTrilha, LH);
   cena = { tipo: 'mapa', n: 'saguao', salao: true, w: LW, h: LH, alturaPersonagem: Number(S.altura_personagem) || 120, cfg: { entrada: S.entrada, saidas: [sd.cfg] }, grade, portas: {}, naTrilha, saidas: [sd.saida] };
-  cena.expoPortas = (S.portas || []).map(p => ({ ...p, trilha: naTrilha(...p.ponto) }));
+  mapearPortasExpo();   // 🚪 PROMPT-240: cada porta abre a sala da ordem da visita
   desenharPlacasExpo();
   destinoEspecial = null;
   alvoMapa = null;
   pertoSaidaGin = false;
   const pd = deSala && cena.expoPortas.find(p => p.n === deSala);
-  if (pd) posicionarJogador(pd.trilha[0], pd.trilha[1], viradoDaPorta(pd.n));
+  if (pd) posicionarJogador(pd.trilha[0], pd.trilha[1], viradoDaPorta(pd.k));   // no capacho da porta daquela sala
   else posicionarJogador(S.entrada[0], S.entrada[1], 'costas');
   soltouDesdeTroca = false;
   ajustarCamera();
@@ -9311,7 +9333,7 @@ async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (ap
   pararExpo();
   if (privilegioExpo()) ouvirPendentesExpo();   // ⏳ {n} para aprovar
 }
-// voltando de uma sala, virado para o corredor: ímpares na parede da esquerda, pares na da direita, a 15 no fundo
+// voltando de uma sala, virado para o corredor (pela posição da porta): ímpares na parede da esquerda, pares na da direita, a 15 no fundo
 const viradoDaPorta = (n) => (n >= 15 ? 'frente' : n % 2 ? 'direita' : 'esquerda');
 // professora e modo teste, no saguão: quantos itens e nomes esperam aprovação (todas as salas, sem as fotos)
 let expoPendN = 0, expoPendSalas = 0, expoPendCasas = 0;
@@ -9334,13 +9356,13 @@ function ouvirPendentesExpo() {
   } catch (e) { console.warn('[jogo-revisao] exposicao_salas indisponível', e?.code || e); }
   pararOuvirExpo = () => { try { f(); g(); } catch (_) {} expoPendN = expoPendSalas = expoPendCasas = 0; };
 }
-// o número em cada placa (e 🔒: sala em que este aluno não pode entrar)
+// o número da porta em cada placa (a ordem da visita; e 🔒: sala em que este aluno não pode entrar)
 function desenharPlacasExpo() {
   const at = $('cena-atores');
   for (const el of at.querySelectorAll('.expo-placa')) el.remove();
   at.insertAdjacentHTML('beforeend', (cena.expoPortas || []).map(p => {
     const tranca = !podeEntrarSala(p.n), c = curtidasSala(p.n);
-    return `<div class="expo-placa" style="left:${p.placa[0]}px;top:${p.placa[1]}px"><b>${p.n}</b>${tranca ? '<i>🔒</i>' : ''}` +
+    return `<div class="expo-placa" style="left:${p.placa[0]}px;top:${p.placa[1]}px"><b>${p.k ?? p.n}</b>${tranca ? '<i>🔒</i>' : ''}` +
       (grupoSala(p.n) || c ? `<em><span>❤️</span><span>${c}</span>${maisCurtida(p.n) ? '<span>🏆</span>' : ''}</em>` : '') + '</div>';
   }).join(''));
 }
@@ -9366,7 +9388,7 @@ function balaoExpo(p, txt) {   // o balão das portas do ginásio, sem botões
   soltouDesdeTroca = false;   // segurando ⬆, não repete
   fecharBalaoPorta();
   const el = $('porta-balao');
-  el.innerHTML = `<b>Sala ${p.n}</b><span>${esc(txt)}</span>`;
+  el.innerHTML = `<b>Porta ${p.k ?? p.n}</b><span>${esc(txt)}</span>`;
   el.hidden = false;
   el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
   balaoPorta = { d: { x: p.ponto[0], y: p.ponto[1] }, timer: setTimeout(fecharBalaoPorta, 2500) };
@@ -9399,7 +9421,7 @@ async function abrirSalaExpo(n) {
   entrarNoMapaOnline('sala-' + n, 'exposicao');
   ouvirExpo(['tema', 'musica', 'nome', 'nome_pendente', 'nome_motivo', 'cores/parede', 'cores/chao'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
 }
-function tituloSala(n) { const nome = nomeSalaVisivel(n); return `🖼️ Sala ${n}${nome ? ' · ' + String(nome).slice(0, 40) : ''}`; }
+function tituloSala(n) { const nome = nomeSalaVisivel(n); return `🖼️ Porta ${portaDaSala(n)}${nome ? ' · ' + String(nome).slice(0, 40) : ''}`; }
 // mudou no Firebase com o aluno dentro: nome na faixa, fundo do tema (a música segue em lugarDaMusica)
 async function aplicarEstadoSala(n) {
   if (salaExpo() !== n) return;
@@ -9673,7 +9695,7 @@ function etiquetaHtml(it, m, w, txt) {
 }
 function letreiroHtml(w, h) {
   const nome = nomeDaSala(), L = EXPO.letreiro || {}, [cx, cy] = L.centro || [50, 50], larg = Number(L.largura) || 68;
-  if (!nome) return ex.editando ? `<span class="ex-letreiro vazio" style="left:${cx}%;top:${cy}%;max-width:${larg}%;font-size:${(h * 0.16).toFixed(1)}px">✏️ nome da sala</span>` : '';
+  if (!nome) return ex.editando ? `<span class="ex-letreiro vazio" style="left:${cx}%;top:${cy}%;max-width:${larg}%;font-size:${(h * 0.16).toFixed(1)}px">${ehProfessora() ? '✏️' : '🔒'} nome da sala</span>` : '';
   const fs = Math.min(h * 0.34, (w * larg / 100) / Math.max(4, nome.length * 0.52));
   return `<span class="ex-letreiro" style="left:${cx}%;top:${cy}%;max-width:${larg}%;font-size:${fs.toFixed(1)}px">${esc(nome)}</span>`;
 }
@@ -10407,8 +10429,10 @@ function abrirConteudoExpo(id) {
 function renderConteudoExpo() {
   const m = ex?.itens.get(contExpo?.id), it = m && catExpo(m.mv);
   if (!it) { $('ex-cont').hidden = true; return; }
-  if (it.conteudo === 'nome_sala') {
-    $('ex-cont-corpo').innerHTML = avisoAprovHtml(seloNomeExpo(ex.n), estadoSala(ex.n).nome_motivo) + `<label class="ex-campo">Nome da sala<input id="ex-c-nome" maxlength="30" value="${esc(nomeDaSala())}" placeholder="Ex.: Heróis da resistência"/></label>`;
+  if (it.conteudo === 'nome_sala') {   // 🔒 PROMPT-240: o nome da sala é da professora
+    $('ex-cont-corpo').innerHTML = ehProfessora()
+      ? `<label class="ex-campo">Nome da sala<input id="ex-c-nome" maxlength="30" value="${esc(nomeDaSala())}" placeholder="Ex.: Heróis da resistência"/></label>`
+      : `<p class="ex-nome-trava">🔒 O nome da sala é definido pela professora.</p>${nomeDaSala() ? `<p class="ex-nome-atual">🪧 ${esc(nomeDaSala())}</p>` : ''}`;
     return;
   }
   const ids = it.conteudo === 'foto' ? [m.foto] : it.conteudo === 'fotos4' ? fotosLista(m) : [];
@@ -10423,11 +10447,11 @@ async function salvarConteudoExpo() {
   const m = ex?.itens.get(contExpo?.id), it = m && catExpo(m.mv);
   if (!it) return;
   if (it.conteudo === 'nome_sala') {
+    if (!ehProfessora()) { $('ex-cont').hidden = true; return; }   // 🔒 o aluno só vê o nome
     const nome = $('ex-c-nome').value.replace(/\s+/g, ' ').trim().slice(0, 30);
-    if (temPalavraProibida(nome)) { $('ex-cont-msg').textContent = 'Revise o texto 🙂'; return; }
-    // o nome novo espera a professora (nome_pendente); o aprovado continua valendo para os de fora. Apagar: na hora
-    const o = (expoSalas[ex.n] ||= {}), aprovado = String(o.nome || '');
-    const mud = !nome ? { nome: null, nome_pendente: null, nome_motivo: null } : nome === aprovado ? { nome_pendente: null, nome_motivo: null } : { nome_pendente: nome, nome_motivo: null };
+    // a professora: vale na hora, sem aprovação
+    const o = (expoSalas[ex.n] ||= {});
+    const mud = { nome: nome || null, nome_pendente: null, nome_motivo: null };
     for (const [k, v] of Object.entries(mud)) { if (v === null) delete o[k]; else o[k] = v; }
     aplicarEstadoSala(ex.n);
     redesenharLetreiros();
@@ -10520,7 +10544,7 @@ function renderVisualizador() {
   $('ex-ver-texto').textContent = m.texto || '';
   const st = $('ex-ver-status'), ta = textoAprov(seloExpo(m), m.motivo);
   st.textContent = ta; st.hidden = !ta; st.className = `ex-aprov ${m.status === 'recusado' ? 'rec' : 'pend'}`;
-  $('ex-ver-rodape').textContent = `Sala ${ex.n}${g?.turma ? ' · ' + g.turma : ''}`;
+  $('ex-ver-rodape').textContent = `Porta ${portaDaSala(ex.n)}${g?.turma ? ' · ' + g.turma : ''}`;
   $('ex-ver-ant').disabled = i <= 0;
   $('ex-ver-prox').disabled = i < 0 || i >= lista.length - 1;
 }
