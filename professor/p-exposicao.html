@@ -247,7 +247,13 @@ const grupoJson = (n) => (EXPO?.salas?.[n]?.membros?.length ? EXPO.salas[n] : nu
 const grupoDe = (n) => grupoFb(n) || grupoJson(n);
 // 🖼️ PROMPT-242: o fundo valendo: tema_professora > tema_fixo (exposicao.json) > tema (o grupo) > tema_padrao
 // ⭐ PROMPT-244: os objetos obrigatórios do tema (moveis[].sala_tema = n)
-const obrigDe = (n) => (EXPO?.moveis || []).filter(it => Number(it.sala_tema) === Number(n));
+// 📻 PROMPT-251: o rádio (todas_salas) vale em todas as salas que têm o áudio (so_com_audio)
+const obrigDe = (n) => (EXPO?.moveis || []).filter(it => (it.todas_salas === true && (!it.so_com_audio || grioArq[n]?.audio)) || Number(it.sala_tema) === Number(n));
+// a imagem do móvel como no jogo: imagem_de (o rádio usa a caixa_som até chegar a dele) e ?v= (PROMPT-251)
+function srcMovel(mv, vista) {
+  const it = catDe(mv), id = it?.ajustavel ? "moldura_paisagem" : it?.imagem_de || mv, v = catDe(id)?.v;
+  return `${IMG}/exposicao/moveis/${id}_${vista}.webp${v ? `?v=${encodeURIComponent(v)}` : ""}`;
+}
 function obrigHtml(n, s) {
   const l = obrigDe(n);
   if (!l.length) return "";
@@ -257,6 +263,8 @@ function obrigHtml(n, s) {
 }
 const temaDe = (id) => (EXPO?.temas || []).find(t => t.id === id) || null;
 const temaFixo = (n) => temaDe(EXPO?.salas?.[n]?.tema_fixo);
+// 🏷️ PROMPT-251: o título da sala (como no jogo): o nome que você gravou > o nome do tema fixo
+const tituloSala = (n) => salas[n]?.nome || temaFixo(n)?.nome || "";
 const temaValendo = (n) => { const s = salas[n] || {}; return temaDe(s.tema_professora) || temaFixo(n) || temaDe(s.tema) || temaDe(EXPO?.tema_padrao); };
 async function gravar(p, msgOk) {
   try { await p; if (msgOk) aviso(msgOk); return true; }
@@ -382,7 +390,7 @@ function renderPendentes() {
   if (!grupos.length) { $("pendentes").innerHTML = '<div class="vazio">✅ Nada para aprovar.</div>'; return; }
   $("pendentes").innerHTML = grupos.map(({ n, l }) => {
     const g = grupoDe(n), s = salas[n] || {};
-    return `<section class="pend-sala" data-sala="${n}"><div class="pend-cab"><b>Sala ${n}</b>${s.nome ? `<span>${esc(s.nome)}</span>` : ""}
+    return `<section class="pend-sala" data-sala="${n}"><div class="pend-cab"><b>Sala ${n}</b>${tituloSala(n) ? `<span>${esc(tituloSala(n))}</span>` : ""}
         <span class="muted">${g ? esc(g.turma) : ""} · ${l.length} pendente${l.length === 1 ? "" : "s"}</span>
         <button class="btn-ok" data-aprovar-sala>✅ Aprovar todos desta sala</button></div>
       ${l.map(p => (p.nome ? nomePendHtml(s) : itemPendHtml(p.id, p.v))).join("")}</section>`;
@@ -407,7 +415,7 @@ function itemPendHtml(id, v) {
 function nomePendHtml(s) {
   return `<div class="pend" data-nome-pend="${esc(s.nome_pendente)}"><div class="pend-fotos"><span class="nome-pend">🪧 ${esc(s.nome_pendente)}</span></div>
       <div class="pend-info"><div class="tipo">Nome da sala (letreiro)</div>
-        <p>${s.nome ? `Nome aprovado agora: <b>${esc(s.nome)}</b>` : '<span class="muted">Ainda sem nome aprovado (os visitantes veem só "Sala n").</span>'}</p>
+        <p>${s.nome ? `Nome aprovado agora: <b>${esc(s.nome)}</b>` : `<span class="muted">Ainda sem nome aprovado (os visitantes veem o nome do tema${temaFixo(n) ? `: "${esc(temaFixo(n).nome)}"` : ""}).</span>`}</p>
         <div class="pend-bot"><button class="btn-ok" data-aprovar>✅ Aprovar</button><button class="btn-perigo" data-recusar>❌ Recusar</button></div>
         ${recusaHtml()}</div></div>`;
 }
@@ -473,8 +481,8 @@ $("filtro-status").addEventListener("change", () => render());
 // 🎙️ o que falta para o griô: audio/exposicao/sala_{n}.mp3 e dados/exposicao/legendas/sala_{n}.txt (ou .vtt)
 function grioHtml(n) {
   const a = grioArq[n];
-  if (!a) return '<span class="muted grio">🎙️ …</span>';
-  return `<span class="grio" title="audio/exposicao/sala_${n}.mp3 · dados/exposicao/legendas/sala_${n}.txt">🎙️ áudio ${a.audio ? "✔" : "✖"} · 📝 legenda ${a.leg ? "✔" + (a.leg === "vtt" ? " (vtt)" : "") : "✖"}</span>`;
+  if (!a) return '<span class="muted grio">📻 …</span>';
+  return `<span class="grio" title="audio/exposicao/sala_${n}.mp3 · dados/exposicao/legendas/sala_${n}.txt">📻 áudio ${a.audio ? "✔" : "✖"} · 📝 legenda ${a.leg ? "✔" + (a.leg === "vtt" ? " (vtt)" : "") : "✖"}</span>`;
 }
 async function conferirGrio() {
   await Promise.all(portas().map(async n => {
@@ -495,11 +503,11 @@ function salaHtml(n, ondeEsta) {
   const filtro = $("filtro-status").value;
   const linhas = itens.filter(([, v]) => !filtro || (statusDe(v) || "-") === filtro).map(([id, v]) => {
     const it = catDe(v.mv), fs = fotosDe(v), st = statusDe(v);
-    return `<tr><td class="st" title="${esc(st || "")}${v.motivo ? ": " + esc(v.motivo) : ""}">${st ? ICONE[st] : ""}</td><td class="mini"><img src="${IMG}/exposicao/moveis/${esc(it?.ajustavel ? "moldura_paisagem" : v.mv)}_${esc(v.vista || it?.vistas?.[0] || "f")}.webp" alt="" style="${filtroDe(it, Number(v.cor) || 0) ? "filter:" + filtroDe(it, Number(v.cor) || 0) : ""}" loading="lazy"/></td>
+    return `<tr><td class="st" title="${esc(st || "")}${v.motivo ? ": " + esc(v.motivo) : ""}">${st ? ICONE[st] : ""}</td><td class="mini"><img src="${esc(srcMovel(v.mv, v.vista || it?.vistas?.[0] || "f"))}" alt="" style="${filtroDe(it, Number(v.cor) || 0) ? "filter:" + filtroDe(it, Number(v.cor) || 0) : ""}" loading="lazy"/></td>
       <td>${v.obrig === true ? '<span title="Objeto obrigatório do tema">⭐ </span>' : ""}${esc(it?.nome || v.mv)}${fs.length ? ` <span class="muted">· 📷 ${fs.length}</span>` : ""}</td><td>${esc(v.titulo || "")}</td><td>${esc(nomePor(v.por))}</td><td>${fmt(v.ts)}</td>
       <td class="acoes">${fs.length ? `<button class="btn-perigo" data-so-foto="${esc(id)}">Apagar só a foto</button> ` : ""}<button class="btn-perigo" data-apagar="${esc(id)}">🗑️</button></td></tr>`;
   }).join("");
-  return `<details class="sala" data-sala="${n}"${abertas.has(n) ? " open" : ""}><summary><b>Porta ${portaDe(n)}</b><span class="muted">Sala ${n}</span>${s.nome ? `<span>${esc(s.nome)}</span>` : ""}
+  return `<details class="sala" data-sala="${n}"${abertas.has(n) ? " open" : ""}><summary><b>Porta ${portaDe(n)}</b><span class="muted">Sala ${n}</span>${tituloSala(n) ? `<span${s.nome ? "" : ' title="Nome do tema (você ainda não gravou um nome)"'}>${esc(tituloSala(n))}</span>` : ""}
       <span class="muted">${g ? `${esc(g.turma)} · ${membros.length} integrante${membros.length === 1 ? "" : "s"}` : "sem grupo"}</span>
       ${grioHtml(n)}${obrigHtml(n, s)}<span class="uso">${itens.length}/${lim.itens} itens · ${nFotos}/${lim.fotos} fotos</span></summary>
     <div class="corpo">
@@ -626,7 +634,7 @@ const MODOS = { montagem: "🚧 Montagem: só os alunos entram e os grupos decor
   encerrado: "🎉 Encerrado: os visitantes veem a mensagem de fim; os alunos só olham." };
 const contaTeste = (uid, nome) => uid === "PROFESSORA" || ALUNOS_TESTE.includes(uid) || /PROFESSOR|TESTE/i.test(`${uid} ${nome || ""}`);
 let pub = { votos: {}, visitas: {}, recados: {}, reacoes: {}, online: 0 };
-const nomeSala = (n) => salas[n]?.nome || EXPO?.salas?.[n]?.nome || `Sala ${n}`;
+const nomeSala = (n) => salas[n]?.nome || EXPO?.salas?.[n]?.nome || temaFixo(n)?.nome || `Sala ${n}`;
 function contarVotos() {
   const c = {};
   for (const [uid, n] of Object.entries(pub.votos || {})) { const k = Number(n); if (k >= 1 && k <= 13 && !contaTeste(uid)) c[k] = (c[k] || 0) + 1; }

@@ -6990,7 +6990,7 @@ function tocarNoMapa(e) {
   if (ehVila() && tocarCasaVila(p)) return;        // 🏘️ porta: entra · casa: cor do telhado / visitar / deixar (PROMPT-109)
   if (tocouQuadroEstudos(p)) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'estudos')); return; }
   if (ehSaguao()) { const pt = portaExpoEm(p); if (pt) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'expo:' + pt.n)); return; } }   // 🖼️ placa ou porta
-  if (grio && salaExpo() === grio.n && !ex?.editando && tocouGrio(p)) { ouvirGrio(true); return; }   // 🎙️ tocar no griô: ouve de novo
+  if (grio && salaExpo() === grio.n && !ex?.editando && radioExpoEm(p)) { ouvirGrio(true); tocar('clique'); return; }   // 📻 tocar no rádio: ouve de novo (PROMPT-251)
   if (ex && salaExpo()) {   // ✏️ quem decora: tocar num móvel abre só as opções dele (sem o modo decorar) · 🖼️ os outros: foto ou texto no painel grande
     if (podeDecorar(ex.n) && !transicionando) { const id = itemExpoEm(p, true); if (id) { selecionarExpo(id); return; } }
     const id = itemExpoEm(p); if (id) { abrirVisualizador(id); return; }
@@ -7180,7 +7180,8 @@ function dicaEntrar() {
   let el = atores.querySelector('.jr-dica-entrar');
   if (!d || conversa.falando) { if (el) el.hidden = true; return; }
   if (!el) { el = document.createElement('div'); el.className = 'jr-rotulo-porta jr-dica-entrar'; el.innerHTML = '<span></span>'; atores.appendChild(el); }
-  const txt = d.tipo === 'saida' ? `${SETA_SAIDA[zonaSaida(d).lado]} Sair` : d.alvo === 'mesa_damas' ? '⬆ Damas' : d.alvo === 'estudos' ? '⬆ Ler' : String(d.alvo || '').startsWith('pc:') ? '⬆ Usar' : '⬆ Entrar';
+  const txt = d.tipo === 'saida' ? `${SETA_SAIDA[zonaSaida(d).lado]} Sair` : d.alvo === 'mesa_damas' ? '⬆ Damas' : d.alvo === 'estudos' ? '⬆ Ler' : String(d.alvo || '').startsWith('pc:') ? '⬆ Usar'
+    : String(d.alvo || '').startsWith('expo:') && tituloTemaSala(Number(d.alvo.slice(5))) ? `⬆ Entrar · ${tituloTemaSala(Number(d.alvo.slice(5)))}` : '⬆ Entrar';   // 🏷️ PROMPT-251: a porta do saguão com o tema
   if (el.firstChild.textContent !== txt) el.firstChild.textContent = txt;
   const fs = 16 * escalaAtoresCena() / ESCALA_ATORES + 'px';   // maior que os rótulos: no celular deitado a cena encolhe pela metade (PROMPT-155)
   if (el.firstChild.style.fontSize !== fs) el.firstChild.style.fontSize = fs;
@@ -9398,7 +9399,7 @@ function pintarVotoExpo(meu) {
   const ordem = ordemSalasExpo();
   $('expo-cartoes').innerHTML = ordem.map((n, i) => {
     if (!podeEntrarSala(n)) return '';   // sem grupo (e, para o visitante, sem conteúdo): não entra no voto
-    const minha = souDaSala(n), off = prof || fechado || falta > 0 || minha, t = temaDaSala(n), nome = nomeSalaVisivel(n);
+    const minha = souDaSala(n), off = prof || fechado || falta > 0 || minha, t = temaDaSala(n), nome = tituloTemaSala(n);
     return `<button class="expo-cartao${meu === n ? ' votada' : ''}${off ? ' off' : ''}" data-votar="${n}"${off ? ' disabled' : ''}>
       <img src="${IMG}/${esc(t?.imagem || '')}" alt="" loading="lazy" draggable="false"/><b>Porta ${i + 1}</b>${nome ? `<span>${esc(nome)}</span>` : ''}${minha ? '<em>sua sala</em>' : meu === n ? '<em>✔ seu voto</em>' : ''}</button>`;
   }).join('');
@@ -9499,7 +9500,7 @@ function pintarCreditosExpo(n) {
   if (!g) return;
   const nomes = (g.membros || []).filter(nm => { const uid = `${g.turma}_${nm}`.replace(/[.#$[\]/\s]/g, '_'); return !contaEscondida(uid, nm); })
     .map(nm => String(nm).trim().split(/\s+/)[0]).filter(Boolean);
-  const nome = nomeSalaVisivel(n) || `Sala da porta ${portaDaSala(n)}`;
+  const nome = tituloTemaSala(n) || `Sala da porta ${portaDaSala(n)}`;
   el.innerHTML = `<b>${esc(nome)}</b>${g.turma && !/TESTE/i.test(g.turma) ? `<span>Turma ${esc(g.turma)}</span>` : ''}${nomes.length ? `<span class="nomes">${nomes.map(esc).join(', ')}</span>` : ''}`;
   el.dataset.sala = String(n);
 }
@@ -9509,7 +9510,7 @@ function pintarPodioExpo(entrando = false) {
   const el = $('expo-podio'), p = expoCfg.podio ? Object.values(expoCfg.podio).map(Number).filter(n => n >= 1) : [];
   if (!ehSaguao() || expoCfg.resultado_visivel !== true || !p.length) { el.hidden = true; return; }
   if (!entrando && !el.hidden && el.dataset.chave === JSON.stringify(p)) return;
-  const nome = (n) => nomeSalaVisivel(n) || `Porta ${portaDaSala(n)}`, sub = (n) => (nomeSalaVisivel(n) ? `<small>Porta ${portaDaSala(n)}</small>` : '');
+  const nome = (n) => tituloTemaSala(n) || `Porta ${portaDaSala(n)}`, sub = (n) => (tituloTemaSala(n) ? `<small>Porta ${portaDaSala(n)}</small>` : '');
   el.innerHTML = `<button class="bt-lista-x" id="expo-podio-x" aria-label="Fechar">✕</button><b>🏆 As salas favoritas do público</b>
     <div class="expo-podio-l">${p.slice(0, 3).map((n, i) => `<div class="pos p${i + 1}"><span>${['🥇', '🥈', '🥉'][i]}</span><b>${esc(nome(n))}</b>${sub(n)}</div>`).join('')}</div>`;
   el.dataset.chave = JSON.stringify(p);
@@ -9736,7 +9737,7 @@ async function abrirSalaExpo(n) {
   abrirItensSala(n, grade);   // 🖼️ móveis, fotos e textos (PROMPT-EXPOSICAO-2)
   ex.trilha = tema.trilha || S.trilha;
   desenharCamadasExpo(n, tema);   // 🎨 parede e chão na cor do grupo (PROMPT-234)
-  montarGrio(n);                  // 🎙️ o griô conta a história do grupo (sem o áudio, a sala fica sem ele)
+  montarGrio(n);                  // 📻 o áudio do grupo, no rádio (sem o áudio, a sala fica sem rádio)
   destinoEspecial = null;
   alvoMapa = null;
   pertoSaidaGin = false;
@@ -9752,7 +9753,7 @@ async function abrirSalaExpo(n) {
   if (souDaSala(n) && !privilegioExpo() && expoModo !== 'montagem') avisoExpo(expoModo === 'aberto' ? '🔒 A exposição está aberta ao público' : '🔒 A exposição terminou: a sala fica só para ver');
   ouvirExpo(['tema', 'tema_professora', 'musica', 'nome', 'nome_pendente', 'nome_motivo', 'cores/parede', 'cores/chao'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
 }
-function tituloSala(n) { const nome = nomeSalaVisivel(n); return `🖼️ Porta ${portaDaSala(n)}${nome ? ' · ' + String(nome).slice(0, 40) : ''}`; }
+function tituloSala(n) { const nome = tituloTemaSala(n); return `🖼️ Porta ${portaDaSala(n)}${nome ? ' · ' + String(nome).slice(0, 40) : ''}`; }
 // mudou no Firebase com o aluno dentro: nome na faixa, fundo do tema (a música segue em lugarDaMusica)
 async function aplicarEstadoSala(n) {
   if (salaExpo() !== n) return;
@@ -9882,7 +9883,12 @@ function ligarExposicao() {
 let ex = null;   // a sala aberta: { n, itens: Map, els: Map, gradeBase, editando, sel, cat, arr, pan, camX, ver, conf }
 const fotosExpo = new Map();   // id da foto → Promise<dataURL | null>
 const catExpo = (mv) => (Array.isArray(EXPO?.moveis) ? EXPO.moveis : []).find(i => i.id === mv) || null;
-const srcExpo = (mv, vista) => `${IMG}/exposicao/moveis/${catExpo(mv)?.ajustavel ? 'moldura_paisagem' : mv}_${vista}.webp`;   // 🖼️ o quadro ajustável não tem imagem própria (PROMPT-241)
+// 🖼️ o quadro ajustável não tem imagem própria (PROMPT-241); imagem_de: a imagem de outro (o rádio usa a caixa_som até chegar a dele);
+// moveis[].v = ?v= da imagem, para os alunos verem a nova (PROMPT-251)
+const srcExpo = (mv, vista) => {
+  const it = catExpo(mv), id = it?.ajustavel ? 'moldura_paisagem' : it?.imagem_de || mv, v = catExpo(id)?.v;
+  return `${IMG}/exposicao/moveis/${id}_${vista}.webp${v ? `?v=${encodeURIComponent(v)}` : ''}`;
+};
 const escalaExpo = () => Number(EXPO?.escala_moveis) || 1;
 const limiteExpo = (k, padrao) => Number(EXPO?.limites?.[k]) || padrao;
 const filtroExpo = (it, cor) => (it?.cor && EXPO?.cores?.[it.cor]?.[cor]) || '';
@@ -9899,6 +9905,9 @@ const visivelExpo = (m) => !precisaAprov(catExpo(m.mv)) || m.status === 'aprovad
 const seloExpo = (m) => (precisaAprov(catExpo(m.mv)) && veTudoExpo() ? (m.status === 'pendente' ? '⏳' : m.status === 'recusado' ? '❌' : '') : '');
 // o nome da sala: o grupo vê o pendente (enquanto espera); os de fora, só o aprovado
 const nomeSalaVisivel = (n) => { const st = estadoSala(n); return String((veTudoExpo(n) && st.nome_pendente) || st.nome || ''); };
+// 🏷️ PROMPT-251: o título da sala nas placas, no voto, no pódio e na faixa: o nome gravado > o nome do tema fixo (exposicao.json → salas[n].tema_fixo)
+const nomeTemaFixo = (n) => String((EXPO?.temas || []).find(t => t.id === EXPO?.salas?.[n]?.tema_fixo)?.nome || '');
+const tituloTemaSala = (n) => nomeSalaVisivel(n) || nomeTemaFixo(n);
 const nomeDaSala = () => nomeSalaVisivel(ex.n);
 const seloNomeExpo = (n) => { const st = estadoSala(n); return !veTudoExpo(n) ? '' : st.nome_pendente ? '⏳' : st.nome_motivo !== undefined && st.nome_motivo !== null ? '❌' : ''; };
 // 📏 tamanhos de um objeto de chão (PROMPT-152): 1 = 100%, o tamanho do catálogo
@@ -10064,18 +10073,18 @@ function itemExpoMudou(id, v) {
     if (mm && it?.tipo === 'chao') mm.tam = tamQueCabe(mm.tam, (t) => tamExpo({ ...mm, tam: t }));
     if (mm && ex.arr?.id !== id) ajustarNoChaoExpo(mm);   // 🖼️ PROMPT-242: fundo com o chão mais embaixo
     desenharItemExpo(id); refazerGradeExpo(); if (ex.editando) { renderCatalogoExpo(); resumoAprovExpo(); }
+    if (it?.id === RADIO_EXPO || (!m && ex.audioOk)) garantirRadioLocal();   // 📻 PROMPT-251
   });
   if (ex.ver) renderVisualizador();
 }
 
 // ── ⭐ objetos obrigatórios do tema (PROMPT-244) ──
 // moveis[].sala_tema = n. Na primeira vez que o grupo (ou a professora, ou o modo teste) abre a sala, cada um que falta é
-// colocado num lugar livre do chão (da frente para o fundo, do meio para os lados, longe da porta, da faixa de entrada e do griô, sem cobrir
+// colocado num lugar livre do chão (da frente para o fundo, do meio para os lados, longe da porta e da faixa de entrada, sem cobrir
 // nada), com a chave obrig_{id} (dois abrindo juntos gravam o mesmo item) e obrig: true. Uma cópia que o grupo já tinha
 // vira a obrigatória. exposicao_salas/{n}/obrig_removido/{id}: a professora tirou, não volta. Visitantes não gravam.
-const obrigDaSala = (n) => (Array.isArray(EXPO?.moveis) ? EXPO.moveis : []).filter(it => Number(it.sala_tema) === Number(n));
+const obrigDaSala = (n) => (Array.isArray(EXPO?.moveis) ? EXPO.moveis : []).filter(it => it.todas_salas === true || Number(it.sala_tema) === Number(n));   // 📻 todas_salas: o rádio (PROMPT-251)
 const itensQueContam = () => [...ex.itens.values()].filter(m => !m.obrig).length;   // os obrigatórios não contam no limite
-const posGrioExpo = () => { const S = EXPO.sala; return Array.isArray(S.grio) && S.grio.length === 2 ? S.grio.map(Number) : [S.entrada[0] - 260, S.entrada[1] - 20]; };
 // o retângulo que o item ocupa na tela (parede e os de cima de outro não contam: não disputam o chão)
 function caixaExpo(m) {
   const it = catExpo(m.mv);
@@ -10085,9 +10094,8 @@ function caixaExpo(m) {
 }
 const cruza = (a, b, folga = 6) => a.x0 < b.x1 + folga && b.x0 < a.x1 + folga && a.y0 < b.y1 + folga && b.y0 < a.y1 + folga;
 function lugarLivreExpo(m, ocup) {
-  const S = EXPO.sala, [w, h] = tamExpo(m), ch = chaoYExpo(), [ex0, ey0] = S.entrada, [gx, gy] = posGrioExpo();
-  const proibido = [{ x0: ex0 - 170, x1: ex0 + 170, y0: ey0 - 260, y1: ch[1] + 20 },   // a porta e a faixa de entrada
-    { x0: gx - 80, x1: gx + 80, y0: gy - alturaSalao() - 10, y1: gy + 20 }];          // o griô
+  const S = EXPO.sala, [w, h] = tamExpo(m), ch = chaoYExpo(), [ex0, ey0] = S.entrada;
+  const proibido = [{ x0: ex0 - 170, x1: ex0 + 170, y0: ey0 - 260, y1: ch[1] + 20 }];   // a porta e a faixa de entrada
   const base = (mm) => { const b = baseDeChao(mm, w, h); return { x0: b.x0, x1: b.x1, y0: b.y0, y1: b.y1 }; };
   const tenta = (cobrir) => {
     for (let y = ch[1] - 110; y >= ch[0] + 6; y -= 14) {   // a borda da frente fica atrás da barra do Decorar e fora da câmera
@@ -10111,8 +10119,10 @@ function lugarLivreExpo(m, ocup) {
   const t = { ...m }; prenderExpo(t, S.entrada[0] + 300, (ch[0] + ch[1]) / 2); return { x: t.x, y: t.y };
 }
 async function colocarObrigatoriosExpo(n) {
-  const lista = obrigDaSala(n);
+  let lista = obrigDaSala(n);
   if (!lista.length || !(souDaSala(n) || privilegioExpo())) return;   // visitantes não gravam nada
+  if (lista.some(it => it.so_com_audio) && !(await temAudioGrio(n))) lista = lista.filter(it => !it.so_com_audio);   // 📻 sem o áudio da sala: sem rádio
+  if (!lista.length || !ex || ex.n !== n || salaExpo() !== n) return;
   let st;
   try { const s = await get(ref(db, `${noExpo('exposicao_salas')}/${n}`)); st = s.exists() ? s.val() || {} : {}; }
   catch (e) { console.warn('[jogo-revisao] obrigatórios da sala', e?.code || e); return; }
@@ -10150,7 +10160,9 @@ function desenharItemExpo(id) {
   const ps = m.sobre && posSobre(m), base = ps && ex.itens.get(m.sobre);   // 🏛️ em cima de outro: a posição vem do tampo dele
   if (ps) { m.x = ps.x; m.y = ps.y; }
   if (!el) { el = document.createElement('div'); el.dataset.ex = id; at.appendChild(el); ex.els.set(id, el); }
-  el.className = `cs-movel ex-movel cs-${it.tipo}${ex.sel === id ? ' sel' : ''}${mexendoOutro(m) ? ' ex-mexendo' : ''}`;
+  const radio = m.mv === RADIO_EXPO;   // 📻 PROMPT-251: só aparece com o áudio da sala; enquanto toca, vibra e solta notinhas
+  el.className = `cs-movel ex-movel cs-${it.tipo}${ex.sel === id ? ' sel' : ''}${mexendoOutro(m) ? ' ex-mexendo' : ''}${radio ? ' ex-radio' : ''}${radio && radioTocando() ? ' ex-radio-tocando' : ''}`;
+  el.style.display = radio && !ex.audioOk ? 'none' : '';
   Object.assign(el.style, { left: m.x + 'px', top: m.y + 'px', width: w + 'px', height: h + 'px', zIndex: it.tipo === 'tapete' ? 1 : it.tipo === 'parede' ? 2 : base ? Math.round(base.y) + 1 : Math.round(m.y) });
   if (temApoio(it)) for (const cid of filhosExpo(id)) desenharItemExpo(cid);   // os de cima andam junto
   const selo = it.conteudo === 'nome_sala' ? seloNomeExpo(ex.n) : seloExpo(m);
@@ -10783,20 +10795,49 @@ function ligarEditorExpo() {
   });
 }
 
-// ── 🎙️ Griô: narração com legenda em cada sala (PROMPT-234) ──
+// ── 📻 Áudio da sala: narração com legenda (PROMPT-234), tocada num rádio (PROMPT-251: não tem mais o griô) ──
 // audio/exposicao/sala_{n}.mp3 + dados/exposicao/legendas/sala_{n}.txt (ou .vtt): veja js/jogo-revisao/grio.js.
-// Ao entrar, o áudio toca uma vez (a música da sala a 20%); 🔊 pisca em cima dele. A legenda fica numa faixa embaixo.
-// Tocar no griô ou "▶️ Ouvir de novo" repete; ⏸️ pausa; CC liga/desliga a legenda (localStorage jr_grio_cc).
+// Ao entrar, o áudio toca uma vez (a música da sala a 20%); o rádio vibra e solta 🎵 enquanto toca. A legenda fica numa faixa embaixo.
+// Tocar no rádio ou "▶️ Ouvir de novo" repete; ⏸️ pausa; CC liga/desliga a legenda (localStorage jr_grio_cc).
 // O navegador bloqueou o som (celular) ou o 🔊 do jogo está desligado: "▶️ Toque para ouvir a história".
-let grio = null;   // { n, audio, leg, frases, x, y, el, timer, fim, bloqueado }
-const IMG_GRIO = `${IMG}/exposicao/grio.webp`, IMG_GRIO_RESERVA = `${IMG}/npcs/seu_antonio.webp`;   // até chegar a imagem do griô: um NPC
+// O rádio é um móvel obrigatório de todas as salas com áudio (exposicao.json → moveis 'radio', todas_salas + so_com_audio): o grupo
+// move, não apaga. Quem não grava (visitante, colega de fora) e entra numa sala ainda sem o rádio gravado vê um rádio só no aparelho.
+let grio = null;   // { n, audio, leg, frases, timer, fim, bloqueado }
+const RADIO_EXPO = 'radio', RADIO_LOCAL = '_radio_local';
+const radioTocando = () => !!grio && grio.n === ex?.n && !grio.audio.paused && !grio.audio.ended;
+function radioExpoEm(p) {
+  if (!ex?.audioOk) return null;
+  for (const [id, m] of ex.itens) {
+    if (m.mv !== RADIO_EXPO) continue;
+    const [w, h] = tamExpo(m);
+    if (Math.abs(p.x - m.x) <= w / 2 + 12 && p.y >= m.y - h - 12 && p.y <= m.y + 10) return id;   // uma folga: o rádio é pequeno
+  }
+  return null;
+}
+const desenharRadiosExpo = () => { if (ex) for (const [id, m] of ex.itens) if (m.mv === RADIO_EXPO) desenharItemExpo(id); };
+// o rádio só deste aparelho: sala com áudio, sem o rádio gravado, e eu não gravo (quem grava recebe o de verdade)
+async function garantirRadioLocal() {
+  if (!ex) return;
+  const n = ex.n, temReal = [...ex.itens].some(([id, m]) => id !== RADIO_LOCAL && m.mv === RADIO_EXPO);
+  const precisa = ex.audioOk && !temReal && !podeDecorar(n) && !!catExpo(RADIO_EXPO);
+  if (!precisa) { if (ex.itens.has(RADIO_LOCAL)) { ex.itens.delete(RADIO_LOCAL); desenharItemExpo(RADIO_LOCAL); refazerGradeExpo(); } return; }
+  if (ex.itens.has(RADIO_LOCAL)) return;
+  const it = catExpo(RADIO_EXPO);
+  await medirItemExpo(it);
+  if (!ex || ex.n !== n || ex.itens.has(RADIO_LOCAL) || [...ex.itens.values()].some(m => m.mv === RADIO_EXPO)) return;
+  const ocup = [...ex.itens.values()].map(caixaExpo).filter(Boolean);
+  const m = { mv: RADIO_EXPO, x: 0, y: 0, vista: it.vistas.includes('f') ? 'f' : it.vistas[0], espelho: false, tam: 1, cor: 0, titulo: '', texto: '', foto: null, fotos: null, obrig: true, por: '', ts: 0 };
+  Object.assign(m, lugarLivreExpo(m, ocup));
+  ex.itens.set(RADIO_LOCAL, m);
+  desenharItemExpo(RADIO_LOCAL); refazerGradeExpo();
+}
 const ccGrio = () => { try { return localStorage.getItem('jr_grio_cc') !== '0'; } catch (_) { return true; } };
 async function montarGrio(n) {
   if (!(await temAudioGrio(n)) || salaExpo() !== n || grio) return;
   const leg = await legendaGrio(n);
   if (salaExpo() !== n || grio) return;
-  const S = EXPO.sala, pos = Array.isArray(S.grio) && S.grio.length === 2 ? S.grio.map(Number) : [S.entrada[0] - 260, S.entrada[1] - 20];
-  const g = grio = { n, audio: new Audio(srcAudioGrio(n)), leg, frases: leg?.tipo === 'vtt' ? leg.frases : null, x: pos[0], y: pos[1], fim: false, bloqueado: false };
+  const g = grio = { n, audio: new Audio(srcAudioGrio(n)), leg, frases: leg?.tipo === 'vtt' ? leg.frases : null, fim: false, bloqueado: false };
+  if (ex?.n === n) { ex.audioOk = true; desenharRadiosExpo(); garantirRadioLocal(); }   // 📻 a sala tem áudio: o rádio aparece
   g.audio.preload = 'auto';
   const tempos = () => { if (leg?.tipo === 'txt' && Number.isFinite(g.audio.duration) && g.audio.duration > 0) g.frases = tempoDasLinhas(leg.linhas, g.audio.duration); };
   g.audio.addEventListener('loadedmetadata', tempos);
@@ -10804,22 +10845,17 @@ async function montarGrio(n) {
   g.audio.addEventListener('play', () => { if (grio !== g) return; g.fim = false; g.bloqueado = false; abaixarMusica(0.2); pintarGrio(); });
   g.audio.addEventListener('pause', () => { if (grio === g) { abaixarMusica(1); pintarGrio(); } });
   g.audio.addEventListener('ended', () => { if (grio === g) { g.fim = true; abaixarMusica(1); pintarGrio(); } });
-  g.audio.addEventListener('error', () => { if (grio === g) pararGrio(); });   // o arquivo sumiu ou não abre: sem griô
-  // o personagem perto da entrada
-  const el = g.el = document.createElement('div');
-  el.className = 'ex-grio';
-  el.innerHTML = `<img alt="Griô" draggable="false"/><span class="ex-grio-som" aria-hidden="true">🔊</span>`;
-  const img = el.querySelector('img');
-  img.addEventListener('error', () => { if (!img.src.endsWith(IMG_GRIO_RESERVA)) img.src = IMG_GRIO_RESERVA; }, { once: true });
-  img.src = IMG_GRIO;
-  Object.assign(el.style, { left: g.x + 'px', top: g.y + 'px', height: alturaSalao() + 'px', zIndex: Math.round(g.y) });
-  $('cena-atores').appendChild(el);
+  g.audio.addEventListener('error', () => {   // o arquivo sumiu ou não abre: sem áudio e sem rádio
+    if (grio !== g) return;
+    pararGrio();
+    if (ex?.n === g.n) { ex.audioOk = false; desenharRadiosExpo(); garantirRadioLocal(); }
+  });
   // a faixa embaixo: controles + legenda
   let ui = $('grio-ui');
   if (!ui) {
     ui = document.createElement('div'); ui.id = 'grio-ui'; ui.className = 'ex-grio-ui'; ui.hidden = true;
     ui.innerHTML = `<p class="ex-grio-legenda" aria-live="polite"><span class="ant"></span><b class="atual"></b></p>
-      <div class="ex-grio-botoes"><span class="ex-grio-nome">🎙️ Griô</span>
+      <div class="ex-grio-botoes"><span class="ex-grio-nome">📻 Rádio</span>
         <button type="button" class="jr-btn jr-btn-sec" data-grio="tocar">▶️ Ouvir de novo</button>
         <button type="button" class="jr-btn jr-btn-sec" data-grio="continuar" hidden>▶️ Continuar</button>
         <button type="button" class="jr-btn jr-btn-sec" data-grio="pausar" hidden aria-label="Pausar">⏸️</button>
@@ -10860,13 +10896,9 @@ function pararGrio() {
   clearInterval(g.timer);
   try { g.audio.pause(); g.audio.removeAttribute('src'); g.audio.load(); } catch (_) {}
   abaixarMusica(1);
-  g.el?.remove();
+  if (ex?.n === g.n) desenharRadiosExpo();   // 📻 para de vibrar
   const ui = $('grio-ui');
   if (ui) ui.hidden = true;
-}
-function tocouGrio(p) {
-  const g = grio, h = alturaSalao(), w = h * 0.6;
-  return !!g && Math.abs(p.x - g.x) <= w / 2 && p.y >= g.y - h && p.y <= g.y + 10;
 }
 function legendaGrioAgora() {
   const g = grio, ui = $('grio-ui');
@@ -10878,7 +10910,7 @@ function legendaGrioAgora() {
   if (b.textContent !== (f?.txt || '')) b.textContent = f?.txt || '';
   if (a.textContent !== ant) a.textContent = ant;
   leg.hidden = !f;
-  g.el?.classList.toggle('falando', tocando);
+  if (ex?.n === g.n) for (const [id, el] of ex.els) if (ex.itens.get(id)?.mv === RADIO_EXPO) el.classList.toggle('ex-radio-tocando', tocando);   // 📻
 }
 function pintarGrio() {
   const g = grio, ui = $('grio-ui');
@@ -11116,6 +11148,7 @@ function itemExpoEm(p, todos = false) {
   let melhor = null, mz = -1;
   for (const [id, m] of ex.itens) {
     if (!todos && !temConteudo(m)) continue;
+    if (m.mv === RADIO_EXPO && (!ex.audioOk || id === RADIO_LOCAL)) continue;   // 📻 escondido (sem áudio) ou o rádio só deste aparelho
     const [w, h] = tamExpo(m), it = catExpo(m.mv), z = it.tipo === 'tapete' ? 1 : it.tipo === 'parede' ? 2 : m.y;
     if (Math.abs(p.x - m.x) <= w / 2 && p.y >= m.y - h && p.y <= m.y + 4 && z > mz) { mz = z; melhor = id; }
   }
