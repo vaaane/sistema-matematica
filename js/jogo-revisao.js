@@ -15272,6 +15272,7 @@ function iniciarBatalha(id, origem = 'lista') {
   $('bt-calc').hidden = true;   // batalha com treinador: sem 🧮 (PROMPT-94; a calculadora fica só nas perguntas dos ginásios)
   fecharCalc();
   $('bt-fim').hidden = true;
+  $('batalha').classList.remove('bt-acabou');   // 🏁 PROMPT-250
   $('bt-ops').hidden = $('bt-conta').hidden = false;
   $('bt-ops').innerHTML = ''; $('bt-conta').textContent = 'Prepare-se…'; $('bt-msg').textContent = '';
   $('bt-fx').innerHTML = '';
@@ -15851,22 +15852,26 @@ function btFim() {
   $('bt-calc').hidden = true; fecharCalc();
   $('bt-sair').style.visibility = 'hidden';   // some sem mudar a largura do HUD
   for (const l of ['L', 'R']) btTempoBarra(l, 0, '');
-  $('bt-fim-tit').textContent = venceu ? 'Você venceu! 🎉' : `${bt.t.nome} venceu desta vez`;
+  $('bt-fim-tit').textContent = venceu ? '🎉 Você venceu!' : `${bt.t.nome} venceu desta vez`;
+  $('bt-fim-tit').title = $('bt-fim-tit').textContent;   // 🏁 PROMPT-250: nome longo corta com "…"; o texto inteiro no title
   $('bt-fim-tit').classList.toggle('venceu', venceu);
   const chips = [];
   if (pr.xp) chips.push(`<span class="bt-premio xp">+${pr.xp} XP</span>`);
   if (pr.moedas) chips.push(`<span class="bt-premio mo">+${pr.moedas} ${moedaHtml()}</span>`);
   if (pr.lealdade) chips.push(`<span class="bt-premio le">+${Math.round(pr.lealdade * 10) / 10} lealdade</span>`);
-  if (pr.bonusPrimeira) chips.push(`<span class="bt-premio mo">🏆 1ª vitória: +${pr.bonusPrimeira} ${moedaHtml()}</span>`);
+  if (pr.bonusPrimeira) chips.push(`<span class="bt-premio mo">🏆 <span class="bt-premio-rot">1ª vitória: </span>+${pr.bonusPrimeira} ${moedaHtml()}</span>`);
   $('bt-premios').innerHTML = chips.join('') || '<span class="bt-premio">Sem prêmios</span>';
   const dia = diaBatalhas(), lim = limitesBatalhaDia();
-  $('bt-fim-dia').innerHTML = (pr.cortado ? '<b>Limite de prêmios de hoje atingido — amanhã tem mais!</b>' : '') +
-    `<span>Prêmios de batalha hoje: ${dia.moedas} / ${lim.moedas != null ? comMult(lim.moedas) : '∞'} moedas</span>`;
+  $('bt-fim-dia').innerHTML = `<span>Prêmios de batalha hoje: ${dia.moedas} / ${lim.moedas != null ? comMult(lim.moedas) : '∞'} moedas</span>`;
   $('bt-revanche').hidden = venceu;
-  // revisão das contas erradas (ou "Perfeito!"); os botões só aparecem depois do "Entendi!"
+  // revisão das contas erradas (ou "Perfeito!"): abre por cima, sozinha, e fica o botão "📋 Rever" na faixa (PROMPT-250)
   const comRevisao = cfgBatalha().revisao_no_fim !== false, revisar = comRevisao && bt.revisao.length > 0;
   $('bt-fim-perfeito').hidden = !(comRevisao && !bt.revisao.length && bt.contas.length);
-  $('bt-fim-botoes').hidden = revisar;
+  $('bt-fim-sub').textContent = pr.cortado ? 'Limite de prêmios de hoje atingido — amanhã tem mais!' : '';
+  $('bt-fim-sub').hidden = !pr.cortado || !$('bt-fim-perfeito').hidden;
+  $('bt-rever').hidden = !revisar;
+  $('bt-fim-botoes').hidden = false;
+  $('batalha').classList.add('bt-acabou');   // 🏁 PROMPT-250: some o painel da pergunta e as barras de tempo; a arena cresce
   $('bt-fim').hidden = false;
   if (revisar) btLater(abrirRevisaoBatalha, 1600);
   if (pr.xp) darXP(pr.xp);
@@ -17198,6 +17203,7 @@ function montarTelaDeq() {
   el.querySelector('.deq-espera').hidden = false;
   el.querySelector('.deq-espera').innerHTML = '<p>Chamando a equipe…</p>';
   el.querySelector('.deq-fim').hidden = true;
+  el.classList.remove('deq-acabou');   // 🏁 PROMPT-250
 }
 const nomeMembroDeq = (s, u) => s?.membros?.[u]?.nome || nomeAlunoEq(u);
 const imgPetDeq = (forma) => quadrosDe(forma, 'andar_direita')[0] || srcIcone(forma) || '';
@@ -17224,7 +17230,7 @@ function renderDeq() {
   if (L.ev && L.ev.rod > deq.evVisto && !deq.animando) animarEvDeq(s, L.ev);
   else if (!deq.animando) renderPerguntaDeq(s);
   if (s.estado === 'fim' && !deq.animando) mostrarFimDeq(s);
-  else if (s.estado === 'luta') el.querySelector('.deq-fim').hidden = true;
+  else if (s.estado === 'luta') { el.querySelector('.deq-fim').hidden = true; el.classList.remove('deq-acabou'); }
 }
 function renderLadosDeq(s) {
   const el = $('deq'), L = s.luta, us = lutadoresDeq(s);
@@ -17358,8 +17364,12 @@ function mostrarFimDeq(s) {
   const continua = s.tipo === 'torre' ? !(r === 'venceu' && s.alvo.chefe) : r !== 'venceu';
   if (!conduz && continua && quemConduzDeq(s)) botoes += `<p class="deq-dica">${esc(nomeMembroDeq(s, quemConduzDeq(s)))} escolhe se a equipe continua.</p>`;
   botoes += `<button class="jr-btn" data-deq="fechar">${pr.bau ? '🎁 Abrir o baú' : 'Fechar'}</button>`;
-  box.innerHTML = `<h2 class="${r === 'venceu' ? 'venceu' : ''}">${r === 'venceu' ? 'A equipe venceu! 🎉' : r === 'volta' ? 'Errou metade! A equipe volta para o 1º treinador do andar. 💪' : `${esc(nomeT)} venceu desta vez`}</h2>
-    <div class="bt-premios">${chips}</div>${pr.aviso ? `<p class="deq-dica">${esc(pr.aviso)}</p>` : ''}<div class="deq-fim-bts">${botoes}</div>`;
+  // 🏁 PROMPT-250: uma faixa de uma linha embaixo da arena (título e aviso | prêmios | botões)
+  const tit = r === 'venceu' ? '🎉 A equipe venceu!' : r === 'volta' ? 'Errou metade! 💪' : `${nomeT} venceu desta vez`;
+  const sub = r === 'volta' ? 'A equipe volta para o 1º treinador do andar.' : pr.aviso || '';
+  box.innerHTML = `<div class="deq-fim-esq"><h2 class="${r === 'venceu' ? 'venceu' : ''}" title="${esc(tit)}">${esc(tit)}</h2>${sub ? `<p class="deq-fim-sub" title="${esc(sub)}">${esc(sub)}</p>` : ''}</div>
+    <div class="deq-fim-meio"><div class="bt-premios">${chips}</div></div><div class="deq-fim-bts">${botoes}</div>`;
+  el.classList.add('deq-acabou');
   box.hidden = false;
   tocar(r === 'venceu' ? 'vitoria' : 'erro');
 }
@@ -17376,7 +17386,7 @@ function aplicarFimDeq(s) {
     if (pr.xp) { out.chips.push(`<span class="bt-premio xp">+${pr.xp} XP</span>`); darXP(pr.xp); }
     if (pr.moedas) out.chips.push(`<span class="bt-premio mo">+${pr.moedas} ${moedaHtml()}</span>`);
     if (pr.lealdade) out.chips.push(`<span class="bt-premio le">+${Math.round(pr.lealdade * 10) / 10} lealdade</span>`);
-    if (pr.bonusPrimeira) out.chips.push(`<span class="bt-premio mo">🏆 1ª vitória: +${pr.bonusPrimeira} ${moedaHtml()}</span>`);
+    if (pr.bonusPrimeira) out.chips.push(`<span class="bt-premio mo">🏆 <span class="bt-premio-rot">1ª vitória: </span>+${pr.bonusPrimeira} ${moedaHtml()}</span>`);
     if (pr.cortado) out.aviso = 'Limite de prêmios de hoje atingido — amanhã tem mais!';
     return out;
   }
@@ -21342,6 +21352,7 @@ function ligarEventos() {
   });
   $('bt-ops').addEventListener('click', (e) => { const b = e.target.closest('.bt-op'); if (b && !b.disabled && bt?.p) btResponder('L', bt.p.opcoes[b.dataset.i]); });
   $('bt-rev-ok').addEventListener('click', fecharRevisaoBatalha);
+  $('bt-rever').addEventListener('click', abrirRevisaoBatalha);   // 🏁 PROMPT-250
   $('pd-teclado').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) teclaPedido(b.dataset.k); });
   $('pd-depois').addEventListener('click', () => teclaPedido('depois'));
   $('pd-fechar').addEventListener('click', () => teclaPedido('fechar'));

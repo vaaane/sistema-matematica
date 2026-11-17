@@ -1532,7 +1532,6 @@ html.jr-deitado .jr-explica-rodape { font-size: calc(10.5px * var(--letra, 1)); 
 .bt-premio.xp { color: #c77dff; } .bt-premio.mo { color: var(--jr-ouro); } .bt-premio.le { color: #ff7aa8; }
 .bt-fim-dia { display: flex; flex-direction: column; gap: 2px; font-family: 'Inter', sans-serif; font-size: 12px; color: var(--bt-muted); font-weight: 600; }
 .bt-fim-dia b { color: #ffd0b0; }
-.bt-fim .jr-mp-botoes { width: min(420px, 100%); }
 .bt-fim .jr-btn[hidden] { display: none; }
 html.jr-deitado .bt-hud { padding: 0 2px 4px; gap: 8px; }
 html.jr-deitado .bt-nome { font-size: 15px; }
@@ -6068,3 +6067,45 @@ html.jr-visitante #btn-expo-decorar, html.jr-visitante #btn-expo-pend { display:
 /* 💬 PROMPT-249: no Neon, as falas e a pergunta do pet (mapa e casinha) com a letra mais fina: peso 600 e um brilho só, de 4 px.
    (Quadrinho, Galáxia e Doce conferidos: a fala curta não fica maior que no Clássico.) */
 #jr-app.jr-balao-neon .jr-pet-fala { font-weight: 600; text-shadow: 0 0 4px var(--neon, #3ee8ff); }
+
+/* ══ 🏁 PROMPT-250: o fim do duelo numa faixa de uma linha (treinadores dos mapas e duelo em equipe) ══
+   esquerda: título + 2ª linha · meio: prêmios + "Prêmios de batalha hoje" · direita: botões. As barras de tempo
+   e o painel da pergunta somem; a arena (flex: 1) cresce com a altura que sobrou. Durante o duelo nada muda. */
+.bt-tela.bt-acabou .bt-timers, .bt-tela.bt-acabou .bt-msg, .bt-tela.bt-acabou .bt-dica { display: none; }
+.bt-tela.bt-acabou .bt-painel { padding: 6px 0 0; gap: 0; }
+.bt-fim:not([hidden]), .deq-tela.deq-acabou .deq-fim:not([hidden]) {
+  display: grid; grid-template-columns: minmax(110px, 1fr) auto auto; align-items: center; column-gap: clamp(8px, 1.6vw, 18px);
+  height: clamp(56px, 13dvh, 84px); box-sizing: border-box; padding: 0 clamp(8px, 1.4vw, 16px); text-align: left;
+  background: #1b1b36; border: 2px solid #2e2e52; border-radius: 14px; }
+.bt-fim-esq, .deq-fim-esq { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.bt-fim .bt-fim-tit, .deq-fim-esq h2 { margin: 0; font: 700 clamp(17px, 4.6dvh, 25px)/1.1 'Rajdhani', sans-serif; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bt-fim .bt-fim-tit.venceu, .deq-fim-esq h2.venceu { color: var(--jr-ouro, #ffd700); }
+.bt-fim .bt-fim-perfeito { font: 700 clamp(13px, 3.4dvh, 16px)/1.15 'Rajdhani', sans-serif; color: var(--jr-verde, #00e676); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bt-fim-sub, .deq-fim-sub { margin: 0; font: 600 clamp(11px, 2.8dvh, 13px)/1.2 'Inter', sans-serif; color: #ffd0b0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bt-fim-sub[hidden] { display: none; }
+.bt-fim-meio, .deq-fim-meio { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+.bt-fim .bt-premios, .deq-fim-meio .bt-premios { flex-wrap: nowrap; gap: 6px; }
+.bt-fim .bt-premio, .deq-fim-meio .bt-premio { white-space: nowrap; padding: 2px 9px; font-size: clamp(11px, 2.9dvh, 13px); }
+.bt-fim .bt-fim-dia { font-size: clamp(10px, 2.5dvh, 11.5px); white-space: nowrap; }
+.bt-fim .bt-fim-bts, .deq-tela.deq-acabou .deq-fim-bts { display: flex; flex-wrap: nowrap; gap: 8px; width: auto; align-items: center; justify-content: flex-end; }
+.bt-fim .bt-fim-bts[hidden] { display: none; }
+.bt-fim .bt-fim-bts .jr-btn, .deq-tela.deq-acabou .deq-fim-bts .jr-btn { min-height: clamp(36px, 9dvh, 46px); padding: 4px clamp(10px, 1.6vw, 18px); white-space: nowrap; font-size: clamp(13px, 3.4dvh, 16px); }
+html.jr-deitado .bt-fim .bt-fim-tit { font-size: clamp(16px, 4.6dvh, 21px); }
+html.jr-deitado .bt-fim .bt-fim-bts .jr-btn { min-height: 36px; padding: 4px 12px; }
+/* duelo em equipe: o painel da pergunta some e a faixa ocupa o lugar dele (3ª linha da grade), sem cobrir a arena */
+.deq-tela.deq-acabou .deq-painel { display: none; }
+.deq-tela.deq-acabou .deq-fim { position: static; inset: auto; }
+.deq-tela.deq-acabou .deq-fim-bts .deq-dica { font-size: 11px; max-width: 150px; line-height: 1.2; text-align: right; }
+@media (max-width: 760px) {   /* celular deitado: prêmios e botões mais justos ("📋" sem o texto; "🏆 +29" sem o "1ª vitória") */
+  .bt-fim .bt-rot, .bt-fim .bt-premio-rot, .deq-fim-meio .bt-premio-rot { display: none; }
+  .bt-fim .bt-premios, .deq-fim-meio .bt-premios { gap: 4px; }
+  .bt-fim .bt-premio, .deq-fim-meio .bt-premio { padding: 1px 7px; }
+  .bt-fim .bt-fim-bts, .deq-tela.deq-acabou .deq-fim-bts { gap: 6px; }
+  .bt-fim .bt-fim-bts .jr-btn, .deq-tela.deq-acabou .deq-fim-bts .jr-btn { padding: 4px 10px; }
+}
+@media (max-width: 560px) {   /* celular em pé: a faixa ganha uma 2ª linha só para os botões, sem cortar nada */
+  .bt-fim:not([hidden]), .deq-tela.deq-acabou .deq-fim:not([hidden]) { grid-template-columns: minmax(0, 1fr) auto; height: auto; row-gap: 6px; padding: 8px 10px; }
+  .bt-fim .bt-fim-bts, .deq-tela.deq-acabou .deq-fim-bts { grid-column: 1 / -1; justify-content: stretch; }
+  .bt-fim .bt-fim-bts .jr-btn, .deq-tela.deq-acabou .deq-fim-bts .jr-btn { flex: 1; }
+}

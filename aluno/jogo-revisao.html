@@ -816,12 +816,19 @@
       <div class="bt-ops" id="bt-ops"></div>
       <div class="bt-msg" id="bt-msg" aria-live="polite"></div>
       <button class="bt-dica" id="bt-dica" hidden>💡 Dica do pet</button>
+      <!-- 🏁 PROMPT-250: o fim do duelo numa faixa de uma linha (título | prêmios | botões) -->
       <div class="bt-fim" id="bt-fim" hidden>
-        <div class="bt-fim-tit" id="bt-fim-tit"></div>
-        <div class="bt-fim-perfeito" id="bt-fim-perfeito" hidden>Perfeito! Nenhum erro 🎉</div>
-        <div class="bt-premios" id="bt-premios"></div>
-        <div class="bt-fim-dia" id="bt-fim-dia"></div>
-        <div class="jr-mp-botoes" id="bt-fim-botoes">
+        <div class="bt-fim-esq">
+          <div class="bt-fim-tit" id="bt-fim-tit"></div>
+          <div class="bt-fim-perfeito" id="bt-fim-perfeito" hidden>Perfeito! Nenhum erro</div>
+          <div class="bt-fim-sub" id="bt-fim-sub" hidden></div>
+        </div>
+        <div class="bt-fim-meio">
+          <div class="bt-premios" id="bt-premios"></div>
+          <div class="bt-fim-dia" id="bt-fim-dia"></div>
+        </div>
+        <div class="jr-mp-botoes bt-fim-bts" id="bt-fim-botoes">
+          <button class="jr-btn jr-btn-sec" id="bt-rever" hidden aria-label="Rever as contas erradas">📋<span class="bt-rot"> Rever</span></button>
           <button class="jr-btn jr-btn-ouro" id="bt-revanche">🔁 Revanche</button>
           <button class="jr-btn jr-btn-sec" id="bt-voltar">Voltar</button>
         </div>
