@@ -445,9 +445,9 @@
 </div></div>
 
 <script type="module">
-import { getConfig, getSenhaAluno, getResultados, getLiberadas, getAllAtividadeStatus, contarSessoesTabuadaHoje, somarPartidasTabuadaTotal, getFeedGlobal } from "/js/db.js";
+import { getConfig, getSenhaAluno, getLiberadas, getAllAtividadeStatus } from "/js/db.js";
 import { getSession, setSession, hashSenha } from "/js/auth.js";
-import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, ALUNOS_TESTE, bimestreJogos } from "/js/constants.js";
 
 // Redireciona se já logado
 const sess = getSession();
@@ -489,6 +489,51 @@ if (window.location.hash === '#professor') setRole('professor');
 let tentativas = 5;
 let liberadasCache = [];
 
+// ── Números do rodapé por REST (fora da conexão do login) ─────
+const _RTDB = 'https://sistemamatematica-50eff-default-rtdb.firebaseio.com';
+const _statsAbort = new AbortController();
+let _statsFalhou = false;   // algum download falhou/cancelado: mostra o que der, mas não guarda no cache
+function _rest(path, qs = '') {
+  return fetch(`${_RTDB}/${path}.json${qs}`, { signal: _statsAbort.signal })
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .catch(() => { _statsFalhou = true; return null; });
+}
+const _STATS_KEY = 'login_stats_v1';
+const _statsCache = (() => {
+  try {
+    const c = JSON.parse(localStorage.getItem(_STATS_KEY) || 'null');
+    const _h = new Date(), dia = `${String(_h.getDate()).padStart(2,'0')}/${String(_h.getMonth()+1).padStart(2,'0')}/${_h.getFullYear()}`;
+    return c && c.dia === dia && Date.now() - c.ts < 30 * 60000 ? c : null;
+  } catch(_) { return null; }
+})();
+const _contaTeste = (uid, v) => ALUNOS_TESTE.includes(uid) || /PROFESSOR|TESTE/i.test(`${uid} ${v?.nome || ''}`);
+const _inicioHojeBrasilia = () => { const d = new Date(Date.now() - 3 * 3600000); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) + 3 * 3600000; };
+const _entradas = o => (o && typeof o === 'object' ? Object.entries(o) : []);
+const _porBimestre = o => (o && typeof o === 'object' ? Object.values(o).flatMap(_entradas) : []);
+// mesma conta de contarSessoesTabuadaHoje() em js/db.js
+async function _contarTabuadaHojeREST() {
+  const ini = _inicioHojeBrasilia(), bim = bimestreJogos();
+  const [sessoes, neg12, negB] = await Promise.all([
+    _rest('tabuada_sessoes', `?orderBy=${encodeURIComponent('"$key"')}&startAt=${encodeURIComponent(`"${ini}"`)}`),
+    _rest('tabuada_negativos_niveis'),
+    bim > 2 ? _rest(`tabuada_negativos_niveis_b/${bim}`) : Promise.resolve(null),
+  ]);
+  let count = 0;
+  for (const [k, v] of _entradas(sessoes)) if (parseInt(k, 10) >= ini && !_contaTeste(v?.uid || '', v)) count++;
+  const negHoje = new Set();
+  for (const [uid, v] of [..._entradas(neg12), ..._entradas(negB)]) if (Number(v?.ultima_partida) >= ini && !_contaTeste(uid, v)) negHoje.add(uid);
+  return count + negHoje.size;
+}
+// mesma conta de somarPartidasTabuadaTotal() em js/db.js
+async function _somarTabuadaTotalREST() {
+  const [n, nb, g, gb] = await Promise.all([
+    _rest('tabuada_niveis'), _rest('tabuada_niveis_b'), _rest('tabuada_negativos_niveis'), _rest('tabuada_negativos_niveis_b'),
+  ]);
+  let total = 0;
+  for (const [uid, v] of [..._entradas(n), ..._porBimestre(nb), ..._entradas(g), ..._porBimestre(gb)]) if (!_contaTeste(uid, v)) total += Number(v?.total_partidas) || 0;
+  return total;
+}
+
 (async () => {
   try {
     const hojeISO = new Date().toISOString().slice(0, 10); // "2026-06-11"
@@ -498,13 +543,16 @@ let liberadasCache = [];
     const inicioHoje = new Date(); inicioHoje.setHours(0,0,0,0);
     const tsInicioHoje = inicioHoje.getTime();
 
+    // Os números do rodapé somam ~6 MB do banco. Pelo SDK eles ocupavam a mesma conexão do login e a
+    // verificação da senha ficava na fila atrás deles ("carregando infinito"). Agora vêm por REST (conexão
+    // separada), são cancelados ao clicar em Entrar e ficam guardados 30 min no aparelho.
     const [resultados, liberadas, atividadeStatus, tabuadaHoje, tabuadaTotal, feed] = await Promise.all([
-      getResultados(),
+      _statsCache ? Promise.resolve(null) : _rest('resultados').then(o => Object.entries(o || {}).map(([id, v]) => ({ id, ...v }))),
       getLiberadas(),
       getAllAtividadeStatus(),
-      contarSessoesTabuadaHoje(),
-      somarPartidasTabuadaTotal(),
-      getFeedGlobal(40),
+      _statsCache ? _statsCache.tabuadaHoje : _contarTabuadaHojeREST(),
+      _statsCache ? _statsCache.tabuadaTotal : _somarTabuadaTotalREST(),
+      _statsCache ? _statsCache.feed : _rest('feed_global').then(o => Object.values(o || {}).sort((a, b) => (b?.ts || 0) - (a?.ts || 0)).slice(0, 40)),
     ]);
     // Filtra liberações encerradas usando config/atividade_status
     liberadasCache = liberadas.filter(l => {
@@ -512,12 +560,16 @@ let liberadasCache = [];
       return !st || st.status !== 'encerrada';
     });
 
-    const reais = resultados.filter(r => r.concluido && !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
-
     // Atividades total + hoje
     // r.data é dd/mm/yyyy — compara exato com hoje formatado da mesma forma
-    const totalAtividades = reais.length;
-    const ativHoje = reais.filter(r => r.data && r.data.startsWith(hoje)).length;
+    let totalAtividades, ativHoje;
+    if (_statsCache) ({ totalAtividades, ativHoje } = _statsCache);
+    else {
+      const reais = resultados.filter(r => r.concluido && !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
+      totalAtividades = reais.length;
+      ativHoje = reais.filter(r => r.data && r.data.startsWith(hoje)).length;
+      if (!_statsFalhou) try { localStorage.setItem(_STATS_KEY, JSON.stringify({ ts: Date.now(), dia: hoje, totalAtividades, ativHoje, tabuadaHoje, tabuadaTotal, feed })); } catch(_) {}
+    }
     document.getElementById('statAtividades').textContent = totalAtividades;
     const elAvHj = document.getElementById('statAtividadesHoje');
     if (elAvHj) elAvHj.textContent = ativHoje > 0 ? `+${ativHoje} hj` : '';
@@ -657,6 +709,11 @@ document.getElementById('modal-modo-teste').addEventListener('click', function(e
   if (e.target === this) window.fecharModoTeste();
 });
 
+// promessa com tempo máximo: em vez de girar para sempre, cai no catch e mostra o erro
+function _comLimite(p, ms) {
+  return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('tempo esgotado')), ms))]);
+}
+
 // ── Login aluno ───────────────────────────────────────────────
 window.entrarAluno = async function(e) {
   const btn = document.getElementById('btnAluno');
@@ -673,8 +730,9 @@ window.entrarAluno = async function(e) {
   if (tentativas <= 0) return showError('errorAluno', 'Acesso bloqueado após 5 tentativas. Recarregue a página.');
 
   setLoading('btnAluno', true);
+  _statsAbort.abort();   // libera a rede para o login
   try {
-    const [hash1, rec1] = await Promise.all([hashSenha(turma, aluno1, pin1), getSenhaAluno(turma, aluno1)]);
+    const [hash1, rec1] = await Promise.all([hashSenha(turma, aluno1, pin1), _comLimite(getSenhaAluno(turma, aluno1), 20000)]);
     if (!rec1) return showError('errorAluno', `Senha não cadastrada para ${aluno1}. Peça ao professor para configurar.`);
     if (rec1.hash !== hash1) {
       tentativas--;
@@ -687,9 +745,9 @@ window.entrarAluno = async function(e) {
     try {
       const { ref: fbRef, set, get: fbGet, update: fbUpdate } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
       const { db } = await import('/js/firebase-config.js');
-      await set(fbRef(db, `perfis/${uidPerfil}/session_token`), sessionToken);
+      await _comLimite(set(fbRef(db, `perfis/${uidPerfil}/session_token`), sessionToken), 10000);
       // Desfazer a dupla nos DOIS lados: quem tem este aluno como parceiro E a própria presença deste aluno.
-      const _presSnap = await fbGet(fbRef(db, 'presenca_online'));
+      const _presSnap = await _comLimite(fbGet(fbRef(db, 'presenca_online')), 10000);
       if (_presSnap.exists()) {
         const _updates = {};
         _presSnap.forEach(child => {
@@ -717,7 +775,7 @@ window.entrarAluno = async function(e) {
     // Inicializar perfil de gamificação (só cria se não existir)
     try {
       const { inicializarPerfil } = await import('/js/db.js');
-      await inicializarPerfil(uidPerfil, alunos[0], turma);
+      await _comLimite(inicializarPerfil(uidPerfil, alunos[0], turma), 10000);
     } catch(e) { console.warn('[Perfil] Erro ao inicializar:', e); }
     window.location.href = '/aluno/menu.html';
   } catch(err) {
@@ -735,8 +793,9 @@ window.entrarProf = async function(e) {
   document.getElementById('errorProf').classList.remove('show');
   if (!senha) return showError('errorProf', null);
   setLoading('btnProf', true);
+  _statsAbort.abort();
   try {
-    const cfg = await getConfig();
+    const cfg = await _comLimite(getConfig(), 20000);
     if (senha === cfg.senha) {
       localStorage.removeItem('modoTeste');   // apaga marca de modo teste esquecida
       setSession({ modo: 'professor' });
