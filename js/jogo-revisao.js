@@ -10083,6 +10083,7 @@ function itemExpoMudou(id, v) {
 // colocado num lugar livre do chão (da frente para o fundo, do meio para os lados, longe da porta e da faixa de entrada, sem cobrir
 // nada), com a chave obrig_{id} (dois abrindo juntos gravam o mesmo item) e obrig: true. Uma cópia que o grupo já tinha
 // vira a obrigatória. exposicao_salas/{n}/obrig_removido/{id}: a professora tirou, não volta. Visitantes não gravam.
+// Um obrigatório que não é mais do tema da sala (PROMPT-252: a sala trocou de tema) vira móvel comum (obrig some).
 const obrigDaSala = (n) => (Array.isArray(EXPO?.moveis) ? EXPO.moveis : []).filter(it => it.todas_salas === true || Number(it.sala_tema) === Number(n));   // 📻 todas_salas: o rádio (PROMPT-251)
 const itensQueContam = () => [...ex.itens.values()].filter(m => !m.obrig).length;   // os obrigatórios não contam no limite
 // o retângulo que o item ocupa na tela (parede e os de cima de outro não contam: não disputam o chão)
@@ -10119,16 +10120,21 @@ function lugarLivreExpo(m, ocup) {
   const t = { ...m }; prenderExpo(t, S.entrada[0] + 300, (ch[0] + ch[1]) / 2); return { x: t.x, y: t.y };
 }
 async function colocarObrigatoriosExpo(n) {
-  let lista = obrigDaSala(n);
-  if (!lista.length || !(souDaSala(n) || privilegioExpo())) return;   // visitantes não gravam nada
+  if (!(souDaSala(n) || privilegioExpo())) return;   // visitantes não gravam nada
+  const doTema = obrigDaSala(n);   // os do tema da sala + o rádio (todas_salas)
+  let lista = doTema;
   if (lista.some(it => it.so_com_audio) && !(await temAudioGrio(n))) lista = lista.filter(it => !it.so_com_audio);   // 📻 sem o áudio da sala: sem rádio
-  if (!lista.length || !ex || ex.n !== n || salaExpo() !== n) return;
+  if (!ex || ex.n !== n || salaExpo() !== n) return;
   let st;
   try { const s = await get(ref(db, `${noExpo('exposicao_salas')}/${n}`)); st = s.exists() ? s.val() || {} : {}; }
   catch (e) { console.warn('[jogo-revisao] obrigatórios da sala', e?.code || e); return; }
   if (!ex || ex.n !== n || salaExpo() !== n) return;
   const itens = st.itens && typeof st.itens === 'object' ? st.itens : {}, removidos = st.obrig_removido || {};
   const patch = {}, faltam = [];
+  // 🔁 PROMPT-252: a sala trocou de tema: o obrigatório do tema antigo vira um móvel comum, no mesmo lugar (o grupo move, apaga ou
+  // mantém; passa a contar no limite). O rádio (todas_salas) está em doTema: nunca entra nessa regra, nem sem o áudio.
+  const valem = new Set(doTema.map(it => it.id));
+  for (const [id, v] of Object.entries(itens)) if (v?.obrig === true && !valem.has(v.mv)) patch[`itens/${id}/obrig`] = null;
   for (const it of lista) {
     if (removidos[it.id]) continue;
     const doTipo = Object.entries(itens).filter(([, v]) => v?.mv === it.id).sort((a, b) => (a[0] < b[0] ? -1 : 1));
