@@ -6120,3 +6120,108 @@ html.jr-deitado .bt-fim .bt-fim-bts .jr-btn { min-height: 36px; padding: 4px 12p
   background: rgba(255, 123, 46, .92); color: #fff; font: 700 12px/1.25 Inter, system-ui, sans-serif; white-space: nowrap; pointer-events: none;
   box-shadow: 0 2px 6px rgba(0,0,0,.35); max-width: calc(100vw - 16px); overflow: hidden; text-overflow: ellipsis; }
 html.jr-previa .jr-hud-titulo { padding-top: 16px; }   /* o nome do lugar desce, para a faixa não cobrir */
+
+/* ══ 🖼️ PROMPT-254: livro de visitas e voto que cabem no celular deitado; 🏅 carimbos das salas ══ */
+/* título e ✕ fixos no alto; só o meio rola (a janela nunca passa da tela) */
+.expo-fixa { max-height: min(100%, calc(100dvh - 24px)); overflow: hidden; display: flex; flex-direction: column; }
+.expo-fixa > .al-topo { flex: none; }
+.expo-fixa .expo-rodape { flex: none; margin-top: 8px; }
+.expo-rolar { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 2px; }
+/* 🗳️ voto: a linha dos carimbos e a mensagem */
+.expo-voto-info { flex: none; margin: 2px 0 6px; display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 2px 14px; font-size: 14px; }
+.expo-carimbos-n { color: #ffd700; font-weight: 700; }
+.expo-carimbos-n b { font: 700 17px 'Rajdhani', sans-serif; }
+/* visitada: colorida, com o carimbo; não visitada: cinza. Desabilitada para o voto (menos de 5 salas) continua colorida */
+.expo-cartao.off { filter: none; opacity: 1; cursor: default; }
+.expo-cartao.nao-visitada { background: #15172a; }
+.expo-cartao.nao-visitada img { filter: grayscale(1) brightness(.65); }
+.expo-cartao.nao-visitada b, .expo-cartao.nao-visitada span { color: #8d8fa8; }
+.expo-nao-vis { font-size: 11px; color: #8d8fa8; }
+.expo-carimbo { position: absolute; top: 10%; left: 50%; transform: translateX(-50%) rotate(-12deg); font: 800 15px 'Rajdhani', sans-serif; font-style: normal;
+  letter-spacing: 1px; color: #00e676; border: 2px solid #00e676; border-radius: 6px; padding: 0 8px; background: rgba(13,15,26,.6); white-space: nowrap;
+  pointer-events: none; text-shadow: 0 1px 2px #000; }
+/* 📖 livro: duas colunas (à esquerda reagir e escrever; à direita os recados, que rolam sozinhos) */
+.expo-livro-caixa { max-width: min(860px, calc(100vw - 24px)); }
+.expo-livro-corpo { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.expo-livro-esq, .expo-livro-dir { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.expo-livro-esq .expo-reacoes { margin: 2px 0 8px; gap: 8px; }
+.expo-livro-esq .expo-recado { margin-bottom: 0; }
+.expo-reac b { font: 700 15px 'Rajdhani', sans-serif; }   /* sem o zero cortado da Orbitron; só aparece quando é maior que 0 */
+.expo-obs { display: block; margin-top: 4px; }
+@media (orientation: portrait) and (max-width: 600px) {   /* em pé (sem o jogo girado): uma coluna embaixo da outra, e a janela rola */
+  html:not(.jr-girado) .expo-livro-caixa { overflow-y: auto; }
+  html:not(.jr-girado) .expo-livro-corpo { display: block; }
+  html:not(.jr-girado) .expo-livro-esq, html:not(.jr-girado) .expo-livro-dir { overflow: visible; }
+  html:not(.jr-girado) .expo-livro-dir { margin-top: 10px; }
+}
+/* celular/tablet (deitado ou girado pelo jogo): tudo menor; no voto, 4 cartões por linha */
+html.jr-deitado .expo-fixa { padding: 8px 10px; gap: 4px; }
+html.jr-deitado .expo-fixa > .al-topo b { font-size: 18px; }
+html.jr-deitado .expo-cartoes { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+html.jr-deitado .expo-cartao { padding-bottom: 4px; gap: 0; }
+html.jr-deitado .expo-cartao b { font-size: 13px; }
+html.jr-deitado .expo-cartao span { font-size: 11px; }
+html.jr-deitado .expo-carimbo { font-size: 12px; padding: 0 6px; }
+html.jr-deitado .expo-voto-info { font-size: 13px; margin: 0 0 4px; }
+html.jr-deitado .expo-reac { min-width: 52px; padding: 4px 6px; }
+html.jr-deitado .expo-reac span { font-size: 22px; }
+html.jr-deitado .expo-recado textarea { padding: 6px 8px; font-size: 14px; }
+html.jr-deitado .expo-rec { padding: 6px 10px; }
+/* 🏅 o canto de baixo à esquerda: os créditos (na sala), o contador (no saguão) e o botão dos carimbos */
+.expo-canto { position: fixed; z-index: 15; left: max(12px, var(--sa-l, 0px)); bottom: max(12px, var(--sa-b, 0px)); display: flex; flex-direction: column;
+  align-items: flex-start; gap: 6px; pointer-events: none; max-width: calc(100vw - 160px); }
+.expo-canto .ex-creditos, .expo-canto .expo-contador { position: static; }
+.expo-canto-l { display: flex; gap: 8px; align-items: center; }
+.expo-carimbos-b { pointer-events: auto; cursor: pointer; background: rgba(13,15,26,.82); border: 1px solid rgba(255,215,0,.6); border-radius: 999px; padding: 6px 14px;
+  font: 700 15px 'Rajdhani', sans-serif; color: #ffd700; white-space: nowrap; }
+/* 🏅 completou todas as salas */
+.expo-parabens { z-index: 70; }
+.expo-confete { z-index: 80; }
+.expo-parabens .al-caixa { border: 2px solid #ffd700; }
+.expo-parabens-c { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 6px 4px; overflow-y: auto; min-height: 0; }
+.expo-par-tit { font: 700 26px 'Rajdhani', sans-serif; color: #ffd700; line-height: 1.1; }
+.expo-par-nome { font: 700 32px 'Rajdhani', sans-serif; color: #fff; line-height: 1.1; overflow-wrap: anywhere; }
+.expo-par-campo { display: flex; gap: 8px; width: 100%; max-width: 420px; }
+.expo-par-campo input { flex: 1; min-width: 0; border-radius: 10px; border: 1px solid rgba(255,255,255,.25); background: #11131f; color: #fff; padding: 8px 12px; font: 16px 'Inter', sans-serif; }
+.expo-par-data { color: #c9cbe0; font: 15px 'Inter', sans-serif; }
+.expo-par-mostre { font: 700 20px 'Rajdhani', sans-serif; color: #0d0f1a; background: #00e676; padding: 6px 16px; border-radius: 12px; }
+.expo-par-bts { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+html.jr-deitado .expo-parabens-c { gap: 6px; padding: 2px; }
+html.jr-deitado .expo-par-tit { font-size: 22px; }
+html.jr-deitado .expo-par-nome { font-size: 26px; }
+html.jr-deitado .expo-par-mostre { font-size: 18px; padding: 4px 14px; }
+.expo-fixa > .al-topo .bt-lista-x { margin-left: auto; }   /* o ✕ no canto direito */
+/* jogo girado (celular em pé): a largura do jogo é a altura da tela, e a altura é a largura */
+html.jr-girado .expo-caixa { max-width: min(520px, calc(100dvh - 32px)); }
+html.jr-girado .expo-larga { max-width: min(760px, calc(100dvh - 24px)); max-height: calc(100vw - 32px); }
+html.jr-girado .expo-livro-caixa { max-width: min(860px, calc(100dvh - 24px)); }
+html.jr-girado .expo-fixa { max-height: min(100%, calc(100vw - 24px)); }
+
+/* ══ 🐾 PROMPT-255: o pet do visitante (escolha na entrada) e as falas do pet na Exposição ══ */
+.jr-pet-fala.expo-fala { font-size: calc(14px * var(--letra, 1)); max-width: min(300px, 80vw); }
+/* a entrada: o personagem e o pet lado a lado; o Entrar sempre à vista */
+.expo-entrada-caixa { max-width: min(860px, calc(100vw - 24px)); }
+.expo-entrada-corpo { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px 16px; }
+.expo-entrada-corpo:has(> #expo-pets-col:not([hidden])) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.expo-entrada-col { min-width: 0; display: flex; flex-direction: column; }
+.expo-entrada-col .expo-txt { margin: 2px 0 8px; }
+.expo-entrada-caixa .expo-pers { margin-bottom: 4px; }
+.expo-entrada-caixa .expo-entrar { flex: none; align-self: center; margin-top: 6px; }
+.expo-pets { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.expo-pet-b { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; padding: 4px 2px; border-radius: 12px;
+  border: 2px solid transparent; background: rgba(255,255,255,.06); cursor: pointer; color: #c9cbe0; min-width: 0; }
+.expo-pet-b img { width: 100%; max-height: 58px; object-fit: contain; display: block; }
+.expo-pet-b small { font: 600 11px 'Inter', sans-serif; line-height: 1.1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.expo-pet-b.sel { border-color: #ffd700; background: rgba(255,215,0,.12); color: #fff; }
+.expo-sem-pet span { font-size: 28px; line-height: 58px; opacity: .8; }
+/* celular/tablet (deitado ou girado): personagens menores (4 × 2 cabe ao lado dos pets) */
+html.jr-deitado .expo-entrada-caixa .expo-pers { gap: 6px; }
+html.jr-deitado .expo-entrada-caixa .expo-pers-b { padding: 3px; aspect-ratio: auto; height: min(118px, calc((100dvh - 190px) / 2)); }
+html.jr-girado .expo-entrada-caixa .expo-pers-b { height: min(118px, calc((100vw - 190px) / 2)); }
+html.jr-deitado .expo-entrada-caixa .expo-pers-b img { height: 100%; width: auto; }
+html.jr-deitado .expo-pet-b img { max-height: 46px; }
+html.jr-deitado .expo-sem-pet span { line-height: 46px; font-size: 24px; }
+html.jr-deitado .expo-entrada-caixa .expo-entrar { font-size: 16px; padding: 6px 26px; }
+@media (orientation: portrait) and (max-width: 600px) {   /* em pé sem o jogo girado: um embaixo do outro */
+  html:not(.jr-girado) .expo-entrada-corpo:has(> #expo-pets-col:not([hidden])) { grid-template-columns: minmax(0, 1fr); }
+}

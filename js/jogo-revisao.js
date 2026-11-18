@@ -1021,6 +1021,7 @@ export async function iniciarJogo(sess) {
   try { MAPA_PG = await fetch(`${DADOS}/mapa-programe.json`).then(r => { if (!r.ok) throw new Error('mapa-programe.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] mapa da Ilha dos Robôs indisponível (fica a lista de fases)', e); }
   ESTUDOS = await fetch(`${DADOS}/estudos.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);
+  carregarFalasExpo();   // 🐾 PROMPT-255: as falas do pet na Exposição (sem o arquivo: sem falas)
   iniciarExposicao(await fetch(`${DADOS}/exposicao.json`).then(r => (r.ok ? r.json() : null)).catch(() => null));   // 🖼️ sem ele: sem pavilhão   // 📜 Quadro de Estudos (sem ele: nenhum quadro)
   falarCurioParam = teste && new URLSearchParams(location.search).get('falar') === 'curiosidade';
   [ALBUM, CURIO] = await Promise.all(['album.json', 'curiosidades.json'].map(f => fetch(`${DADOS}/${f}`).then(r => (r.ok ? r.json() : null)).catch(() => null)));   // 📒💡 (PROMPT-98)
@@ -4693,8 +4694,8 @@ const colegaVisivel = (uid, r) => !!r && Date.now() - (Number(r.ts) || 0) < VALI
 
 async function entrarOnline() {
   let apelido = String(sessao.nome || '').split(' ')[0];   // sem apelido: o primeiro nome
-  if (sessao.visitante) {   // 🚪 PROMPT-246: "Visitante", sem pet e sem turma
-    await iniciarOnline({ uid: sessao.uid, teste: expoVisTeste, dados: { apelido: 'Visitante', turma: '', vis: true, personagem: meuPersonagem(), cores: null, mapa: 'saguao', local: 'exposicao', x: Math.round(jog.x), y: Math.round(jog.y), dir: jog.dir } });
+  if (sessao.visitante) {   // 🚪 PROMPT-246: "Visitante", sem turma (🐾 PROMPT-255: com o pet escolhido)
+    await iniciarOnline({ uid: sessao.uid, teste: expoVisTeste, dados: { apelido: 'Visitante', turma: '', vis: true, personagem: meuPersonagem(), cores: null, ...(estado.pets?.ativo ? { pet: estado.pets.ativo, ...visualOnline(estado.pets.ativo) } : {}), mapa: 'saguao', local: 'exposicao', x: Math.round(jog.x), y: Math.round(jog.y), dir: jog.dir } });
     if (ehSaguao()) entrarNoMapaOnline('saguao', 'exposicao');
     return;
   }
@@ -5342,8 +5343,9 @@ function petFalar(tipoForcado = null) {
 
 // Mostra os balões um depois do outro (piada: abertura → pergunta, com tempo para pensar → resposta → risada).
 // PROMPT-137: texto longo vira vários balões de até ~60 letras; cada um fica o tempo de leitura
-function mostrarFalaPet(baloes, fome = false) {
-  baloes = quebrarBaloes(baloes);
+function mostrarFalaPet(baloes, fome = false, inteiro = false) {   // inteiro (🐾 PROMPT-255, a Exposição): um balão só, sem quebrar
+  if (!inteiro && emExpo()) return;   // 🐾 PROMPT-255: na Exposição, só as curiosidades e os incentivos (nada de fome, missões, humor…)
+  baloes = inteiro ? baloes : quebrarBaloes(baloes);
   pararFalaPet();
   conversa.falando = true;
   let i = 0;
@@ -5353,6 +5355,7 @@ function mostrarFalaPet(baloes, fome = false) {
     if (!b || cena?.tipo !== 'mapa') { pararFalaPet(); return; }
     el.textContent = b.texto;
     el.classList.toggle('largo', !!b.largo);   // curiosidade: balão mais largo
+    el.classList.toggle('expo-fala', emExpo());   // 🐾 PROMPT-255: 14 px
     el.hidden = false;
     el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
     caberBalaoPet(el);
@@ -5393,6 +5396,7 @@ function falarPorToque() {
   const agora = performance.now();
   if (agora - conversa.toqueT < 5000) return;
   conversa.toqueT = agora;
+  if (emExpo()) { seguidor?.reagir('feliz', 700); if (!sobreposicaoAberta()) fexp.prox = Math.min(fexp.prox, agora); return; }   // 🐾 tocar no pet: a próxima fala vem já
   if (petPodeFalar()) { petFalar(); return; }
   const pet = seguidor.pet;
   const frase = fraseDe(pet, 'sem_lealdade', { pet: nomePet(pet), apelido: apelidoAluno || String(sessao.nome || '').split(' ')[0] });
@@ -5408,6 +5412,7 @@ function falarPorToque() {
 
 // A cada quadro no mapa
 function atualizarConversa() {
+  if (emExpo()) { atualizarFalaExpo(); return; }   // 🐾 PROMPT-255: na Exposição, só curiosidades e incentivos
   if (cs?.visita) return;   // 🏠 visitando um colega: o meu pet ficou em casa
   if (cs?.ida?.fase === 'fazendo' && seguidor?.zFixo != null) return;   // 💤 dormindo na cama: não fala
   if (conversa.falando) posicionarFalaPet();
@@ -9210,8 +9215,8 @@ const expoGrupos = {};            // n → { turma, membros } lidos ao vivo (nul
 const grupoSala = (n) => { const g = expoGrupos[n] !== undefined && expoGrupos[n] !== null ? expoGrupos[n] : EXPO?.salas?.[n]; return g?.membros?.length ? g : null; };
 const souDaSala = (n) => { const g = grupoSala(n); return !!g && g.turma === sessao.turma && (g.membros || []).includes(sessao.nome); };
 // todos entram em todas as salas com grupo (sem grupo: "Em breve"); os de fora só veem o aprovado (visivelExpo).
-// 🚪 PROMPT-246: o visitante, só nas salas com algum item aprovado
-const podeEntrarSala = (n) => !!grupoSala(n) && (!sessao?.visitante || !!expoComConteudo[n]);
+// 🚪 PROMPT-254: o visitante também entra em toda sala com grupo (lá dentro, só vê o aprovado)
+const podeEntrarSala = (n) => !!grupoSala(n);
 // ✏️ Decorar: o grupo (só na montagem) e a professora (e o modo teste)
 const podeDecorar = (n) => !!grupoSala(n) && (privilegioExpo() || (souDaSala(n) && expoModo === 'montagem'));
 const estadoSala = (n) => ({ tema: EXPO?.tema_padrao, musica: null, nome: null, ...(expoSalas[n] || {}) });
@@ -9284,7 +9289,6 @@ function iniciarExposicao(j) {
 // + total (+1). Voto: exposicao_votos/{uid} = n. Livro: exposicao_livro/reacoes/{uid} = emoji e recados/{uid}.
 const MODOS_EXPO = ['montagem', 'aberto', 'encerrado'];
 let expoModo = 'montagem', expoCfg = {}, expoTotalVis = 0;
-const expoComConteudo = {};   // n → true: tem algum item aprovado (o visitante entra)
 let expoCfgPronto = null;     // resolve na 1ª leitura do exposicao_config (o visitante espera o modo)
 const contaNaoConta = () => ehProfessora() || contaEscondida(sessao.uid, sessao.nome);   // professora e teste: não contam
 const lerLocal = (k, padrao) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? padrao; } catch (_) { return padrao; } };
@@ -9307,7 +9311,9 @@ async function iniciarVisitante() {
   expoCfgPronto.resolver = pronto;
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
-    const [pers, expo] = await Promise.all([pegar('personagens.json'), pegar('exposicao.json')]);
+    carregarFalasExpo();   // 🐾 PROMPT-255
+    const spr = carregarSprites().then(() => { petsOk = true; }).catch((e) => console.warn('[jogo-revisao] pets do visitante indisponíveis', e));   // 🐾 só o sprites.json; as imagens, do pet escolhido
+    const [pers, expo] = await Promise.all([pegar('personagens.json'), pegar('exposicao.json'), spr]);
     definirPersonagens(pers);
     iniciarExposicao(expo);
     if (!EXPO) throw new Error('exposicao.json');
@@ -9331,18 +9337,165 @@ function abrirEntradaVisitante() {
   $('expo-pers').innerHTML = lista.map(id => `<button class="expo-pers-b" data-pers="${esc(id)}" aria-label="Personagem"><img src="${urlQuadro('frente', -1, id, null)}" alt="" draggable="false"/></button>`).join('');
   $('expo-pers').onclick = (e) => { const b = e.target.closest('[data-pers]'); if (b) { sel = b.dataset.pers; pintar(); tocar('clique'); } };
   pintar();
+  pintarPetsEntradaExpo();   // 🐾 PROMPT-255
   $('expo-aviso').hidden = true;
   $('expo-entrada').hidden = false;
   $('expo-entrar').onclick = async () => {
     $('expo-entrada').hidden = true;
     estado.personagem = sel;
     preCarregarQuadros(sel, null);
+    ligarPetVisitante();   // 🐾 PROMPT-255: só agora as animações do pet escolhido
     expoVisDentro = true;
     await transicao(() => abrirSaguao());
     if (!expoPrevia) entrarOnline().catch(() => {});   // 👀 a prévia não aparece para os outros
   };
 }
 let expoVisDentro = false;
+
+// 🐾 PROMPT-255: o visitante escolhe um pet (exposicao-falas.json → pets_visitante), na cor normal e filhote. Estado só local:
+// sem fome, humor, lealdade, loja ou casinha; nada no Firebase (só a presença, para os outros verem). Guardado no aparelho.
+const CHAVE_PET_VIS = 'expo_pet_visitante';
+let petVisSel = null;   // id do pet ou '' (sem pet)
+const petsDoVisitante = () => (Array.isArray(FALAS_EXPO?.pets_visitante) ? FALAS_EXPO.pets_visitante : []).filter(p => petsOk && petValido(p));
+function pintarPetsEntradaExpo() {
+  const lista = petsDoVisitante(), col = $('expo-pets-col');
+  col.hidden = !lista.length;
+  if (!lista.length) { petVisSel = ''; return; }
+  if (petVisSel === null) {
+    const salvo = lerLocal(CHAVE_PET_VIS, null);
+    petVisSel = salvo === '' || lista.includes(salvo) ? salvo : lista[Math.floor(Math.random() * lista.length)];   // 1ª visita: um já sorteado
+  }
+  $('expo-pets').innerHTML = `<button class="expo-pet-b expo-sem-pet" data-pet="" aria-label="Sem pet"><span>🚫</span><small>Sem pet</small></button>`
+    + lista.map(p => `<button class="expo-pet-b" data-pet="${esc(p)}" aria-label="${esc(NOME_PET[p] || p)}"><img src="${quadrosDe(p, 'sentado_girando')[0]}" alt="" draggable="false"/><small>${esc(NOME_PET[p] || p)}</small></button>`).join('');
+  const marcar = () => { for (const b of $('expo-pets').children) b.classList.toggle('sel', b.dataset.pet === petVisSel); };
+  $('expo-pets').onclick = (e) => { const b = e.target.closest('[data-pet]'); if (b) { petVisSel = b.dataset.pet; marcar(); tocar('clique'); } };
+  marcar();
+}
+function ligarPetVisitante() {
+  const p = petVisSel && petsDoVisitante().includes(petVisSel) ? petVisSel : '';
+  gravarLocal(CHAVE_PET_VIS, p);
+  estado.pets = { ...(estado.pets || {}), ativo: p || null, conquistados: {} };   // sem cuidados: filhote, cor normal, barriga cheia
+  if (!p) return;
+  if (!seguidor) {
+    seguidor = new PetSeguidor($('pet'), $('pet-sombra'));
+    seguidor.evitar = (x, y) => ladoForaDaPorta(x, y, [jog.x, jog.y]);
+    seguidor.semTriste = true;   // nunca triste_fome / sentado_2
+  }
+  preCarregarPet(formaDe(p));
+  seguidor.definir(p, formaDe(p));
+}
+// ao entrar numa sala nova: um feliz curto e, se a espécie tiver, uma cambalhota
+function comemorarPetExpo(longo = false) {
+  if (!seguidor?.pet || $('pet').hidden) return;
+  seguidor.reagir('feliz', longo ? 2600 : 1100);
+  if (temAnim(seguidor.forma, 'pulo_cambalhota')) setTimeout(() => { if (seguidor?.pet && !seguidor.acao) seguidor.reagir('pulo_cambalhota'); }, longo ? 2600 : 1100);
+}
+
+// 💬 PROMPT-255: o pet fala na Exposição (o do visitante, do aluno e da professora): curiosidades do tema da sala e incentivos para
+// ver outras salas. Na sala: a 1ª curiosidade em ~3 s, depois uma a cada 20 s; depois de 2, alterna curiosidade e incentivo.
+// No saguão: um incentivo em ~4 s. Com janela aberta, editando ou trocando de cena, espera. As outras falas do pet não aparecem aqui.
+let FALAS_EXPO = null;
+function carregarFalasExpo() {
+  if (FALAS_EXPO) return;
+  fetch(`${DADOS}/exposicao-falas.json`).then(r => (r.ok ? r.json() : null)).then(j => { if (j && typeof j === 'object') FALAS_EXPO = j; })
+    .catch(() => console.warn('[jogo-revisao] exposicao-falas.json indisponível'));
+}
+const emExpo = () => ehSaguao() || !!salaExpo();
+const fexp = { lugar: null, prox: 0, ditas: new Set(), nCurio: 0, ultimo: null, votoDito: false, livroDito: false, pendente: null };
+let meuVotoExpo;   // undefined: ainda não lido; null: sem voto
+const curioVistasMem = {};   // 👀 a prévia: só na memória
+const chaveCurio = () => `expo_curio_${noExpo('x')}`;
+function curioVistas() { return expoPrevia ? curioVistasMem : lerLocal(chaveCurio(), {}) || {}; }
+function guardarCurio(tema, i) {
+  const v = curioVistas(), l = Array.isArray(v[tema]) ? v[tema] : [];
+  if (!l.includes(i)) l.push(i);
+  v[tema] = l;
+  if (!expoPrevia) gravarLocal(chaveCurio(), v);
+}
+const curiosidadesDo = (tema) => { const c = FALAS_EXPO?.curiosidades || {}; return c[tema] || c[String(tema || '').replace(/_\d+$/, '')] || []; };   // afrofuturismo_2 → afrofuturismo
+function proximaCurioExpo(tema) {
+  const l = curiosidadesDo(tema);
+  if (!l.length) return null;
+  let vistas = curioVistas()[tema] || [];
+  let livres = l.map((_, i) => i).filter(i => !fexp.ditas.has(i));
+  if (!livres.length) return null;   // já falou todas nesta visita à sala
+  let novas = livres.filter(i => !vistas.includes(i));
+  if (!novas.length) { const v = curioVistas(); v[tema] = []; if (!expoPrevia) gravarLocal(chaveCurio(), v); novas = livres; }   // já ouviu todas: recomeça
+  const i = novas[0];
+  fexp.ditas.add(i); guardarCurio(tema, i);
+  return l[i];
+}
+// uma porta aberta e ainda não visitada: a próxima depois da sala atual, na ordem do saguão (no saguão: a primeira)
+function portaNaoVisitada() {
+  const ordem = ordemSalasExpo(), vis = visitadasExpo(), n = salaExpo(), i0 = n ? ordem.indexOf(n) : -1;
+  for (let d = 1; d <= ordem.length; d++) {
+    const m = ordem[(i0 + d + ordem.length) % ordem.length];
+    if (m !== n && podeEntrarSala(m) && !vis.has(m)) return m;
+  }
+  return null;
+}
+function textoIncentivo(tipo) {
+  const ab = salasAbertasExpo(), vis = visitadasExpo(), vistas = ab.filter(m => vis.has(m)).length, falta = ab.length - vistas;
+  const m = portaNaoVisitada();
+  let l = (FALAS_EXPO?.incentivos?.[tipo] || []).filter(t => typeof t === 'string' && t);
+  if (!m) l = l.filter(t => !/\{k\}|\{tema\}/.test(t));
+  if (!falta) l = l.filter(t => !/\{falta\}/.test(t));
+  if (tipo === 'saguao' && fexp.livroDito) l = l.filter(t => !/livro/i.test(t));   // o livro: no máximo uma vez por visita
+  if (!l.length) return null;
+  const t = sortear(l);
+  if (tipo === 'saguao' && /livro/i.test(t)) fexp.livroDito = true;
+  const nome = m ? tituloTemaSala(m) || temaDaSala(m)?.nome || '' : '';
+  return t.replace(/\{k\}/g, m ? String(portaDaSala(m)) : '').replace(/\{tema\}/g, nome).replace(/\{falta\}/g, String(falta)).replace(/\{vistas\}/g, String(vistas));
+}
+function falaExpo(texto) {
+  if (!texto) return false;
+  mostrarFalaPet([{ texto, espera: 0, fixo: 6000, largo: texto.length > 60 }], false, true);
+  return true;
+}
+const completoTodas = () => { const ab = salasAbertasExpo(), vis = visitadasExpo(); return !!ab.length && ab.every(m => vis.has(m)); };
+function lembrarVotoAgora() {
+  if (fexp.votoDito || expoModo !== 'aberto' || ehProfessora() || visitadasExpo().size < MIN_SALAS_VOTO) return false;
+  if (expoPrevia) meuVotoExpo = votoPrevia;
+  if (meuVotoExpo === undefined) {   // lê uma vez (só leitura)
+    meuVotoExpo = null;
+    get(ref(db, `${noExpo('exposicao_votos')}/${sessao.uid}`)).then(s => { meuVotoExpo = s.exists() ? Number(s.val()) : null; }).catch(() => {});
+    return false;
+  }
+  if (meuVotoExpo) { fexp.votoDito = true; return false; }
+  fexp.votoDito = true;
+  return falaExpo(sortear(FALAS_EXPO?.incentivos?.voto || []) || null);
+}
+// a cada quadro, na Exposição (no lugar do atualizarConversa)
+function atualizarFalaExpo() {
+  if (conversa.falando) posicionarFalaPet();
+  const agora = performance.now(), n = salaExpo(), lugar = n ? 'sala-' + n : 'saguao';
+  if (fexp.lugar !== lugar) { fexp.lugar = lugar; fexp.prox = agora + (n ? 3000 : 4000); fexp.ditas = new Set(); fexp.nCurio = 0; fexp.ultimo = null; fexp.feitoSaguao = false; }
+  const janela = transicionando || perguntaAberta || sobreposicaoAberta() || !!ex?.editando;
+  if (janela) { if (conversa.falando) pararFalaPet(); return; }   // não cobre as janelas: a fala espera
+  if (!FALAS_EXPO || !seguidor?.pet || $('pet').hidden || conversa.falando) return;
+  if (fexp.pendente) { const t = fexp.pendente; fexp.pendente = null; falaExpo(t); fexp.prox = agora + 20000; return; }
+  if (agora < fexp.prox) return;
+  fexp.prox = agora + 20000;
+  if (!n) {   // saguão: uma frase por chegada
+    if (fexp.feitoSaguao) return;
+    fexp.feitoSaguao = true;
+    if (lembrarVotoAgora()) return;
+    falaExpo(completoTodas() ? textoIncentivo('completo') : textoIncentivo('saguao'));
+    return;
+  }
+  if (lembrarVotoAgora()) return;
+  const tema = temaDaSala(n)?.id;
+  const querCurio = fexp.nCurio < 2 || fexp.ultimo !== 'curio';
+  let t = querCurio ? proximaCurioExpo(tema) : null;
+  if (t) {
+    fexp.nCurio++; fexp.ultimo = 'curio';
+    if (fexp.nCurio === 1) seguidor.reagir('feliz', 700);   // um pulinho na 1ª
+    falaExpo(t);
+    return;
+  }
+  fexp.ultimo = 'inc';
+  falaExpo(completoTodas() ? textoIncentivo('completo') : textoIncentivo('sala'));
+}
 // montagem / encerrado: o visitante vê só a mensagem (a troca de modo vale na hora)
 function avisoModoExpo() {
   const t = expoModo === 'encerrado'
@@ -9365,16 +9518,6 @@ function mudouModoExpo(antes) {
   if (ehSaguao()) { pintarPodioExpo(); montarLivroExpo(); }
 }
 
-// quais salas têm algum item aprovado (o visitante só entra nelas); uma leitura, sem as fotos
-async function carregarConteudoExpo() {
-  try {
-    const s = await get(ref(db, noExpo('exposicao_salas')));
-    for (const [n, sala] of Object.entries(s.exists() ? s.val() || {} : {})) {
-      expoComConteudo[n] = Object.values(sala?.itens || {}).some(v => { const m = v && lerItemExpo(v); return !!m && precisaAprov(catExpo(m.mv)) && m.status === 'aprovado'; });
-    }
-  } catch (e) { console.warn('[jogo-revisao] salas da exposição indisponíveis', e?.code || e); }
-}
-
 // 👣 visitas (só no modo aberto; professora e contas de teste não contam). Uma vez por aparelho/aluno
 const expoContei = new Set();
 async function registrarVisitaExpo(n = null) {
@@ -9393,7 +9536,11 @@ const chaveVisitadas = () => `expo_visitadas_${noExpo('x')}_${sessao.uid}`;
 // 👀 a prévia guarda só na memória (não mistura com a visita de verdade neste aparelho)
 const visitadasPrevia = new Set();
 const visitadasExpo = () => (expoPrevia ? new Set(visitadasPrevia) : new Set((lerLocal(chaveVisitadas(), []) || []).map(Number)));
-function marcarVisitadaExpo(n) { if (expoPrevia) { visitadasPrevia.add(n); return; } const v = visitadasExpo(); if (!v.has(n)) { v.add(n); gravarLocal(chaveVisitadas(), [...v]); } }
+function marcarVisitadaExpo(n) {
+  if (expoPrevia) visitadasPrevia.add(n);
+  else { const v = visitadasExpo(); if (!v.has(n)) { v.add(n); gravarLocal(chaveVisitadas(), [...v]); } }
+  conferirCompletoExpo();   // 🏅 PROMPT-254
+}
 
 // 🗳️ voto: um por pessoa (uid), pode trocar enquanto estiver aberto; o aluno não vota na própria sala
 const MIN_SALAS_VOTO = 5;
@@ -9409,6 +9556,7 @@ async function abrirVotoExpo(saida = false) {
   let meu = null;
   if (expoPrevia) meu = votoPrevia;
   else try { const s = await get(ref(db, `${noExpo('exposicao_votos')}/${sessao.uid}`)); meu = s.exists() ? Number(s.val()) : null; } catch (_) {}
+  meuVotoExpo = meu;
   pintarVotoExpo(meu);
 }
 function pintarVotoExpo(meu) {
@@ -9418,16 +9566,18 @@ function pintarVotoExpo(meu) {
     : fechado ? 'A votação está fechada.'
     : falta ? `Visite pelo menos ${MIN_SALAS_VOTO} salas para votar (${vis.size}/${MIN_SALAS_VOTO}).`
     : meu ? 'Você já votou. Pode trocar o voto enquanto a exposição estiver aberta.' : 'Toque na sala para votar.';
-  const ordem = ordemSalasExpo();
+  const ordem = ordemSalasExpo(), ab = salasAbertasExpo();
+  $('expo-carimbos-n').innerHTML = `🏅 Salas visitadas: <b>${ab.filter(n => vis.has(n)).length}/${ab.length}</b>`;   // 🏅 PROMPT-254
   $('expo-cartoes').innerHTML = ordem.map((n, i) => {
-    if (!podeEntrarSala(n)) return '';   // sem grupo (e, para o visitante, sem conteúdo): não entra no voto
-    const minha = souDaSala(n), off = prof || fechado || falta > 0 || minha, t = temaDaSala(n), nome = tituloTemaSala(n);
-    return `<button class="expo-cartao${meu === n ? ' votada' : ''}${off ? ' off' : ''}" data-votar="${n}"${off ? ' disabled' : ''}>
-      <img src="${IMG}/${esc(t?.imagem || '')}" alt="" loading="lazy" draggable="false"/><b>Porta ${i + 1}</b>${nome ? `<span>${esc(nome)}</span>` : ''}${minha ? '<em>sua sala</em>' : meu === n ? '<em>✔ seu voto</em>' : ''}</button>`;
+    if (!podeEntrarSala(n)) return '';   // sem grupo: não entra no voto
+    const minha = souDaSala(n), off = prof || fechado || falta > 0 || minha, t = temaDaSala(n), nome = tituloTemaSala(n), foi = vis.has(n);
+    return `<button class="expo-cartao${meu === n ? ' votada' : ''}${off ? ' off' : ''}${foi ? ' visitada' : ' nao-visitada'}" data-votar="${n}"${off ? ' disabled' : ''}>
+      <img src="${IMG}/${esc(t?.imagem || '')}" alt="" loading="lazy" draggable="false"/><b>Porta ${i + 1}</b>${nome ? `<span>${esc(nome)}</span>` : ''}${minha ? '<em>sua sala</em>' : meu === n ? '<em>✔ seu voto</em>' : ''}${foi ? '<i class="expo-carimbo">✔ VISITADA</i>' : '<small class="expo-nao-vis">Ainda não visitada</small>'}</button>`;
   }).join('');
 }
 async function votarExpo(n) {
   if (expoModo !== 'aberto' || ehProfessora() || souDaSala(n) || visitadasExpo().size < MIN_SALAS_VOTO) return;
+  meuVotoExpo = n;   // 🐾 o pet não lembra mais do voto
   if (expoPrevia) {   // 👀 a tela igual, sem gravar
     votoPrevia = n; tocar('clique'); pintarVotoExpo(n);
     if ($('expo-voto').dataset.saida) { $('expo-voto').hidden = true; fimVisitaExpo(); }
@@ -9450,6 +9600,57 @@ function fimVisitaExpo() {
     <button class="jr-btn jr-btn-ouro" id="expo-voltar-saguao">Voltar ao saguão</button>`;
   $('expo-aviso').dataset.fim = '1';
   $('expo-aviso').hidden = false;
+}
+
+// 🏅 PROMPT-254: carimbos das salas visitadas (as abertas: com grupo). Na 1ª vez que visita a última: confete e a tela de
+// parabéns ("Mostre esta tela à professora"). Guardado só no aparelho (a prévia: só na memória); nada vai para o Firebase.
+// A professora não completa (só vê os carimbos). Uma sala que abre depois sobe o total, mas quem completou continua completo.
+const salasAbertasExpo = () => ordemSalasExpo().filter(n => podeEntrarSala(n));
+const chaveCompletoExpo = () => `expo_completo_${noExpo('x')}_${sessao.uid}`;
+let completoPrevia = null;   // 👀 { ts, total, nome }
+const completoExpo = () => (expoPrevia ? completoPrevia : lerLocal(chaveCompletoExpo(), null));
+function guardarCompletoExpo(c) { if (expoPrevia) completoPrevia = c; else gravarLocal(chaveCompletoExpo(), c); }
+const nomeAlunoExpo = () => (sessao.visitante ? '' : `${sessao.nome || ''}${sessao.turma ? ' · ' + sessao.turma : ''}`);
+function textoCarimbosExpo() {
+  if (!ehProfessora() && completoExpo()) return '🏅 Completo!';
+  const ab = salasAbertasExpo(), vis = visitadasExpo();
+  return `🏅 ${ab.filter(n => vis.has(n)).length}/${ab.length}`;
+}
+function conferirCompletoExpo() {
+  if (ehProfessora() || completoExpo()) return;
+  const ab = salasAbertasExpo(), vis = visitadasExpo();
+  if (!ab.length || !ab.every(n => vis.has(n))) return;
+  guardarCompletoExpo({ ts: Date.now(), total: ab.length, nome: sessao.visitante ? '' : nomeAlunoExpo() });
+  confeteExpo(); tocar('acerto');
+  abrirParabensExpo();
+  comemorarPetExpo(true);   // 🐾 PROMPT-255
+  fexp.pendente = textoIncentivo('completo');   // fala quando a tela de parabéns fechar
+}
+const dataHoraBrasilia = (ts) => new Date(ts).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+function abrirParabensExpo() {
+  const c = completoExpo();
+  if (!c || ehProfessora()) return;
+  const nome = sessao.visitante ? c.nome : nomeAlunoExpo() || c.nome;
+  $('expo-parabens-c').innerHTML = `<b class="expo-par-tit">🏅 Você visitou todas as ${Number(c.total) || salasAbertasExpo().length} salas!</b>
+    ${nome ? `<div class="expo-par-nome">${esc(nome)}</div>`
+      : '<div class="expo-par-campo"><input id="expo-par-nome" maxlength="40" autocomplete="off" placeholder="Digite seu nome"/><button class="jr-btn jr-btn-ouro" id="expo-par-ok">Confirmar</button></div>'}
+    <div class="expo-par-data">${esc(dataHoraBrasilia(c.ts))}</div>
+    <div class="expo-par-mostre">📸 Mostre esta tela à professora</div>
+    <div class="expo-par-bts"><button class="jr-btn jr-btn-sec" id="expo-par-carimbos">Ver os carimbos</button><button class="jr-btn jr-btn-ouro" id="expo-par-fechar">Fechar</button></div>`;
+  $('expo-parabens').hidden = false;
+}
+function confirmarNomeExpo() {
+  const c = completoExpo(), txt = String($('expo-par-nome')?.value || '').replace(/\s+/g, ' ').trim();
+  if (!c || !txt) return;
+  if (txt.length > 40) { avisoExpo('O nome pode ter até 40 letras.'); return; }
+  if (temPalavrao(txt)) { avisoExpo('🚫 Esse nome tem uma palavra que não pode. Escreva de outro jeito.'); tocar('erro'); return; }
+  guardarCompletoExpo({ ...c, nome: txt });
+  tocar('clique');
+  abrirParabensExpo();
+}
+function abrirCarimbosExpo() {
+  if (!ehProfessora() && completoExpo()) abrirParabensExpo();
+  else abrirVotoExpo(false);
 }
 
 // 📖 livro de visitas: um pedestal perto da porta de vidro. Reações (uma por pessoa, pode trocar) e um recado
@@ -9487,16 +9688,15 @@ function pintarReacoesLivro() {
   const n = Object.fromEntries(REACOES_LIVRO.map(e => [e, 0]));
   for (const v of Object.values(livroReac)) if (v in n) n[v]++;
   const minha = livroReac[sessao.uid], pode = expoModo === 'aberto' || privilegioExpo();
-  $('expo-reacoes').innerHTML = REACOES_LIVRO.map(e => `<button class="expo-reac${minha === e ? ' sel' : ''}" data-reac="${e}"${pode ? '' : ' disabled'}><span>${e}</span><b>${n[e]}</b></button>`).join('');
+  $('expo-reacoes').innerHTML = REACOES_LIVRO.map(e => `<button class="expo-reac${minha === e ? ' sel' : ''}" data-reac="${e}"${pode ? '' : ' disabled'}><span>${e}</span>${n[e] > 0 ? `<b>${n[e]}</b>` : ''}</button>`).join('');
 }
 function pintarRecadoLivro() {
   const meu = livroRecados[sessao.uid], el = $('expo-recado');
   if (meu) { el.innerHTML = `<p class="expo-meu">Seu recado: “${esc(meu.texto)}” <em>${expoPrevia ? '👀 prévia: não gravado' : meu.ok === true ? '✔ no livro' : '⏳ esperando a professora'}</em></p>`; return; }
   if (expoModo !== 'aberto' && !privilegioExpo()) { el.innerHTML = ''; return; }
-  el.innerHTML = `<label class="expo-rotulo">Deixe um recado (opcional)</label>
-    <textarea id="expo-recado-txt" maxlength="120" rows="2" placeholder="O que você achou da exposição?"></textarea>
+  el.innerHTML = `<textarea id="expo-recado-txt" maxlength="120" rows="2" placeholder="O que você achou da exposição?"></textarea>
     <div class="expo-linha"><small id="expo-recado-n">0/120</small><button class="jr-btn jr-btn-ouro" id="expo-recado-env">Enviar</button></div>
-    <small class="expo-obs">Assinado como “${esc(assinaturaLivro())}”. Aparece no livro depois que a professora aprovar.</small>`;
+    <small class="expo-obs">Assinado como ${esc(assinaturaLivro())}. Aparece no livro depois que a professora aprovar.</small>`;
 }
 function pintarRecadosLivro() {
   const ok = Object.values(livroRecados).filter(v => v && v.ok === true && typeof v.texto === 'string').sort((a, b) => (Number(b.ts) || 0) - (Number(a.ts) || 0));
@@ -9558,8 +9758,21 @@ function confeteExpo() {
 }
 function ligarEventosPublicoExpo() {
   $('btn-expo-votar').addEventListener('click', () => abrirVotoExpo(false));
+  $('btn-expo-carimbos').addEventListener('click', () => { tocar('clique'); abrirCarimbosExpo(); });   // 🏅 PROMPT-254
+  if (window.visualViewport) {   // ⌨️ PROMPT-254: com o teclado aberto, o livro e os parabéns ficam na parte visível da tela
+    const vv = window.visualViewport, seguir = () => { const g = document.documentElement.classList.contains('jr-girado'); for (const id of ['expo-livro', 'expo-parabens']) { const el = $(id); el.style.top = g ? '' : vv.offsetTop + 'px'; el.style.height = g ? '' : vv.height + 'px'; } };   // girado: o jogo já cuida
+    vv.addEventListener('resize', seguir); vv.addEventListener('scroll', seguir); seguir();
+  }
+  $('expo-parabens').addEventListener('click', (e) => {
+    if (e.target.closest('#expo-par-fechar') || e.target === $('expo-parabens')) { $('expo-parabens').hidden = true; return; }
+    if (e.target.closest('#expo-par-carimbos')) { $('expo-parabens').hidden = true; abrirVotoExpo(false); return; }
+    if (e.target.closest('#expo-par-ok')) confirmarNomeExpo();
+  });
+  $('expo-parabens').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && e.target.id === 'expo-par-nome') confirmarNomeExpo(); });
+  $('expo-parabens').addEventListener('focusin', (e) => { if (e.target.id === 'expo-par-nome') setTimeout(() => $('expo-par-ok')?.scrollIntoView({ block: 'nearest' }), 350); });
   $('expo-voto-x').addEventListener('click', () => { $('expo-voto').hidden = true; });
   $('expo-voto').addEventListener('click', (e) => {
+    if (e.target === $('expo-voto') && !$('expo-voto').dataset.saida) { $('expo-voto').hidden = true; return; }   // 🏅 tocar fora fecha (menos no "Antes de sair")
     const b = e.target.closest('[data-votar]');
     if (b && !b.disabled) votarExpo(Number(b.dataset.votar));
     if (e.target.closest('#expo-sair-sem')) { $('expo-voto').hidden = true; fimVisitaExpo(); }
@@ -9570,6 +9783,8 @@ function ligarEventosPublicoExpo() {
     if (ehSaguao()) { const S = EXPO.saguao; posicionarJogador(S.entrada[0], S.entrada[1] - 40, 'costas'); soltouDesdeTroca = false; }
   });
   $('expo-livro-x').addEventListener('click', fecharLivroExpo);
+  $('expo-livro').addEventListener('click', (e) => { if (e.target === $('expo-livro')) fecharLivroExpo(); });
+  $('expo-livro').addEventListener('focusin', (e) => { if (e.target.id === 'expo-recado-txt') setTimeout(() => $('expo-recado-env')?.scrollIntoView({ block: 'nearest' }), 350); });   // ⌨️ PROMPT-254: o Enviar à vista
   $('expo-livro').addEventListener('click', (e) => {
     const r = e.target.closest('[data-reac]');
     if (r) reagirLivro(r.dataset.reac);
@@ -9669,7 +9884,6 @@ async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (ap
   const sd = saidaFaixa(S.saida_praca, S.entrada, naTrilha, LH);
   cena = { tipo: 'mapa', n: 'saguao', salao: true, w: LW, h: LH, alturaPersonagem: Number(S.altura_personagem) || 120, cfg: { entrada: S.entrada, saidas: [sd.cfg] }, grade, portas: {}, naTrilha, saidas: [sd.saida] };
   mapearPortasExpo();   // 🚪 PROMPT-240: cada porta abre a sala da ordem da visita
-  if (sessao.visitante) await carregarConteudoExpo();   // 🚪 PROMPT-246: quais salas abrem para o visitante
   desenharPlacasExpo();
   montarLivroExpo();    // 📖 PROMPT-246
   destinoEspecial = null;
@@ -9737,8 +9951,7 @@ function portaExpoEm(p) {
 function entrarSalaExpo(n) {
   const p = cena.expoPortas?.find(x => x.n === n);
   if (!p) return;
-  if (!grupoSala(n) || (sessao.visitante && !podeEntrarSala(n))) { balaoExpo(p, '🔜 Em breve'); return; }   // 🚪 o visitante: só salas com conteúdo aprovado
-  if (!podeEntrarSala(n)) { balaoExpo(p, '🔒 Sala do grupo — só para integrantes'); tocar('erro'); return; }
+  if (!podeEntrarSala(n)) { balaoExpo(p, '🔜 Em breve'); return; }   // 🚪 PROMPT-254: sem grupo, para todos
   transicao(() => abrirSalaExpo(n));
 }
 function balaoExpo(p, txt) {   // o balão das portas do ginásio, sem botões
@@ -9778,7 +9991,9 @@ async function abrirSalaExpo(n) {
   atualizarBotaoPet();
   entrarNoMapaOnline('sala-' + n, 'exposicao');
   colocarObrigatoriosExpo(n);   // ⭐ PROMPT-244
+  const novaExpo = !visitadasExpo().has(n);
   registrarVisitaExpo(n); marcarVisitadaExpo(n);   // 👣 PROMPT-246
+  if (novaExpo && !(!ehProfessora() && completoExpo() && completoTodas())) setTimeout(() => comemorarPetExpo(), 350);   // 🐾 PROMPT-255: sala nova
   pintarCreditosExpo(n);   // 🏷️
   if (souDaSala(n) && !privilegioExpo() && expoModo !== 'montagem') avisoExpo(expoModo === 'aberto' ? '🔒 A exposição está aberta ao público' : '🔒 A exposição terminou: a sala fica só para ver');
   ouvirExpo(['tema', 'tema_professora', 'musica', 'nome', 'nome_pendente', 'nome_motivo', 'cores/parede', 'cores/chao'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
@@ -9861,6 +10076,9 @@ function atualizarHudExpo() {
   if (bv.hidden !== semV) bv.hidden = semV;
   const cr = $('ex-creditos'), semCr = !(salaExpo() && cr.dataset.sala === String(salaExpo()) && $('tela-cena').hidden === false && !ex?.editando && !ex?.ver);
   if (cr.hidden !== semCr) cr.hidden = semCr;
+  const bk = $('btn-expo-carimbos'), semK = !((ehSaguao() || salaExpo()) && !$('tela-cena').hidden && !ex?.editando && !ex?.ver && (!sessao.visitante || expoVisDentro));   // 🏅 PROMPT-254
+  if (bk.hidden !== semK) bk.hidden = semK;
+  if (!semK && performance.now() - (bk._t || 0) > 400) { bk._t = performance.now(); const tk = textoCarimbosExpo(); if (bk.textContent !== tk) bk.textContent = tk; }   // lê o aparelho no máximo 2,5× por segundo
   const ct = $('expo-contador'), semCt = !(ehSaguao() && expoModo !== 'montagem' && !$('tela-cena').hidden), tt = `👣 ${expoTotalVis} visitante${expoTotalVis === 1 ? '' : 's'}`;
   if (ct.hidden !== semCt) ct.hidden = semCt;
   if (!semCt && ct.textContent !== tt) ct.textContent = tt;
@@ -10154,7 +10372,7 @@ async function colocarObrigatoriosExpo(n) {
   if (!(souDaSala(n) || privilegioExpo())) return;   // visitantes não gravam nada
   const doTema = obrigDaSala(n);   // os do tema da sala + o rádio (todas_salas)
   let lista = doTema;
-  if (lista.some(it => it.so_com_audio) && !(await temAudioGrio(n))) lista = lista.filter(it => !it.so_com_audio);   // 📻 sem o áudio da sala: sem rádio
+  if (lista.some(it => it.so_com_audio) && (!audiosExpo() || !(await temAudioGrio(n)))) lista = lista.filter(it => !it.so_com_audio);   // 📻 sem o áudio da sala (ou "audios": false): sem rádio
   if (!ex || ex.n !== n || salaExpo() !== n) return;
   let st;
   try { const s = await get(ref(db, `${noExpo('exposicao_salas')}/${n}`)); st = s.exists() ? s.val() || {} : {}; }
@@ -10266,7 +10484,7 @@ function refazerGradeExpo() {
     if (!ex || cena?.expoSala !== ex.n) return;
     const g = Uint8Array.from(ex.gradeBase);
     g.gw = ex.gradeBase.gw; g.gh = ex.gradeBase.gh;
-    for (const m of ex.itens.values()) if (catExpo(m.mv)?.tipo === 'chao' && !m.sobre) { const [w, h] = tamExpo(m); zerarNaGrade(g, baseDeChao(m, w, h)); }   // o de cima não ocupa o chão
+    for (const m of ex.itens.values()) if (catExpo(m.mv)?.tipo === 'chao' && !m.sobre && !(m.mv === RADIO_EXPO && !ex.audioOk)) { const [w, h] = tamExpo(m); zerarNaGrade(g, baseDeChao(m, w, h)); }   // o de cima não ocupa o chão   // 📻 PROMPT-254: o rádio escondido não ocupa o chão
     cena.grade = g;
   }, 60);
 }
@@ -10841,6 +11059,8 @@ function ligarEditorExpo() {
 // move, não apaga. Quem não grava (visitante, colega de fora) e entra numa sala ainda sem o rádio gravado vê um rádio só no aparelho.
 let grio = null;   // { n, audio, leg, frases, timer, fim, bloqueado }
 const RADIO_EXPO = 'radio', RADIO_LOCAL = '_radio_local';
+// 🔇 PROMPT-254: exposicao.json → "audios": false: sem rádio, sem áudio de sala, sem ▶️/⏸️/CC (os rádios gravados ficam no Firebase, escondidos)
+const audiosExpo = () => EXPO?.audios !== false;
 const radioTocando = () => !!grio && grio.n === ex?.n && !grio.audio.paused && !grio.audio.ended;
 function radioExpoEm(p) {
   if (!ex?.audioOk) return null;
@@ -10870,7 +11090,7 @@ async function garantirRadioLocal() {
 }
 const ccGrio = () => { try { return localStorage.getItem('jr_grio_cc') !== '0'; } catch (_) { return true; } };
 async function montarGrio(n) {
-  if (!(await temAudioGrio(n)) || salaExpo() !== n || grio) return;
+  if (!audiosExpo() || !(await temAudioGrio(n)) || salaExpo() !== n || grio) return;   // 🔇 PROMPT-254
   const leg = await legendaGrio(n);
   if (salaExpo() !== n || grio) return;
   const g = grio = { n, audio: new Audio(srcAudioGrio(n)), leg, frases: leg?.tipo === 'vtt' ? leg.frases : null, fim: false, bloqueado: false };

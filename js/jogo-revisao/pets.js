@@ -261,6 +261,9 @@ const comPesoNoturno = (l) => (noite ? [...l, ...l.filter(a => DORMIR.has(a))] :
 // Ações do pet seguindo o personagem nos mapas (personagem parado 4 s): a mesma lista do parado (acoes_parado)
 const MS_ANTES_ACAO = 4000;
 const MS_FOME = 5500;   // com fome: a sequência `fome` (~4,7 s: cheira o ar e lambe os beiços) começa a cada ~10 s
+// 🐾 PROMPT-255: triste_fome, sentado_2 e o que cai neles pela reserva (farejar, lamber…, quando o pet não tem a própria)
+const POSES_TRISTES = ['triste_fome', 'sentado_2'];
+const poseTriste = (forma, anim) => POSES_TRISTES.includes(anim) || (!temAnim(forma, anim) && POSES_TRISTES.includes(SPR?.reserva?.[anim]));
 const temAcoesMapa = (forma) => acoesParado(forma).some(a => temSequencia(forma, a));
 // aba em segundo plano: os seguidores param a ação (a sequência roda por setTimeout, que continua com a aba escondida)
 const SEGUIDORES = new Set();
@@ -452,6 +455,7 @@ export class PetSeguidor {
   }
 
   trocar(anim, reiniciar) {
+    if (this.semTriste && poseTriste(this.forma, anim)) anim = 'sentado_girando';   // 🐾 PROMPT-255: o pet do visitante nunca fica triste
     if (this.anim === anim && !reiniciar) return;
     this.anim = anim; this.q = 0; this.t = 0; this.vez = 1;
     this.lista = quadrosDe(this.forma, anim);

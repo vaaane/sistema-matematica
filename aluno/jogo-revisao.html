@@ -429,10 +429,13 @@
   <!-- 🖼️ Exposição (PROMPT-EXPOSICAO-2): tema da sala, conteúdo do item e o visualizador -->
   <!-- 🚪 PROMPT-246: Exposição aberta ao público -->
   <div id="expo-entrada" class="al-fundo expo-modal" hidden role="dialog" aria-label="Escolha seu personagem">
-    <div class="al-caixa expo-caixa">
+    <div class="al-caixa expo-caixa expo-fixa expo-entrada-caixa">
       <div class="al-topo expo-topo"><b>🖼️ Exposição Virtual da Consciência Negra</b></div>
-      <p class="expo-txt">Escolha seu personagem e entre</p>
-      <div class="expo-pers" id="expo-pers"></div>
+      <!-- 🐾 PROMPT-255: o personagem e o pet lado a lado (no celular deitado cabe tudo com o Entrar) -->
+      <div class="expo-entrada-corpo">
+        <div class="expo-entrada-col"><p class="expo-txt">Escolha seu personagem e entre</p><div class="expo-pers" id="expo-pers"></div></div>
+        <div class="expo-entrada-col" id="expo-pets-col" hidden><p class="expo-txt">🐾 Escolha um pet para te acompanhar</p><div class="expo-pets" id="expo-pets"></div></div>
+      </div>
       <button class="jr-btn jr-btn-ouro expo-entrar" id="expo-entrar">Entrar ➜</button>
     </div>
   </div>
@@ -440,24 +443,33 @@
     <div class="al-caixa expo-caixa"><div class="expo-aviso-txt" id="expo-aviso-txt"></div></div>
   </div>
   <div id="expo-voto" class="al-fundo expo-modal" hidden role="dialog" aria-label="Votar na sala favorita">
-    <div class="al-caixa expo-caixa expo-larga">
+    <div class="al-caixa expo-caixa expo-larga expo-fixa">
       <div class="al-topo"><b id="expo-voto-tit">🗳️ Qual sala você mais gostou?</b><button class="bt-lista-x" id="expo-voto-x" aria-label="Fechar">✕</button></div>
-      <p class="expo-txt" id="expo-voto-msg"></p>
-      <div class="expo-cartoes" id="expo-cartoes"></div>
+      <!-- 🏅 PROMPT-254: os carimbos das salas visitadas -->
+      <p class="expo-txt expo-voto-info"><span class="expo-carimbos-n" id="expo-carimbos-n"></span><span id="expo-voto-msg"></span></p>
+      <div class="expo-rolar"><div class="expo-cartoes" id="expo-cartoes"></div></div>
       <div class="expo-rodape" id="expo-voto-rodape"></div>
     </div>
   </div>
   <div id="expo-livro" class="al-fundo expo-modal" hidden role="dialog" aria-label="Livro de visitas">
-    <div class="al-caixa expo-caixa expo-larga">
+    <div class="al-caixa expo-caixa expo-larga expo-fixa expo-livro-caixa">
       <div class="al-topo"><b>📖 Livro de visitas</b><button class="bt-lista-x" id="expo-livro-x" aria-label="Fechar">✕</button></div>
-      <div class="expo-reacoes" id="expo-reacoes"></div>
-      <div class="expo-recado" id="expo-recado"></div>
-      <div class="expo-recados" id="expo-recados"></div>
+      <!-- 📖 PROMPT-254: duas colunas (à esquerda reagir e escrever; à direita os recados, que rolam) -->
+      <div class="expo-livro-corpo">
+        <div class="expo-livro-esq"><div class="expo-reacoes" id="expo-reacoes"></div><div class="expo-recado" id="expo-recado"></div></div>
+        <div class="expo-livro-dir"><div class="expo-recados" id="expo-recados"></div></div>
+      </div>
     </div>
   </div>
   <div id="expo-podio" class="expo-podio" hidden aria-live="polite"></div>
-  <div id="expo-contador" class="expo-contador" hidden></div>
-  <div id="ex-creditos" class="ex-creditos" hidden></div>
+  <!-- 🏅 PROMPT-254: o canto de baixo à esquerda: o contador, o botão dos carimbos e (na sala) os créditos -->
+  <div class="expo-canto">
+    <div id="ex-creditos" class="ex-creditos" hidden></div>
+    <div class="expo-canto-l"><div id="expo-contador" class="expo-contador" hidden></div><button class="expo-carimbos-b" id="btn-expo-carimbos" hidden aria-label="Salas visitadas">🏅</button></div>
+  </div>
+  <div id="expo-parabens" class="al-fundo expo-modal expo-parabens" hidden role="dialog" aria-label="Você visitou todas as salas">
+    <div class="al-caixa expo-caixa expo-fixa"><div class="expo-parabens-c" id="expo-parabens-c"></div></div>
+  </div>
   <div id="ex-temas" class="al-fundo" hidden role="dialog" aria-label="Tema da sala">
     <div class="al-caixa cs-comida-caixa">
       <div class="al-topo"><b>🎨 Tema da sala</b><button class="bt-lista-x" data-fechar="ex-temas" aria-label="Fechar">✕</button></div>

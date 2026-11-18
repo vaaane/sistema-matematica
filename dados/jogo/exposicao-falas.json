@@ -1,0 +1,112 @@
+{
+  "_nota": "PROMPT-255: falas do pet na Exposição. curiosidades por id de tema (exposicao.json → temas[].id), não por número de sala. {k} = número de uma porta não visitada (a ordem do saguão), {tema} = o nome do tema dela, {falta} = salas abertas que faltam, {vistas} = salas visitadas.",
+  "pets_visitante": [
+    "elefante",
+    "gato",
+    "gaviao",
+    "axolote",
+    "capivara",
+    "tigre",
+    "morcego",
+    "unicornio",
+    "dragao_vermelho"
+  ],
+  "curiosidades": {
+    "raizes": [
+      "A África tem 54 países e mais de 2.000 línguas!",
+      "Os fósseis mais antigos da nossa espécie, o Homo sapiens, foram achados na África.",
+      "Existiram reinos poderosos na África, como Kush, Gana e Mali.",
+      "Caçula, cafuné e moleque são palavras que vieram de línguas africanas."
+    ],
+    "saberes": [
+      "A universidade mais antiga do mundo ainda em funcionamento fica no Marrocos e foi fundada no ano 859.",
+      "O osso de Ishango, do Congo, tem cerca de 20 mil anos, e as marcas nele podem ser contas!",
+      "Tombuctu, no Mali, guardava milhares de livros de matemática, astronomia e medicina.",
+      "Muitos africanos trouxeram ao Brasil técnicas de mineração, de trabalho com metais e de agricultura."
+    ],
+    "travessia": [
+      "O Brasil foi o país que mais recebeu africanos escravizados: cerca de 4 milhões de pessoas.",
+      "A viagem pelo oceano Atlântico podia durar mais de um mês, em porões apertados.",
+      "O Brasil foi o último país das Américas a acabar com a escravidão, em 1888.",
+      "O Cais do Valongo, no Rio de Janeiro, por onde chegaram muitos africanos, é Patrimônio Mundial da UNESCO."
+    ],
+    "resistencia": [
+      "O Quilombo dos Palmares resistiu por quase 100 anos, na Serra da Barriga, em Alagoas.",
+      "Zumbi dos Palmares morreu em 20 de novembro de 1695. Por isso, hoje é o Dia da Consciência Negra!",
+      "Dandara lutou em Palmares e é lembrada como uma heroína.",
+      "Hoje mais de 1 milhão de pessoas vivem em comunidades quilombolas no Brasil."
+    ],
+    "movimentos": [
+      "Desde 2024, o 20 de novembro é feriado nacional.",
+      "Uma lei de 2003 tornou obrigatório ensinar história e cultura afro-brasileira nas escolas.",
+      "O Movimento Negro Unificado foi criado em 1978, em São Paulo.",
+      "A Lei de Cotas nas universidades federais é de 2012."
+    ],
+    "vozes": [
+      "Carolina Maria de Jesus escreveu Quarto de Despejo, que foi traduzido para mais de 10 línguas!",
+      "Machado de Assis, o primeiro presidente da Academia Brasileira de Letras, era negro.",
+      "Conceição Evaristo criou a palavra \"escrevivência\": escrever a partir da própria vida.",
+      "Maria Firmina dos Reis escreveu Úrsula em 1859, um dos primeiros romances contra a escravidão no Brasil."
+    ],
+    "ciencia": [
+      "Katherine Johnson fez os cálculos que ajudaram a NASA a levar astronautas até a Lua.",
+      "André Rebouças, engenheiro negro do século 19, projetou docas e ferrovias no Brasil.",
+      "Mark Dean ajudou a criar o computador pessoal da IBM.",
+      "Sônia Guimarães foi a primeira mulher negra doutora em Física no Brasil."
+    ],
+    "esporte": [
+      "Pelé, o Rei do Futebol, ganhou 3 Copas do Mundo!",
+      "Adhemar Ferreira da Silva ganhou dois ouros olímpicos no salto triplo, em 1952 e 1956.",
+      "Rebeca Andrade é a atleta brasileira com mais medalhas olímpicas: são 6!",
+      "Daiane dos Santos criou um salto que leva o nome dela."
+    ],
+    "musica": [
+      "Pelo Telefone, de 1916, é considerado o primeiro samba gravado.",
+      "A roda de capoeira é Patrimônio Cultural da Humanidade desde 2014.",
+      "O samba-reggae nasceu em Salvador, com o Olodum.",
+      "Maracatu, jongo e tambor de crioula têm raízes africanas."
+    ],
+    "identidade": [
+      "Mais da metade dos brasileiros se declara preta ou parda.",
+      "Em muitos povos africanos, as tranças podem mostrar a idade, a família e a origem de uma pessoa.",
+      "Se ver em livros, filmes e brinquedos faz bem para a autoestima: isso é representatividade!",
+      "A boneca abayomi é feita só com nós de pano, sem costura e sem cola."
+    ],
+    "fe": [
+      "No Brasil, cada pessoa pode seguir a religião que quiser, ou nenhuma. É lei!",
+      "O candomblé e a umbanda são religiões de matriz africana.",
+      "21 de janeiro é o Dia Nacional de Combate à Intolerância Religiosa.",
+      "Mãe Menininha do Gantois foi uma das mães de santo mais respeitadas do Brasil."
+    ],
+    "afrofuturismo": [
+      "O Pantera Negra, de 1966, foi o primeiro super-herói negro das grandes editoras de quadrinhos.",
+      "Wakanda é um país africano inventado, com a tecnologia mais avançada do mundo.",
+      "A palavra \"afrofuturismo\" foi criada em 1993.",
+      "Octavia Butler, escritora de ficção científica, ganhou os maiores prêmios do gênero."
+    ],
+    "racismo_hoje": [
+      "No Brasil, racismo é crime, e não prescreve: pode ser punido a qualquer tempo.",
+      "Desde 2023, a injúria racial também é crime de racismo.",
+      "Viu racismo? Denuncie no Disque 100.",
+      "Não rir de piada racista já é uma atitude contra o racismo!"
+    ]
+  },
+  "incentivos": {
+    "sala": [
+      "Já viu a porta {k}? Lá fala de {tema}! 🐾",
+      "Faltam {falta} salas para completar seus carimbos! 🏅",
+      "Vamos para outra sala? Eu quero conhecer {tema}!",
+      "Você já viu {vistas} salas. Bora para a próxima?"
+    ],
+    "voto": [
+      "Já dá para votar na sua sala favorita! 🗳️"
+    ],
+    "saguao": [
+      "Escolhe uma porta! Que tal a {k}: {tema}?",
+      "Não esquece de deixar um recado no livro de visitas! 📖"
+    ],
+    "completo": [
+      "Você viu TODAS as salas! Mostra os carimbos para a professora! 🏅"
+    ]
+  }
+}
