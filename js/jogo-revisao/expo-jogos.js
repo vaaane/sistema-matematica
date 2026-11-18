@@ -85,7 +85,7 @@ function fecharMenu() { $('expo-jogos-menu').hidden = true; }
 const chaveTut = (id) => `expo_jogo_tut_${id}`;
 const viuTutorial = (id) => (C.previa() ? tutMem.has(id) : !!C.lerLocal(chaveTut(id), false));
 function marcarTutorial(id) { if (C.previa()) tutMem.add(id); else C.gravarLocal(chaveTut(id), true); }
-export function abrirJogoExpo(id, { npc = null, soTutorial = false } = {}) {
+export function abrirJogoExpo(id, { npc = null, soTutorial = false, soVer = false } = {}) {   // soVer: só o tutorial, termina em "✔ Entendi" (⚔️ PROMPT-260)
   const j = jogosExpo()[id];
   if (!j) return;
   limparTimers();
@@ -94,9 +94,11 @@ export function abrirJogoExpo(id, { npc = null, soTutorial = false } = {}) {
   aberto = { id, j, op, npc };
   $('ej-tit').textContent = `${j.icone} ${j.nome}`;
   $('expo-jogo').hidden = false;
-  if (soTutorial || !viuTutorial(id)) mostrarTutorial(id, 0, soTutorial ? 'fechar-ou-jogar' : 'jogar');
+  if (soVer) mostrarTutorial(id, 0, 'ver');
+  else if (soTutorial || !viuTutorial(id)) mostrarTutorial(id, 0, soTutorial ? 'fechar-ou-jogar' : 'jogar');
   else comecar();
 }
+export const fecharJogoExpo = () => { if (aberto) fecharJogo(); };
 function fecharJogo() { limparTimers(); aberto = null; $('expo-jogo').hidden = true; $('ej-c').innerHTML = ''; }
 function comecar() {
   limparTimers();
@@ -114,7 +116,7 @@ function mostrarTutorial(id, i, fim) {
   let alvo = $('ej-c');
   if (sobre) { alvo = $('ej-tut-sobre'); if (!alvo) { alvo = document.createElement('div'); alvo.id = 'ej-tut-sobre'; alvo.className = 'ej-tut-sobre'; $('ej-c').append(alvo); } }
   else limparTimers();
-  const fimBt = sobre ? '<button class="jr-btn jr-btn-ouro" data-ej="tut-voltar">↩ Voltar ao jogo</button>' : '<button class="jr-btn jr-btn-ouro" data-ej="tut-jogar">▶ Jogar</button>';
+  const fimBt = sobre ? '<button class="jr-btn jr-btn-ouro" data-ej="tut-voltar">↩ Voltar ao jogo</button>' : fim === 'ver' ? '<button class="jr-btn jr-btn-ouro" data-ej="fechar">✔ Entendi</button>' : '<button class="jr-btn jr-btn-ouro" data-ej="tut-jogar">▶ Jogar</button>';
   alvo.innerHTML = `<div class="ej-tut"><div class="ej-tut-fig">${figuraTutorial(id, i)}</div>
     <div class="ej-tut-txt"><small>Como jogar · ${i + 1}/${n}</small><p>${C.esc(cards[i] || '')}</p>
       <div class="ej-tut-bts"><button class="jr-btn jr-btn-sec" data-ej="tut-ant"${i === 0 ? ' disabled' : ''}>← Anterior</button>
@@ -197,7 +199,7 @@ async function fimTabuleiro(res) {
     <div class="ej-fim-bts"><button class="jr-btn jr-btn-sec" data-ej="fechar">Fechar</button><button class="jr-btn jr-btn-ouro" data-ej="de-novo">🔁 Jogar de novo</button></div>`;
   el.hidden = false;
 }
-const avisoGravar = (st) => (st === 'previa' ? ' · 👀 prévia: não gravado' : st === 'prof' ? ' · professora: não grava' : st === 'fechado' ? ' · 🔒 exposição fechada: não gravado'
+export const avisoGravar = (st) => (st === 'previa' ? ' · 👀 prévia: não gravado' : st === 'prof' ? ' · professora: não grava' : st === 'fechado' ? ' · 🔒 exposição fechada: não gravado'
   : st === 'erro' ? ' · ⚠️ não gravou' : st === 'teste' ? ' · conta de teste' : '');
 
 // ══ 🔷 Shisima ══

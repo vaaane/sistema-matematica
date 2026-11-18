@@ -6510,3 +6510,34 @@ html.jr-girado .ej-tab.ej-yote { height: auto; width: min(100%, calc(100cqh * va
 html.jr-girado .ej-cartas { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 html.jr-girado .ej-item { grid-template-columns: 40px 1fr auto; }
 html.jr-girado .ej-item-bts { grid-column: auto; }
+
+/* ══ ⚔️ PROMPT-260: desafio ao vivo na Exposição (Shisima e Yoté entre duas pessoas) ══ */
+.expo-duelo-b { width: auto !important; padding: 0 10px !important; font: 700 14px 'Rajdhani', sans-serif !important; color: #00e676; border-color: rgba(0,230,118,.6) !important; white-space: nowrap; }
+.expo-duelo-jogando { width: auto !important; padding: 0 8px !important; font: 600 13px 'Inter', sans-serif !important; color: #c9cbe0; opacity: .85; white-space: nowrap; display: inline-flex; align-items: center; }
+.ed-fundo .ed-caixa-p { width: min(420px, calc(100vw - 32px)); text-align: center; display: flex; flex-direction: column; gap: 12px; padding: 18px 16px; }
+.ed-conv-t { margin: 0; font: 600 18px/1.35 'Inter', sans-serif; color: #fff; }
+.ed-conv-t b { color: #ffd700; }
+.ed-barra { height: 8px; border-radius: 999px; background: #1c1f35; overflow: hidden; flex: none; }
+.ed-barra[hidden] { display: none; }
+.ed-barra i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #00d4ff, #00e676); border-radius: 999px; }
+.ed-barra i.pouco { background: linear-gradient(90deg, #ff7b2e, #ef4444); }
+.ed-bts { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.ed-link { background: none; border: 0; color: #00d4ff; font: 600 14px 'Inter', sans-serif; cursor: pointer; text-decoration: underline; }
+.ed-topo { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; margin-bottom: 6px; flex: none; }
+.ed-topo b { font: 700 18px 'Rajdhani', sans-serif; color: #b9a8ff; white-space: nowrap; }
+.ed-topo b.minha { color: #ffd700; }
+.ed-quem { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; width: 100%; background: #15172a; border: 1px solid #2c2f4a; border-radius: 10px; padding: 6px 8px; }
+.ed-quem b { font: 700 16px 'Rajdhani', sans-serif; color: #fff; }
+.ed-quem.op b { color: #b9a8ff; }
+.ed-quem .ej-mao { padding: 2px 8px; }
+.ed-cor { width: 16px; height: 16px; border-radius: 50%; display: inline-block; }
+.ed-cor.ej-p1 { background: #ffd700; }
+.ed-cor.ej-p2 { background: #7c5cfc; }
+.ed-carregando { margin: auto; color: #c9cbe0; font: 600 16px 'Inter', sans-serif; }
+#ed-c .ej-mesa:has(.ej-yote) { container-type: size; }
+@media (max-height: 500px) {
+  .ed-topo b { font-size: 16px; }
+  .ed-quem { padding: 4px 6px; }
+  .ed-conv-t { font-size: 16px; }
+}
+html.jr-girado .ed-fundo .ed-caixa-p { width: min(420px, calc(100dvh - 32px)); }

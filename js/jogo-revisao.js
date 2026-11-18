@@ -40,7 +40,8 @@ import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, t
   sortearAcaoParado, EMOCOES, MS_EMOCAO, coresDragao, aceitaCor, ehFormaAdulta, formaComCor, definirNoite,
   NOME_COR_PET, NOME_ORIGINAL_PET, petDaCor, adultoDaCor, coresDoPet, FUNDOS_PET, ADULTO_E_FILHOTE, CRESCE_ADULTO_FILHOTE, filhoteDoAdulto } from '/js/jogo-revisao/pets.js';
 import { temPalavrao } from '/js/palavroes.js';
-import { configurarJogosExpo, jogoDaSalaExpo, abrirJogoExpo, abrirMenuJogosExpo, npcsSaguaoExpo, jogosExpo, jogoAbertoExpo } from '/js/jogo-revisao/expo-jogos.js';   // 🎲 PROMPT-259
+import { configurarJogosExpo, jogoDaSalaExpo, abrirJogoExpo, abrirMenuJogosExpo, npcsSaguaoExpo, jogosExpo, jogoAbertoExpo, fecharJogoExpo, avisoGravar } from '/js/jogo-revisao/expo-jogos.js';   // 🎲 PROMPT-259
+import { configurarDueloExpo, ouvirConvitesDueloExpo, desafiarExpo, dueloAtivoExpo } from '/js/jogo-revisao/expo-duelo.js';   // ⚔️ PROMPT-260
 import { bonusDe, BONUS_ZERA_S, PONTOS_ACERTO, NOME_MAX, TURMA_MAX, limparNome, rotuloNome, chaveNome, totalDe, montarRanking, montarCompletos, contarAgora } from '/js/jogo-revisao/expo-ranking.js';   // 📝 PROMPT-257   // 🚫 PROMPT-246: recados do livro de visitas
 import { lerTodos, lerRegistro, iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, soOuvirOnline, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 // 👀 PROMPT-253: a prévia da Exposição (/exposicao?previa=1) não grava NADA no Firebase. A guarda única: todo set/update/push/
@@ -4895,7 +4896,7 @@ function abrirCartaoColega(c) {
   fecharCartaoColega();
   pararFalaPet();   // o balão do meu pet não fica por cima do cartão
   const r = c.reg || {}, el = $('colega-cartao');
-  const nome = rotuloColega(c.uid, r), turma = nomeVisivel(r.turma);
+  const nome = emExpo() ? nomeExpoDe(c.uid, r) : rotuloColega(c.uid, r), turma = emExpo() && nome.includes(' – ') ? '' : nomeVisivel(r.turma);   // ⚔️ PROMPT-260: na Exposição, o nome aprovado do ranking
   const pet = petValido(petAtual(r.pet)) ? petAtual(r.pet) : null;
   el.innerHTML = `
     ${bustoHtml(urlQuadro('frente', -1, c.pers || PERS.padrao, c.cores), `jr-busto-colega${temBrilho(c.uid, c.reg) ? ' jr-brilho' : ''}`, BUSTO_PERS)}
@@ -4907,6 +4908,7 @@ function abrirCartaoColega(c) {
     ${podeDesafiar() && !r.sem_convites ? '<button class="jr-colega-oi jr-colega-desafiar" data-desafiar aria-label="Desafiar" title="Desafiar">⚔️</button>' : ''}
     ${presenteBloqueado(c) ? '' : '<button class="jr-colega-oi" data-presente aria-label="Presentear" title="Presentear">🎁</button>'}
     ${casaPub(c.uid) ? BOTAO_VISITAR : ''}
+    ${botaoDueloExpo(c)}
     <button class="jr-colega-oi" data-oi aria-label="Acenar">👋</button>
     <button class="jr-colega-oi" data-emojis aria-label="Mandar um emoji" title="Emoji">😀</button>
     <button class="jr-colega-oi" data-perfil aria-label="Ver perfil" title="Ver perfil">🏅</button>
@@ -10314,7 +10316,57 @@ function carregarJogosExpo() {
       salaDoJogo: (id) => { const ts = jogosExpo()[id]?.sala_tema || [], n = salasAbertasExpo().find(k => ts.includes(temaDaSala(k)?.id) || ts.includes(String(temaDaSala(k)?.id || '').replace(/_\d+$/, ''))); return n ? `Porta ${portaDaSala(n)}${tituloTemaSala(n) ? ' · ' + tituloTemaSala(n) : ''}` : ''; },
     });
     if (ehSaguao()) montarPessoas('saguao');
+    configurarDueloAoVivoExpo();   // ⚔️ PROMPT-260
   }).catch(() => console.warn('[jogo-revisao] exposicao-jogos.json indisponível'));
+}
+// ══ ⚔️ PROMPT-260: desafiar outra pessoa no Shisima e no Yoté, ao vivo (js/jogo-revisao/expo-duelo.js) ══════════════════
+// Como as Damas entre colegas, em jogo_revisao_praca{_teste}/expo/ (convites/{uid} e partidas/{id}). Na prévia não existe:
+// a prévia não entra no online (PROMPT-253), então ninguém aparece para ser desafiado.
+const JOGOS_DUELO_EXPO = ['shisima', 'yote'];
+// o nome na Exposição: o aprovado do ranking ("Maria – 7B"); sem ele, "Visitante" (ou o primeiro nome do aluno)
+function nomeExpoDe(uid, r) {
+  const n = desTodos.nomes?.[uid];
+  if (n?.nome && desTodos.status?.[uid] === 'aprovado') return rotuloNome(n);
+  return /^V_/.test(String(uid)) ? 'Visitante' : rotuloColega(uid, { ...(r || {}), local: 'exposicao' });
+}
+const meuNomeExpo = () => nomeExpoDe(sessao.uid, { apelido: sessao.visitante ? '' : nomeRanking(), local: 'exposicao' });
+const ehProfessoraUid = (uid, r) => uid === UID_PROFESSORA || /PROFESSOR/i.test(`${uid} ${r?.apelido || ''}`);
+function botaoDueloExpo(c) {
+  const r = c.reg || {};
+  if (!emExpo() || expoPrevia || !jogosExpo().shisima || c.uid === sessao.uid || ehProfessoraUid(c.uid, r)) return '';
+  if (r.expo_jogando) return '<span class="jr-colega-oi expo-duelo-jogando" aria-label="Jogando">🎲 jogando</span>';
+  if (r.sem_convites) return '<span class="jr-colega-oi expo-duelo-jogando" aria-label="Não recebe convites">🔕</span>';
+  return '<button class="jr-colega-oi expo-duelo-b" data-expo-duelo aria-label="Desafiar" title="Desafiar">🎲 Desafiar</button>';
+}
+function escolherJogoDueloExpo(c) {
+  if (dueloAtivoExpo()) return;
+  const el = $('colega-cartao');
+  clearTimeout(cartaoColega.timer);
+  cartaoColega.timer = setTimeout(fecharCartaoColega, 10000);
+  el.innerHTML = `<span class="jr-colega-info jr-presente"><b>🎲 Desafiar ${esc(nomeExpoDe(c.uid, c.reg))}</b>
+    <span class="jr-presente-lista">${JOGOS_DUELO_EXPO.map(id => `<button data-expo-duelo-jogo="${id}">${esc(jogosExpo()[id]?.icone || '')} ${esc(jogosExpo()[id]?.nome || id)}</button>`).join('')}</span></span>`;
+  posicionarCartaoColega();
+}
+let dueloConfigurado = false;
+function configurarDueloAoVivoExpo() {
+  if (dueloConfigurado || !jogosExpo().shisima) return;
+  dueloConfigurado = true;
+  try { onValue(ref(db, '.info/serverTimeOffset'), (s) => { offsetServidor = Number(s.val()) || 0; }); } catch (_) {}   // o visitante não passa pela Praça
+  configurarDueloExpo({
+    pai: $('expo-desafio').parentElement, esc, tocar,
+    fb: { db, ref, set, remove, push, onValue, runTransaction, onDisconnect },
+    base: () => `${basePraca()}/expo`,
+    agora: agoraServ,
+    eu: () => ({ uid: sessao.uid, nome: meuNomeExpo() }),
+    podeReceber: () => emExpo() && !expoPrevia && !estado?.semConvites,
+    cfg: (id) => jogosExpo()[id] || null,
+    melhor: (id) => Number(meuDesafio()?.jogos?.[id]) || 0,
+    gravar: gravarJogoExpo,
+    avisoGravar,
+    comoJogar: (id) => abrirJogoExpo(id, { soVer: true }),
+    jogando: (v) => enviarOnline({ expo_jogando: v || null }),   // "🎲 jogando" no cartão de quem toca em mim
+    fecharOutros: () => { fecharJogoExpo(); fecharCartaoColega(); fecharBalaoPessoa(); },
+  });
 }
 // os NPCs do saguão: as imagens e os tamanhos do npcs.json; perto da entrada, sem tapar portas, o livro nem o caminho
 const POS_NPCS_SAGUAO = { duda: [585, 700], marcos: [470, 640], joana: [1190, 690] };
@@ -10350,6 +10402,7 @@ function atualizarJogosExpo() {
   if (b.hidden !== sem) b.hidden = sem;
   if (!sem) { const t = `Jogo: ${jogosExpo()[id]?.nome || ''}`; if (b.title !== t) { b.title = t; b.setAttribute('aria-label', t); } }   // o rótulo fica "🎲 Jogo" (cabe ao lado das reações)
   if (ehSaguao()) falarNpcSaguaoExpo(); else falaNpcSaguaoT = 0;
+  if (!expoPrevia && emExpo()) ouvirConvitesDueloExpo();   // ⚔️ PROMPT-260 (uma vez)
 }
 // o melhor de cada jogo (como o desafio: a professora e a prévia só na memória; com a exposição aberta)
 async function gravarJogoExpo(id, pts) {
@@ -22212,6 +22265,9 @@ function ligarEventos() {
     if (e.target.closest('[data-visitar]')) { visitarCasinha(cartaoColega.c.uid); return; }   // 🏠 (PROMPT-107)
     if (e.target.closest('[data-vizinho]')) { const c = cartaoColega.c; fecharCartaoColega(); convidarVizinho(c.uid, rotuloColega(c.uid, c.reg), c.reg?.turma); return; }   // 🏡 (PROMPT-109)
     if (e.target.closest('[data-desafiar]')) { escolherModoDesafio(cartaoColega.c); return; }
+    if (e.target.closest('[data-expo-duelo]')) { escolherJogoDueloExpo(cartaoColega.c); return; }   // ⚔️ PROMPT-260
+    const edj = e.target.closest('[data-expo-duelo-jogo]');
+    if (edj) { const c = cartaoColega.c; fecharCartaoColega(); desafiarExpo({ uid: c.uid, nome: nomeExpoDe(c.uid, c.reg) }, edj.dataset.expoDueloJogo); return; }
     const md = e.target.closest('[data-modo]');
     if (md) { confirmarDesafio(cartaoColega.c, md.dataset.modo); return; }
     const dm = e.target.closest('[data-desafiar-mesmo]');
