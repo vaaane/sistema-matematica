@@ -6114,3 +6114,9 @@ html.jr-deitado .bt-fim .bt-fim-bts .jr-btn { min-height: 36px; padding: 4px 12p
   .bt-fim .bt-fim-bts, .deq-tela.deq-acabou .deq-fim-bts { grid-column: 1 / -1; justify-content: stretch; }
   .bt-fim .bt-fim-bts .jr-btn, .deq-tela.deq-acabou .deq-fim-bts .jr-btn { flex: 1; }
 }
+
+/* 👀 PROMPT-253: a faixa da prévia (fixa no alto, fina, não pega o toque: os botões embaixo dela continuam funcionando) */
+.expo-previa { position: fixed; z-index: 400; top: 0; left: 50%; transform: translateX(-50%); padding: 2px 12px 3px; border-radius: 0 0 10px 10px;
+  background: rgba(255, 123, 46, .92); color: #fff; font: 700 12px/1.25 Inter, system-ui, sans-serif; white-space: nowrap; pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,.35); max-width: calc(100vw - 16px); overflow: hidden; text-overflow: ellipsis; }
+html.jr-previa .jr-hud-titulo { padding-top: 16px; }   /* o nome do lugar desce, para a faixa não cobrir */

@@ -168,6 +168,7 @@
         <div class="filtros" style="margin-bottom:12px">
           <button class="btn-sec" id="pub-atualizar">↻ Atualizar</button>
           <button class="btn-pri" id="pub-qr">📱 QR Code da exposição</button>
+          <button class="btn-sec" id="pub-previa">🔗 Link de prévia (teste)</button>
         </div>
         <div class="pub-grid">
           <div class="pub-card"><h3>Modo da exposição</h3>
@@ -707,6 +708,28 @@ $("pub-qr").addEventListener("click", () => {
   fundo.addEventListener("click", (e) => {
     if (e.target === fundo || e.target.closest("[data-fechar-qr]")) fundo.remove();
     if (e.target.closest("[data-imprimir]")) { $("cartaz-qr").innerHTML = svgQr(url); $("cartaz-end").textContent = url; window.print(); }
+  });
+  document.body.append(fundo);
+});
+// 👀 PROMPT-253: o link de prévia (visitante nas salas de verdade, em qualquer modo, sem gravar). Sem cartaz: não imprimir o QR errado.
+$("pub-previa").addEventListener("click", () => {
+  const url = URL_PUBLICA + "?previa=1" + (teste ? "&teste=1" : "");
+  const fundo = document.createElement("div");
+  fundo.className = "qr-fundo";
+  fundo.innerHTML = `<div class="qr-caixa">${svgQr(url)}<p><b>${esc(url)}</b></p>
+    <p style="font-size:14px;word-break:normal">Para testar antes de abrir: entra como visitante nas salas de verdade, em qualquer modo, e não grava visita, voto nem livro.</p>
+    ${teste ? '<p style="color:#b45309">Modo teste: este QR usa os dados de teste.</p>' : ""}
+    <div class="linha" style="justify-content:center"><button class="btn-pri" data-copiar>📋 Copiar link</button><button class="btn-sec" data-fechar-qr>Fechar</button></div></div>`;
+  fundo.addEventListener("click", async (e) => {
+    if (e.target === fundo || e.target.closest("[data-fechar-qr]")) { fundo.remove(); return; }
+    const b = e.target.closest("[data-copiar]");
+    if (!b) return;
+    try { await navigator.clipboard.writeText(url); b.textContent = "✔ Link copiado"; }
+    catch (_) {
+      const t = document.createElement("textarea"); t.value = url; document.body.append(t); t.select();
+      try { document.execCommand("copy"); b.textContent = "✔ Link copiado"; } catch (_) { b.textContent = "Copie o endereço acima"; }
+      t.remove();
+    }
   });
   document.body.append(fundo);
 });

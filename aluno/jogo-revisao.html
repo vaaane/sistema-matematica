@@ -1206,17 +1206,20 @@ import { iniciarJogo, UID_PROFESSORA } from '/js/jogo-revisao.js';
 // 🚪 PROMPT-246: ?exposicao=1 (o endereço público /exposicao, pelo QR Code): começa no saguão da Exposição.
 // Logado: entra com a identidade dele. Sem login: Visitante (um id guardado no aparelho), sem ir para a tela de login.
 const _expoPub = new URLSearchParams(location.search).get('exposicao') === '1';
-const _s0 = getSession();
+// 👀 PROMPT-253: ?previa=1: sempre Visitante (mesmo com login no aparelho), em qualquer modo, sem gravar nada. A sessão
+// gravada (sm_session) não é usada nem trocada: depois, o jogo normal abre com o login de antes.
+const _previa = _expoPub && new URLSearchParams(location.search).get('previa') === '1';
+const _s0 = _previa ? null : getSession();
 const _logado = _s0?.modo === 'professor' || (_s0?.modo === 'aluno' && Array.isArray(_s0.alunos) && _s0.alunos.length);
 if (_expoPub && !_logado) {
   let id = null;
-  try { id = localStorage.getItem('expo_visitante'); } catch (_) {}
+  if (!_previa) try { id = localStorage.getItem('expo_visitante'); } catch (_) {}
   if (!/^V_[a-z0-9]{12}$/.test(id || '')) {
     const r = new Uint8Array(12); crypto.getRandomValues(r);
     id = 'V_' + Array.from(r, b => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
-    try { localStorage.setItem('expo_visitante', id); } catch (_) {}   // sem guardar: vale só nesta visita
+    if (!_previa) try { localStorage.setItem('expo_visitante', id); } catch (_) {}   // sem guardar: vale só nesta visita (a prévia: um id novo a cada vez)
   }
-  iniciarJogo({ uid: id, turma: '', nome: 'Visitante', visitante: true, exposicao: true });
+  iniciarJogo({ uid: id, turma: '', nome: 'Visitante', visitante: true, exposicao: true, previa: _previa });
 }
 // A professora entra pelo menu dela e joga como aluna (sem presença de duelos)
 const sess = _expoPub && !_logado ? null : getSession()?.modo === 'professor' ? null : requireAluno('/index.html');

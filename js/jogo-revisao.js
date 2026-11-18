@@ -4,7 +4,7 @@
 // ============================================================
 import { isModoTeste, getSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
-import { ref, get, update, push, set, remove, increment, onValue, onChildAdded, onChildChanged, onChildRemoved, runTransaction, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { ref, get, update as fbUpdate, push as fbPush, set as fbSet, remove as fbRemove, increment, onValue, onChildAdded, onChildChanged, onChildRemoved, runTransaction as fbTransaction, onDisconnect as fbOnDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { prepararFoto, analisarMoldura } from '/js/jogo-revisao/exposicao-img.js';
 import { criarLousa } from '/js/jogo-revisao/lousa.js';
 import { comoFaz, dicaCurta, quadroComoFaz, paginaResumo } from '/js/jogo-revisao/aulas-como.js';
@@ -40,7 +40,17 @@ import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, t
   sortearAcaoParado, EMOCOES, MS_EMOCAO, coresDragao, aceitaCor, ehFormaAdulta, formaComCor, definirNoite,
   NOME_COR_PET, NOME_ORIGINAL_PET, petDaCor, adultoDaCor, coresDoPet, FUNDOS_PET, ADULTO_E_FILHOTE, CRESCE_ADULTO_FILHOTE, filhoteDoAdulto } from '/js/jogo-revisao/pets.js';
 import { temPalavrao } from '/js/palavroes.js';   // 🚫 PROMPT-246: recados do livro de visitas
-import { lerTodos, lerRegistro, iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
+import { lerTodos, lerRegistro, iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, soOuvirOnline, VALIDADE_MS } from '/js/jogo-revisao/online.js';
+// 👀 PROMPT-253: a prévia da Exposição (/exposicao?previa=1) não grava NADA no Firebase. A guarda única: todo set/update/push/
+// remove/runTransaction/onDisconnect deste arquivo passa por aqui (o online.js tem os dele: a prévia não chama entrarOnline).
+let expoPrevia = false;
+const semGravar = (o, r) => { console.info('[jogo-revisao] 👀 prévia: não gravou', o, r?.toString?.() || ''); return Promise.resolve(); };
+const set = (r, v) => (expoPrevia ? semGravar('set', r) : fbSet(r, v));
+const update = (r, v) => (expoPrevia ? semGravar('update', r) : fbUpdate(r, v));
+const remove = (r) => (expoPrevia ? semGravar('remove', r) : fbRemove(r));
+const push = (r, v) => (expoPrevia && v !== undefined ? (semGravar('push', r), fbPush(r)) : fbPush(r, v));   // push sem valor não grava (só cria a chave)
+const runTransaction = (r, fn, o) => (expoPrevia ? semGravar('runTransaction', r).then(() => ({ committed: false, snapshot: null })) : fbTransaction(r, fn, o));
+const onDisconnect = (r) => (expoPrevia ? { set: () => semGravar('onDisconnect', r), update: () => semGravar('onDisconnect', r), remove: () => semGravar('onDisconnect', r), cancel: () => Promise.resolve() } : fbOnDisconnect(r));
 import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, limiteMoedasPedidos, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
 import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, tiposDeConta, gerarConta, vidaExtraLealdade, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
 import { definirFalas, falasProntas, configFalas, dicaDe, montarFala, duracaoBalao, fraseDe, fraseFiltrada, configAjuda, frasesFaro, quebrarBaloes, partirTexto, duracaoDe, tempoFala, tempoLeitura } from '/js/jogo-revisao/conversa.js';
@@ -943,7 +953,7 @@ export async function iniciarJogo(sess) {
     aula: (chave, i = 0) => { abrirAula(chave, 'menu'); irPaginaAula(i); }, aulaPags: (chave) => aulaDe(chave)?.paginas?.length || 0,
     perguntaPet: (enun, opcoes) => desenharPerguntaPet(enun, opcoes), falaPet: (txt) => mostrarFalaPet([{ texto: txt, espera: 0, fixo: 8000 }]), irPara: (x, y) => posicionarJogador(x, y, 'frente'), loja: (aba) => abrirLoja(aba), saguao: () => abrirSaguao(), salaExpo: (n) => abrirSalaExpo(n), porta: (k) => entrarSalaExpo(cena.expoPortas[k - 1].n), portasExpo: () => cena?.expoPortas?.map(p => [p.k, p.n]), cena: () => cena, jog: () => jog, joy: () => joy, expo: () => EXPO, temasExpo: () => abrirTemasExpo(), decorar: () => entrarEdicaoExpo(), conteudoExpo: (id) => abrirConteudoExpo(id), grio: () => grio };   // 💬 PROMPT-232   // 🔠 PROMPT-231: conferir as letras   // 🏆 PROMPT-230
 
-  if (sess.visitante) return iniciarVisitante();   // 🚪 PROMPT-246: só a Exposição, sem progresso
+  if (sess.visitante) { expoPrevia = sess.previa === true; return iniciarVisitante(); }   // 🚪 PROMPT-246: só a Exposição, sem progresso (👀 PROMPT-253: a prévia)
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
     const [pers, geral, mapas, interiores, geralQ, ...qs] = await Promise.all([
@@ -9252,7 +9262,7 @@ function iniciarExposicao(j) {
       const antes = expoModo;
       expoCfg = s.exists() && s.val() && typeof s.val() === 'object' ? s.val() : {};
       expoOrdemFb = expoCfg.ordem_salas ?? null;
-      expoModo = MODOS_EXPO.includes(expoCfg.modo) ? expoCfg.modo : 'montagem';
+      expoModo = expoPrevia ? 'aberto' : MODOS_EXPO.includes(expoCfg.modo) ? expoCfg.modo : 'montagem';   // 👀 a prévia ignora o modo (vê como aberto)
       if (ehSaguao()) { mapearPortasExpo(); desenharPlacasExpo(); }
       mudouModoExpo(antes);
     }, (e) => { console.warn('[jogo-revisao] exposicao_config indisponível', e?.code || e); mudouModoExpo(expoModo); });
@@ -9285,6 +9295,14 @@ async function iniciarVisitante() {
   teste = false;
   estado = estadoVazio();
   document.documentElement.classList.add('jr-visitante');
+  if (expoPrevia) {   // 👀 PROMPT-253: a faixa fixa; os outros online só lidos (no nó certo)
+    document.documentElement.classList.add('jr-previa');
+    const f = document.createElement('div');
+    f.id = 'expo-previa'; f.className = 'expo-previa'; f.textContent = '👀 Prévia: nada aqui é gravado';
+    document.body.append(f);
+    soOuvirOnline(expoVisTeste);
+    expoModo = 'aberto';   // mesmo se o exposicao_config não responder
+  }
   let pronto; expoCfgPronto = new Promise(r => { pronto = r; });
   expoCfgPronto.resolver = pronto;
   try {
@@ -9321,7 +9339,7 @@ function abrirEntradaVisitante() {
     preCarregarQuadros(sel, null);
     expoVisDentro = true;
     await transicao(() => abrirSaguao());
-    entrarOnline().catch(() => {});
+    if (!expoPrevia) entrarOnline().catch(() => {});   // 👀 a prévia não aparece para os outros
   };
 }
 let expoVisDentro = false;
@@ -9360,7 +9378,7 @@ async function carregarConteudoExpo() {
 // 👣 visitas (só no modo aberto; professora e contas de teste não contam). Uma vez por aparelho/aluno
 const expoContei = new Set();
 async function registrarVisitaExpo(n = null) {
-  if (expoModo !== 'aberto' || contaNaoConta()) return;
+  if (expoPrevia || expoModo !== 'aberto' || contaNaoConta()) return;   // 👀 a prévia não conta visita
   const base = noExpo('exposicao_visitas'), caminho = n ? `${base}/salas/${n}/${sessao.uid}` : `${base}/geral/${sessao.uid}`;
   if (expoContei.has(caminho)) return;
   expoContei.add(caminho);
@@ -9372,11 +9390,14 @@ async function registrarVisitaExpo(n = null) {
 }
 // as salas visitadas (para o voto: pelo menos 5), no aparelho
 const chaveVisitadas = () => `expo_visitadas_${noExpo('x')}_${sessao.uid}`;
-const visitadasExpo = () => new Set((lerLocal(chaveVisitadas(), []) || []).map(Number));
-function marcarVisitadaExpo(n) { const v = visitadasExpo(); if (!v.has(n)) { v.add(n); gravarLocal(chaveVisitadas(), [...v]); } }
+// 👀 a prévia guarda só na memória (não mistura com a visita de verdade neste aparelho)
+const visitadasPrevia = new Set();
+const visitadasExpo = () => (expoPrevia ? new Set(visitadasPrevia) : new Set((lerLocal(chaveVisitadas(), []) || []).map(Number)));
+function marcarVisitadaExpo(n) { if (expoPrevia) { visitadasPrevia.add(n); return; } const v = visitadasExpo(); if (!v.has(n)) { v.add(n); gravarLocal(chaveVisitadas(), [...v]); } }
 
 // 🗳️ voto: um por pessoa (uid), pode trocar enquanto estiver aberto; o aluno não vota na própria sala
 const MIN_SALAS_VOTO = 5;
+let votoPrevia = null;   // 👀 o voto da prévia (só na memória)
 async function abrirVotoExpo(saida = false) {
   const m = $('expo-voto');
   m.dataset.saida = saida ? '1' : '';
@@ -9386,7 +9407,8 @@ async function abrirVotoExpo(saida = false) {
   $('expo-voto-rodape').innerHTML = saida ? '<button class="jr-btn jr-btn-sec" id="expo-sair-sem">Sair sem votar</button>' : '';
   m.hidden = false;
   let meu = null;
-  try { const s = await get(ref(db, `${noExpo('exposicao_votos')}/${sessao.uid}`)); meu = s.exists() ? Number(s.val()) : null; } catch (_) {}
+  if (expoPrevia) meu = votoPrevia;
+  else try { const s = await get(ref(db, `${noExpo('exposicao_votos')}/${sessao.uid}`)); meu = s.exists() ? Number(s.val()) : null; } catch (_) {}
   pintarVotoExpo(meu);
 }
 function pintarVotoExpo(meu) {
@@ -9406,6 +9428,12 @@ function pintarVotoExpo(meu) {
 }
 async function votarExpo(n) {
   if (expoModo !== 'aberto' || ehProfessora() || souDaSala(n) || visitadasExpo().size < MIN_SALAS_VOTO) return;
+  if (expoPrevia) {   // 👀 a tela igual, sem gravar
+    votoPrevia = n; tocar('clique'); pintarVotoExpo(n);
+    if ($('expo-voto').dataset.saida) { $('expo-voto').hidden = true; fimVisitaExpo(); }
+    avisoExpo('👀 Prévia: voto não gravado ✔');
+    return;
+  }
   try { await set(ref(db, `${noExpo('exposicao_votos')}/${sessao.uid}`), n); }
   catch (e) { console.warn('[jogo-revisao] voto', e?.code || e); avisoExpo('Não foi possível votar agora. Tente de novo.'); return; }
   tocar('clique');
@@ -9463,7 +9491,7 @@ function pintarReacoesLivro() {
 }
 function pintarRecadoLivro() {
   const meu = livroRecados[sessao.uid], el = $('expo-recado');
-  if (meu) { el.innerHTML = `<p class="expo-meu">Seu recado: “${esc(meu.texto)}” <em>${meu.ok === true ? '✔ no livro' : '⏳ esperando a professora'}</em></p>`; return; }
+  if (meu) { el.innerHTML = `<p class="expo-meu">Seu recado: “${esc(meu.texto)}” <em>${expoPrevia ? '👀 prévia: não gravado' : meu.ok === true ? '✔ no livro' : '⏳ esperando a professora'}</em></p>`; return; }
   if (expoModo !== 'aberto' && !privilegioExpo()) { el.innerHTML = ''; return; }
   el.innerHTML = `<label class="expo-rotulo">Deixe um recado (opcional)</label>
     <textarea id="expo-recado-txt" maxlength="120" rows="2" placeholder="O que você achou da exposição?"></textarea>
@@ -9479,6 +9507,7 @@ function pintarRecadosLivro() {
 async function reagirLivro(e) {
   if (!REACOES_LIVRO.includes(e) || !(expoModo === 'aberto' || privilegioExpo())) return;
   livroReac = { ...livroReac, [sessao.uid]: e }; pintarReacoesLivro(); tocar('clique');
+  if (expoPrevia) { avisoExpo('👀 Prévia: assinatura não gravada ✔'); return; }
   try { await set(ref(db, `${noExpo('exposicao_livro')}/reacoes/${sessao.uid}`), e); } catch (err) { console.warn('[jogo-revisao] reação do livro', err?.code || err); }
 }
 async function enviarRecadoLivro() {
@@ -9487,6 +9516,7 @@ async function enviarRecadoLivro() {
   if (txt.length > 120) { avisoExpo('O recado pode ter até 120 letras.'); return; }
   if (temPalavrao(txt)) { avisoExpo('🚫 Esse recado tem uma palavra que não pode. Escreva de outro jeito.'); tocar('erro'); return; }
   const r = { texto: txt, nome: assinaturaLivro(), ts: Date.now() };
+  if (expoPrevia) { livroRecados[sessao.uid] = r; pintarRecadoLivro(); tocar('clique'); avisoExpo('👀 Prévia: assinatura não gravada ✔'); return; }
   try { await set(ref(db, `${noExpo('exposicao_livro')}/recados/${sessao.uid}`), r); }
   catch (e) { console.warn('[jogo-revisao] recado do livro', e?.code || e); avisoExpo('Não foi possível enviar agora. Tente de novo.'); return; }
   livroRecados[sessao.uid] = r; pintarRecadoLivro(); tocar('clique');
@@ -9859,6 +9889,7 @@ function atualizarHudExpo() {
 function curtirSala() {
   const n = salaExpo();
   if (!podeCurtirSala(n)) { if (n && souDaSala(n)) avisoExpo('❤️ Esta é a sala do seu grupo: as curtidas são dos colegas.'); return; }
+  if (expoPrevia) { tocar('clique'); avisoExpo('👀 Prévia: curtida não gravada'); return; }
   const s = (expoCurtidas[n] ||= new Set()), sim = !s.has(sessao.uid);
   if (sim) s.add(sessao.uid); else s.delete(sessao.uid);
   tocar(sim ? 'acerto' : 'clique');

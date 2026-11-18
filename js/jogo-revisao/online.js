@@ -16,6 +16,7 @@ const VIDA_MS = 10000;              // ts é renovado pelo menos a cada 10 s
 let base = 'jogo_revisao_online';
 let meuUid = null;
 let ativo = false;
+let soOuvir = false;      // 👀 PROMPT-253: a prévia lê os outros sem ter registro próprio
 let ultimoEnvio = 0;
 let timerVida = 0;
 let atual = {};          // o registro inteiro (identidade + último estado), regravado ao reconectar
@@ -73,7 +74,7 @@ export async function sairOnline() {
 
 // cb({ uid: registro }) com os outros (sem você); devolve a função para parar de ouvir
 function ouvir(q, cb) {
-  if (!ativo) return () => {};
+  if (!ativo && !soOuvir) return () => {};
   return onValue(q, (snap) => {
     const v = snap.exists() ? snap.val() || {} : {};
     delete v[meuUid];
@@ -84,6 +85,8 @@ function ouvir(q, cb) {
 export const ouvirMapa = (n, cb, lim = 0) => ouvir(lim ? query(ref(db, base), orderByChild('mapa'), equalTo(n), limitToLast(lim)) : query(ref(db, base), orderByChild('mapa'), equalTo(n)), cb);
 export const ouvirTodos = (cb) => ouvir(ref(db, base), cb);
 export const onlineAtivo = () => ativo;
+// 👀 PROMPT-253: a prévia só olha os outros (não grava o próprio registro): escolhe o nó sem iniciarOnline
+export function soOuvirOnline(teste) { base = teste ? 'jogo_revisao_online_teste' : 'jogo_revisao_online'; soOuvir = true; }
 // leitura única (a lista "👥 Online" fora do mapa geral: lida a cada 20 s, sem ouvir as posições de todo mundo ao vivo)
 export async function lerTodos() {
   if (!ativo) return {};
