@@ -6225,3 +6225,131 @@ html.jr-deitado .expo-entrada-caixa .expo-entrar { font-size: 16px; padding: 6px
 @media (orientation: portrait) and (max-width: 600px) {   /* em pé sem o jogo girado: um embaixo do outro */
   html:not(.jr-girado) .expo-entrada-corpo:has(> #expo-pets-col:not([hidden])) { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ══ 📝 PROMPT-257: o desafio da sala, o nome no ranking e o 📺 painel ao vivo do saguão ══ */
+.expo-des-b { border-color: rgba(0,212,255,.6); color: #00d4ff; }
+.expo-des-caixa { width: min(720px, calc(100vw - 24px)); position: relative; }
+.expo-des-c { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 10px; padding: 2px; position: relative; }
+.expo-des-topo { display: flex; justify-content: space-between; font: 600 14px 'Inter', sans-serif; color: #c9cbe0; }
+.expo-des-pts { color: #ffd700; }
+.expo-des-pts b { font: 700 16px 'Rajdhani', sans-serif; }
+.expo-des-p { margin: 0; font: 600 18px/1.3 'Inter', sans-serif; color: #fff; }
+.expo-des-barra { position: relative; height: 22px; border-radius: 999px; background: #1c1f35; overflow: hidden; flex: none; }
+.expo-des-barra i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #ff7b2e, #ffd700); border-radius: 999px; transition: width .1s linear; }
+.expo-des-barra span { position: relative; display: block; text-align: center; font: 700 14px/22px 'Rajdhani', sans-serif; color: #0d0f1a; text-shadow: 0 0 3px rgba(255,255,255,.6); }
+.expo-des-ops { display: flex; flex-direction: column; gap: 8px; }
+.expo-des-op { text-align: left; background: #1a1d33; color: #fff; border: 2px solid rgba(124,92,252,.55); border-radius: 12px; padding: 10px 14px; font: 600 16px/1.25 'Inter', sans-serif; cursor: pointer; }
+.expo-des-op:not(:disabled):hover { border-color: #00d4ff; }
+.expo-des-op:disabled { cursor: default; opacity: .6; }
+.expo-des-op.certa { background: rgba(0,230,118,.18); border-color: #00e676; color: #b9ffd9; opacity: 1; }
+.expo-des-op.errada { background: rgba(239,68,68,.2); border-color: #ef4444; color: #ffc4c4; opacity: 1; }
+.expo-des-exp { background: #12142a; border: 1px solid rgba(255,215,0,.35); border-radius: 12px; padding: 8px 12px; font: 15px/1.35 'Inter', sans-serif; color: #e6e7f2; }
+.expo-des-exp p { margin: 0; }
+.expo-des-certa { display: block; color: #00e676; font: 700 17px 'Rajdhani', sans-serif; margin-bottom: 4px; }
+.expo-des-rod { display: flex; justify-content: flex-end; margin-top: 6px; }
+.expo-des-mais { position: absolute; right: 16px; top: 30px; font: 800 30px 'Rajdhani', sans-serif; color: #00e676; text-shadow: 0 2px 6px #000; pointer-events: none; animation: expo-des-sobe 1.3s ease-out forwards; }
+@keyframes expo-des-sobe { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-40px); opacity: 0; } }
+/* respondida: o enunciado e as opções diminuem (a explicação cabe sem rolar no celular deitado) */
+.expo-des-resp .expo-des-p { font-size: 15px; }
+.expo-des-resp .expo-des-op { padding: 5px 12px; font-size: 14px; }
+.expo-des-resp .expo-des-ops { gap: 5px; }
+.expo-des-resp .expo-des-c { gap: 6px; }
+.expo-des-nome { display: flex; gap: 10px; flex-wrap: wrap; }
+.expo-des-nome label { display: flex; flex-direction: column; gap: 4px; flex: 1 1 140px; font: 600 14px 'Inter', sans-serif; color: #c9cbe0; }
+.expo-des-nome label { text-align: left; display: block; }
+.expo-des-nome label input { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; }
+.expo-des-nome label small { font-weight: 400; color: #8d8fa8; }
+.expo-des-nome label + label { flex: 0 0 130px; }
+.expo-des-nome input { min-width: 0; border-radius: 10px; border: 1px solid rgba(255,255,255,.25); background: #11131f; color: #fff; padding: 8px 12px; font: 16px 'Inter', sans-serif; }
+.expo-des-fim { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; color: #e6e7f2; font: 15px 'Inter', sans-serif; }
+.expo-des-fim p { margin: 0; }
+.expo-des-fim-t { font: 700 26px 'Rajdhani', sans-serif; color: #fff; }
+.expo-des-fim-t em { font-style: normal; color: #ffd700; font-size: 34px; }
+.expo-des-nomeinfo { font-size: 14px; color: #c9cbe0; }
+.expo-des-trocar { background: none; border: 1px solid rgba(255,255,255,.3); color: #00d4ff; border-radius: 999px; padding: 2px 10px; font: 600 13px 'Inter', sans-serif; cursor: pointer; margin-left: 4px; }
+@media (max-height: 500px) {
+  .expo-des-c { gap: 6px; }
+  .expo-des-p { font-size: 16px; }
+  .expo-des-op { padding: 6px 12px; font-size: 14px; }
+  .expo-des-ops { gap: 5px; }
+  .expo-des-resp .expo-des-p { font-size: 14px; }
+  .expo-des-resp .expo-des-op { padding: 3px 10px; font-size: 13px; }
+  .expo-des-resp .expo-des-topo { display: none; }
+  .expo-des-exp { padding: 6px 10px; }
+  .expo-des-certa { font-size: 16px; margin-bottom: 2px; }
+  .expo-des-exp { display: grid; grid-template-columns: 1fr auto; align-items: end; column-gap: 10px; }   /* o Próxima ao lado da explicação */
+  .expo-des-certa { grid-column: 1 / -1; }
+  .expo-des-rod { margin-top: 0; }
+  .expo-des-rod .jr-btn { padding: 6px 14px; white-space: nowrap; }
+  .expo-des-fim { gap: 4px; }
+  .expo-des-fim-t { font-size: 22px; }
+}
+html.jr-girado .expo-des-caixa { width: min(720px, calc(100dvh - 24px)); max-height: calc(100vw - 24px); }
+/* 📺 o painel ao vivo: canto direito, abaixo dos botões do topo e acima do joystick */
+.expo-aovivo { position: fixed; z-index: 14; top: calc(max(8px, var(--sa-t, 0px)) + 46px); right: max(10px, var(--sa-r, 0px)); display: flex; flex-direction: column;
+  align-items: flex-end; gap: 6px; width: min(300px, 40vw); pointer-events: none; }
+.expo-av-b { pointer-events: auto; cursor: pointer; background: rgba(13,15,26,.85); border: 1px solid rgba(0,212,255,.6); border-radius: 999px; padding: 5px 14px;
+  font: 700 15px 'Rajdhani', sans-serif; color: #00d4ff; white-space: nowrap; }
+.expo-av-b.aberto { border-color: #ffd700; color: #ffd700; }
+.expo-av-c { pointer-events: auto; width: 100%; max-height: calc(100dvh - 200px); overflow-y: auto; overscroll-behavior: contain; background: rgba(13,15,26,.86);
+  border: 1px solid rgba(124,92,252,.5); border-radius: 14px; padding: 8px 12px; color: #e6e7f2; font: 13px 'Inter', sans-serif; box-sizing: border-box; }
+.expo-av-c section + section { border-top: 1px solid rgba(255,255,255,.1); margin-top: 6px; padding-top: 6px; }
+.expo-av-c h4 { margin: 0 0 4px; font: 700 15px 'Rajdhani', sans-serif; color: #fff; }
+.expo-av-c p { margin: 2px 0; }
+.expo-av-rk, .expo-av-l { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.expo-av-rk li { display: grid; grid-template-columns: 28px 1fr auto; gap: 6px; align-items: baseline; padding: 1px 4px; border-radius: 6px; }
+.expo-av-rk li span { color: #8d8fa8; font-weight: 700; }
+.expo-av-rk li b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.expo-av-rk li em, .expo-av-l li em { font-style: normal; font: 700 14px 'Rajdhani', sans-serif; color: #00d4ff; }
+.expo-av-rk li.p1 span, .expo-av-rk li.p1 b { color: #ffd700; }
+.expo-av-rk li.p2 span, .expo-av-rk li.p2 b { color: #d9dde8; }
+.expo-av-rk li.p3 span, .expo-av-rk li.p3 b { color: #e0975a; }
+.expo-av-rk li.pisca { animation: expo-av-pisca 1.6s ease-out 1; }
+@keyframes expo-av-pisca { 0%, 40% { background: rgba(255,215,0,.45); } 100% { background: transparent; } }
+.expo-av-l li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.expo-av-voce { color: #ffd700; font-weight: 600; margin-top: 4px !important; }
+.expo-av-vazio, .expo-av-mais { color: #8d8fa8; }
+.expo-av-agora b { font: 700 20px 'Rajdhani', sans-serif; color: #00e676; }
+@media (max-height: 500px) {
+  .expo-av-c { max-height: calc(100dvh - 240px); padding: 6px 10px; font-size: 12px; }   /* acima do joystick */
+  .expo-av-c h4 { font-size: 14px; }
+}
+html.jr-girado .expo-aovivo { width: min(300px, 40dvh); }
+html.jr-girado .expo-av-c { max-height: calc(100vw - 240px); }
+.expo-des-exp p, .expo-des-p { text-align: left; }
+
+/* ══ ✨ PROMPT-258: reações no ar (nas salas) e o 🖼️ cartão "Eu visitei a exposição" ══ */
+.expo-reac-barra { position: fixed; z-index: 15; left: 50%; transform: translateX(-50%); bottom: max(10px, var(--sa-b, 0px)); display: flex; gap: 4px;
+  background: rgba(13,15,26,.78); border: 1px solid rgba(255,215,0,.45); border-radius: 999px; padding: 3px 6px; }
+.expo-reac-barra button { background: none; border: 0; cursor: pointer; font-size: 24px; line-height: 1; padding: 4px 6px; border-radius: 999px; }
+.expo-reac-barra button:active { transform: scale(1.25); background: rgba(255,255,255,.12); }
+.expo-reac-sobe { position: absolute; z-index: 9600; pointer-events: none; line-height: 1; transform: translate(-50%, -100%);
+  animation: expo-reac-sobe 2.5s ease-out forwards; text-shadow: 0 2px 4px rgba(0,0,0,.4); }
+@keyframes expo-reac-sobe {
+  0% { opacity: 0; translate: 0 0; scale: .6; }
+  12% { opacity: 1; scale: 1.1; }
+  30% { translate: var(--bal) calc(var(--sobe) * .3); scale: 1; }
+  55% { translate: calc(var(--bal) * -1) calc(var(--sobe) * .6); }
+  80% { opacity: 1; translate: var(--bal) calc(var(--sobe) * .85); }
+  100% { opacity: 0; translate: 0 var(--sobe); }
+}
+@media (max-height: 500px) { .expo-reac-barra button { font-size: 21px; padding: 3px 5px; } }
+.expo-cartao-m { z-index: 75; }
+.expo-cartao-caixa { width: auto; max-width: calc(100vw - 24px); }
+.expo-cartao-corpo { display: flex; gap: 14px; align-items: center; justify-content: center; min-height: 0; flex: 1 1 auto; }
+.expo-cartao-img { aspect-ratio: 9 / 16; height: min(70dvh, 640px); max-height: calc(100dvh - 90px); display: flex; align-items: center; justify-content: center;
+  background: #11131f; border-radius: 12px; overflow: hidden; flex: none; }
+.expo-cartao-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.expo-cartao-bts { display: flex; flex-direction: column; gap: 10px; align-items: stretch; max-width: 220px; }
+.expo-cartao-bts .jr-btn:disabled { opacity: .5; }
+@media (orientation: portrait) and (max-width: 600px) {
+  .expo-cartao-corpo { flex-direction: column; }
+  .expo-cartao-img { height: min(62dvh, 560px); }
+  .expo-cartao-bts { flex-direction: row; flex-wrap: wrap; justify-content: center; max-width: none; }
+}
+@media (max-height: 500px) { .expo-cartao-img { height: calc(100dvh - 80px); } }
+html.jr-girado .expo-cartao-img { height: calc(100vw - 80px); max-height: calc(100vw - 80px); }
+/* o jogo girado (celular em pé): a janela fica deitada como o jogo, então imagem e botões lado a lado */
+html.jr-girado .expo-cartao-corpo { flex-direction: row; }
+html.jr-girado .expo-cartao-bts { flex-direction: column; flex-wrap: nowrap; max-width: 220px; }
+html.jr-girado .expo-cartao-caixa { max-width: calc(100dvh - 24px); max-height: calc(100vw - 24px); }

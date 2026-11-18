@@ -1,0 +1,2376 @@
+{
+ "_nota": "PROMPT-257: desafio das salas. perguntas por id de tema (exposicao.json → temas[].id): p = pergunta, o = opções (o[0] é a certa; o jogo embaralha), e = explicação (mostrada depois de responder; no erro, junto com a resposta certa). Cada vez: 3 das 20, de preferência as que a pessoa ainda não respondeu. Pontos: 10 por acerto + bônus de rapidez = máx(0, 5 − ⌊máx(0, t − 5) / 3⌋), t em segundos até tocar. Máximo 45 por sala; vale a melhor de cada sala.",
+ "por_vez": 3,
+ "pontos_acerto": 10,
+ "bonus_max": 5,
+ "bonus_ate_s": 5,
+ "bonus_cai_s": 3,
+ "perguntas": {
+  "raizes": [
+   {
+    "p": "Qual rei do Mali é lembrado como uma das pessoas mais ricas da história?",
+    "o": [
+     "Mansa Musa",
+     "Zumbi",
+     "Nelson Mandela"
+    ],
+    "e": "Mansa Musa governou o Império do Mali. Na viagem a Meca, em 1324, levou tanto ouro que o preço do ouro caiu no Egito."
+   },
+   {
+    "p": "Quantos países tem a África?",
+    "o": [
+     "54",
+     "12",
+     "100"
+    ],
+    "e": "São 54 países. O maior é a Argélia, e o mais populoso é a Nigéria."
+   },
+   {
+    "p": "De onde vieram palavras como cafuné, caçula e moleque?",
+    "o": [
+     "De línguas africanas",
+     "Do inglês",
+     "Do japonês"
+    ],
+    "e": "Elas vêm de línguas bantas, como o quimbundo, falado em Angola. O português do Brasil tem centenas de palavras africanas."
+   },
+   {
+    "p": "Qual reino da África construiu mais pirâmides que o Egito?",
+    "o": [
+     "Kush",
+     "Roma",
+     "Japão"
+    ],
+    "e": "O Reino de Kush ficava no atual Sudão. As pirâmides de Meroé são menores e mais pontudas que as do Egito."
+   },
+   {
+    "p": "O Grande Zimbábue é uma cidade feita de:",
+    "o": [
+     "Pedras encaixadas, sem cimento",
+     "Vidro",
+     "Madeira e papel"
+    ],
+    "e": "O Grande Zimbábue deu nome ao país Zimbábue. Suas muralhas chegam a 11 metros de altura."
+   },
+   {
+    "p": "Qual árvore, símbolo da África, pode viver mais de mil anos?",
+    "o": [
+     "Baobá",
+     "Pinheiro",
+     "Coqueiro"
+    ],
+    "e": "O baobá guarda água no tronco, que pode ficar enorme. Em muitas aldeias, as pessoas se reúnem à sombra dele."
+   },
+   {
+    "p": "Qual país africano venceu a Itália na Batalha de Adwa, em 1896?",
+    "o": [
+     "Etiópia",
+     "Egito",
+     "Marrocos"
+    ],
+    "e": "A vitória de Adwa virou símbolo de orgulho para toda a África. A Etiópia é um dos países mais antigos do mundo."
+   },
+   {
+    "p": "Qual rainha de Angola enfrentou os portugueses por décadas?",
+    "o": [
+     "Nzinga",
+     "Cleópatra",
+     "Elizabeth"
+    ],
+    "e": "Nzinga Mbandi era rainha de Ndongo e Matamba. Ela negociava, fazia alianças e liderava tropas."
+   },
+   {
+    "p": "Qual dia é o Dia da África?",
+    "o": [
+     "25 de maio",
+     "1º de janeiro",
+     "20 de novembro"
+    ],
+    "e": "O Dia da África lembra a criação da Organização da Unidade Africana, em 25 de maio de 1963."
+   },
+   {
+    "p": "Qual destes alimentos chegou ao Brasil com os africanos?",
+    "o": [
+     "Quiabo",
+     "Batata inglesa",
+     "Maçã"
+    ],
+    "e": "O quiabo, o inhame e o dendê vieram da África. O dendê virou a base de pratos baianos como o acarajé e o vatapá."
+   },
+   {
+    "p": "Qual país tem a maior população negra fora da África?",
+    "o": [
+     "Brasil",
+     "Canadá",
+     "Rússia"
+    ],
+    "e": "Hoje, mais da metade dos brasileiros é negra. Por isso, o Brasil tem a maior população negra fora da África."
+   },
+   {
+    "p": "Onde foram achados os fósseis mais antigos do Homo sapiens?",
+    "o": [
+     "Na África",
+     "Na Europa",
+     "Na Antártida"
+    ],
+    "e": "Fósseis do Marrocos mostram Homo sapiens de cerca de 300 mil anos. Todos os humanos têm ancestrais africanos."
+   },
+   {
+    "p": "Quantas línguas são faladas na África, aproximadamente?",
+    "o": [
+     "Mais de 2.000",
+     "Umas 10",
+     "Só uma"
+    ],
+    "e": "São mais de 2.000 línguas! Na África do Sul, por exemplo, há 12 línguas oficiais."
+   },
+   {
+    "p": "Qual destas palavras é de origem africana?",
+    "o": [
+     "Samba",
+     "Futebol",
+     "Computador"
+    ],
+    "e": "Samba vem do quimbundo \"semba\", que quer dizer umbigada, um passo de dança."
+   },
+   {
+    "p": "O que é o kente, de Gana?",
+    "o": [
+     "Um tecido colorido com significados",
+     "Uma comida",
+     "Um instrumento"
+    ],
+    "e": "O kente é tecido em tiras estreitas. Cada cor tem um sentido: o dourado é riqueza, e o verde, crescimento."
+   },
+   {
+    "p": "De que região vieram muitos africanos bantos trazidos ao Brasil?",
+    "o": [
+     "Angola e Congo",
+     "Egito e Líbia",
+     "Japão e China"
+    ],
+    "e": "Esses povos falavam línguas bantas, como o quimbundo e o quicongo. Eles marcaram a fala e a música do Brasil."
+   },
+   {
+    "p": "Os iorubás influenciaram muito a cultura de qual estado?",
+    "o": [
+     "Bahia",
+     "Santa Catarina",
+     "Acre"
+    ],
+    "e": "Os iorubás trouxeram o culto aos orixás, que deu origem ao candomblé baiano."
+   },
+   {
+    "p": "O ofício das baianas de acarajé é:",
+    "o": [
+     "Patrimônio Cultural do Brasil",
+     "Proibido por lei",
+     "Uma invenção recente"
+    ],
+    "e": "As baianas de acarajé usam roupas brancas e turbante. O acarajé é feito de feijão-fradinho frito no dendê."
+   },
+   {
+    "p": "A África é o ___ maior continente.",
+    "o": [
+     "2º",
+     "5º",
+     "7º"
+    ],
+    "e": "A África tem mais de 30 milhões de km². É o 2º maior continente, atrás só da Ásia."
+   },
+   {
+    "p": "A antiga cidade de Benin, na Nigéria, era cercada por:",
+    "o": [
+     "Enormes muralhas de terra",
+     "Arranha-céus",
+     "Um rio de lava"
+    ],
+    "e": "As muralhas de Benin tinham milhares de quilômetros de extensão. Elas foram destruídas pelos ingleses em 1897."
+   }
+  ],
+  "saberes": [
+   {
+    "p": "O que quer dizer Ubuntu?",
+    "o": [
+     "Eu sou porque nós somos",
+     "Bom dia, vizinho",
+     "Terra distante"
+    ],
+    "e": "Ubuntu também lembra que cuidar da comunidade é cuidar de si. Nelson Mandela falava muito dessa ideia."
+   },
+   {
+    "p": "Onde fica a universidade mais antiga do mundo ainda em funcionamento?",
+    "o": [
+     "No Marrocos",
+     "Em Portugal",
+     "No Japão"
+    ],
+    "e": "É a Universidade de Al Quaraouiyine, em Fez. Ela foi fundada por uma mulher, Fátima al-Fihri."
+   },
+   {
+    "p": "Os iorubás contam usando qual base?",
+    "o": [
+     "Base 20",
+     "Base 10",
+     "Base 2"
+    ],
+    "e": "Os iorubás contam de 20 em 20. Por exemplo, 40 é \"dois vintes\"."
+   },
+   {
+    "p": "O que pode ser o osso de Lebombo, com 29 marcas?",
+    "o": [
+     "Um calendário",
+     "Um pente",
+     "Uma flauta"
+    ],
+    "e": "O osso de Lebombo é de babuíno e tem cerca de 43 mil anos. É um dos objetos matemáticos mais antigos do mundo."
+   },
+   {
+    "p": "Qual é o nome do jogo africano de semear sementes em buracos?",
+    "o": [
+     "Mancala",
+     "Xadrez",
+     "Dominó"
+    ],
+    "e": "O mancala tem versões com nomes diferentes: oware, em Gana, e ayo, entre os iorubás. Ele treina a contagem e a estratégia."
+   },
+   {
+    "p": "O que são os desenhos sona, de Angola?",
+    "o": [
+     "Desenhos de uma linha só em volta de pontos",
+     "Pinturas em cavernas",
+     "Letras do alfabeto"
+    ],
+    "e": "Os sona são feitos na areia pelos povos chokwe, em Angola. Muitos desenhos contam histórias enquanto são traçados."
+   },
+   {
+    "p": "Quem eram os griôs?",
+    "o": [
+     "Guardiões da história, que contavam e cantavam",
+     "Soldados do rei",
+     "Navegadores"
+    ],
+    "e": "Os griôs aprendem desde crianças. Eles cantam a história de reis, como Sundiata Keita, do Mali."
+   },
+   {
+    "p": "Imhotep, do Egito, era arquiteto e também:",
+    "o": [
+     "Médico",
+     "Jogador de futebol",
+     "Pirata"
+    ],
+    "e": "Imhotep projetou a pirâmide de degraus de Djoser, há uns 4.600 anos. Depois, foi venerado como sábio da medicina."
+   },
+   {
+    "p": "Quantos dias tinha o calendário criado pelos egípcios?",
+    "o": [
+     "365",
+     "100",
+     "500"
+    ],
+    "e": "O calendário egípcio tinha 12 meses de 30 dias, mais 5 dias de festa. Ele seguia as cheias do rio Nilo."
+   },
+   {
+    "p": "Quem salvou os manuscritos de Tombuctu em 2012?",
+    "o": [
+     "Os moradores, que os esconderam",
+     "Um museu da Europa",
+     "Ninguém: eles se perderam"
+    ],
+    "e": "O bibliotecário Abdel Kader Haidara e outros moradores levaram os manuscritos escondidos em caixas e sacos de arroz."
+   },
+   {
+    "p": "Os egípcios antigos já usavam frações há mais de:",
+    "o": [
+     "3.500 anos",
+     "50 anos",
+     "200 anos"
+    ],
+    "e": "Na matemática do Egito, as frações eram escritas como somas de frações com numerador 1, como 1/2 + 1/4."
+   },
+   {
+    "p": "Há quanto tempo povos africanos trabalham o ferro?",
+    "o": [
+     "Mais de 2.500 anos",
+     "100 anos",
+     "10 anos"
+    ],
+    "e": "Em Nok, na Nigéria, já se trabalhava o ferro há uns 2.500 anos. A mesma cultura fazia esculturas de barro."
+   },
+   {
+    "p": "O que são fractais?",
+    "o": [
+     "Formas que se repetem em tamanhos diferentes",
+     "Um tipo de tambor",
+     "Uma dança"
+    ],
+    "e": "Os fractais aparecem em tranças, tecidos e na planta de aldeias. O matemático Ron Eglash estudou isso."
+   },
+   {
+    "p": "Quem disse \"cada velho que morre é uma biblioteca que se queima\"?",
+    "o": [
+     "Amadou Hampâté Bâ",
+     "Machado de Assis",
+     "Pelé"
+    ],
+    "e": "Amadou Hampâté Bâ era escritor do Mali. A frase mostra o valor da tradição oral, guardada pela memória dos mais velhos."
+   },
+   {
+    "p": "As famosas cabeças de bronze de Ifé e Benin foram feitas por:",
+    "o": [
+     "Artistas africanos",
+     "Robôs",
+     "Romanos"
+    ],
+    "e": "As cabeças de Ifé têm uns 700 anos. Muitas peças de Benin foram levadas por ingleses e hoje estão em museus da Europa."
+   },
+   {
+    "p": "Qual destas comidas nasceu da cozinha afro-brasileira?",
+    "o": [
+     "Vatapá",
+     "Pizza",
+     "Sushi"
+    ],
+    "e": "O vatapá leva pão, amendoim, castanha, dendê e camarão. É herança da cozinha das mulheres africanas na Bahia."
+   },
+   {
+    "p": "Um papiro do Egito antigo já descrevia como tratar:",
+    "o": [
+     "Feridas e fraturas",
+     "Celulares quebrados",
+     "Computadores"
+    ],
+    "e": "É o papiro de Edwin Smith, com mais de 3.500 anos. Ele já descrevia exames, curativos e talas."
+   },
+   {
+    "p": "Tombuctu fica em qual país?",
+    "o": [
+     "Mali",
+     "Brasil",
+     "França"
+    ],
+    "e": "Tombuctu era um grande centro de estudos no Império do Mali, entre os séculos 14 e 16."
+   },
+   {
+    "p": "O osso de Ishango, do Congo, tem cerca de:",
+    "o": [
+     "20 mil anos",
+     "200 anos",
+     "20 anos"
+    ],
+    "e": "O osso de Ishango foi achado no Congo. Ele tem riscos agrupados que podem mostrar contas ou números primos."
+   },
+   {
+    "p": "Além do ferro, africanos trouxeram ao Brasil técnicas de:",
+    "o": [
+     "Mineração e agricultura",
+     "Programação",
+     "Aviação"
+    ],
+    "e": "Africanos trabalharam nas minas de ouro de Minas Gerais e trouxeram técnicas de fundir metais."
+   }
+  ],
+  "travessia": [
+   {
+    "p": "Em que ano a escravidão acabou no Brasil?",
+    "o": [
+     "1888",
+     "1822",
+     "1500"
+    ],
+    "e": "A Lei Áurea foi assinada pela princesa Isabel em 13 de maio de 1888. Mas a liberdade veio sem terra, sem trabalho e sem escola."
+   },
+   {
+    "p": "Como eram chamados os navios negreiros?",
+    "o": [
+     "Tumbeiros",
+     "Caravelas da sorte",
+     "Jangadas"
+    ],
+    "e": "Tumbeiro vem de \"tumba\": muitos morriam pela fome, pelas doenças e pela falta de ar nos porões."
+   },
+   {
+    "p": "Luiz Gama libertou mais de 500 pessoas trabalhando como:",
+    "o": [
+     "Advogado",
+     "Capitão de navio",
+     "Rei"
+    ],
+    "e": "Luiz Gama foi vendido como escravizado pelo próprio pai, aos 10 anos. Estudou sozinho e virou advogado."
+   },
+   {
+    "p": "Quantos artigos tinha a Lei Áurea?",
+    "o": [
+     "Dois",
+     "Cem",
+     "Vinte"
+    ],
+    "e": "Ela tinha só dois artigos: o 1º acabava com a escravidão, e o 2º revogava as leis contrárias."
+   },
+   {
+    "p": "Qual foi o país que mais recebeu africanos escravizados?",
+    "o": [
+     "Brasil",
+     "Canadá",
+     "Argentina"
+    ],
+    "e": "O Brasil recebeu cerca de 40% de todos os africanos levados às Américas."
+   },
+   {
+    "p": "Quanto tempo durou a escravidão no Brasil?",
+    "o": [
+     "Mais de 300 anos",
+     "10 anos",
+     "50 anos"
+    ],
+    "e": "Foram mais de 300 anos de escravidão, desde os anos 1530 até 1888."
+   },
+   {
+    "p": "O que as pessoas libertas receberam depois da abolição?",
+    "o": [
+     "Nada: nem terra, nem trabalho, nem escola",
+     "Uma casa cada uma",
+     "Um salário do governo"
+    ],
+    "e": "Nenhuma lei garantiu terra, emprego ou escola. Por isso, muitas famílias negras foram morar em morros e periferias."
+   },
+   {
+    "p": "Qual lugar no Rio é Patrimônio Mundial por ter recebido muitos africanos?",
+    "o": [
+     "Cais do Valongo",
+     "Cristo Redentor",
+     "Maracanã"
+    ],
+    "e": "O Cais do Valongo ficou enterrado e foi reencontrado em 2011, durante obras no Rio. Virou Patrimônio Mundial em 2017."
+   },
+   {
+    "p": "A lei de 1831 contra o tráfico ficou conhecida como:",
+    "o": [
+     "Lei para inglês ver",
+     "Lei do Ventre Livre",
+     "Lei Áurea"
+    ],
+    "e": "Ela foi feita só para agradar a Inglaterra, que pressionava contra o tráfico. Na prática, o tráfico continuou por quase 20 anos."
+   },
+   {
+    "p": "Quanto tempo podia durar a viagem pelo Atlântico?",
+    "o": [
+     "Mais de um mês",
+     "Um dia",
+     "Uma semana de avião"
+    ],
+    "e": "A travessia durava de 30 a 50 dias. Era comum faltar água e comida."
+   },
+   {
+    "p": "Qual lei de 1850 proibiu o tráfico de africanos para o Brasil?",
+    "o": [
+     "Lei Eusébio de Queirós",
+     "Lei Áurea",
+     "Lei de Cotas"
+    ],
+    "e": "A Lei Eusébio de Queirós acabou de vez com a chegada de navios negreiros. Mas a escravidão continuou por mais 38 anos."
+   },
+   {
+    "p": "A Lei do Ventre Livre, de 1871, libertava:",
+    "o": [
+     "Os bebês que nasciam",
+     "Os idosos",
+     "Todos os escravizados"
+    ],
+    "e": "Os bebês ficavam com o senhor até os 8 anos. Depois, o governo pagava uma indenização, ou eles trabalhavam até os 21."
+   },
+   {
+    "p": "A Lei dos Sexagenários libertava quem tinha mais de:",
+    "o": [
+     "60 anos",
+     "18 anos",
+     "30 anos"
+    ],
+    "e": "Pouquíssimos escravizados chegavam aos 60 anos. Por isso, essa lei teve pouco efeito."
+   },
+   {
+    "p": "Quais foram os maiores portos de chegada de africanos escravizados?",
+    "o": [
+     "Salvador e Rio de Janeiro",
+     "Manaus e Belém",
+     "Curitiba e Florianópolis"
+    ],
+    "e": "Juntos, Salvador e o Rio de Janeiro receberam a maior parte dos africanos que chegaram ao Brasil."
+   },
+   {
+    "p": "O que é a Kalunga, para os povos bantos?",
+    "o": [
+     "O mar e o mundo dos ancestrais",
+     "Um tipo de navio",
+     "Uma comida"
+    ],
+    "e": "Kalunga também é o nome de uma comunidade quilombola em Goiás, a maior do Brasil."
+   },
+   {
+    "p": "Por que os navios negreiros eram chamados de tumbeiros?",
+    "o": [
+     "Muitas pessoas morriam na viagem",
+     "Eram muito rápidos",
+     "Levavam turistas"
+    ],
+    "e": "Nos porões apertados, faltava ar, e as doenças se espalhavam rápido."
+   },
+   {
+    "p": "Para o movimento negro, o 13 de maio é dia de:",
+    "o": [
+     "Luta, porque a abolição veio sem direitos",
+     "Carnaval",
+     "Natal"
+    ],
+    "e": "Por isso, o movimento negro prefere celebrar o 20 de novembro, o dia de Zumbi, que lembra a luta."
+   },
+   {
+    "p": "Mais de quantos africanos foram embarcados à força para as Américas?",
+    "o": [
+     "12 milhões",
+     "1 mil",
+     "100 mil"
+    ],
+    "e": "Cerca de 12,5 milhões de pessoas foram embarcadas, e quase 2 milhões morreram na travessia."
+   },
+   {
+    "p": "O que fica no Cemitério dos Pretos Novos, no Rio?",
+    "o": [
+     "Restos de africanos que morreram ao chegar",
+     "Um shopping",
+     "Um estádio"
+    ],
+    "e": "O cemitério foi descoberto em 1996, quando uma família reformava a casa. Hoje é um instituto de memória."
+   },
+   {
+    "p": "Como os escravizados resistiram?",
+    "o": [
+     "Com fugas, quilombos e revoltas",
+     "Não resistiram",
+     "Só com cartas ao rei"
+    ],
+    "e": "Também houve resistência no dia a dia: guardar a língua, a fé e a música africanas."
+   }
+  ],
+  "resistencia": [
+   {
+    "p": "Por que 20 de novembro é o Dia da Consciência Negra?",
+    "o": [
+     "Zumbi dos Palmares morreu nesse dia, em 1695",
+     "É o dia da Lei Áurea",
+     "É o aniversário de Pelé"
+    ],
+    "e": "Zumbi foi morto em 20 de novembro de 1695, depois de anos de luta. Ele virou o maior símbolo da resistência negra."
+   },
+   {
+    "p": "Quem liderou a Revolta da Chibata?",
+    "o": [
+     "João Cândido",
+     "Dom Pedro II",
+     "Machado de Assis"
+    ],
+    "e": "Os marinheiros tomaram navios de guerra na Baía de Guanabara. Cinco dias depois, o governo prometeu acabar com as chibatadas."
+   },
+   {
+    "p": "Qual estado acabou com a escravidão em 1884, antes do resto do Brasil?",
+    "o": [
+     "Ceará",
+     "São Paulo",
+     "Paraná"
+    ],
+    "e": "O Ceará foi a primeira província a acabar com a escravidão, em 25 de março de 1884. Por isso, é chamado de \"Terra da Luz\"."
+   },
+   {
+    "p": "Quanto tempo o Quilombo dos Palmares resistiu?",
+    "o": [
+     "Quase 100 anos",
+     "2 meses",
+     "5 anos"
+    ],
+    "e": "Palmares durou quase todo o século 17. Era o maior quilombo das Américas."
+   },
+   {
+    "p": "Quem liderou Palmares antes de Zumbi?",
+    "o": [
+     "Ganga Zumba",
+     "Tiradentes",
+     "João Cândido"
+    ],
+    "e": "Ganga Zumba fez um acordo com o governo, que muitos não aceitaram. Zumbi seguiu lutando."
+   },
+   {
+    "p": "Quem liderou o Quilombo do Quariterê, em Mato Grosso?",
+    "o": [
+     "Tereza de Benguela",
+     "Dandara",
+     "Luísa Mahin"
+    ],
+    "e": "Tereza de Benguela comandou o Quariterê depois da morte do companheiro. O quilombo tinha até um parlamento."
+   },
+   {
+    "p": "Quem organizou a Revolta dos Malês, em Salvador?",
+    "o": [
+     "Africanos muçulmanos",
+     "Marinheiros ingleses",
+     "Fazendeiros"
+    ],
+    "e": "Os malês queriam acabar com a escravidão na Bahia. A revolta aconteceu durante o Ramadã, em janeiro de 1835."
+   },
+   {
+    "p": "Qual era o apelido de João Cândido?",
+    "o": [
+     "Almirante Negro",
+     "Rei do Futebol",
+     "Dragão do Mar"
+    ],
+    "e": "João Cândido era gaúcho e marinheiro. Depois da revolta, foi preso e expulso da Marinha."
+   },
+   {
+    "p": "O que quer dizer a palavra quilombo?",
+    "o": [
+     "Acampamento ou povoação",
+     "Navio",
+     "Prisão"
+    ],
+    "e": "Quilombo vem do quimbundo \"kilombo\". Hoje, a palavra também quer dizer comunidade de resistência."
+   },
+   {
+    "p": "Em qual estado fica a Serra da Barriga, onde era Palmares?",
+    "o": [
+     "Alagoas",
+     "Rio Grande do Sul",
+     "Amazonas"
+    ],
+    "e": "A Serra da Barriga é um parque memorial. Todo 20 de novembro, há celebrações por lá."
+   },
+   {
+    "p": "Quem é lembrada como liderança da Revolta dos Malês?",
+    "o": [
+     "Luísa Mahin",
+     "Tereza de Benguela",
+     "Glória Maria"
+    ],
+    "e": "Luísa Mahin era africana e, segundo a tradição, mãe de Luiz Gama."
+   },
+   {
+    "p": "Qual é o Dia Nacional de Tereza de Benguela e da Mulher Negra?",
+    "o": [
+     "25 de julho",
+     "8 de março",
+     "13 de maio"
+    ],
+    "e": "A data foi escolhida porque Tereza de Benguela é símbolo da luta das mulheres negras."
+   },
+   {
+    "p": "Contra o que foi a Revolta da Chibata, em 1910?",
+    "o": [
+     "Os castigos com chicote na Marinha",
+     "O preço do pão",
+     "O fim do Carnaval"
+    ],
+    "e": "As chibatadas eram dadas em marinheiros, a maioria negros, mesmo depois da abolição."
+   },
+   {
+    "p": "Quem eram os jangadeiros liderados pelo Dragão do Mar?",
+    "o": [
+     "Pescadores do Ceará que não levaram escravizados",
+     "Piratas",
+     "Soldados do rei"
+    ],
+    "e": "O Dragão do Mar se chamava Francisco José do Nascimento. O grito era \"No porto do Ceará não se embarcam mais escravos!\"."
+   },
+   {
+    "p": "A capoeira já foi:",
+    "o": [
+     "Proibida por lei",
+     "Esporte olímpico obrigatório",
+     "Ensinada só a reis"
+    ],
+    "e": "Em 1890, praticar capoeira na rua podia dar prisão. Hoje, ela é Patrimônio da Humanidade."
+   },
+   {
+    "p": "Quem escreveu uma carta de denúncia em 1770 e é a primeira advogada do Piauí?",
+    "o": [
+     "Esperança Garcia",
+     "Dandara",
+     "Carolina Maria de Jesus"
+    ],
+    "e": "Esperança Garcia escreveu ao governador do Piauí contando os maus-tratos. A carta foi descoberta séculos depois."
+   },
+   {
+    "p": "Como eram chamados os povoados de Palmares?",
+    "o": [
+     "Mocambos",
+     "Castelos",
+     "Fazendas"
+    ],
+    "e": "Os mocambos tinham casas, plantações e oficinas. Os moradores eram africanos, indígenas e pessoas pobres."
+   },
+   {
+    "p": "Zumbi e Dandara estão no:",
+    "o": [
+     "Livro dos Heróis e Heroínas da Pátria",
+     "Livro dos Recordes",
+     "Dicionário"
+    ],
+    "e": "Zumbi entrou no Livro dos Heróis e Heroínas da Pátria em 1997, e Dandara, em 2019. O livro fica em Brasília."
+   },
+   {
+    "p": "Quem lutou em Palmares e é lembrada como heroína?",
+    "o": [
+     "Dandara",
+     "Cleópatra",
+     "Anita Garibaldi"
+    ],
+    "e": "Dandara lutava com armas e ajudava a planejar defesas. Ela não aceitou o acordo de Ganga Zumba com o governo."
+   },
+   {
+    "p": "Quantas pessoas vivem hoje em comunidades quilombolas no Brasil?",
+    "o": [
+     "Mais de 1 milhão",
+     "Umas 100",
+     "Nenhuma"
+    ],
+    "e": "Hoje existem milhares de comunidades quilombolas reconhecidas, e elas lutam pelo direito à terra."
+   }
+  ],
+  "movimentos": [
+   {
+    "p": "Desde quando o 20 de novembro é feriado nacional?",
+    "o": [
+     "2024",
+     "1888",
+     "1950"
+    ],
+    "e": "Foi a Lei 14.759, de 2023. Antes, só alguns estados e cidades davam feriado."
+   },
+   {
+    "p": "Em que ano uma lei tornou obrigatório ensinar história afro-brasileira nas escolas?",
+    "o": [
+     "2003",
+     "1964",
+     "1888"
+    ],
+    "e": "É a Lei 10.639. Ela fez o 20 de novembro entrar no calendário escolar."
+   },
+   {
+    "p": "Quantos anos Nelson Mandela ficou preso?",
+    "o": [
+     "27",
+     "2",
+     "50"
+    ],
+    "e": "Mandela saiu da prisão em 1990 e virou presidente em 1994. Ele ganhou o Nobel da Paz."
+   },
+   {
+    "p": "Qual grupo propôs o 20 de novembro, em 1971?",
+    "o": [
+     "Grupo Palmares, de Porto Alegre",
+     "Os Beatles",
+     "A Seleção Brasileira"
+    ],
+    "e": "O Grupo Palmares queria uma data de orgulho negro, no lugar do 13 de maio."
+   },
+   {
+    "p": "Quem criou o Teatro Experimental do Negro?",
+    "o": [
+     "Abdias Nascimento",
+     "Pelé",
+     "Machado de Assis"
+    ],
+    "e": "Abdias Nascimento também criou o Museu de Arte Negra e foi indicado ao Nobel da Paz."
+   },
+   {
+    "p": "Qual foi o primeiro bloco afro do Carnaval de Salvador?",
+    "o": [
+     "Ilê Aiyê",
+     "Galo da Madrugada",
+     "Mangueira"
+    ],
+    "e": "O Ilê Aiyê só desfila com pessoas negras, como forma de valorizar a beleza negra."
+   },
+   {
+    "p": "Em que ano foi criado o Movimento Negro Unificado?",
+    "o": [
+     "1978",
+     "1888",
+     "2020"
+    ],
+    "e": "O MNU nasceu num ato contra o racismo nas escadarias do Theatro Municipal de São Paulo."
+   },
+   {
+    "p": "Quem fez o discurso \"Eu tenho um sonho\"?",
+    "o": [
+     "Martin Luther King Jr.",
+     "Nelson Mandela",
+     "Barack Obama"
+    ],
+    "e": "O discurso foi na Marcha sobre Washington, para mais de 200 mil pessoas."
+   },
+   {
+    "p": "Quem se recusou a ceder o lugar no ônibus, em 1955?",
+    "o": [
+     "Rosa Parks",
+     "Maya Angelou",
+     "Serena Williams"
+    ],
+    "e": "Rosa Parks foi presa. Em resposta, a comunidade negra boicotou os ônibus de Montgomery por mais de um ano."
+   },
+   {
+    "p": "Desde quando o Brasil tem um Ministério da Igualdade Racial?",
+    "o": [
+     "2023",
+     "1888",
+     "1970"
+    ],
+    "e": "Antes, a igualdade racial fazia parte de uma secretaria. Agora, tem um ministério próprio."
+   },
+   {
+    "p": "Qual poeta foi um dos criadores do Dia da Consciência Negra?",
+    "o": [
+     "Oliveira Silveira",
+     "Carlos Drummond",
+     "Vinicius de Moraes"
+    ],
+    "e": "Oliveira Silveira era poeta gaúcho. Ele defendia lembrar Zumbi, e não a Lei Áurea."
+   },
+   {
+    "p": "A Frente Negra Brasileira, de 1931, chegou a virar:",
+    "o": [
+     "Partido político",
+     "Time de futebol",
+     "Escola de samba"
+    ],
+    "e": "A Frente Negra lutava por educação e trabalho. Foi fechada pelo governo Vargas em 1937."
+   },
+   {
+    "p": "De que ano é o Estatuto da Igualdade Racial?",
+    "o": [
+     "2010",
+     "1822",
+     "1950"
+    ],
+    "e": "O Estatuto trata de saúde, educação, cultura e trabalho para a população negra."
+   },
+   {
+    "p": "Em que ano foi criada a Lei de Cotas nas universidades federais?",
+    "o": [
+     "2012",
+     "1888",
+     "1990"
+    ],
+    "e": "A Lei de Cotas reserva vagas em universidades e institutos federais para estudantes de escola pública, negros e indígenas."
+   },
+   {
+    "p": "Quem fundou o Geledés, Instituto da Mulher Negra?",
+    "o": [
+     "Sueli Carneiro",
+     "Rosa Parks",
+     "Taís Araújo"
+    ],
+    "e": "O Geledés luta contra o racismo e o machismo. Sueli Carneiro é filósofa e escritora."
+   },
+   {
+    "p": "Quem ajudou a fundar o Movimento Negro Unificado?",
+    "o": [
+     "Lélia Gonzalez",
+     "Xuxa",
+     "Anitta"
+    ],
+    "e": "Lélia Gonzalez criou a ideia de \"amefricanidade\", que une as culturas negras das Américas."
+   },
+   {
+    "p": "Em 2015, a Marcha das Mulheres Negras aconteceu em:",
+    "o": [
+     "Brasília",
+     "Paris",
+     "Nova York"
+    ],
+    "e": "Elas marcharam contra o racismo e a violência e pelo bem viver."
+   },
+   {
+    "p": "Mandela lutou contra o apartheid em qual país?",
+    "o": [
+     "África do Sul",
+     "Brasil",
+     "Estados Unidos"
+    ],
+    "e": "O apartheid separava brancos e negros em escolas, bairros e até praias. Ele acabou em 1994."
+   },
+   {
+    "p": "O movimento Vidas Negras Importam ganhou o mundo em:",
+    "o": [
+     "2020",
+     "1500",
+     "1950"
+    ],
+    "e": "O movimento começou nos EUA, em 2013, e se espalhou pelo mundo depois da morte de George Floyd, em 2020."
+   },
+   {
+    "p": "Em 2008, a lei passou a incluir nas escolas também a história:",
+    "o": [
+     "Indígena",
+     "Da Lua",
+     "Dos dinossauros"
+    ],
+    "e": "Foi a Lei 11.645. Agora, a escola ensina a história e a cultura afro-brasileira e indígena."
+   }
+  ],
+  "vozes": [
+   {
+    "p": "Quem escreveu Quarto de Despejo?",
+    "o": [
+     "Carolina Maria de Jesus",
+     "Cecília Meireles",
+     "Monteiro Lobato"
+    ],
+    "e": "Carolina era catadora de papel em São Paulo e escrevia num diário. O livro vendeu milhares de cópias em poucos dias."
+   },
+   {
+    "p": "Qual palavra Conceição Evaristo criou?",
+    "o": [
+     "Escrevivência",
+     "Abayomi",
+     "Ubuntu"
+    ],
+    "e": "Escrevivência é escrever a partir da vida e da memória de mulheres negras. Ela escreveu o livro Ponciá Vicêncio."
+   },
+   {
+    "p": "Quem foi o primeiro presidente da Academia Brasileira de Letras?",
+    "o": [
+     "Machado de Assis",
+     "Pelé",
+     "Gilberto Gil"
+    ],
+    "e": "Machado de Assis era neto de escravizados e foi o primeiro presidente da Academia. Escreveu Dom Casmurro."
+   },
+   {
+    "p": "Quem foi a primeira mulher negra a ganhar o Nobel de Literatura?",
+    "o": [
+     "Toni Morrison",
+     "Carolina Maria de Jesus",
+     "Elza Soares"
+    ],
+    "e": "Toni Morrison era americana e escreveu Amada, sobre a escravidão."
+   },
+   {
+    "p": "Qual livro Maria Firmina dos Reis escreveu em 1859?",
+    "o": [
+     "Úrsula",
+     "Dom Casmurro",
+     "Iracema"
+    ],
+    "e": "Maria Firmina dos Reis era professora no Maranhão. Úrsula dá voz aos personagens escravizados."
+   },
+   {
+    "p": "Quem foi a primeira mulher negra eleita deputada no Brasil?",
+    "o": [
+     "Antonieta de Barros",
+     "Glória Maria",
+     "Ruth de Souza"
+    ],
+    "e": "Antonieta de Barros era professora em Santa Catarina. Ela criou o Dia do Professor, em 15 de outubro."
+   },
+   {
+    "p": "Quem escreveu o Pequeno Manual Antirracista?",
+    "o": [
+     "Djamila Ribeiro",
+     "Monteiro Lobato",
+     "Cecília Meireles"
+    ],
+    "e": "Djamila Ribeiro é filósofa. O livro dá dicas práticas para enfrentar o racismo no dia a dia."
+   },
+   {
+    "p": "Quem a BBC elegeu a cantora brasileira do milênio?",
+    "o": [
+     "Elza Soares",
+     "Anitta",
+     "Xuxa"
+    ],
+    "e": "Elza Soares cantou samba, jazz e rap e lutou contra o racismo e a violência contra as mulheres."
+   },
+   {
+    "p": "Quem fala sobre \"o perigo de uma história única\"?",
+    "o": [
+     "Chimamanda Ngozi Adichie",
+     "Toni Morrison",
+     "Maya Angelou"
+    ],
+    "e": "Chimamanda é nigeriana. Ela diz que ouvir só uma história sobre um povo cria estereótipos."
+   },
+   {
+    "p": "Quem escreveu Triste Fim de Policarpo Quaresma?",
+    "o": [
+     "Lima Barreto",
+     "Ziraldo",
+     "Mauricio de Sousa"
+    ],
+    "e": "Lima Barreto morava no subúrbio do Rio e criticava o racismo e a política do seu tempo."
+   },
+   {
+    "p": "Cruz e Sousa é o maior nome de qual movimento literário?",
+    "o": [
+     "Simbolismo",
+     "Modernismo",
+     "Romantismo"
+    ],
+    "e": "Cruz e Sousa era filho de escravizados e foi chamado de \"Cisne Negro\" e \"Dante Negro\"."
+   },
+   {
+    "p": "Conceição Evaristo ganhou o Prêmio Jabuti com qual livro?",
+    "o": [
+     "Olhos d'Água",
+     "O Pequeno Príncipe",
+     "Dom Casmurro"
+    ],
+    "e": "Olhos d'Água tem 15 contos sobre a vida de pessoas negras, cheios de afeto e de dor."
+   },
+   {
+    "p": "Milton Santos ganhou o prêmio chamado de \"Nobel da\":",
+    "o": [
+     "Geografia",
+     "Matemática",
+     "Música"
+    ],
+    "e": "Milton Santos estudou as cidades e a globalização. Ele ganhou o Prêmio Vautrin Lud em 1994."
+   },
+   {
+    "p": "Quem entrou para a Academia Brasileira de Letras em 2022?",
+    "o": [
+     "Gilberto Gil",
+     "Neymar",
+     "Pelé"
+    ],
+    "e": "Gilberto Gil foi ministro da Cultura e compôs músicas como \"Aquele Abraço\"."
+   },
+   {
+    "p": "Quem escreveu o poema \"Ainda assim eu me levanto\"?",
+    "o": [
+     "Maya Angelou",
+     "Cecília Meireles",
+     "Clarice Lispector"
+    ],
+    "e": "O poema fala de levantar com orgulho, mesmo diante do racismo. Maya Angelou também era atriz e ativista."
+   },
+   {
+    "p": "Abdias Nascimento foi escritor, artista e também:",
+    "o": [
+     "Deputado e senador",
+     "Astronauta",
+     "Jogador de futebol"
+    ],
+    "e": "Abdias Nascimento viveu até os 97 anos. Ele também pintava quadros com símbolos dos orixás."
+   },
+   {
+    "p": "Quem foi a primeira mulher na ala de compositores de uma escola de samba?",
+    "o": [
+     "Dona Ivone Lara",
+     "Elza Soares",
+     "Clementina de Jesus"
+    ],
+    "e": "O samba \"Sonho Meu\" é dela. Dona Ivone Lara também era enfermeira."
+   },
+   {
+    "p": "Ruth de Souza foi indicada a um prêmio de cinema em qual cidade?",
+    "o": [
+     "Veneza",
+     "Manaus",
+     "Tóquio"
+    ],
+    "e": "Ruth de Souza foi a primeira atriz negra do Theatro Municipal do Rio, com o Teatro Experimental do Negro."
+   },
+   {
+    "p": "Quem foi a primeira ialorixá a entrar numa academia de letras?",
+    "o": [
+     "Mãe Stella de Oxóssi",
+     "Mãe Menininha",
+     "Tia Ciata"
+    ],
+    "e": "Mãe Stella comandou o terreiro Ilê Axé Opô Afonjá, em Salvador, e escreveu livros sobre o candomblé."
+   },
+   {
+    "p": "Quarto de Despejo foi traduzido para mais de:",
+    "o": [
+     "10 línguas",
+     "1 língua",
+     "100 línguas"
+    ],
+    "e": "Quarto de Despejo foi traduzido para mais de 10 línguas, como inglês, francês, alemão e japonês."
+   }
+  ],
+  "ciencia": [
+   {
+    "p": "Quem fez cálculos que ajudaram a NASA a levar astronautas à Lua?",
+    "o": [
+     "Katherine Johnson",
+     "Serena Williams",
+     "Rosa Parks"
+    ],
+    "e": "Katherine Johnson calculava à mão trajetórias de foguetes. O astronauta John Glenn pediu que ela conferisse os cálculos do computador."
+   },
+   {
+    "p": "Quem foi a primeira mulher negra a ir ao espaço?",
+    "o": [
+     "Mae Jemison",
+     "Halle Berry",
+     "Maya Angelou"
+    ],
+    "e": "Mae Jemison é médica e engenheira. No espaço, ela fez experiências sobre ossos e enjoo."
+   },
+   {
+    "p": "O que Charles Drew criou?",
+    "o": [
+     "Os grandes bancos de sangue",
+     "O GPS",
+     "O semáforo"
+    ],
+    "e": "Charles Drew descobriu como guardar o plasma do sangue por mais tempo. Isso salvou muitos soldados na Segunda Guerra."
+   },
+   {
+    "p": "Quem foi a primeira engenheira negra do Brasil?",
+    "o": [
+     "Enedina Alves Marques",
+     "Mae Jemison",
+     "Katherine Johnson"
+    ],
+    "e": "Enedina Alves Marques trabalhou numa grande usina hidrelétrica no Paraná."
+   },
+   {
+    "p": "Quem ajudou a sequenciar o coronavírus no Brasil em 48 horas?",
+    "o": [
+     "Jaqueline Goes de Jesus",
+     "Sônia Guimarães",
+     "Glória Maria"
+    ],
+    "e": "Jaqueline Goes de Jesus fez isso logo no começo da pandemia, em 2020. Isso ajudou a acompanhar o vírus."
+   },
+   {
+    "p": "Os cálculos de Gladys West ajudaram a criar:",
+    "o": [
+     "O GPS",
+     "O telefone",
+     "A televisão"
+    ],
+    "e": "O GPS usa satélites e cálculos sobre a forma da Terra. Gladys West fez esses cálculos."
+   },
+   {
+    "p": "George Washington Carver criou centenas de produtos a partir do:",
+    "o": [
+     "Amendoim",
+     "Petróleo",
+     "Ouro"
+    ],
+    "e": "George Washington Carver ensinou agricultores a alternar plantações para o solo não ficar fraco."
+   },
+   {
+    "p": "Garrett Morgan inventou:",
+    "o": [
+     "Um semáforo",
+     "O avião",
+     "O celular"
+    ],
+    "e": "O semáforo de Garrett Morgan tinha um sinal para todos pararem. Ele também inventou uma máscara contra fumaça."
+   },
+   {
+    "p": "Qual filme conta a história de matemáticas negras da NASA?",
+    "o": [
+     "Estrelas Além do Tempo",
+     "Pantera Negra",
+     "Toy Story"
+    ],
+    "e": "O filme conta a história de Katherine Johnson, Dorothy Vaughan e Mary Jackson."
+   },
+   {
+    "p": "Qual túnel do Rio tem o nome de engenheiros negros?",
+    "o": [
+     "Túnel Rebouças",
+     "Túnel do Tempo",
+     "Túnel Pelé"
+    ],
+    "e": "O túnel homenageia André e Antônio Rebouças, irmãos engenheiros negros do século 19."
+   },
+   {
+    "p": "Juliano Moreira foi pioneiro de qual área no Brasil?",
+    "o": [
+     "Psiquiatria",
+     "Astronomia",
+     "Aviação"
+    ],
+    "e": "Juliano Moreira lutou para tratar os pacientes com respeito e combateu teorias racistas na medicina."
+   },
+   {
+    "p": "Theodoro Sampaio trabalhou em obras de:",
+    "o": [
+     "Água e esgoto",
+     "Foguetes",
+     "Videogames"
+    ],
+    "e": "Theodoro Sampaio também estudou línguas indígenas e escreveu livros de geografia."
+   },
+   {
+    "p": "Lewis Latimer melhorou o filamento das:",
+    "o": [
+     "Lâmpadas elétricas",
+     "Bicicletas",
+     "Panelas"
+    ],
+    "e": "O filamento de carbono de Lewis Latimer fazia a lâmpada durar mais."
+   },
+   {
+    "p": "Alan Emtage criou o Archie, considerado o primeiro:",
+    "o": [
+     "Buscador da internet",
+     "Videogame",
+     "Telefone"
+    ],
+    "e": "O Archie, de 1990, procurava arquivos na internet antes de existir o Google."
+   },
+   {
+    "p": "Em que ano Mae Jemison foi ao espaço?",
+    "o": [
+     "1992",
+     "1888",
+     "2020"
+    ],
+    "e": "A missão de Mae Jemison durou 8 dias, no ônibus espacial Endeavour."
+   },
+   {
+    "p": "André Rebouças projetou no Brasil:",
+    "o": [
+     "Docas e ferrovias",
+     "Celulares",
+     "Satélites"
+    ],
+    "e": "André Rebouças também era abolicionista e lutou pelo fim da escravidão."
+   },
+   {
+    "p": "Sônia Guimarães foi a primeira mulher negra doutora em:",
+    "o": [
+     "Física",
+     "Música",
+     "Futebol"
+    ],
+    "e": "Sônia Guimarães é professora no ITA, uma das faculdades mais difíceis do Brasil."
+   },
+   {
+    "p": "Marie Van Brittan Brown inventou um dos primeiros:",
+    "o": [
+     "Sistemas de câmera de segurança",
+     "Carros elétricos",
+     "Aviões"
+    ],
+    "e": "O sistema dela tinha câmera, monitor e um botão para chamar a polícia."
+   },
+   {
+    "p": "Benjamin Banneker construiu um relógio feito de:",
+    "o": [
+     "Madeira",
+     "Plástico",
+     "Gelo"
+    ],
+    "e": "Banneker só tinha visto um relógio de bolso. Ele copiou o mecanismo em madeira, peça por peça."
+   },
+   {
+    "p": "Mark Dean ajudou a criar o computador pessoal de qual empresa?",
+    "o": [
+     "IBM",
+     "Nike",
+     "Coca-Cola"
+    ],
+    "e": "Mark Dean também participou do primeiro chip de computador de 1 GHz."
+   }
+  ],
+  "esporte": [
+   {
+    "p": "Quantas Copas do Mundo Pelé ganhou?",
+    "o": [
+     "3",
+     "1",
+     "5"
+    ],
+    "e": "Pelé ganhou as Copas de 1958, 1962 e 1970. Ele marcou mais de mil gols."
+   },
+   {
+    "p": "Quem é a atleta brasileira com mais medalhas olímpicas?",
+    "o": [
+     "Rebeca Andrade",
+     "Marta",
+     "Daiane dos Santos"
+    ],
+    "e": "Rebeca Andrade tem 6 medalhas olímpicas: 2 ouros, 3 pratas e 1 bronze. Ela treinou em projetos sociais de Guarulhos."
+   },
+   {
+    "p": "Em quanto tempo Usain Bolt correu os 100 metros?",
+    "o": [
+     "9,58 segundos",
+     "15 segundos",
+     "7 segundos"
+    ],
+    "e": "O recorde de Usain Bolt é de 2009. Ele também tem o recorde dos 200 metros."
+   },
+   {
+    "p": "Quantos ouros Jesse Owens ganhou em 1936?",
+    "o": [
+     "4",
+     "1",
+     "10"
+    ],
+    "e": "Jesse Owens venceu na Alemanha de Hitler, que pregava a \"superioridade\" de outra raça."
+   },
+   {
+    "p": "Quantas Copas do Mundo Formiga jogou?",
+    "o": [
+     "7",
+     "2",
+     "3"
+    ],
+    "e": "Formiga jogou as Copas de 1995 a 2019. Ela também esteve em 7 Olimpíadas."
+   },
+   {
+    "p": "Qual era o apelido de Leônidas da Silva?",
+    "o": [
+     "Diamante Negro",
+     "Rei do Futebol",
+     "Fenômeno"
+    ],
+    "e": "Leônidas da Silva ajudou a popularizar a bicicleta. O chocolate Diamante Negro foi batizado em homenagem a ele."
+   },
+   {
+    "p": "Quem inventou o chute \"folha seca\"?",
+    "o": [
+     "Didi",
+     "Neymar",
+     "Ronaldinho"
+    ],
+    "e": "Na \"folha seca\", a bola sobe e cai de repente, como uma folha. Didi foi campeão do mundo em 1958 e 1962."
+   },
+   {
+    "p": "Quem ganhou o primeiro ouro do Brasil na Rio 2016, no judô?",
+    "o": [
+     "Rafaela Silva",
+     "Beatriz Souza",
+     "Rebeca Andrade"
+    ],
+    "e": "Rafaela Silva é da Cidade de Deus, no Rio, e começou no judô num projeto social."
+   },
+   {
+    "p": "Quantos títulos de Grand Slam Serena Williams ganhou?",
+    "o": [
+     "23",
+     "3",
+     "100"
+    ],
+    "e": "Serena Williams e a irmã Venus aprenderam a jogar em quadras públicas de Compton, nos EUA."
+   },
+   {
+    "p": "Quantos títulos de Fórmula 1 Lewis Hamilton tem?",
+    "o": [
+     "7",
+     "1",
+     "15"
+    ],
+    "e": "Lewis Hamilton foi o primeiro piloto negro da Fórmula 1 e luta pela diversidade no esporte."
+   },
+   {
+    "p": "Em Paris 2024, quem se curvou para Rebeca Andrade no pódio?",
+    "o": [
+     "As ginastas americanas",
+     "O presidente",
+     "Os juízes"
+    ],
+    "e": "Na final de Paris, Simone Biles e Jordan Chiles fizeram uma reverência para Rebeca Andrade. A foto rodou o mundo."
+   },
+   {
+    "p": "Quem ganhou o ouro nos 800 m em Los Angeles, em 1984?",
+    "o": [
+     "Joaquim Cruz",
+     "Usain Bolt",
+     "Pelé"
+    ],
+    "e": "Joaquim Cruz é de Taguatinga, no Distrito Federal! Ele ganhou ouro em 1984 e prata em 1988."
+   },
+   {
+    "p": "Quem ganhou o primeiro ouro do Brasil em Paris 2024, no judô?",
+    "o": [
+     "Beatriz Souza",
+     "Rafaela Silva",
+     "Formiga"
+    ],
+    "e": "Beatriz Souza é da categoria acima de 78 kg e venceu uma atleta de Israel na final."
+   },
+   {
+    "p": "Quantos movimentos da ginástica têm o nome de Simone Biles?",
+    "o": [
+     "5",
+     "1",
+     "50"
+    ],
+    "e": "Um dos movimentos é o Yurchenko duplo carpado, no salto. Quase nenhuma atleta consegue fazer."
+   },
+   {
+    "p": "Quem foi a primeira brasileira campeã mundial de ginástica, em 2003?",
+    "o": [
+     "Daiane dos Santos",
+     "Rebeca Andrade",
+     "Marta"
+    ],
+    "e": "Daiane dos Santos tem dois movimentos com o seu nome: o Dos Santos I e o Dos Santos II."
+   },
+   {
+    "p": "Em que esporte Adhemar Ferreira da Silva ganhou dois ouros?",
+    "o": [
+     "Salto triplo",
+     "Natação",
+     "Vôlei"
+    ],
+    "e": "Adhemar Ferreira da Silva quebrou o recorde mundial do salto triplo várias vezes."
+   },
+   {
+    "p": "Muhammad Ali foi campeão de boxe e lutou também:",
+    "o": [
+     "Pelos direitos civis",
+     "Na Fórmula 1",
+     "No xadrez"
+    ],
+    "e": "Muhammad Ali se recusou a ir para a Guerra do Vietnã e perdeu o título por isso."
+   },
+   {
+    "p": "Qual clube defendeu seus jogadores negros nos anos 1920?",
+    "o": [
+     "Vasco da Gama",
+     "Real Madrid",
+     "Barcelona"
+    ],
+    "e": "Em 1924, o Vasco enviou a \"Resposta Histórica\": não aceitaria excluir seus jogadores negros e pobres."
+   },
+   {
+    "p": "Arthur Friedenreich foi um dos primeiros craques do:",
+    "o": [
+     "Futebol brasileiro",
+     "Basquete americano",
+     "Tênis"
+    ],
+    "e": "Arthur Friedenreich alisava o cabelo antes dos jogos, porque o futebol da época era racista."
+   },
+   {
+    "p": "De qual Copa Leônidas da Silva foi artilheiro?",
+    "o": [
+     "1938",
+     "2014",
+     "1994"
+    ],
+    "e": "Leônidas da Silva fez 7 gols na Copa de 1938, na França."
+   }
+  ],
+  "musica": [
+   {
+    "p": "Qual é considerado o primeiro samba gravado?",
+    "o": [
+     "Pelo Telefone",
+     "Carinhoso",
+     "Aquarela do Brasil"
+    ],
+    "e": "Pelo Telefone foi composto por Donga, um sambista negro que frequentava a casa de Tia Ciata."
+   },
+   {
+    "p": "Desde quando a roda de capoeira é Patrimônio da Humanidade?",
+    "o": [
+     "2014",
+     "1888",
+     "1950"
+    ],
+    "e": "A roda de capoeira junta luta, dança e música. Hoje é praticada em mais de 150 países."
+   },
+   {
+    "p": "Em qual cidade nasceu o samba-reggae, com o Olodum?",
+    "o": [
+     "Salvador",
+     "São Paulo",
+     "Curitiba"
+    ],
+    "e": "O samba-reggae nasceu nos anos 1980, com o maestro Neguinho do Samba."
+   },
+   {
+    "p": "Qual instrumento vem de arcos musicais africanos?",
+    "o": [
+     "Berimbau",
+     "Piano",
+     "Violino"
+    ],
+    "e": "O berimbau tem um arco de madeira, um arame e uma cabaça. Ele comanda o ritmo na roda de capoeira."
+   },
+   {
+    "p": "Quem compôs \"Carinhoso\"?",
+    "o": [
+     "Pixinguinha",
+     "Bob Marley",
+     "Cartola"
+    ],
+    "e": "Pixinguinha era flautista e saxofonista. Ele compôs Carinhoso em 1917."
+   },
+   {
+    "p": "Em que país nasceu o reggae?",
+    "o": [
+     "Jamaica",
+     "Japão",
+     "Alemanha"
+    ],
+    "e": "O reggae nasceu nos anos 1960 e fala de paz, justiça e da África."
+   },
+   {
+    "p": "Quem recebia em casa os sambistas que criaram o samba carioca?",
+    "o": [
+     "Tia Ciata",
+     "Clementina de Jesus",
+     "Elza Soares"
+    ],
+    "e": "Tia Ciata era baiana e mãe de santo. Na casa dela, na Praça Onze, havia festa, comida e samba."
+   },
+   {
+    "p": "Cartola foi um dos fundadores de qual escola de samba?",
+    "o": [
+     "Mangueira",
+     "Vai-Vai",
+     "Portela"
+    ],
+    "e": "A Mangueira tem as cores verde e rosa. Cartola compôs \"As Rosas Não Falam\"."
+   },
+   {
+    "p": "Onde nasceu o hip-hop?",
+    "o": [
+     "Em Nova York, nos anos 1970",
+     "Em Paris, em 1900",
+     "Em Tóquio, em 2010"
+    ],
+    "e": "O hip-hop junta o rap, o DJ, o breakdance e o grafite."
+   },
+   {
+    "p": "Qual instrumento faz o \"ronco\" do samba?",
+    "o": [
+     "Cuíca",
+     "Flauta",
+     "Gaita"
+    ],
+    "e": "A cuíca tem uma varinha presa no couro. Esfregando com um pano molhado, ela \"ronca\"."
+   },
+   {
+    "p": "O Dia Nacional do Choro, 23 de abril, é o aniversário de:",
+    "o": [
+     "Pixinguinha",
+     "Cartola",
+     "Gilberto Gil"
+    ],
+    "e": "Pixinguinha é considerado o pai do choro moderno."
+   },
+   {
+    "p": "O samba de roda de qual região é Patrimônio da Humanidade?",
+    "o": [
+     "Recôncavo Baiano",
+     "Pampa gaúcho",
+     "Pantanal"
+    ],
+    "e": "O samba de roda tem palmas, viola e prato e faca. Foi reconhecido pela UNESCO em 2005."
+   },
+   {
+    "p": "Qual afoxé desfila no Carnaval de Salvador desde 1949?",
+    "o": [
+     "Filhos de Gandhy",
+     "Ilê Aiyê",
+     "Olodum"
+    ],
+    "e": "Os Filhos de Gandhy desfilam de branco e azul, pedindo paz, em homenagem a Gandhi."
+   },
+   {
+    "p": "O maracatu nasceu das coroações de:",
+    "o": [
+     "Reis e rainhas do Congo",
+     "Imperadores romanos",
+     "Presidentes"
+    ],
+    "e": "O maracatu tem rei, rainha, damas do paço e muitos tambores. É de Pernambuco."
+   },
+   {
+    "p": "Quem levou o reggae para o mundo?",
+    "o": [
+     "Bob Marley",
+     "Pixinguinha",
+     "Michael Jackson"
+    ],
+    "e": "Bob Marley era jamaicano. Ele cantou músicas como \"Get Up, Stand Up\" e \"One Love\"."
+   },
+   {
+    "p": "Quais ritmos nasceram da música negra dos EUA?",
+    "o": [
+     "Blues, jazz e rock",
+     "Valsa e ópera",
+     "Tango e flamenco"
+    ],
+    "e": "Esses ritmos nasceram entre descendentes de africanos escravizados nos EUA."
+   },
+   {
+    "p": "Clementina de Jesus gravou o primeiro disco com mais de:",
+    "o": [
+     "60 anos",
+     "10 anos",
+     "100 anos"
+    ],
+    "e": "Clementina de Jesus foi descoberta cantando numa festa. Ela trouxe cantos antigos de origem africana."
+   },
+   {
+    "p": "O congado é uma festa de qual estado?",
+    "o": [
+     "Minas Gerais",
+     "Amazonas",
+     "Paraná"
+    ],
+    "e": "No congado, há cortejos com tambores, fitas coloridas e coroação de reis negros."
+   },
+   {
+    "p": "Jongo e tambor de crioula são:",
+    "o": [
+     "Patrimônio Cultural do Brasil",
+     "Esportes olímpicos",
+     "Comidas típicas"
+    ],
+    "e": "O jongo é do Sudeste, e o tambor de crioula, do Maranhão. Os dois têm roda, tambor e dança."
+   },
+   {
+    "p": "O funk carioca nasceu:",
+    "o": [
+     "Nas periferias do Rio",
+     "Em Paris",
+     "No Japão"
+    ],
+    "e": "O funk carioca nasceu nos bailes dos anos 1980 e virou um dos ritmos mais ouvidos do Brasil."
+   }
+  ],
+  "identidade": [
+   {
+    "p": "Segundo o Censo, como se declara mais da metade dos brasileiros?",
+    "o": [
+     "Preta ou parda",
+     "Branca",
+     "Amarela"
+    ],
+    "e": "No Censo de 2022, cerca de 55% das pessoas se declararam pretas ou pardas."
+   },
+   {
+    "p": "Qual foi a primeira princesa negra da Disney?",
+    "o": [
+     "Tiana",
+     "Cinderela",
+     "Moana"
+    ],
+    "e": "Tiana é do filme A Princesa e o Sapo e sonha em ter um restaurante."
+   },
+   {
+    "p": "Como é feita a boneca abayomi?",
+    "o": [
+     "Só com nós de pano, sem costura",
+     "De plástico",
+     "De madeira entalhada"
+    ],
+    "e": "A abayomi é feita com retalhos e nós. Em iorubá, o nome quer dizer \"encontro precioso\"."
+   },
+   {
+    "p": "O que é representatividade?",
+    "o": [
+     "Se ver em livros, filmes e brinquedos",
+     "Ter muitos amigos",
+     "Ganhar um prêmio"
+    ],
+    "e": "Ver alguém parecido com você em lugares importantes mostra que você também pode chegar lá."
+   },
+   {
+    "p": "Para o IBGE, a população negra é formada por:",
+    "o": [
+     "Pretos e pardos",
+     "Só pretos",
+     "Só pardos"
+    ],
+    "e": "Pretos e pardos juntos são a população negra, a maioria do Brasil."
+   },
+   {
+    "p": "O black power é um penteado e também um símbolo de:",
+    "o": [
+     "Orgulho negro",
+     "Uma banda",
+     "Um time de futebol"
+    ],
+    "e": "O black power ficou famoso nos anos 1960 e 1970, com o lema \"Black is beautiful\": o negro é lindo."
+   },
+   {
+    "p": "Quem foi a primeira mulher negra a ganhar o Oscar de Melhor Atriz?",
+    "o": [
+     "Halle Berry",
+     "Viola Davis",
+     "Taís Araújo"
+    ],
+    "e": "Halle Berry ganhou o Oscar pelo filme A Última Ceia, em 2002."
+   },
+   {
+    "p": "O que é colorismo?",
+    "o": [
+     "Quando pessoas de pele mais escura sofrem mais preconceito",
+     "Um tipo de pintura",
+     "Uma brincadeira de cores"
+    ],
+    "e": "Colorismo é um racismo que trata melhor quem tem a pele mais clara."
+   },
+   {
+    "p": "No Censo, quem diz qual é a cor ou raça de cada pessoa?",
+    "o": [
+     "A própria pessoa",
+     "O vizinho",
+     "O médico"
+    ],
+    "e": "O Censo pergunta a cor ou raça, e a própria pessoa responde: é a autodeclaração."
+   },
+   {
+    "p": "Qual foi o primeiro filme de super-herói indicado ao Oscar de Melhor Filme?",
+    "o": [
+     "Pantera Negra",
+     "Homem-Aranha",
+     "Batman"
+    ],
+    "e": "Pantera Negra ganhou 3 Oscars: figurino, trilha sonora e direção de arte."
+   },
+   {
+    "p": "Turbantes e torços fazem parte de culturas:",
+    "o": [
+     "Africanas e afro-brasileiras",
+     "Só europeias",
+     "Só asiáticas"
+    ],
+    "e": "Turbantes podem mostrar a origem, a religião ou ser só um estilo cheio de orgulho."
+   },
+   {
+    "p": "Quem foi a primeira mulher negra a apresentar a previsão do tempo no Jornal Nacional?",
+    "o": [
+     "Maju Coutinho",
+     "Glória Maria",
+     "Taís Araújo"
+    ],
+    "e": "Maju Coutinho começou em 2015 e depois passou a apresentar o Jornal Nacional."
+   },
+   {
+    "p": "Quem foi uma das primeiras repórteres negras da TV brasileira?",
+    "o": [
+     "Glória Maria",
+     "Xuxa",
+     "Ana Maria Braga"
+    ],
+    "e": "Glória Maria trabalhou mais de 50 anos na TV e viajou a mais de 100 países fazendo reportagens."
+   },
+   {
+    "p": "Em que ano apareceu Tiana, a primeira princesa negra da Disney?",
+    "o": [
+     "2009",
+     "1950",
+     "1990"
+    ],
+    "e": "Tiana é de Nova Orleans, a cidade do jazz."
+   },
+   {
+    "p": "Bonecas negras ajudam crianças negras a:",
+    "o": [
+     "Se verem bonitas e importantes",
+     "Dormir mais cedo",
+     "Aprender inglês"
+    ],
+    "e": "Brinquedos que parecem com as crianças ajudam a gostar de si mesmas."
+   },
+   {
+    "p": "Quem foi a primeira protagonista negra de uma novela brasileira?",
+    "o": [
+     "Taís Araújo",
+     "Maju Coutinho",
+     "Halle Berry"
+    ],
+    "e": "Taís Araújo fez a novela Xica da Silva, em 1996, sobre uma mulher negra de Minas Gerais no século 18."
+   },
+   {
+    "p": "Viola Davis foi a primeira atriz negra a ganhar o Oscar, o Emmy e o:",
+    "o": [
+     "Tony",
+     "Nobel",
+     "Jabuti"
+    ],
+    "e": "Viola Davis tem o Oscar, o Emmy e o Tony: a \"tríplice coroa\" da atuação."
+   },
+   {
+    "p": "No Censo de 2022, a maior parte dos brasileiros se declarou:",
+    "o": [
+     "Parda",
+     "Branca",
+     "Indígena"
+    ],
+    "e": "No Censo de 2022, os pardos foram cerca de 45%, e os pretos, cerca de 10%."
+   },
+   {
+    "p": "Em muitos povos africanos, as tranças podem mostrar:",
+    "o": [
+     "Idade, família e origem",
+     "A hora do dia",
+     "O time de futebol"
+    ],
+    "e": "Algumas tranças levavam dias para ficar prontas e eram feitas em família."
+   },
+   {
+    "p": "O cabelo crespo é:",
+    "o": [
+     "Lindo, com vários tipos de cachos",
+     "Ruim",
+     "Igual em todo mundo"
+    ],
+    "e": "Os cachos crespos têm muitos formatos. Cuidar e valorizar o cabelo também é autoestima."
+   }
+  ],
+  "fe": [
+   {
+    "p": "Qual é o Dia Nacional de Combate à Intolerância Religiosa?",
+    "o": [
+     "21 de janeiro",
+     "25 de dezembro",
+     "1º de abril"
+    ],
+    "e": "Essa data lembra Mãe Gilda, que morreu em 2000 depois de ataques ao seu terreiro."
+   },
+   {
+    "p": "Qual orixá é ligado ao mar?",
+    "o": [
+     "Iemanjá",
+     "Xangô",
+     "Ogum"
+    ],
+    "e": "Iemanjá é a rainha do mar. Muitas pessoas levam flores ao mar para ela."
+   },
+   {
+    "p": "O que quer dizer \"o Brasil é um país laico\"?",
+    "o": [
+     "O governo não tem religião oficial",
+     "Todos seguem a mesma religião",
+     "Religião é proibida"
+    ],
+    "e": "Num país laico, todas as religiões têm o mesmo direito de existir, e quem não tem religião também."
+   },
+   {
+    "p": "Qual orixá é ligado aos rios?",
+    "o": [
+     "Oxum",
+     "Iemanjá",
+     "Ogum"
+    ],
+    "e": "Oxum é ligada aos rios, ao amor e ao ouro. Sua cor é o amarelo."
+   },
+   {
+    "p": "Onde nasceu a umbanda?",
+    "o": [
+     "No Brasil",
+     "Em Portugal",
+     "Na China"
+    ],
+    "e": "A umbanda junta tradições africanas, indígenas, católicas e espíritas. Nasceu no Rio de Janeiro, em 1908."
+   },
+   {
+    "p": "O que quer dizer axé?",
+    "o": [
+     "Força, energia vital",
+     "Tchau",
+     "Comida"
+    ],
+    "e": "Axé também virou saudação e desejo de energia boa. E deu nome a um ritmo baiano."
+   },
+   {
+    "p": "Discriminar alguém pela religião é:",
+    "o": [
+     "Crime",
+     "Permitido",
+     "Uma brincadeira"
+    ],
+    "e": "Discriminar alguém pela religião é crime pela Lei 7.716, a mesma que pune o racismo."
+   },
+   {
+    "p": "O acarajé é comida sagrada de qual orixá?",
+    "o": [
+     "Iansã",
+     "Oxóssi",
+     "Iemanjá"
+    ],
+    "e": "Iansã é a orixá dos ventos e das tempestades. O acarajé é uma das comidas oferecidas a ela."
+   },
+   {
+    "p": "No sincretismo, Ogum se misturou com qual santo?",
+    "o": [
+     "São Jorge",
+     "Santo Antônio",
+     "São Pedro"
+    ],
+    "e": "No Rio, Ogum e São Jorge são festejados no mesmo dia, 23 de abril."
+   },
+   {
+    "p": "Qual é o dia da festa de Iemanjá no Rio Vermelho, em Salvador?",
+    "o": [
+     "2 de fevereiro",
+     "25 de dezembro",
+     "7 de setembro"
+    ],
+    "e": "A festa de Iemanjá em Salvador começou com pescadores, que pediam peixe e mar calmo."
+   },
+   {
+    "p": "Qual orixá é ligado aos raios?",
+    "o": [
+     "Xangô",
+     "Oxum",
+     "Iemanjá"
+    ],
+    "e": "Xangô é o orixá da justiça e dos raios. Seu símbolo é um machado de duas lâminas."
+   },
+   {
+    "p": "Qual foi o primeiro terreiro tombado como patrimônio do Brasil?",
+    "o": [
+     "Terreiro da Casa Branca",
+     "Terreiro de Jesus",
+     "Casa de Mãe Gilda"
+    ],
+    "e": "O Terreiro da Casa Branca é um dos terreiros mais antigos do Brasil, fundado no século 19."
+   },
+   {
+    "p": "Quem forma a Irmandade da Boa Morte, em Cachoeira (BA)?",
+    "o": [
+     "Mulheres negras",
+     "Marinheiros",
+     "Crianças"
+    ],
+    "e": "A Irmandade da Boa Morte faz uma festa em agosto e ajudava a comprar a liberdade de escravizados."
+   },
+   {
+    "p": "Quem eram os malês da Bahia?",
+    "o": [
+     "Africanos muçulmanos",
+     "Padres portugueses",
+     "Indígenas"
+    ],
+    "e": "Os malês sabiam ler e escrever em árabe, numa época em que poucos sabiam ler."
+   },
+   {
+    "p": "O 21 de janeiro lembra qual ialorixá?",
+    "o": [
+     "Mãe Gilda",
+     "Mãe Menininha",
+     "Mãe Stella"
+    ],
+    "e": "Mãe Gilda era ialorixá em Salvador. Depois de sua morte, a data virou lei nacional."
+   },
+   {
+    "p": "Respeitar a religião do outro é:",
+    "o": [
+     "Aceitar que ele tem o direito de crer diferente",
+     "Concordar com tudo",
+     "Não falar com ele"
+    ],
+    "e": "Respeitar é garantir que todos possam praticar sua fé em paz."
+   },
+   {
+    "p": "O que é o xirê, no candomblé?",
+    "o": [
+     "A roda de dança e canto para os orixás",
+     "Uma comida",
+     "Uma roupa"
+    ],
+    "e": "O xirê começa com Exu e segue com cantos e danças para cada orixá."
+   },
+   {
+    "p": "Quem foi uma das mães de santo mais respeitadas do Brasil?",
+    "o": [
+     "Mãe Menininha do Gantois",
+     "Tia Ciata",
+     "Dona Ivone Lara"
+    ],
+    "e": "Mãe Menininha comandou o terreiro do Gantois por mais de 60 anos. Dorival Caymmi fez uma música para ela."
+   },
+   {
+    "p": "Candomblé e umbanda são religiões de matriz:",
+    "o": [
+     "Africana",
+     "Japonesa",
+     "Nórdica"
+    ],
+    "e": "Elas vêm de crenças trazidas por povos africanos, como os iorubás e os bantos."
+   },
+   {
+    "p": "Benzedeiras e rezadeiras misturam tradições:",
+    "o": [
+     "Africanas, indígenas e europeias",
+     "Só japonesas",
+     "Só americanas"
+    ],
+    "e": "As benzedeiras usam ramos de plantas e rezas para afastar o mau-olhado. É uma tradição de várias regiões do Brasil."
+   }
+  ],
+  "afrofuturismo": [
+   {
+    "p": "Qual é o país inventado do Pantera Negra?",
+    "o": [
+     "Wakanda",
+     "Atlântida",
+     "Gotham"
+    ],
+    "e": "Wakanda escondeu suas riquezas e sua tecnologia do resto do mundo para não ser colonizada."
+   },
+   {
+    "p": "Quem é a gênia da tecnologia de Wakanda?",
+    "o": [
+     "Shuri",
+     "Tempestade",
+     "Mulher-Maravilha"
+    ],
+    "e": "Shuri tem 16 anos no filme e cria o traje do Pantera Negra."
+   },
+   {
+    "p": "Qual metal fez de Wakanda o país mais avançado do mundo?",
+    "o": [
+     "Vibranium",
+     "Ouro",
+     "Kriptonita"
+    ],
+    "e": "O vibranium veio de um meteoro e absorve impactos e energia."
+   },
+   {
+    "p": "Quem foi o primeiro super-herói negro das grandes editoras?",
+    "o": [
+     "Pantera Negra",
+     "Superman",
+     "Hulk"
+    ],
+    "e": "O Pantera Negra foi criado por Stan Lee e Jack Kirby. No cinema, foi interpretado por Chadwick Boseman."
+   },
+   {
+    "p": "Qual heroína dos X-Men controla o clima?",
+    "o": [
+     "Tempestade",
+     "Shuri",
+     "Mulher-Gato"
+    ],
+    "e": "Tempestade nasceu no Quênia e é uma das líderes dos X-Men."
+   },
+   {
+    "p": "Quem é o Homem-Aranha afro-latino?",
+    "o": [
+     "Miles Morales",
+     "Peter Parker",
+     "Bruce Wayne"
+    ],
+    "e": "Miles Morales foi criado em 2011. Ele tem pai negro e mãe porto-riquenha."
+   },
+   {
+    "p": "Qual músico dizia que vinha de Saturno?",
+    "o": [
+     "Sun Ra",
+     "Pixinguinha",
+     "Bob Marley"
+    ],
+    "e": "Sun Ra tocava jazz com roupas espaciais e fazia shows como se fossem viagens pelo universo."
+   },
+   {
+    "p": "Quem dirigiu o filme Medida Provisória?",
+    "o": [
+     "Lázaro Ramos",
+     "Pelé",
+     "Gilberto Gil"
+    ],
+    "e": "Medida Provisória mostra um futuro em que o governo quer mandar pessoas negras para a África."
+   },
+   {
+    "p": "Quem foi o primeiro herói negro da Marvel com revista própria?",
+    "o": [
+     "Luke Cage",
+     "Homem de Ferro",
+     "Thor"
+    ],
+    "e": "Luke Cage tem pele inquebrável e trabalha como herói de aluguel no Harlem."
+   },
+   {
+    "p": "O que o afrofuturismo imagina?",
+    "o": [
+     "Futuros com pessoas negras como protagonistas",
+     "Só o passado",
+     "Só histórias de terror"
+    ],
+    "e": "O afrofuturismo mostra pessoas negras como cientistas, pilotos e inventores do futuro."
+   },
+   {
+    "p": "Em que ano foi criada a palavra afrofuturismo?",
+    "o": [
+     "1993",
+     "1888",
+     "2023"
+    ],
+    "e": "A palavra foi criada pelo escritor Mark Dery. A ideia já existia antes, na música e na literatura."
+   },
+   {
+    "p": "Qual escritora de ficção científica ganhou a \"bolsa dos gênios\"?",
+    "o": [
+     "Octavia Butler",
+     "Carolina Maria de Jesus",
+     "J. K. Rowling"
+    ],
+    "e": "Octavia Butler escreveu Kindred, sobre uma mulher que volta no tempo até a escravidão."
+   },
+   {
+    "p": "Quem escreveu Binti, com heroínas africanas?",
+    "o": [
+     "Nnedi Okorafor",
+     "Toni Morrison",
+     "Maya Angelou"
+    ],
+    "e": "Binti é uma garota que sai de casa para estudar numa universidade intergaláctica."
+   },
+   {
+    "p": "Qual cantora criou uma personagem androide nos seus discos?",
+    "o": [
+     "Janelle Monáe",
+     "Elza Soares",
+     "Ivete Sangalo"
+    ],
+    "e": "Janelle Monáe também é atriz e trabalhou em Estrelas Além do Tempo."
+   },
+   {
+    "p": "John Stewart, um dos primeiros heróis negros da DC, é o:",
+    "o": [
+     "Lanterna Verde",
+     "Batman",
+     "Flash"
+    ],
+    "e": "John Stewart era arquiteto antes de virar o Lanterna Verde."
+   },
+   {
+    "p": "Em Pantera Negra, Wakanda é um país que nunca foi:",
+    "o": [
+     "Colonizado",
+     "Visitado",
+     "Desenhado"
+    ],
+    "e": "Wakanda mostra uma África rica e avançada, diferente do que muitos filmes mostravam."
+   },
+   {
+    "p": "Fábio Kabral escreve afrofuturismo com:",
+    "o": [
+     "Orixás em mundos de ficção",
+     "Dinossauros",
+     "Fadas europeias"
+    ],
+    "e": "O livro de Fábio Kabral se chama O Caçador Cibernético da Rua 13."
+   },
+   {
+    "p": "O gesto \"Wakanda para sempre\" virou símbolo de:",
+    "o": [
+     "Orgulho negro",
+     "Um time de futebol",
+     "Uma marca de roupa"
+    ],
+    "e": "O gesto é de braços cruzados no peito. Atletas e artistas do mundo inteiro repetiram."
+   },
+   {
+    "p": "No afrofuturismo, a arte mistura elementos africanos com:",
+    "o": [
+     "Tecnologia",
+     "Só pinturas antigas",
+     "Nada"
+    ],
+    "e": "O afrofuturismo aparece em roupas, cabelos, músicas e videoclipes."
+   },
+   {
+    "p": "Em que ano Luke Cage ganhou revista própria?",
+    "o": [
+     "1972",
+     "2020",
+     "1888"
+    ],
+    "e": "Luke Cage ganhou uma série de TV em 2016."
+   }
+  ],
+  "racismo_hoje": [
+   {
+    "p": "Onde dá para denunciar racismo?",
+    "o": [
+     "No Disque 100",
+     "Só no jornal",
+     "Não dá para denunciar"
+    ],
+    "e": "No Disque 100, a denúncia é gratuita e pode ser anônima. Também dá para ir à delegacia."
+   },
+   {
+    "p": "No Brasil, racismo é:",
+    "o": [
+     "Crime",
+     "Só falta de educação",
+     "Permitido na internet"
+    ],
+    "e": "Racismo é crime, e a pena pode ser de prisão. Ele não prescreve e não dá direito a fiança."
+   },
+   {
+    "p": "Qual é o Dia Internacional contra a Discriminação Racial?",
+    "o": [
+     "21 de março",
+     "13 de maio",
+     "7 de setembro"
+    ],
+    "e": "O 21 de março lembra o Massacre de Sharpeville, na África do Sul, em 1960, quando 69 pessoas foram mortas num protesto."
+   },
+   {
+    "p": "Qual foi a primeira lei contra o racismo no Brasil, de 1951?",
+    "o": [
+     "Lei Afonso Arinos",
+     "Lei Áurea",
+     "Lei Maria da Penha"
+    ],
+    "e": "A Lei Afonso Arinos surgiu depois que uma dançarina negra americana foi barrada num hotel de São Paulo."
+   },
+   {
+    "p": "O que é racismo estrutural?",
+    "o": [
+     "Preconceito no jeito que a sociedade funciona",
+     "Um tipo de construção",
+     "Uma regra de futebol"
+    ],
+    "e": "É o racismo que aparece nas oportunidades: no emprego, na escola, na saúde e na TV."
+   },
+   {
+    "p": "Chamar cabelo crespo de \"ruim\" é:",
+    "o": [
+     "Racismo",
+     "Elogio",
+     "Brincadeira sem problema"
+    ],
+    "e": "Não existe cabelo ruim. Esse tipo de fala machuca e ensina as crianças a não gostarem de si."
+   },
+   {
+    "p": "Piada racista é:",
+    "o": [
+     "Racismo",
+     "Só brincadeira",
+     "Humor permitido"
+    ],
+    "e": "Rir de piada racista também ajuda o racismo a continuar. Dá para não rir e dizer que não achou graça."
+   },
+   {
+    "p": "Sofreu racismo na escola. O que fazer?",
+    "o": [
+     "Contar para um adulto de confiança",
+     "Ficar quieto",
+     "Revidar com violência"
+    ],
+    "e": "Contar a um adulto de confiança ajuda a escola a agir e a proteger você."
+   },
+   {
+    "p": "Qual jogador virou símbolo da luta antirracista no futebol?",
+    "o": [
+     "Vinícius Júnior",
+     "Cristiano Ronaldo",
+     "Messi"
+    ],
+    "e": "Vinícius Júnior sofreu vários ataques na Espanha e cobrou punições. Muitos racistas foram condenados."
+   },
+   {
+    "p": "O que é ser antirracista?",
+    "o": [
+     "Agir: aprender, apoiar e denunciar",
+     "Só não ser racista",
+     "Não falar sobre o assunto"
+    ],
+    "e": "Ser antirracista é mais do que não ser racista: é agir contra o racismo."
+   },
+   {
+    "p": "Qual lei de 1989 define os crimes de racismo?",
+    "o": [
+     "Lei Caó",
+     "Lei Áurea",
+     "Lei do Ventre Livre"
+    ],
+    "e": "A Lei Caó leva o apelido do deputado Carlos Alberto Caó, que a escreveu."
+   },
+   {
+    "p": "Desde 2023, a injúria racial é:",
+    "o": [
+     "Crime de racismo",
+     "Permitida",
+     "Só uma multa de trânsito"
+    ],
+    "e": "Com a Lei 14.532, de 2023, xingar alguém por sua cor ou raça dá pena de 2 a 5 anos."
+   },
+   {
+    "p": "Racismo na internet:",
+    "o": [
+     "Também é crime",
+     "É permitido",
+     "Não existe"
+    ],
+    "e": "Na internet, guarde prints e denuncie. Também dá para denunciar no site da SaferNet."
+   },
+   {
+    "p": "Atacar religiões de matriz africana é:",
+    "o": [
+     "Racismo religioso, e é crime",
+     "Liberdade de expressão",
+     "Permitido"
+    ],
+    "e": "Ataques a terreiros são uma forma de racismo, porque atingem religiões de origem africana."
+   },
+   {
+    "p": "O que a ONU fez de 2015 a 2024?",
+    "o": [
+     "A Década Internacional de Afrodescendentes",
+     "A Copa do Mundo",
+     "Os Jogos Olímpicos"
+    ],
+    "e": "A ONU quis chamar atenção para os direitos de mais de 200 milhões de afrodescendentes nas Américas."
+   },
+   {
+    "p": "Qual palavra carrega racismo e deve ser evitada?",
+    "o": [
+     "Denegrir",
+     "Amizade",
+     "Escola"
+    ],
+    "e": "Denegrir quer dizer \"tornar negro\", com a ideia de algo ruim. Prefira \"difamar\"."
+   },
+   {
+    "p": "Qual é o primeiro passo diante de quem sofreu racismo?",
+    "o": [
+     "Escutar e acreditar",
+     "Rir junto",
+     "Mudar de assunto"
+    ],
+    "e": "Escutar e acreditar ajuda quem sofreu a se sentir protegido e a buscar ajuda."
+   },
+   {
+    "p": "Racismo no Brasil prescreve?",
+    "o": [
+     "Não, pode ser punido a qualquer tempo",
+     "Sim, em 1 dia",
+     "Sim, em 1 mês"
+    ],
+    "e": "Não prescrever quer dizer que o crime pode ser julgado mesmo muitos anos depois."
+   },
+   {
+    "p": "Em média, no Brasil, pessoas negras ganham:",
+    "o": [
+     "Menos que pessoas brancas",
+     "Mais que pessoas brancas",
+     "Exatamente igual"
+    ],
+    "e": "Essa diferença de salário mostra o racismo estrutural no trabalho."
+   },
+   {
+    "p": "O Brasil foi construído com o trabalho, a cultura e a luta da:",
+    "o": [
+     "População negra",
+     "Só da realeza",
+     "Só dos portugueses"
+    ],
+    "e": "Muito do Brasil, como a música, a comida e as cidades, foi construído pelas mãos negras."
+   }
+  ]
+ }
+}

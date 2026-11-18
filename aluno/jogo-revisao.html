@@ -465,7 +465,36 @@
   <!-- 🏅 PROMPT-254: o canto de baixo à esquerda: o contador, o botão dos carimbos e (na sala) os créditos -->
   <div class="expo-canto">
     <div id="ex-creditos" class="ex-creditos" hidden></div>
-    <div class="expo-canto-l"><div id="expo-contador" class="expo-contador" hidden></div><button class="expo-carimbos-b" id="btn-expo-carimbos" hidden aria-label="Salas visitadas">🏅</button></div>
+    <div class="expo-canto-l"><div id="expo-contador" class="expo-contador" hidden></div><button class="expo-carimbos-b" id="btn-expo-carimbos" hidden aria-label="Salas visitadas">🏅</button><button class="expo-carimbos-b expo-des-b" id="btn-expo-desafio" hidden aria-label="Desafio da sala">📝 Desafio</button></div>
+  </div>
+  <!-- 📝 PROMPT-257: o desafio da sala (3 perguntas), a janelinha "antes de sair" e o 📺 painel ao vivo do saguão -->
+  <div id="expo-desafio" class="al-fundo expo-modal" hidden role="dialog" aria-label="Desafio da sala">
+    <div class="al-caixa expo-caixa expo-fixa expo-des-caixa">
+      <div class="al-topo"><b id="expo-des-tit">📝 Desafio</b><button class="bt-lista-x" id="expo-des-x" aria-label="Fechar">✕</button></div>
+      <div class="expo-des-c" id="expo-des-c"></div>
+    </div>
+  </div>
+  <div id="expo-des-convite" class="al-fundo expo-modal" hidden role="dialog" aria-label="Desafio da sala">
+    <div class="al-caixa expo-caixa"><p class="expo-txt"><b>📝 Quer fazer o desafio desta sala antes de sair?</b></p>
+      <div class="expo-par-bts"><button class="jr-btn jr-btn-sec" id="expo-conv-sair">Sair</button><button class="jr-btn jr-btn-ouro" id="expo-conv-fazer">Fazer</button></div></div>
+  </div>
+  <!-- ✨ PROMPT-258: reações no ar (só nas salas) e o cartão "Eu visitei a exposição" -->
+  <div id="expo-reac-barra" class="expo-reac-barra" hidden>
+    <button data-reac-expo="❤️" aria-label="Reagir ❤️">❤️</button><button data-reac-expo="👏" aria-label="Reagir 👏">👏</button><button data-reac-expo="✊🏾" aria-label="Reagir ✊🏾">✊🏾</button><button data-reac-expo="🌟" aria-label="Reagir 🌟">🌟</button>
+  </div>
+  <div id="expo-cartao" class="al-fundo expo-modal expo-cartao-m" hidden role="dialog" aria-label="Meu cartão">
+    <div class="al-caixa expo-caixa expo-fixa expo-cartao-caixa">
+      <div class="al-topo"><b>🖼️ Meu cartão</b><button class="bt-lista-x" id="expo-cartao-x" aria-label="Fechar">✕</button></div>
+      <div class="expo-cartao-corpo">
+        <div class="expo-cartao-img" id="expo-cartao-img"></div>
+        <div class="expo-cartao-bts"><button class="jr-btn jr-btn-ouro" id="expo-cartao-comp" hidden>📤 Compartilhar</button><button class="jr-btn jr-btn-sec" id="expo-cartao-baixar" disabled>📥 Baixar</button>
+          <small class="expo-obs">Do tamanho do status do WhatsApp.</small></div>
+      </div>
+    </div>
+  </div>
+  <div id="expo-aovivo" class="expo-aovivo" hidden>
+    <button class="expo-av-b" id="expo-av-b" aria-expanded="false">📺 Ao vivo</button>
+    <div class="expo-av-c" id="expo-av-c" hidden></div>
   </div>
   <div id="expo-parabens" class="al-fundo expo-modal expo-parabens" hidden role="dialog" aria-label="Você visitou todas as salas">
     <div class="al-caixa expo-caixa expo-fixa"><div class="expo-parabens-c" id="expo-parabens-c"></div></div>

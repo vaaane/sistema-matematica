@@ -69,6 +69,19 @@
     .recado{background:var(--bg,#0d0f1a);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:14px}
     .recado small{color:var(--text-muted)}
     .recado .linha{margin-top:6px}
+    /* 📝 PROMPT-257: aprovar os nomes do desafio (pensado para o celular) */
+    .des-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+    .des-card .nm{font-family:'Rajdhani',sans-serif;font-size:1.35rem;font-weight:700}
+    .des-card .info{font-size:13px;color:var(--text-muted);margin:2px 0 8px}
+    .des-card .dup{font-size:14px;color:var(--gold,#ffd700);margin:0 0 8px}
+    .des-bts{display:flex;gap:8px;flex-wrap:wrap}
+    .des-bts button{flex:1 1 30%;min-height:46px;font-size:15px;white-space:nowrap;padding-left:8px;padding-right:8px}
+    .des-edit{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .des-edit input{flex:1 1 140px;min-width:0;background:var(--bg,#0d0f1a);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:16px;font-family:'Inter',sans-serif}
+    .des-edit input.tu{flex:0 1 90px}
+    .des-rk{display:flex;flex-direction:column;gap:4px}
+    .des-rk .l{display:grid;grid-template-columns:38px 1fr auto auto;gap:8px;align-items:center;border-bottom:1px solid var(--border);padding:6px 0;font-size:14px}
+    .des-rk .l b{font-family:'Orbitron',sans-serif;font-size:.9rem;color:var(--cyan,#00d4ff)}
     .qr-fundo{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
     .qr-caixa{background:#fff;color:#111;border-radius:16px;padding:20px;text-align:center;max-width:min(440px,100%)}
     .qr-caixa svg{width:min(320px,70vw);height:auto;display:block;margin:0 auto}
@@ -143,6 +156,7 @@
         <button class="aba ativa" data-aba="pend">⏳ Pendentes (<span id="n-pend">…</span>)</button>
         <button class="aba" data-aba="salas">🖼️ Salas</button>
         <button class="aba" data-aba="pub">🚪 Público</button>
+        <button class="aba" data-aba="des" id="aba-des-b">📝 Desafio</button>
       </div>
       <div class="painel" id="aba-pend">
         <p class="muted" style="font-size:13px;margin:0 0 12px">Fotos e textos enviados pelos alunos só aparecem para quem é de fora do grupo depois que você aprova. O nome de cada sala é você que define, na aba Salas.</p>
@@ -150,6 +164,15 @@
         <!-- 🏠 PROMPT-184: quadros com foto das casinhas -->
         <section class="pend-sala" id="pend-casas-sec"><div class="pend-cab"><b>🏠 Casinhas</b><span class="muted">quadros com foto</span></div>
           <div id="pend-casas"><div class="vazio">Carregando…</div></div></section>
+      </div>
+      <!-- 📝 PROMPT-257: os nomes do ranking do desafio (aprovar pelo celular) -->
+      <div class="painel" id="aba-des" hidden>
+        <p class="muted" style="font-size:13px;margin:0 0 12px">Os nomes só aparecem no ranking (no saguão e na TV <a href="/exposicao/tv" target="_blank" rel="noopener" id="des-tv" style="color:var(--cyan)">/exposicao/tv</a>) depois que você aprova. Atualiza sozinho.</p>
+        <div class="filtros" id="des-teste" hidden><button class="btn-perigo" id="des-limpar">🧹 Limpar desafio de teste</button></div>
+        <h3 style="font-family:'Rajdhani',sans-serif;margin:0 0 10px">📝 Desafio: nomes para aprovar</h3>
+        <div id="des-pend"><div class="vazio">Carregando…</div></div>
+        <h3 style="font-family:'Rajdhani',sans-serif;margin:18px 0 10px">🏆 Ranking (aprovados)</h3>
+        <div class="des-rk" id="des-rk"></div>
       </div>
       <div class="painel" id="aba-salas" hidden>
       <p class="muted" style="font-size:13px;margin:0 0 12px">👁️ Todos os alunos entram em todas as salas com grupo. Fotos e textos só aparecem para quem é de fora do grupo depois que você aprova.</p>
@@ -200,6 +223,7 @@ import { db } from "/js/firebase-config.js";
 import { ref, get, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
 import { temAudioGrio, legendaGrio } from "/js/jogo-revisao/grio.js";   // 🎙️ PROMPT-234
+import { montarRanking, totalDe, chaveNome, rotuloNome, limparNome, NOME_MAX, TURMA_MAX } from "/js/jogo-revisao/expo-ranking.js";   // 📝 PROMPT-257
 
 if (!requireProfessor()) throw new Error("sem sessão de professor");
 renderSidebarProfessor("sidebar", "exposicao");
@@ -544,6 +568,7 @@ $("modo-teste").addEventListener("change", (e) => {
   $("salas").innerHTML = $("pendentes").innerHTML = '<div class="vazio">Carregando…</div>';
   fotosCache.clear();
   carregar();
+  ouvirDesafio();   // 📝 PROMPT-257
 });
 $("btn-atualizar").addEventListener("click", () => render());
 function renderOrdem() {
@@ -734,6 +759,76 @@ $("pub-previa").addEventListener("click", () => {
   });
   document.body.append(fundo);
 });
+
+// ══ 📝 PROMPT-257: o desafio das salas: os nomes para aprovar e o ranking ══
+// exposicao_nomes/{uid} { nome, turma, ts } · exposicao_nomes_status/{uid} 'aprovado'|'recusado' (sem: pendente) ·
+// exposicao_desafio/{uid} { salas, total, ts } · exposicao_completos/{uid} ts. Ao vivo (onValue); no Modo teste, os *_teste.
+const des = { desafio: {}, nomes: {}, status: {}, completos: {} };
+let pararDes = [], desEditando = null;
+const escondeDes = (uid, nome) => uid === "PROFESSORA" || (!teste && contaTeste(uid, nome));
+function ouvirDesafio() {
+  pararDes.forEach(f => f()); pararDes = [];
+  for (const k of Object.keys(des)) des[k] = {};
+  $("des-teste").style.display = teste ? "" : "none";   // o .filtros tem display:flex (o hidden não esconde)
+  $("des-tv").href = "/exposicao/tv" + (teste ? "?teste=1" : "");
+  for (const [k, n] of [["desafio", "exposicao_desafio"], ["nomes", "exposicao_nomes"], ["status", "exposicao_nomes_status"], ["completos", "exposicao_completos"]]) {
+    pararDes.push(onValue(ref(db, no(n)), (s) => { des[k] = s.exists() && s.val() && typeof s.val() === "object" ? s.val() : {}; renderDesafio(); },
+      (e) => { console.warn(n, e?.code || e); aviso("⚠️ Não foi possível ler " + no(n) + " (as regras novas já foram publicadas?)"); }));
+  }
+}
+const pendentesDes = () => Object.entries(des.nomes).filter(([uid, n]) => n?.nome && !des.status[uid] && !escondeDes(uid, n.nome))
+  .sort((a, b) => (Number(a[1].ts) || 0) - (Number(b[1].ts) || 0));
+function renderDesafio() {
+  const pend = pendentesDes(), rk = montarRanking(des.desafio, des.nomes, des.status, escondeDes);
+  $("aba-des-b").textContent = pend.length ? `📝 ${pend.length}` : "📝 Desafio";
+  if (desEditando && document.activeElement?.closest?.(".des-edit")) return;   // não apaga o que você está digitando
+  $("des-pend").innerHTML = pend.length ? pend.map(([uid, n]) => {
+    const pts = totalDe(des.desafio[uid]), dup = rk.find(r => r.chave === chaveNome(n) && r.uid !== uid);
+    const edit = desEditando === uid;
+    return `<div class="des-card" data-uid="${esc(uid)}">
+      ${edit ? `<div class="des-edit"><input class="nm-in" maxlength="${NOME_MAX}" value="${esc(n.nome)}" placeholder="Nome"/><input class="tu tu-in" maxlength="${TURMA_MAX}" value="${esc(n.turma || "")}" placeholder="Turma"/></div>`
+        : `<div class="nm">${esc(rotuloNome(n))}</div>`}
+      <div class="info">${pts} pts · ${des.completos[uid] ? "🏅 completou os carimbos" : "ainda não completou"} · ${uid.startsWith("V_") ? "visitante" : "aluno"} · ${fmt(n.ts)}</div>
+      ${dup ? `<p class="dup">⚠️ ${esc(dup.rotulo)} já está no ranking (${dup.total} pts)</p>` : ""}
+      <div class="des-bts">${edit ? '<button class="btn-pri" data-des="salvar">✅ Salvar e aprovar</button><button class="btn-sec" data-des="cancelar">Cancelar</button>'
+        : '<button class="btn-pri" data-des="aprovar">✅ Aprovar</button><button class="btn-sec" data-des="editar">✏️ Editar</button><button class="btn-perigo" data-des="recusar">❌ Recusar</button>'}</div></div>`;
+  }).join("") : '<div class="vazio">Nenhum nome esperando.</div>';
+  $("des-rk").innerHTML = rk.length ? rk.map((r, i) => `<div class="l" data-chave="${esc(r.chave)}"><span>${i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1 + "º"}</span><span>${esc(r.rotulo)}${des.completos[r.uid] ? " 🏅" : ""}</span><b>${r.total}</b><button class="btn-perigo" data-des="tirar">Tirar</button></div>`).join("")
+    : '<div class="vazio">Ninguém aprovado ainda.</div>';
+}
+$("aba-des").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-des]");
+  if (!b) {
+    if (e.target.closest("#des-limpar")) {
+      const bt = $("des-limpar");
+      if (!bt.classList.contains("conf")) { bt.classList.add("conf"); bt.textContent = "Tocar de novo para apagar"; setTimeout(() => { bt.classList.remove("conf"); bt.textContent = "🧹 Limpar desafio de teste"; }, 4000); return; }
+      if (!teste) return;
+      const ok = await gravar(update(ref(db), { exposicao_desafio_teste: null, exposicao_nomes_teste: null, exposicao_nomes_status_teste: null, exposicao_completos_teste: null }), "🧹 Desafio de teste apagado.");
+      bt.classList.remove("conf"); bt.textContent = "🧹 Limpar desafio de teste";
+      if (ok) renderDesafio();
+    }
+    return;
+  }
+  const acao = b.dataset.des, card = b.closest("[data-uid]"), uid = card?.dataset.uid, st = (u, v) => set(ref(db, `${no("exposicao_nomes_status")}/${u}`), v);
+  if (acao === "aprovar") await gravar(st(uid, "aprovado"), "✅ Aprovado: já aparece no ranking.");
+  else if (acao === "recusar") await gravar(st(uid, "recusado"), "❌ Recusado: a pessoa pode trocar o nome.");
+  else if (acao === "editar") { desEditando = uid; renderDesafio(); $("des-pend").querySelector(`[data-uid="${CSS.escape(uid)}"] .nm-in`)?.focus(); }
+  else if (acao === "cancelar") { desEditando = null; renderDesafio(); }
+  else if (acao === "salvar") {
+    const nome = limparNome(card.querySelector(".nm-in").value), turma = limparNome(card.querySelector(".tu-in").value, TURMA_MAX);
+    if (!nome) { aviso("Escreva o nome."); return; }
+    desEditando = null;
+    if (await gravar(update(ref(db, `${no("exposicao_nomes")}/${uid}`), { nome, turma }))) await gravar(st(uid, "aprovado"), `✅ ${rotuloNome({ nome, turma })} aprovado.`);
+    renderDesafio();
+  } else if (acao === "tirar") {
+    const chave = b.closest("[data-chave]").dataset.chave;
+    if (!b.classList.contains("conf")) { b.classList.add("conf"); b.textContent = "Confirmar"; setTimeout(() => { b.classList.remove("conf"); b.textContent = "Tirar"; }, 4000); return; }
+    const uids = Object.keys(des.status).filter(u => des.status[u] === "aprovado" && des.nomes[u] && chaveNome(des.nomes[u]) === chave);   // o mesmo nome em outros aparelhos sai junto
+    await gravar(update(ref(db, no("exposicao_nomes_status")), Object.fromEntries(uids.map(u => [u, "recusado"]))), "Tirado do ranking.");
+  }
+});
+$("aba-des").addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.closest(".des-edit")) e.target.closest(".des-card").querySelector('[data-des="salvar"]')?.click(); });
+ouvirDesafio();
 
 carregar();
 </script>

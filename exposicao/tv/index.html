@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Exposição ao vivo — TV</title>
+<meta name="robots" content="noindex"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+<!-- 📺 PROMPT-257: o painel ao vivo da Exposição para a TV da sala (só lê; atualiza sozinho). ?teste=1: os nós *_teste -->
+<style>
+  :root { --bg: #0d0f1a; --card: #151830; --borda: rgba(124,92,252,.45); --roxo: #7c5cfc; --cyan: #00d4ff; --ouro: #ffd700; --verde: #00e676; --texto: #e6e7f2; --muted: #8d8fa8; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--texto); font-family: 'Inter', system-ui, sans-serif; overflow: hidden; }
+  body { display: grid; grid-template-rows: auto 1fr auto; height: 100dvh; padding: 2vh 2.5vw; gap: 2vh; }
+  h1 { margin: 0; font: 700 clamp(28px, 4.2vh, 56px) 'Rajdhani', sans-serif; color: var(--ouro); text-align: center; }
+  h1 small { color: var(--cyan); font-size: .6em; margin-left: .6em; }
+  main { display: grid; grid-template-columns: 1.25fr 1fr; gap: 2vw; min-height: 0; }
+  .card { background: var(--card); border: 2px solid var(--borda); border-radius: 22px; padding: 2vh 1.6vw; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .card h2 { margin: 0 0 1.2vh; font: 700 clamp(22px, 3.4vh, 44px) 'Rajdhani', sans-serif; color: #fff; }
+  .dir { display: grid; grid-template-rows: 1fr auto auto; gap: 2vh; min-height: 0; }
+  ol, ul { list-style: none; margin: 0; padding: 0; }
+  .rk { display: flex; flex-direction: column; gap: .6vh; }
+  .rk li { display: grid; grid-template-columns: 3.2em 1fr auto; align-items: baseline; gap: 1vw; font-size: clamp(18px, 3.2vh, 42px); padding: .2vh .6vw; border-radius: 10px; }
+  .rk li span { color: var(--muted); font-weight: 700; }
+  .rk li b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rk li em { font: 700 1em 'Orbitron', sans-serif; font-style: normal; color: var(--cyan); }
+  .rk li.p1 span, .rk li.p1 b { color: var(--ouro); } .rk li.p1 b { font-weight: 700; }
+  .rk li.p2 span, .rk li.p2 b { color: #d9dde8; }
+  .rk li.p3 span, .rk li.p3 b { color: #e0975a; }
+  .rk li.pisca { animation: pisca 2.2s ease-out 1; }
+  @keyframes pisca { 0%, 45% { background: rgba(255,215,0,.4); } 100% { background: transparent; } }
+  .lista li { font-size: clamp(16px, 2.7vh, 36px); padding: .3vh 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lista li em { font-style: normal; color: var(--cyan); font-weight: 700; }
+  .mais, .vazio { color: var(--muted); font-size: clamp(15px, 2.4vh, 30px); margin: .6vh 0 0; }
+  .agora { font-size: clamp(20px, 3.4vh, 44px); margin: 0; }
+  .agora b { font: 700 1.7em 'Orbitron', sans-serif; color: var(--verde); margin-right: .3em; }
+  footer { display: flex; align-items: center; justify-content: center; gap: 2vw; }
+  footer .qr { width: clamp(90px, 16vh, 200px); height: clamp(90px, 16vh, 200px); background: #fff; border-radius: 12px; padding: 6px; }
+  footer .qr svg { width: 100%; height: 100%; display: block; }
+  footer p { margin: 0; font: 700 clamp(20px, 3.6vh, 48px) 'Rajdhani', sans-serif; }
+  footer p span { display: block; color: var(--cyan); font: 700 clamp(18px, 3.2vh, 42px) 'Inter', sans-serif; }
+  @media (orientation: portrait) { main { grid-template-columns: 1fr; } .dir { grid-template-rows: auto auto auto; } body { overflow: auto; } html, body { overflow: auto; } }
+</style>
+</head>
+<body>
+<h1>🖼️ Exposição Virtual da Consciência Negra <small>📺 ao vivo</small></h1>
+<main>
+  <section class="card"><h2>🏆 Ranking do desafio</h2><ol class="rk" id="rk"><li class="vazio">Carregando…</li></ol></section>
+  <div class="dir">
+    <section class="card"><h2>🏅 Completaram a exposição</h2><ul class="lista" id="comp"></ul><p class="mais" id="comp-mais"></p></section>
+    <section class="card"><h2>👥 Agora</h2><p class="agora" id="agora"><b>…</b> pessoas visitando</p></section>
+    <section class="card"><h2>❤️ Mais curtidas</h2><ol class="lista" id="curt"></ol></section>
+  </div>
+</main>
+<footer><div class="qr" id="qr"></div><p>📱 Aponte a câmera do celular<span id="end"></span></p></footer>
+<script src="/js/vendor/qrcode.min.js"></script>
+<script type="module">
+import { db } from "/js/firebase-config.js";
+import { ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ALUNOS_TESTE } from "/js/constants.js";
+import { montarRanking, montarCompletos, contarAgora } from "/js/jogo-revisao/expo-ranking.js";
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const teste = new URLSearchParams(location.search).get("teste") === "1";
+const no = (n) => `${n}${teste ? "_teste" : ""}`;
+const esconder = (uid, nome) => uid === "PROFESSORA" || (!teste && (ALUNOS_TESTE.includes(uid) || /PROFESSOR|TESTE/i.test(`${uid} ${nome || ""}`)));
+const URL_PUBLICA = "https://quizdematematica.com/exposicao" + (teste ? "?teste=1" : "");
+try { const q = qrcode(0, "M"); q.addData(URL_PUBLICA); q.make(); $("qr").innerHTML = q.createSvgTag({ cellSize: 8, margin: 1, scalable: true }); } catch (_) {}
+$("end").textContent = URL_PUBLICA.replace(/^https:\/\//, "");
+
+const d = { desafio: {}, nomes: {}, status: {}, completos: {}, curtidas: {}, config: {}, nomesSalas: {} };
+let EXPO = null, topAntes = null, agora = null, pendente = false;
+const ouvir = (chave, caminho) => onValue(ref(db, caminho), (s) => { d[chave] = s.exists() && s.val() && typeof s.val() === "object" ? s.val() : {}; pintar(); }, (e) => console.warn(caminho, e?.code || e));
+for (const [k, n] of [["desafio", "exposicao_desafio"], ["nomes", "exposicao_nomes"], ["status", "exposicao_nomes_status"], ["completos", "exposicao_completos"], ["curtidas", "exposicao_curtidas"], ["config", "exposicao_config"]]) ouvir(k, no(n));
+
+fetch("/dados/jogo/exposicao.json").then(r => r.json()).then(j => {
+  EXPO = j;
+  for (const p of j?.saguao?.portas || []) onValue(ref(db, `${no("exposicao_salas")}/${p.n}/nome`), (s) => { d.nomesSalas[p.n] = s.exists() ? String(s.val() || "") : ""; pintar(); }, () => {});
+  pintar();
+}).catch(() => {});
+// a porta (a ordem da visita) e o nome da sala, como no saguão
+function ordem() {
+  const ns = (EXPO?.saguao?.portas || []).map(p => p.n), o = d.config?.ordem_salas ?? EXPO?.saguao?.ordem_salas, l = Array.isArray(o) ? o : o && typeof o === "object" ? Object.values(o) : null;
+  const v = l && l.length === ns.length ? l.map(Number) : null;
+  return v && v.every(n => ns.includes(n)) && new Set(v).size === v.length ? v : ns;
+}
+const portaDe = (n) => { const k = ordem().indexOf(Number(n)); return k >= 0 ? k + 1 : n; };
+const nomeSala = (n) => d.nomesSalas[n] || (EXPO?.temas || []).find(t => t.id === EXPO?.salas?.[n]?.tema_fixo)?.nome || "";
+
+async function lerAgora() {
+  try { const s = await get(ref(db, no("jogo_revisao_online"))); agora = contarAgora(s.exists() ? s.val() : {}, esconder); pintar(); } catch (_) {}
+}
+lerAgora(); setInterval(lerAgora, 30000);
+
+function pintar() {
+  if (pendente) return;
+  pendente = true;
+  requestAnimationFrame(() => {
+    pendente = false;
+    const rk = montarRanking(d.desafio, d.nomes, d.status, esconder), top = rk.slice(0, 10);
+    const novos = topAntes ? top.filter(r => !topAntes.has(r.chave)).map(r => r.chave) : [];
+    topAntes = new Set(top.map(r => r.chave));
+    $("rk").innerHTML = top.length ? top.map((r, i) => `<li class="${["p1", "p2", "p3"][i] || ""}${novos.includes(r.chave) ? " pisca" : ""}"><span>${["🥇", "🥈", "🥉"][i] || i + 1 + "º"}</span><b>${esc(r.rotulo)}</b><em>${r.total}</em></li>`).join("")
+      : '<li class="vazio">Ninguém ainda. Faça o 📝 desafio nas salas!</li>';
+    const cp = montarCompletos(d.completos, d.nomes, d.status, esconder), cl = cp.lista.slice(0, 8);
+    $("comp").innerHTML = cl.length ? cl.map(c => `<li>${esc(c.rotulo)}</li>`).join("") : '<li class="vazio">Ninguém ainda.</li>';
+    $("comp-mais").textContent = cp.total > cl.length ? `e mais ${cp.total - cl.length}` : "";
+    $("agora").innerHTML = `<b>${agora ?? "…"}</b> ${agora === 1 ? "pessoa visitando" : "pessoas visitando"}`;
+    const c = Object.entries(d.curtidas || {}).map(([n, us]) => [Number(n), Object.keys(us || {}).filter(u => us[u] === true && !esconder(u)).length])
+      .filter(([, q]) => q > 0).sort((a, b) => b[1] - a[1] || portaDe(a[0]) - portaDe(b[0])).slice(0, 3);
+    $("curt").innerHTML = c.length ? c.map(([n, q]) => `<li>Porta ${portaDe(n)}${nomeSala(n) ? " · " + esc(nomeSala(n)) : ""} <em>❤️ ${q}</em></li>`).join("") : '<li class="vazio">Ainda sem curtidas.</li>';
+  });
+}
+</script>
+</body>
+</html>
