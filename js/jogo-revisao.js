@@ -40,6 +40,7 @@ import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, t
   sortearAcaoParado, EMOCOES, MS_EMOCAO, coresDragao, aceitaCor, ehFormaAdulta, formaComCor, definirNoite,
   NOME_COR_PET, NOME_ORIGINAL_PET, petDaCor, adultoDaCor, coresDoPet, FUNDOS_PET, ADULTO_E_FILHOTE, CRESCE_ADULTO_FILHOTE, filhoteDoAdulto } from '/js/jogo-revisao/pets.js';
 import { temPalavrao } from '/js/palavroes.js';
+import { configurarJogosExpo, jogoDaSalaExpo, abrirJogoExpo, abrirMenuJogosExpo, npcsSaguaoExpo, jogosExpo, jogoAbertoExpo } from '/js/jogo-revisao/expo-jogos.js';   // 🎲 PROMPT-259
 import { bonusDe, BONUS_ZERA_S, PONTOS_ACERTO, NOME_MAX, TURMA_MAX, limparNome, rotuloNome, chaveNome, totalDe, montarRanking, montarCompletos, contarAgora } from '/js/jogo-revisao/expo-ranking.js';   // 📝 PROMPT-257   // 🚫 PROMPT-246: recados do livro de visitas
 import { lerTodos, lerRegistro, iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, soOuvirOnline, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 // 👀 PROMPT-253: a prévia da Exposição (/exposicao?previa=1) não grava NADA no Firebase. A guarda única: todo set/update/push/
@@ -9403,6 +9404,7 @@ function carregarFalasExpo() {
   if (FALAS_EXPO) return;
   fetch(`${DADOS}/exposicao-falas.json`).then(r => (r.ok ? r.json() : null)).then(j => { if (j && typeof j === 'object') FALAS_EXPO = j; })
     .catch(() => console.warn('[jogo-revisao] exposicao-falas.json indisponível'));
+  carregarJogosExpo();   // 🎲 PROMPT-259
   if (!DESAFIO) fetch(`${DADOS}/exposicao-desafio.json`).then(r => (r.ok ? r.json() : null)).then(j => { if (j?.perguntas && typeof j.perguntas === 'object') DESAFIO = j; })   // 📝 PROMPT-257 (sem o arquivo: sem desafio)
     .catch(() => console.warn('[jogo-revisao] exposicao-desafio.json indisponível'));
 }
@@ -9772,6 +9774,7 @@ function ligarEventosPublicoExpo() {
   $('btn-expo-carimbos').addEventListener('click', () => { tocar('clique'); abrirCarimbosExpo(); });   // 🏅 PROMPT-254
   ligarEventosDesafioExpo();   // 📝 PROMPT-257
   ligarEventosCartaoExpo();    // ✨🖼️ PROMPT-258
+  $('btn-expo-jogo').addEventListener('click', () => { const id = jogoDaSalaExpo(temaDaSala(salaExpo())?.id); if (id) { tocar('clique'); abrirJogoExpo(id); } });   // 🎲 PROMPT-259
   if (window.visualViewport) {   // ⌨️ PROMPT-254: com o teclado aberto, o livro e os parabéns ficam na parte visível da tela
     const vv = window.visualViewport, seguir = () => { const g = document.documentElement.classList.contains('jr-girado'); for (const id of ['expo-livro', 'expo-parabens', 'expo-desafio']) { const el = $(id); el.style.top = g ? '' : vv.offsetTop + 'px'; el.style.height = g ? '' : vv.height + 'px'; } };   // girado: o jogo já cuida
     vv.addEventListener('resize', seguir); vv.addEventListener('scroll', seguir); seguir();
@@ -9816,7 +9819,7 @@ function ligarEventosPublicoExpo() {
 // Vale a melhor de cada sala (exposicao_desafio/{uid}). O nome (exposicao_nomes) só entra no ranking depois que a professora
 // aprova (exposicao_nomes_status). A professora joga sem gravar; a prévia guarda tudo só na memória.
 let DESAFIO = null;
-const desMem = { salas: {}, total: 0, ts: 0, nome: null, resp: {} };   // 👀 a prévia
+const desMem = { salas: {}, jogos: {}, total: 0, ts: 0, nome: null, resp: {} };   // 👀 a prévia
 const desTodos = { desafio: {}, nomes: {}, status: {}, completos: {} };  // os quatro nós, ao vivo (o painel e o "você")
 let desOuvindo = false, desRodada = null, desTimer = 0, desAvanco = 0, desProxPainel = 0;
 const desJogadas = new Set();      // salas em que já jogou nesta visita (mesmo com 0)
@@ -9987,10 +9990,10 @@ async function terminarRodadaDesafio() {
   } else if (melhorou && gravaDesafio()) {
     if (expoModo !== 'aberto') d.gravou = 'fechado';
     else {
-      const salas = { ...(meuDesafio()?.salas || {}), [n]: d.pts }, total = totalDe({ salas }), ts = Date.now();
+      const salas = { ...(meuDesafio()?.salas || {}), [n]: d.pts }, total = totalDe({ salas, jogos: meuDesafio()?.jogos || {} }), ts = Date.now();   // 🎲 o total soma os jogos
       try {
         await update(ref(db, `${noExpo('exposicao_desafio')}/${sessao.uid}`), { [`salas/${n}`]: d.pts, total, ts });
-        desTodos.desafio = { ...desTodos.desafio, [sessao.uid]: { salas, total, ts } };
+        desTodos.desafio = { ...desTodos.desafio, [sessao.uid]: { ...(meuDesafio() || {}), salas, total, ts } };
         d.gravou = 'ok';
         await garantirNomeAlunoExpo();
       } catch (e) { console.warn('[jogo-revisao] desafio', e?.code || e); d.gravou = 'erro'; }
@@ -10292,6 +10295,82 @@ function ligarEventosCartaoExpo() {
   });
 }
 
+// ══ 🎲 PROMPT-259: os jogos da Exposição (js/jogo-revisao/expo-jogos.js) e Duda, Marcos e Joana no saguão ══════════════
+// dados/jogo/exposicao-jogos.json. Pontos: o melhor de cada jogo em exposicao_desafio/{uid}/jogos/{id}; o total soma salas e jogos.
+let jogosExpoCarregando = false, falaNpcSaguaoT = 0, falaNpcSaguaoK = 0;
+function carregarJogosExpo() {
+  if (jogosExpoCarregando) return;
+  jogosExpoCarregando = true;
+  if (!NPCS.length) fetch(`${DADOS}/npcs.json`).then(r => (r.ok ? r.json() : null)).then(j => { if (!NPCS.length && Array.isArray(j?.npcs)) { NPCS = j.npcs; if (ehSaguao()) montarPessoas('saguao'); } }).catch(() => {});
+  fetch(`${DADOS}/exposicao-jogos.json`).then(r => (r.ok ? r.json() : null)).then(j => {
+    if (!j?.jogos) return;
+    configurarJogosExpo(j, {
+      pai: $('expo-desafio').parentElement, esc, tocar, lerLocal, gravarLocal,
+      previa: () => expoPrevia,
+      melhor: (id) => Number(meuDesafio()?.jogos?.[id]) || 0,
+      gravar: gravarJogoExpo,
+      npc: (id) => { const p = NPCS.find(x => x.id === id); return p ? { nome: p.nome, img: `${IMG}/npcs/${p.id}.webp` } : null; },
+      oponentePet: () => (seguidor?.pet && !$('pet').hidden ? { nome: nomePet(seguidor.pet), img: srcIcone(seguidor.forma) } : null),
+      salaDoJogo: (id) => { const ts = jogosExpo()[id]?.sala_tema || [], n = salasAbertasExpo().find(k => ts.includes(temaDaSala(k)?.id) || ts.includes(String(temaDaSala(k)?.id || '').replace(/_\d+$/, ''))); return n ? `Porta ${portaDaSala(n)}${tituloTemaSala(n) ? ' · ' + tituloTemaSala(n) : ''}` : ''; },
+    });
+    if (ehSaguao()) montarPessoas('saguao');
+  }).catch(() => console.warn('[jogo-revisao] exposicao-jogos.json indisponível'));
+}
+// os NPCs do saguão: as imagens e os tamanhos do npcs.json; perto da entrada, sem tapar portas, o livro nem o caminho
+const POS_NPCS_SAGUAO = { duda: [585, 700], marcos: [470, 640], joana: [1190, 690] };
+function npcsDoSaguaoExpo() {
+  return npcsSaguaoExpo().map((c, i) => {
+    const p = NPCS.find(x => x.id === c.id);
+    if (!p) return null;
+    const pos = Array.isArray(c.pos) ? c.pos : POS_NPCS_SAGUAO[c.id] || [470 + i * 120, 690];
+    return { id: p.id, nome: p.nome, w: p.w, h: p.h, escala: p.escala, piscar: p.piscar, x: Number(pos[0]), y: Number(pos[1]), falas: c.falas || [], jogosExpo: true, destaqueJogo: c.destaque };
+  }).filter(Boolean);
+}
+// um de cada vez, a cada ~12 s, o balão de NPC dos mapas (sem cobrir janelas)
+function falarNpcSaguaoExpo() {
+  const agora = performance.now();
+  if (!falaNpcSaguaoT) { falaNpcSaguaoT = agora + 4000; return; }
+  if (agora < falaNpcSaguaoT) return;
+  falaNpcSaguaoT = agora + 12000;
+  const os = pessoasMapa.filter(o => o.p.jogosExpo);
+  if (!os.length || balaoPessoa || sobreposicaoAberta() || transicionando || $('tela-cena').hidden) return;
+  const o = os[falaNpcSaguaoK++ % os.length], fs = o.p.falas;
+  if (!fs.length) return;
+  const el = $('pessoa-balao');
+  el.innerHTML = `<b>${esc(o.p.nome)}</b><span>${esc(sortearDe(fs))}</span><div class="jr-pessoa-convite expo-npc-toque">🎲 Toque em mim para jogar!</div>`;
+  el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  balaoPessoa = { o, timer: setTimeout(fecharBalaoPessoa, 5000) };
+  posicionarBalaoPessoa();
+}
+const sortearDe = (l) => l[Math.floor(Math.random() * l.length)];
+function atualizarJogosExpo() {
+  const b = $('btn-expo-jogo'), n = salaExpo(), id = n && jogoDaSalaExpo(temaDaSala(n)?.id);
+  const sem = !(id && !$('tela-cena').hidden && !ex?.editando && !ex?.ver);
+  if (b.hidden !== sem) b.hidden = sem;
+  if (!sem) { const t = `Jogo: ${jogosExpo()[id]?.nome || ''}`; if (b.title !== t) { b.title = t; b.setAttribute('aria-label', t); } }   // o rótulo fica "🎲 Jogo" (cabe ao lado das reações)
+  if (ehSaguao()) falarNpcSaguaoExpo(); else falaNpcSaguaoT = 0;
+}
+// o melhor de cada jogo (como o desafio: a professora e a prévia só na memória; com a exposição aberta)
+async function gravarJogoExpo(id, pts) {
+  const max = Math.min(30, Number(jogosExpo()[id]?.pontos_max) || 30), v = Math.max(0, Math.min(max, Math.round(Number(pts) || 0)));
+  const antes = Number(meuDesafio()?.jogos?.[id]) || 0;
+  if (expoPrevia || ehProfessora()) {
+    if (v > antes) { desMem.jogos = { ...desMem.jogos, [id]: v }; desMem.total = totalDe(desMem); desMem.ts = Date.now(); }
+    return expoPrevia ? 'previa' : 'prof';
+  }
+  if (!gravaDesafio()) return 'teste';
+  if (v <= antes) return '';
+  if (expoModo !== 'aberto') return 'fechado';
+  const reg = meuDesafio() || {}, jogos = { ...(reg.jogos || {}), [id]: v }, total = totalDe({ salas: reg.salas || {}, jogos }), ts = Date.now();
+  try {
+    await update(ref(db, `${noExpo('exposicao_desafio')}/${sessao.uid}`), { [`jogos/${id}`]: v, total, ts });
+    desTodos.desafio = { ...desTodos.desafio, [sessao.uid]: { ...reg, jogos, total, ts } };
+    await garantirNomeAlunoExpo();
+    return 'ok';
+  } catch (e) { console.warn('[jogo-revisao] pontos do jogo', e?.code || e); return 'erro'; }
+}
+
 // ── Pavilhão na Praça ───────────────────────────────────────
 function bloquearPavilhao(g0) {   // cópia (a grade da trilha fica em cache e serve a Praça sem o pavilhão)
   const g = Uint8Array.from(g0), b = EXPO.pavilhao.bloqueio;
@@ -10383,6 +10462,7 @@ async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (ap
   mapearPortasExpo();   // 🚪 PROMPT-240: cada porta abre a sala da ordem da visita
   desenharPlacasExpo();
   montarLivroExpo();    // 📖 PROMPT-246
+  montarPessoas('saguao');   // 🎲 PROMPT-259: Duda, Marcos e Joana chamando para jogar
   destinoEspecial = null;
   alvoMapa = null;
   pertoSaidaGin = false;
@@ -10571,6 +10651,7 @@ function musicaDaSala(ignorarMudo = false) {
 function atualizarHudExpo() {
   pintarGrio();
   atualizarBotaoDesafio(); atualizarPainelExpo();   // 📝📺 PROMPT-257
+  atualizarJogosExpo();   // 🎲 PROMPT-259
   const rb = $('expo-reac-barra'), semR = !(salaExpo() && !$('tela-cena').hidden && !ex?.editando && !ex?.ver);   // ✨ PROMPT-258: só nas salas
   if (rb.hidden !== semR) rb.hidden = semR;
   const bv = $('btn-expo-votar'), semV = !(ehSaguao() && expoModo === 'aberto' && !ehProfessora());   // 🗳️ PROMPT-246
@@ -18282,6 +18363,7 @@ function montarPessoas(n) {
   const posNoInterior = (p) => xy(p.id === cfgLoja().vendedor ? LOJA?.vendedora?.pos : p.id === 'teo' ? FLIPER?.teo || FLIPER?.balcao : p.id === 'lia_cientista' ? LAB?.lia : null);
   const lista = n === 'loja' || n === 'fliperama' || n === 'laboratorio'
     ? NPCS.filter(p => p.interior === n).map(p => { const pos = posNoInterior(p); return pos ? { ...p, x: pos[0], y: pos[1] } : p; })
+    : n === 'saguao' ? npcsDoSaguaoExpo()   // 🎲 PROMPT-259 (eles continuam nos mapas de sempre)
     : NPCS.filter(p => p.mapa === n && !p.interior);
   lista.slice(0, 9).forEach((p, i) => {
     const alt = altPessoa(p), larg = alt * p.w / p.h;
@@ -18379,6 +18461,7 @@ function atualizarIconesPessoas() {
   const fvLig = favoresLigados();
   if (fvLig) renovarFavores();
   for (const o of pessoasMapa) {
+    if (o.p.jogosExpo) { o.icone.innerHTML = ''; o.temIcone = false; o.icone.hidden = true; continue; }   // 🎲 no saguão: sem ⚔️ nem pedidos
     const descansa = o.treinador && situacao(desafioCom(o.p.id)) === 'descansando';
     const ped = !!pedidoDe(o.p.id) || (o.p.id === 'engrenaldo' && !estado.avisos?.lab_visto);   // Engrenaldo: ! até entrar no laboratório
     const fvOf = fvLig && ofertaDe(o.p.id) && !fv().abertos[ofertaDe(o.p.id).id], fvAlvo = fvLig && abertoPara(o.p.id);   // 📜 PROMPT-239
@@ -18439,6 +18522,7 @@ function motivoSemBatalha() {
 }
 function falarCom(o, convite = false) {   // convite: tocou no Engrenaldo → pergunta se quer ir para a Ilha dos Robôs
   if (perguntaAberta || transicionando || cena?.tipo !== 'mapa' || !o.img.isConnected) return;
+  if (o.p.jogosExpo) { fecharBalaoPessoa(); jog.dir = o.p.x < jog.x ? 'esquerda' : 'direita'; desenharJogador(); tocar('clique'); abrirMenuJogosExpo(o.p.id); return; }   // 🎲 PROMPT-259
   jog.dir = o.p.x < jog.x ? 'esquerda' : 'direita';
   desenharJogador();
   const falas = o.p.falas || [];

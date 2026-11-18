@@ -6,7 +6,7 @@
 // No ranking: só os aprovados; o mesmo nome (sem acento, sem maiúsculas) com a mesma turma aparece uma vez, com a melhor.
 
 export const PONTOS_ACERTO = 10, BONUS_MAX = 5, BONUS_ATE_S = 5, BONUS_CAI_S = 3;
-export const MAX_SALA = 45, MAX_TOTAL = 585, NOME_MAX = 20, TURMA_MAX = 6;
+export const MAX_SALA = 45, MAX_JOGO = 30, MAX_TOTAL = 690, NOME_MAX = 20, TURMA_MAX = 6;   // 🎲 PROMPT-259: salas + jogos, até 690
 // bônus de rapidez: +5 até 5 s, depois 1 a menos a cada 3 s (0 a partir de 20 s)
 export const bonusDe = (t) => Math.max(0, BONUS_MAX - Math.floor(Math.max(0, t - BONUS_ATE_S) / BONUS_CAI_S));
 export const BONUS_ZERA_S = BONUS_ATE_S + BONUS_MAX * BONUS_CAI_S;
@@ -18,10 +18,11 @@ export const rotuloNome = (n) => `${limparNome(n?.nome)}${limparNome(n?.turma, T
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 const ordemRk = (a, b) => b.total - a.total || a.ts - b.ts;
 
-// o total de cada uid (a soma das salas, no máximo 585: não confia só no "total" gravado)
+// o total de cada uid (a soma das salas e dos jogos, no máximo 690: não confia só no "total" gravado)
 export function totalDe(reg) {
   if (!reg || typeof reg !== 'object') return 0;
-  const s = Object.values(reg.salas || {}).reduce((t, v) => t + Math.min(MAX_SALA, Math.max(0, num(v))), 0);
+  const s = Object.values(reg.salas || {}).reduce((t, v) => t + Math.min(MAX_SALA, Math.max(0, num(v))), 0)
+    + Object.values(reg.jogos || {}).reduce((t, v) => t + Math.min(MAX_JOGO, Math.max(0, num(v))), 0);
   return Math.min(MAX_TOTAL, s);
 }
 

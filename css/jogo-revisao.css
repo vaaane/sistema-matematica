@@ -6353,3 +6353,160 @@ html.jr-girado .expo-cartao-img { height: calc(100vw - 80px); max-height: calc(1
 html.jr-girado .expo-cartao-corpo { flex-direction: row; }
 html.jr-girado .expo-cartao-bts { flex-direction: column; flex-wrap: nowrap; max-width: 220px; }
 html.jr-girado .expo-cartao-caixa { max-width: calc(100dvh - 24px); max-height: calc(100vw - 24px); }
+
+/* ══ 🎲 PROMPT-259: os jogos da Exposição (menu, tutorial, Shisima, Yoté, Linha do tempo, Mito ou verdade) ══ */
+.expo-jogo-b { border-color: rgba(0,230,118,.6); color: #00e676; }
+.expo-npc-toque { margin-top: 4px; font-weight: 700; color: #7c5cfc; }
+.expo-caixa.ej-menu-caixa { width: min(640px, calc(100vw - 24px)); max-width: none; }
+.ej-rosto { height: 30px; vertical-align: middle; margin-right: 6px; border-radius: 6px; background: #1a1d33; object-fit: contain; object-position: top; }
+.ej-item { display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; background: #15172a; margin-bottom: 8px; border: 1px solid transparent; }
+.ej-item.fav { border-color: #ffd700; background: #1d1a2a; }
+.ej-ic { font-size: 28px; text-align: center; }
+.ej-item-t { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ej-item-t b { font: 700 18px 'Rajdhani', sans-serif; color: #fff; }
+.ej-item-t em { font-style: normal; font-size: 12px; color: #ffd700; font-weight: 700; }
+.ej-item-t small { font-size: 12px; color: #8d8fa8; }
+.ej-item-bts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.ej-item-bts .jr-btn { padding: 6px 12px; font-size: 14px; }
+.expo-caixa.ej-caixa { max-width: none; text-align: left; width: min(860px, calc(100vw - 24px)); height: min(560px, calc(100dvh - 24px)); position: relative; }
+.ej-topo-bts { display: flex; gap: 8px; align-items: center; }
+.ej-ajuda { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 999px; width: 34px; height: 34px; font-size: 16px; cursor: pointer; }
+.ej-c { flex: 1 1 auto; min-height: 0; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+/* tutorial */
+.ej-tut { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: center; height: 100%; min-height: 0; }
+.ej-tut-fig { height: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.ej-tut-fig .ej-svg { max-height: 100%; max-width: 100%; }
+.ej-tut-txt { display: flex; flex-direction: column; gap: 10px; }
+.ej-tut-txt small { color: #8d8fa8; font-weight: 600; }
+.ej-tut-txt p { margin: 0; font: 600 19px/1.35 'Inter', sans-serif; color: #fff; }
+.ej-tut-bts { display: flex; gap: 8px; flex-wrap: wrap; }
+.ej-tut-bts .jr-btn:disabled { opacity: .4; }
+.ej-tut-sobre { position: absolute; inset: 0; z-index: 5; background: #12142a; padding: 4px; }
+.ej-ex-cartas { display: flex; align-items: center; gap: 6px; }
+.ej-ex-cartas i { color: #ffd700; font-style: normal; }
+.ej-ex-frase p { font: 600 18px/1.3 'Inter', sans-serif; color: #fff; margin: 0 0 10px; }
+/* tabuleiros */
+.ej-svg { width: 100%; height: 100%; display: block; }
+.ej-linhas line { stroke: #8d7bd8; stroke-width: 4; stroke-linecap: round; }
+.ej-linha { fill: none; stroke: #00e676; stroke-width: 10; stroke-linecap: round; opacity: .75; }
+.ej-p1 { fill: #ffd700; stroke: #8a6d00; stroke-width: 3; }
+.ej-p2 { fill: #7c5cfc; stroke: #3b2a8a; stroke-width: 3; }
+.ej-p1.sel { stroke: #fff; stroke-width: 5; }
+.ej-p1.ult, .ej-p2.ult { filter: drop-shadow(0 0 6px #fff); }
+.ej-vazio { fill: #4c4370; }
+.ej-vazio.dest, .ej-vazio.brilha { fill: #00e676; animation: ej-pulsa 1s ease-in-out infinite; }
+@keyframes ej-pulsa { 50% { opacity: .5; } }
+.ej-alvo { fill: transparent; }
+.ej-ponto { cursor: pointer; }
+.ej-seta { stroke: #00e676; stroke-width: 6; stroke-linecap: round; fill: none; }
+.ej-x { stroke: #ef4444; stroke-width: 5; stroke-linecap: round; }
+.ej-casa { fill: #2a2448; stroke: #4c4370; }
+.ej-txt-svg { font: 700 18px 'Rajdhani', sans-serif; fill: #ffd700; }
+.ej-txt-op { fill: #b9a8ff; }
+.ej-mesa { display: grid; grid-template-columns: auto minmax(160px, 1fr); gap: 14px; flex: 1 1 auto; height: 100%; min-height: 0; align-items: center; position: relative; }
+.ej-tab { height: 100%; aspect-ratio: 1; min-height: 0; max-width: 60vw; }
+.ej-lado { display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; min-width: 0; }
+.ej-op { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 30px; }
+.ej-op img { height: 78px; max-width: 90px; object-fit: contain; }
+.ej-op-ic { font-size: 50px; }
+.ej-op b { font: 700 17px 'Rajdhani', sans-serif; color: #b9a8ff; }
+.ej-balao { position: absolute; top: -6px; left: 50%; transform: translate(-50%, -100%); background: #fff; color: #15102a; border-radius: 12px; padding: 4px 10px;
+  font: 700 14px 'Inter', sans-serif; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.4); z-index: 3; }
+.ej-balao.pop { animation: jr-reacao-entra .25s ease-out; }
+.ej-status { margin: 0; font: 600 15px/1.3 'Inter', sans-serif; color: #fff; }
+.ej-cont { color: #8d8fa8; }
+/* Yoté: a grade de casas */
+.ej-mesa:has(.ej-yote) { grid-template-columns: minmax(0, 1fr) minmax(150px, 190px); container-type: size; }
+.ej-tab.ej-yote { display: grid; grid-template-columns: repeat(var(--cols), 1fr); grid-template-rows: repeat(var(--lins), 1fr); gap: 4px;
+  width: min(100%, calc(100cqh * var(--cols) / var(--lins))); height: auto; aspect-ratio: var(--cols) / var(--lins); max-width: none; justify-self: center; }
+.ej-cel { background: #2a2448; border: 2px solid #4c4370; border-radius: 8px; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; min-width: 0; min-height: 0; }
+.ej-cel i { width: 72%; aspect-ratio: 1; border-radius: 50%; display: block; }
+.ej-cel i.ej-p1 { background: #ffd700; box-shadow: inset 0 -3px 0 #8a6d00; }
+.ej-cel i.ej-p2 { background: #7c5cfc; box-shadow: inset 0 -3px 0 #3b2a8a; }
+.ej-cel i.sel { outline: 3px solid #fff; }
+.ej-cel.dest { border-color: #00e676; background: rgba(0,230,118,.18); }
+.ej-cel.cap { border-color: #ff7b2e; background: rgba(255,123,46,.25); }
+.ej-cel.rm { border-color: #ef4444; animation: ej-pulsa 1s ease-in-out infinite; }
+.ej-cel.ult { box-shadow: 0 0 0 2px rgba(255,255,255,.5) inset; }
+.ej-maos { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.ej-mao { font: 600 14px 'Inter', sans-serif; color: #c9cbe0; background: #15172a; border: 1px solid #2c2f4a; border-radius: 10px; padding: 4px 8px; }
+.ej-mao b { font: 700 16px 'Rajdhani', sans-serif; color: #ffd700; }
+.ej-mao.op b { color: #b9a8ff; }
+.ej-mao.op:disabled { cursor: default; opacity: 1; }
+.ej-mao.rm { border-color: #ef4444; cursor: pointer; animation: ej-pulsa 1s ease-in-out infinite; }
+/* fim de Shisima e Yoté */
+.ej-fim { position: absolute; inset: 0; z-index: 4; background: rgba(13,15,26,.92); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 10px; color: #e6e7f2; }
+.ej-fim[hidden] { display: none; }
+.ej-fim-t { font: 700 28px 'Rajdhani', sans-serif; color: #ffd700; }
+.ej-fim-t em { font-style: normal; color: #00e676; }
+.ej-fim-e { margin: 0; max-width: 560px; font: 15px/1.35 'Inter', sans-serif; color: #c9cbe0; }
+.ej-fim-bts { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+/* Linha do tempo */
+.ej-linha-t { display: flex; justify-content: space-between; gap: 8px; font: 600 13px 'Inter', sans-serif; color: #8d8fa8; margin-bottom: 6px; }
+.ej-cartas { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; flex: 1 1 auto; min-height: 0; }
+.ej-carta { position: relative; background: #f3ead2; color: #2a1d0f; border-radius: 12px; padding: 22px 8px 8px; font: 600 14px/1.25 'Inter', sans-serif; display: flex; flex-direction: column; gap: 4px;
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; border: 3px solid transparent; box-shadow: 0 3px 8px rgba(0,0,0,.35); overflow: hidden; }
+.ej-carta em { position: absolute; top: 4px; left: 8px; font: 700 14px 'Rajdhani', sans-serif; color: #8a6d00; font-style: normal; }
+.ej-carta b { font: 700 24px 'Orbitron', sans-serif; color: #15102a; }
+.ej-carta.sel { border-color: #7c5cfc; transform: translateY(-4px); }
+.ej-carta.arrastando { opacity: .6; transform: scale(1.04); }
+.ej-carta.alvo { border-color: #00d4ff; }
+.ej-carta.certa { background: #c9f7dc; border-color: #00a86b; }
+.ej-carta.errada { background: #ffd6d6; border-color: #c62828; }
+.ej-carta.mini { padding: 6px; font-size: 12px; width: 110px; cursor: default; }
+.ej-carta.mini b { font-size: 16px; }
+.ej-linha-rod { flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 8px; }
+.ej-linha-res { margin: 0; text-align: center; font: 600 15px 'Inter', sans-serif; color: #fff; }
+/* Mito ou verdade */
+.ej-mv { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; }
+.ej-mv-topo { display: flex; justify-content: space-between; font: 600 14px 'Inter', sans-serif; color: #c9cbe0; }
+.ej-mv-frase { margin: auto 0 0; font: 700 24px/1.3 'Inter', sans-serif; color: #fff; text-align: center; padding: 0 8px; }
+.ej-mv > :last-child { margin-bottom: auto; }
+.ej-mv-bts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ej-mv-bts button, .ej-mv-bts span { font: 800 28px 'Rajdhani', sans-serif; letter-spacing: 1px; border-radius: 14px; padding: 22px 16px; border: 0; cursor: pointer; color: #fff; text-align: center; }
+.ej-mv-bts.mini span { font-size: 16px; padding: 8px; }
+.ej-mito { background: #c62828; }
+.ej-verd { background: #00a86b; }
+.ej-mv-res { text-align: center; font: 700 18px 'Inter', sans-serif; }
+.ej-mv-res.ok b { color: #00e676; }
+.ej-mv-res.nao b { color: #ef4444; }
+.ej-mv-res strong { font: 800 22px 'Rajdhani', sans-serif; color: #ffd700; margin-left: 6px; }
+.ej-mv-exp { background: #12142a; border: 1px solid rgba(255,215,0,.35); border-radius: 12px; padding: 8px 12px; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+.ej-mv-exp p { margin: 0; font: 15px/1.35 'Inter', sans-serif; color: #e6e7f2; }
+.ej-mv-fim { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; height: 100%; text-align: center; color: #e6e7f2; font: 16px 'Inter', sans-serif; }
+/* celular deitado: tudo menor */
+@media (max-height: 500px) {
+  .expo-caixa.ej-caixa { height: calc(100dvh - 16px); padding: 8px 10px; }
+  .ej-tut-txt p { font-size: 16px; }
+  .ej-op { margin-top: 26px; }
+  .ej-op img { height: 56px; }
+  .ej-status { font-size: 13px; }
+  .ej-carta { font-size: 12px; padding: 20px 6px 6px; }
+  .ej-carta b { font-size: 18px; }
+  .ej-mv { gap: 6px; }
+  .ej-mv-frase { font-size: 19px; }
+  .ej-mv-bts button { padding: 18px 12px; font-size: 26px; }
+  .ej-mv-exp p { font-size: 14px; }
+  .ej-mv-res { font-size: 16px; }
+  .ej-fim-t { font-size: 24px; }
+  .ej-fim-e { font-size: 13px; }
+  .ej-item { padding: 6px 8px; margin-bottom: 6px; }
+}
+@media (orientation: portrait) and (max-width: 600px) {
+  .ej-tut { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+  .ej-mesa { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+  .ej-tab { height: auto; width: 100%; max-width: none; }
+  .ej-cartas { grid-template-columns: 1fr; }
+  .ej-item { grid-template-columns: 34px 1fr; }
+  .ej-item-bts { grid-column: 1 / -1; justify-content: stretch; }
+}
+html.jr-girado .expo-caixa.ej-caixa { max-width: none; width: min(860px, calc(100dvh - 24px)); height: calc(100vw - 16px); }
+html.jr-girado .expo-caixa.ej-menu-caixa { max-width: none; width: min(640px, calc(100dvh - 24px)); max-height: calc(100vw - 24px); }
+html.jr-girado .ej-tut { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: none; }
+html.jr-girado .ej-mesa { grid-template-columns: auto minmax(150px, 1fr); grid-template-rows: none; }
+html.jr-girado .ej-tab { height: 100%; width: auto; max-width: 62dvh; }
+html.jr-girado .ej-tab.ej-yote { height: auto; width: min(100%, calc(100cqh * var(--cols) / var(--lins))); max-width: none; }
+@media (orientation: portrait) and (max-width: 600px) { html:not(.jr-girado) .ej-mesa:has(.ej-yote) { grid-template-columns: 1fr; container-type: normal; } html:not(.jr-girado) .ej-tab.ej-yote { width: 100%; } }
+html.jr-girado .ej-cartas { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+html.jr-girado .ej-item { grid-template-columns: 40px 1fr auto; }
+html.jr-girado .ej-item-bts { grid-column: auto; }

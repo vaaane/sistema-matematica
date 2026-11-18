@@ -1,0 +1,399 @@
+{
+ "_nota": "PROMPT-259: jogos da Exposição. sala_tema = id do tema (exposicao.json → temas[].id). pontos_max por jogo; vale o melhor resultado de cada jogo no ranking (exposicao_desafio/{uid}/jogos/{id}). Os NPCs do saguão usam as imagens e os dados de npcs.json (mesmo id).",
+ "jogos": {
+  "shisima": {
+   "nome": "Shisima",
+   "icone": "🔷",
+   "origem": "Quênia",
+   "sala_tema": [
+    "raizes"
+   ],
+   "pontos_max": 25,
+   "pontos": {
+    "vitoria": 25,
+    "empate": 3,
+    "derrota": 5
+   },
+   "limite_jogadas": 30,
+   "tutorial": [
+    "O tabuleiro é um octógono: 8 pontas e o centro, ligados por linhas. Cada jogador tem 3 peças.",
+    "Na sua vez, mova uma peça para um ponto vizinho vazio: pela borda ou para o centro. Não pode pular.",
+    "Ganha quem fizer 3 peças em linha reta passando pelo centro.",
+    "Dica: quem ocupa o centro tem vantagem, mas cuidado para não ficar sem jogada!"
+   ],
+   "fim": "O Shisima é jogado por crianças no Quênia, desenhado no chão com pedrinhas. O nome quer dizer \"nascente de água\"."
+  },
+  "yote": {
+   "nome": "Yoté",
+   "icone": "⚫",
+   "origem": "Senegal",
+   "sala_tema": [
+    "saberes"
+   ],
+   "pontos_max": 25,
+   "pontos": {
+    "vitoria": 25,
+    "empate": 3,
+    "derrota": 5
+   },
+   "tabuleiro": [
+    5,
+    6
+   ],
+   "pecas_na_mao": 8,
+   "limite_jogadas": 60,
+   "tutorial": [
+    "O tabuleiro tem 5 × 6 casas. Cada jogador começa com 8 peças na mão, fora do tabuleiro.",
+    "Na sua vez, coloque uma peça da mão numa casa vazia, ou ande uma peça 1 casa, sem diagonal.",
+    "Para capturar, pule por cima de uma peça do outro que está do seu lado e caia na casa vazia logo atrás.",
+    "Bônus! Ao capturar, você ainda tira mais uma peça do outro: do tabuleiro ou da mão dele.",
+    "Ganha quem tirar todas as peças do outro. Em 60 jogadas sem vencedor, ganha quem tiver mais peças."
+   ],
+   "fim": "O Yoté é jogado na África Ocidental com conchas e pedrinhas em buracos na areia. Guardar peças na mão é a grande estratégia."
+  },
+  "linha_tempo": {
+   "nome": "Linha do tempo",
+   "icone": "📜",
+   "sala_tema": [
+    "resistencia"
+   ],
+   "pontos_max": 25,
+   "por_rodada": 5,
+   "pontos_carta": 5,
+   "tutorial": [
+    "Você recebe 5 cartas com fatos da história da população negra no Brasil.",
+    "Arraste as cartas para a ordem certa: do mais antigo para o mais recente.",
+    "Toque em Conferir: as cartas certas ficam verdes e mostram o ano. Cada carta certa vale 5 pontos."
+   ],
+   "cartas": [
+    {
+     "ano": 1695,
+     "txt": "Zumbi dos Palmares é morto em 20 de novembro"
+    },
+    {
+     "ano": 1835,
+     "txt": "Revolta dos Malês, em Salvador"
+    },
+    {
+     "ano": 1850,
+     "txt": "Lei Eusébio de Queirós proíbe o tráfico de africanos"
+    },
+    {
+     "ano": 1871,
+     "txt": "Lei do Ventre Livre"
+    },
+    {
+     "ano": 1884,
+     "txt": "O Ceará acaba com a escravidão"
+    },
+    {
+     "ano": 1888,
+     "txt": "Lei Áurea"
+    },
+    {
+     "ano": 1910,
+     "txt": "Revolta da Chibata"
+    },
+    {
+     "ano": 1931,
+     "txt": "Criação da Frente Negra Brasileira"
+    },
+    {
+     "ano": 1944,
+     "txt": "Abdias Nascimento cria o Teatro Experimental do Negro"
+    },
+    {
+     "ano": 1951,
+     "txt": "Lei Afonso Arinos, a 1ª lei contra o racismo"
+    },
+    {
+     "ano": 1960,
+     "txt": "Carolina Maria de Jesus publica Quarto de Despejo"
+    },
+    {
+     "ano": 1971,
+     "txt": "O Grupo Palmares propõe o 20 de novembro"
+    },
+    {
+     "ano": 1974,
+     "txt": "Nasce o Ilê Aiyê, primeiro bloco afro de Salvador"
+    },
+    {
+     "ano": 1978,
+     "txt": "Criação do Movimento Negro Unificado"
+    },
+    {
+     "ano": 1988,
+     "txt": "A Constituição torna o racismo crime inafiançável"
+    },
+    {
+     "ano": 2003,
+     "txt": "Lei que obriga ensinar história afro-brasileira nas escolas"
+    },
+    {
+     "ano": 2010,
+     "txt": "Estatuto da Igualdade Racial"
+    },
+    {
+     "ano": 2012,
+     "txt": "Lei de Cotas nas universidades federais"
+    },
+    {
+     "ano": 2023,
+     "txt": "Injúria racial passa a ser crime de racismo"
+    },
+    {
+     "ano": 2024,
+     "txt": "20 de novembro vira feriado nacional"
+    }
+   ]
+  },
+  "mito_verdade": {
+   "nome": "Mito ou verdade?",
+   "icone": "🤔",
+   "sala_tema": [
+    "racismo_hoje",
+    "movimentos"
+   ],
+   "pontos_max": 30,
+   "por_rodada": 15,
+   "pontos_acerto": 2,
+   "tutorial": [
+    "Aparecem 15 frases, uma de cada vez.",
+    "Toque em MITO se a frase for falsa, ou em VERDADE se for verdadeira.",
+    "Depois de cada resposta, leia a explicação: ela ensina algo importante! Cada acerto vale 2 pontos."
+   ],
+   "frases": [
+    {
+     "t": "As cotas nas universidades são só pela cor da pele.",
+     "v": false,
+     "e": "Metade das vagas das federais é para quem estudou em escola pública. Dentro delas, há vagas para pretos, pardos, indígenas, quilombolas e pessoas com deficiência, e parte das vagas também considera a renda da família."
+    },
+    {
+     "t": "Quem entra por cota tira notas piores na faculdade.",
+     "v": false,
+     "e": "Estudos de várias universidades mostram que os cotistas têm notas parecidas com as dos outros alunos e abandonam menos o curso."
+    },
+    {
+     "t": "O Supremo Tribunal Federal decidiu que as cotas raciais respeitam a Constituição.",
+     "v": true,
+     "e": "Em 2012, os ministros do STF votaram por unanimidade: as cotas ajudam a corrigir uma desigualdade que vem da escravidão."
+    },
+    {
+     "t": "A Lei de Cotas tem que ser avaliada de tempos em tempos.",
+     "v": true,
+     "e": "A lei de 2012 previa uma revisão em 10 anos. Em 2023, ela foi renovada, e será avaliada de novo a cada 10 anos."
+    },
+    {
+     "t": "Bancas conferem quem pode usar a cota racial.",
+     "v": true,
+     "e": "As bancas de heteroidentificação existem para evitar fraudes, para que a vaga chegue a quem ela é destinada."
+    },
+    {
+     "t": "Cotas só existem no Brasil.",
+     "v": false,
+     "e": "A Índia reserva vagas para grupos discriminados desde 1950, e os Estados Unidos também tiveram ações afirmativas por décadas."
+    },
+    {
+     "t": "Pessoas pardas também fazem parte da população negra.",
+     "v": true,
+     "e": "Para o IBGE e o Estatuto da Igualdade Racial, a população negra é formada por pretos e pardos."
+    },
+    {
+     "t": "No Brasil não existe racismo, porque somos todos misturados.",
+     "v": false,
+     "e": "Isso é chamado de \"mito da democracia racial\". A mistura existe, mas pessoas negras ainda ganham menos e sofrem mais com a violência."
+    },
+    {
+     "t": "Xingar alguém pela cor é 'só' uma ofensa, e não dá nada.",
+     "v": false,
+     "e": "Desde 2023, a injúria racial é crime de racismo: a pena é de 2 a 5 anos de prisão, sem fiança."
+    },
+    {
+     "t": "A princesa Isabel, sozinha, acabou com a escravidão.",
+     "v": false,
+     "e": "A abolição veio de muita luta: quilombos, fugas, revoltas e abolicionistas negros como Luiz Gama, André Rebouças e José do Patrocínio."
+    },
+    {
+     "t": "Chamar alguém de 'moreno' ou 'de cor' é mais educado do que dizer negro.",
+     "v": false,
+     "e": "Negro não é xingamento: é identidade e orgulho. Evitar a palavra passa a ideia de que ser negro é algo ruim."
+    },
+    {
+     "t": "Se existe o Dia da Consciência Negra, deveria existir um 'Dia da Consciência Branca'.",
+     "v": false,
+     "e": "O 20 de novembro lembra a luta contra mais de 300 anos de escravidão e o racismo que continua. Não é uma data contra ninguém."
+    },
+    {
+     "t": "A escravidão foi há tanto tempo que não afeta mais ninguém.",
+     "v": false,
+     "e": "A abolição foi em 1888, há poucas gerações. Muitas desigualdades de hoje, como de renda, moradia e estudo, começaram ali."
+    },
+    {
+     "t": "Os povos africanos não tinham ciência nem escrita antes dos europeus.",
+     "v": false,
+     "e": "A África teve universidades, bibliotecas, matemática, medicina e reinos poderosos, como o Egito, o Mali e Kush."
+    },
+    {
+     "t": "Brincadeira racista entre amigos não tem problema se ninguém reclamar.",
+     "v": false,
+     "e": "Muitas vezes a pessoa não reclama por vergonha ou medo. A \"brincadeira\" machuca do mesmo jeito."
+    },
+    {
+     "t": "Racismo só acontece quando alguém xinga.",
+     "v": false,
+     "e": "Racismo também é excluir, desconfiar, seguir alguém na loja ou negar uma oportunidade por causa da cor."
+    },
+    {
+     "t": "Segundo o IBGE, pretos e pardos já são maioria nas universidades públicas.",
+     "v": true,
+     "e": "Isso aconteceu pela primeira vez em 2018, e as cotas ajudaram muito nessa mudança."
+    },
+    {
+     "t": "Só as pessoas negras precisam lutar contra o racismo.",
+     "v": false,
+     "e": "O racismo é um problema de toda a sociedade. Todo mundo pode, e deve, ser antirracista."
+    },
+    {
+     "t": "Desde 2014, há reserva de vagas para pessoas negras nos concursos públicos federais.",
+     "v": true,
+     "e": "Uma lei de 2014 reservou vagas para pessoas negras nos concursos do governo federal, para que o serviço público tenha a cara do Brasil."
+    },
+    {
+     "t": "Quem entra por cota não precisa fazer prova.",
+     "v": false,
+     "e": "Todos fazem o ENEM ou o vestibular. Os cotistas disputam as vagas entre si e precisam ter nota para passar."
+    },
+    {
+     "t": "Um aluno branco que estudou em escola pública também pode usar cota.",
+     "v": true,
+     "e": "Parte das vagas é só para quem estudou em escola pública, de qualquer cor. As vagas raciais são uma parte dessas."
+    },
+    {
+     "t": "O Brasil foi o último país das Américas a acabar com a escravidão.",
+     "v": true,
+     "e": "Foi em 1888. Muitos países vizinhos já tinham abolido décadas antes."
+    },
+    {
+     "t": "Ensinar história e cultura africana e afro-brasileira na escola é obrigatório por lei.",
+     "v": true,
+     "e": "É a Lei 10.639, de 2003. Desde 2008, a história indígena também é obrigatória."
+    },
+    {
+     "t": "As religiões de matriz africana são 'coisa do mal'.",
+     "v": false,
+     "e": "Isso é preconceito. O candomblé e a umbanda são religiões como as outras, e atacar quem as segue é crime."
+    },
+    {
+     "t": "As pessoas negras são a maioria da população brasileira.",
+     "v": true,
+     "e": "No Censo de 2022, cerca de 55% dos brasileiros se declararam pretos ou pardos."
+    },
+    {
+     "t": "Racismo na internet não dá em nada, porque a pessoa está escondida.",
+     "v": false,
+     "e": "Perfis podem ser identificados pela polícia, e racismo na internet é crime. Guarde prints e denuncie."
+    },
+    {
+     "t": "Zumbi dos Palmares é um herói oficial do Brasil.",
+     "v": true,
+     "e": "O nome dele está no Livro dos Heróis e Heroínas da Pátria desde 1997."
+    },
+    {
+     "t": "Ser antirracista é só não xingar ninguém.",
+     "v": false,
+     "e": "É também agir: aprender, apoiar quem sofre racismo, denunciar e incluir."
+    },
+    {
+     "t": "Os africanos trazidos ao Brasil eram todos de um mesmo povo.",
+     "v": false,
+     "e": "Eram de muitos povos, com línguas e culturas diferentes: bantos, iorubás, jejes, hauçás e outros."
+    },
+    {
+     "t": "No Brasil, pessoas negras e brancas com o mesmo estudo ganham o mesmo salário.",
+     "v": false,
+     "e": "Segundo o IBGE, mesmo com o mesmo nível de estudo, pessoas negras ainda ganham, em média, menos."
+    },
+    {
+     "t": "O Dia da Consciência Negra é a data da Lei Áurea.",
+     "v": false,
+     "e": "A Lei Áurea é de 13 de maio. O 20 de novembro lembra a morte de Zumbi dos Palmares, símbolo da luta pela liberdade."
+    },
+    {
+     "t": "Dandara é reconhecida oficialmente como heroína do Brasil.",
+     "v": true,
+     "e": "Desde 2019, o nome dela está no Livro dos Heróis e Heroínas da Pátria, ao lado de Zumbi."
+    },
+    {
+     "t": "Ainda existem comunidades quilombolas no Brasil.",
+     "v": true,
+     "e": "Mais de 1 milhão de pessoas vivem em comunidades quilombolas, e a Constituição garante a elas o direito à terra."
+    },
+    {
+     "t": "As cotas nas universidades federais também valem para indígenas.",
+     "v": true,
+     "e": "A Lei de Cotas reserva vagas para pretos, pardos e indígenas, e desde 2023 também para quilombolas."
+    },
+    {
+     "t": "A palavra 'mulato' é neutra, sem preconceito.",
+     "v": false,
+     "e": "A palavra vem de \"mula\", o filhote de cavalo com jumento. Muitas pessoas negras a consideram ofensiva."
+    },
+    {
+     "t": "Racismo é um crime que pode ser punido mesmo muitos anos depois.",
+     "v": true,
+     "e": "A Constituição diz que o racismo é imprescritível: não perde o prazo para ser julgado."
+    },
+    {
+     "t": "A capoeira já foi proibida por lei no Brasil.",
+     "v": true,
+     "e": "Em 1890, jogar capoeira na rua podia dar prisão. Hoje, ela é Patrimônio Cultural da Humanidade."
+    },
+    {
+     "t": "A maioria das vítimas de homicídio no Brasil é negra.",
+     "v": true,
+     "e": "Segundo o Atlas da Violência, cerca de 3 em cada 4 vítimas de homicídio são pessoas negras."
+    },
+    {
+     "t": "Machado de Assis, o maior escritor brasileiro, era branco.",
+     "v": false,
+     "e": "Machado era negro, neto de pessoas escravizadas. Por muito tempo, suas fotos foram \"clareadas\" em livros e retratos."
+    },
+    {
+     "t": "Quem tem um bisavô negro pode se declarar negro para usar a cota racial.",
+     "v": false,
+     "e": "A cota racial considera a aparência da pessoa, como a cor da pele e os traços, e não a ancestralidade. As bancas conferem isso."
+    }
+   ]
+  }
+ },
+ "npcs_saguao": [
+  {
+   "id": "duda",
+   "destaque": "shisima",
+   "falas": [
+    "Bora jogar Shisima comigo? 🔷",
+    "Aposto que eu ganho no Yoté!",
+    "Já sabe jogar Shisima? Eu te ensino!"
+   ]
+  },
+  {
+   "id": "marcos",
+   "destaque": "yote",
+   "falas": [
+    "Desafio você no Yoté! ⚫",
+    "Já viu a Linha do tempo? 📜",
+    "Treinei muito no Yoté. Encara?"
+   ]
+  },
+  {
+   "id": "joana",
+   "destaque": "mito_verdade",
+   "falas": [
+    "Mito ou verdade? Vem testar! 🤔",
+    "Quer jogar comigo?",
+    "Tem coisa sobre cotas que pouca gente sabe. Vem ver!"
+   ]
+  }
+ ]
+}
