@@ -436,9 +436,34 @@
         <div class="expo-entrada-col"><p class="expo-txt">Escolha seu personagem e entre</p><div class="expo-pers" id="expo-pers"></div></div>
         <div class="expo-entrada-col" id="expo-pets-col" hidden><p class="expo-txt">🐾 Escolha um pet para te acompanhar</p><div class="expo-pets" id="expo-pets"></div></div>
       </div>
-      <button class="jr-btn jr-btn-ouro expo-entrar" id="expo-entrar">Entrar ➜</button>
+      <!-- 🪪 PROMPT-262: o nome e a turma na entrada (o visitante; o aluno logado não vê) -->
+      <div class="expo-entrada-nome" id="expo-entrada-nome" hidden>
+        <label>Seu nome<input id="expo-ent-nome" maxlength="20" autocomplete="off" placeholder="Seu nome"/></label>
+        <label>Turma <small>(opcional)</small><input id="expo-ent-turma" maxlength="6" autocomplete="off" placeholder="ex.: 7B"/></label>
+        <button class="jr-btn jr-btn-ouro expo-entrar" id="expo-entrar">Entrar ➜</button>
+        <small class="expo-ent-aviso" id="expo-ent-aviso">⚠️ Seu nome passa pela aprovação da professora. Se ele não for aprovado, seus pontos não entram no ranking.</small>
+      </div>
     </div>
   </div>
+  <!-- 🪪 PROMPT-262: a professora recusou o nome: escolher outro -->
+  <div id="expo-nome-rec" class="al-fundo expo-modal" hidden role="dialog" aria-label="Escolha outro nome">
+    <div class="al-caixa expo-caixa">
+      <div class="al-topo"><b>🪪 Seu nome não foi aprovado</b><button class="bt-lista-x" id="expo-nome-rec-x" aria-label="Fechar">✕</button></div>
+      <p class="expo-txt">Seu nome não foi aprovado. Escolha outro nome.</p>
+      <div class="expo-des-nome"><label>Nome<input id="expo-rec-nome" maxlength="20" autocomplete="off"/></label>
+        <label>Turma <small>(opcional)</small><input id="expo-rec-turma" maxlength="6" autocomplete="off" placeholder="ex.: 7B"/></label></div>
+      <div class="expo-par-bts"><button class="jr-btn jr-btn-ouro" id="expo-rec-ok">Salvar</button></div>
+    </div>
+  </div>
+  <!-- 🔔 PROMPT-262: a professora aprova nomes e recados sem sair do jogo -->
+  <div id="expo-sino-p" class="al-fundo expo-modal" hidden role="dialog" aria-label="Aprovar nomes e recados">
+    <div class="al-caixa expo-caixa expo-larga expo-fixa">
+      <div class="al-topo"><b>🔔 Para aprovar</b><button class="bt-lista-x" id="expo-sino-x" aria-label="Fechar">✕</button></div>
+      <div class="expo-sino-abas" id="expo-sino-abas"><button data-sino-aba="nomes" class="on">📝 Nomes <i id="expo-sino-nn"></i></button><button data-sino-aba="recados">📖 Recados <i id="expo-sino-nr"></i></button></div>
+      <div class="expo-rolar expo-sino-c" id="expo-sino-c"></div>
+    </div>
+  </div>
+  <div class="expo-sino-toast" id="expo-sino-toast" hidden></div>
   <div id="expo-aviso" class="al-fundo expo-modal" hidden role="dialog" aria-live="polite">
     <div class="al-caixa expo-caixa"><div class="expo-aviso-txt" id="expo-aviso-txt"></div></div>
   </div>
@@ -465,7 +490,7 @@
   <!-- 🏅 PROMPT-254: o canto de baixo à esquerda: o contador, o botão dos carimbos e (na sala) os créditos -->
   <div class="expo-canto">
     <div id="ex-creditos" class="ex-creditos" hidden></div>
-    <button class="expo-carimbos-b expo-jogo-b" id="btn-expo-jogo" hidden aria-label="Jogo da sala">🎲 Jogo</button><div class="expo-canto-l"><div id="expo-contador" class="expo-contador" hidden></div><button class="expo-carimbos-b" id="btn-expo-carimbos" hidden aria-label="Salas visitadas">🏅</button><button class="expo-carimbos-b expo-des-b" id="btn-expo-desafio" hidden aria-label="Desafio da sala">📝 Desafio</button></div>
+    <button class="expo-carimbos-b expo-jogo-b" id="btn-expo-jogo" hidden aria-label="Jogo da sala">🎲 Jogo</button><div class="expo-canto-l"><div id="expo-contador" class="expo-contador" hidden></div><button class="expo-carimbos-b expo-sino-b" id="btn-expo-sino" hidden aria-label="Nomes e recados para aprovar">🔔<i id="expo-sino-n" hidden></i></button><button class="expo-carimbos-b" id="btn-expo-carimbos" hidden aria-label="Salas visitadas">🏅</button><button class="expo-carimbos-b expo-des-b" id="btn-expo-desafio" hidden aria-label="Desafio da sala">📝 Desafio</button></div>
   </div>
   <!-- 📝 PROMPT-257: o desafio da sala (3 perguntas), a janelinha "antes de sair" e o 📺 painel ao vivo do saguão -->
   <div id="expo-desafio" class="al-fundo expo-modal" hidden role="dialog" aria-label="Desafio da sala">

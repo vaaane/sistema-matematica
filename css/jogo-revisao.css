@@ -6034,10 +6034,10 @@ html.jr-visitante #btn-expo-decorar, html.jr-visitante #btn-expo-pend { display:
 .expo-rec p { margin: 0 0 2px; color: #fff; font-size: 14px; overflow-wrap: anywhere; }
 .expo-rec small { color: #9a9cb5; }
 /* o livro no saguão (desenhado por código: o pedestal com 📖) */
-.expo-livro-ped { position: absolute; width: 60px; transform: translate(-50%, -100%); pointer-events: none; display: flex; flex-direction: column; align-items: center; }
+.expo-livro-ped { position: absolute; width: 36px;   /* PROMPT-262: 60% do que era */ transform: translate(-50%, -100%); pointer-events: none; display: flex; flex-direction: column; align-items: center; }
 .expo-livro-ped img { width: 100%; display: block; }
-.expo-livro-ped span { position: absolute; top: -18px; font-size: 30px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
-.expo-livro-ped b { position: absolute; top: -44px; white-space: nowrap; font: 700 12px 'Rajdhani', sans-serif; color: #fff; background: rgba(13,15,26,.72); padding: 1px 8px; border-radius: 8px; }
+.expo-livro-ped span { position: absolute; top: -12px; font-size: 18px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
+.expo-livro-ped b { position: absolute; top: -30px; white-space: nowrap; font: 700 12px 'Rajdhani', sans-serif; color: #fff; background: rgba(13,15,26,.72); padding: 1px 8px; border-radius: 8px; }
 /* placa de créditos (canto de baixo, à esquerda; o joystick fica à direita) */
 .ex-creditos { position: fixed; z-index: 15; left: max(12px, var(--sa-l, 0px)); bottom: max(12px, var(--sa-b, 0px)); max-width: min(300px, 60vw);
   background: rgba(13,15,26,.82); border: 1px solid rgba(255,215,0,.45); border-radius: 12px; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px;
@@ -6541,3 +6541,148 @@ html.jr-girado .ej-item-bts { grid-column: auto; }
   .ed-conv-t { font-size: 16px; }
 }
 html.jr-girado .ed-fundo .ed-caixa-p { width: min(420px, calc(100dvh - 32px)); }
+
+/* ══ 🎲 PROMPT-261: tabuleiros grandes (tamanho em px pelo JS), tutorial com faixa e bolinhas, Mito mais suave, Linha do tempo comparada e 🏆 ranking ══ */
+.ej-jogo { position: relative; display: flex; flex-direction: column; gap: 6px; height: 100%; min-height: 0; }
+.ej-topo2 { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex: none; min-height: 22px; }
+.ej-jogo .ej-status { margin: 0; min-width: 0; text-align: left; font: 600 14px/1.25 'Inter', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ej-jogo .ej-cont { flex: none; font-size: 12px; color: #8d8fa8; }
+.ej-area { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; column-gap: 14px; }
+.ej-jog { flex: none; width: 96px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; position: relative; }
+.ej-jog img { height: 46px; max-width: 60px; object-fit: contain; }
+.ej-jog .ej-op-ic { font-size: 28px; line-height: 1; }
+.ej-jog b { font: 700 15px 'Rajdhani', sans-serif; color: #fff; display: flex; align-items: center; gap: 4px; max-width: 96px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ej-jog.op b { color: #b9a8ff; }
+.ej-cor { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex: none; }
+.ej-cor.ej-p1 { background: #ffd700; }
+.ej-cor.ej-p2 { background: #7c5cfc; }
+.ej-jog .ej-mao { padding: 3px 12px; font-size: 14px; }
+.ej-jog .ej-balao { top: -4px; }
+#ej-tab, #ed-tab { flex: none; max-width: none; min-height: 0; aspect-ratio: auto; }
+#ej-tab .ej-svg, #ed-tab .ej-svg { width: 100%; height: 100%; }
+/* Yoté: casas quadradas cor de areia, numa moldura de madeira, peças grandes */
+#ej-tab.ej-yote, #ed-tab.ej-yote { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); grid-template-rows: repeat(var(--lins), minmax(0, 1fr)); gap: 3px;
+  padding: 5px; background: #7a5530; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,.45); box-sizing: border-box; }
+.ej-yote .ej-cel { background: #e8cc94; border: 2px solid #b48a4e; border-radius: 6px; }
+.ej-yote .ej-cel i { width: 78%; }
+.ej-yote .ej-cel i.ej-p1 { background: #ffd700; border: 3px solid #6b4e00; box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+.ej-yote .ej-cel i.ej-p2 { background: #5b3fd6; border: 3px solid #22135e; box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+.ej-yote .ej-cel i.sel { outline: 3px solid #fff; outline-offset: 1px; }
+.ej-yote .ej-cel.dest { background: #a8ecc0; border-color: #00a86b; }
+.ej-yote .ej-cel.cap { background: #ffc09a; border-color: #e65c00; }
+.ej-yote .ej-cel.rm { border-color: #ef4444; background: #f6c2c2; }
+.ej-yote .ej-cel.ult { box-shadow: 0 0 0 3px rgba(255,255,255,.75) inset; }
+/* ao vivo: a barra com o tempo e a jogada no canto */
+.ed-topo { grid-template-columns: auto 1fr auto; }
+.ed-status { flex: none; margin: 0; }
+/* ❓ tutorial: faixa no alto, o texto, e embaixo o desenho (separados) */
+#ej-c .ej-tut { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 8px; height: 100%; min-height: 0; align-items: stretch; }
+.ej-tut-faixa { background: linear-gradient(90deg, #7c5cfc, #5b3fd6); color: #fff; font: 800 20px 'Rajdhani', sans-serif; letter-spacing: 1px; padding: 6px 12px; border-radius: 10px; text-align: center; }
+.ej-tut-faixa.rk { background: linear-gradient(90deg, #ffd700, #ff9f1c); color: #1a1205; }
+.ej-tut-p { margin: 0; font: 600 17px/1.35 'Inter', sans-serif; color: #fff; text-align: center; }
+#ej-c .ej-tut-fig { min-height: 0; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #12142a; border-radius: 12px; padding: 4px; }
+#ej-c .ej-tut-fig .ej-svg { height: 100%; width: auto; max-width: 100%; }
+#ej-c .ej-tut-bts { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ej-bolinhas { display: flex; gap: 7px; }
+.ej-bolinhas i { width: 11px; height: 11px; border-radius: 50%; background: #4c4370; display: block; }
+.ej-bolinhas i.on { background: #ffd700; box-shadow: 0 0 6px rgba(255,215,0,.7); }
+.ej-fig-linha_tempo .ej-ex-cartas { max-height: 100%; }
+.ej-fig-linha_tempo .ej-carta.mini { width: 120px; max-height: 100%; overflow: hidden; font-size: 12px; }
+.ej-fig-mito_verdade .ej-ex-frase { max-width: 460px; text-align: center; }
+.ej-fig-mito_verdade .ej-ex-frase p { font-size: 15px; background: #f3ead2; color: #2a1d0f; border-radius: 10px; padding: 8px 12px; }
+/* 🤔 Mito ou verdade: a frase num cartão claro; botões escuros com borda que se enchem ao tocar */
+#ej-c .ej-mv-frase { background: #f3ead2; color: #2a1d0f; border-radius: 14px; padding: 14px 18px; font: 700 22px/1.3 'Inter', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,.35); }
+#ej-c .ej-mv-bts { display: flex; justify-content: center; gap: 4%; }
+#ej-c .ej-mv-bts button { width: 40%; background: #15172a; border: 2px solid; border-radius: 12px; padding: 12px; font: 800 22px 'Rajdhani', sans-serif; letter-spacing: 1px; transition: background .15s, color .15s; }
+#ej-c .ej-mv-bts .ej-mito { border-color: #ff8a7a; color: #ff8a7a; }
+#ej-c .ej-mv-bts .ej-verd { border-color: #4fd1a5; color: #4fd1a5; }
+#ej-c .ej-mv-bts .ej-mito:active, #ej-c .ej-mv-bts .ej-mito:focus-visible { background: #ff8a7a; color: #1a0f0d; }
+#ej-c .ej-mv-bts .ej-verd:active, #ej-c .ej-mv-bts .ej-verd:focus-visible { background: #4fd1a5; color: #06231a; }
+@media (hover: hover) { #ej-c .ej-mv-bts .ej-mito:hover { background: #ff8a7a; color: #1a0f0d; } #ej-c .ej-mv-bts .ej-verd:hover { background: #4fd1a5; color: #06231a; } }
+.ej-mv-bts.mini span.ej-mito { background: #15172a; border: 2px solid #ff8a7a; color: #ff8a7a; }
+.ej-mv-bts.mini span.ej-verd { background: #15172a; border: 2px solid #4fd1a5; color: #4fd1a5; }
+#ej-c .ej-mv-res { border-radius: 12px; padding: 6px 10px; }
+#ej-c .ej-mv-res.verd { background: rgba(79,209,165,.14); }
+#ej-c .ej-mv-res.mito { background: rgba(255,138,122,.14); }
+#ej-c .ej-mv-res.verd strong { color: #4fd1a5; }
+#ej-c .ej-mv-res.mito strong { color: #ff8a7a; }
+/* 📜 Linha do tempo conferida: sua ordem em cima, a certa embaixo, alinhadas */
+.ej-linha-comp { display: flex; flex-direction: column; gap: 4px; height: 100%; min-height: 0; }
+.ej-linha-lbl { font: 700 14px 'Rajdhani', sans-serif; color: #ffb4a8; letter-spacing: .5px; }
+.ej-linha-lbl.ok { color: #4fd1a5; }
+.ej-cartas.comp { flex: 1 1 0; min-height: 0; gap: 6px; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.ej-carta.comp { padding: 4px 6px; font: 600 12px/1.2 'Inter', sans-serif; gap: 2px; cursor: pointer; box-shadow: none; }
+.ej-carta.comp b { font: 700 15px 'Orbitron', sans-serif; }
+.ej-carta.comp span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ej-marca { position: absolute; top: 3px; right: 6px; font-style: normal; font-weight: 800; font-size: 15px; }
+.ej-carta.certa .ej-marca { color: #00a86b; }
+.ej-carta.errada .ej-marca { color: #c62828; }
+.ej-linha-zoom { margin: 0; font: 13px/1.3 'Inter', sans-serif; color: #e6e7f2; text-align: center; min-height: 1.3em; }
+.ej-linha-comp .ej-linha-rod { flex: none; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin-top: 2px; }
+.ej-linha-comp .ej-linha-res { margin: 0; font-size: 14px; }
+/* 🏆 ranking de cada jogo */
+.ej-rk { display: flex; flex-direction: column; gap: 6px; height: 100%; min-height: 0; }
+.ej-rk-crit { color: #8d8fa8; text-align: center; }
+.ej-rk-l { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 3px; }
+.ej-rk-l li { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 8px; align-items: center; background: #15172a; border-radius: 8px; padding: 4px 10px; font: 600 14px 'Inter', sans-serif; color: #e6e7f2; }
+.ej-rk-l li span { font: 700 14px 'Orbitron', sans-serif; color: #8d8fa8; }
+.ej-rk-l li b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ej-rk-l li em { font-style: normal; color: #ffd700; font-weight: 700; white-space: nowrap; }
+.ej-rk-l li.p1 span { color: #ffd700; } .ej-rk-l li.p2 span { color: #c9cbe0; } .ej-rk-l li.p3 span { color: #cd7f32; }
+.ej-rk-eu { margin: 0; text-align: center; font: 700 14px 'Inter', sans-serif; color: #00d4ff; }
+.ej-rk-vazio { margin: auto; text-align: center; color: #8d8fa8; }
+#ej-c .ej-rk .ej-tut-bts, .ej-tut-sobre .ej-rk .ej-tut-bts { justify-content: center; }
+.ej-tut-sobre .ej-rk-l li, #ej-c .ej-rk-l li { background: #1c1f3a; }
+@media (max-height: 500px) {
+  .ej-tut-faixa { font-size: 17px; padding: 4px 10px; }
+  .ej-tut-p { font-size: 15px; }
+  #ej-c .ej-tut { gap: 6px; }
+  .ej-jog img { height: 38px; }
+  #ej-c .ej-mv-frase { font-size: 18px; padding: 10px 14px; }
+  #ej-c .ej-mv-bts button { padding: 9px; font-size: 20px; }
+  .ej-carta.comp { font-size: 11px; }
+  .ej-carta.comp b { font-size: 13px; }
+  .ej-rk-l li { padding: 3px 8px; font-size: 13px; }
+}
+
+/* ══ 🪪 PROMPT-262: o nome na entrada, o 🔔 da professora (aprovar sem sair do jogo) ══ */
+.expo-entrada-nome { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) 120px auto; align-items: end; gap: 4px 10px; margin-top: 6px; }
+.expo-entrada-nome label { display: flex; flex-direction: column; gap: 3px; text-align: left; font: 600 13px 'Inter', sans-serif; color: #c9cbe0; min-width: 0; }
+.expo-entrada-nome label small { font-weight: 400; color: #8d8fa8; }
+.expo-entrada-nome input { min-width: 0; width: 100%; box-sizing: border-box; border-radius: 10px; border: 1px solid rgba(255,255,255,.25); background: #11131f; color: #fff; padding: 7px 10px; font: 16px 'Inter', sans-serif; }
+.expo-entrada-nome input:focus { outline: none; border-color: #ffd700; }
+.expo-entrada-caixa .expo-entrada-nome .expo-entrar { margin: 0; align-self: end; }
+.expo-entrada-nome .expo-entrar:disabled { opacity: .45; filter: grayscale(.6); cursor: not-allowed; }
+.expo-ent-aviso { grid-column: 1 / -1; font: 12px/1.3 'Inter', sans-serif; color: #ffd27a; text-align: left; }
+.expo-ent-aviso.erro { color: #ff8a7a; font-weight: 700; }
+html.jr-deitado .expo-entrada-caixa .expo-pers-b { height: min(118px, calc((100dvh - 262px) / 2)); }
+html.jr-girado .expo-entrada-caixa .expo-pers-b { height: min(118px, calc((100vw - 262px) / 2)); }
+html.jr-deitado .expo-entrada-caixa .expo-entrada-corpo .expo-txt { margin: 0 0 4px; font-size: 14px; }
+html.jr-deitado .expo-entrada-nome input { padding: 5px 9px; font-size: 15px; }
+html.jr-deitado .expo-ent-aviso { font-size: 11px; }
+@media (max-width: 480px) { .expo-entrada-nome { grid-template-columns: minmax(0, 1fr) 90px; } .expo-entrada-nome .expo-entrar { grid-column: 1 / -1; justify-self: center; } }
+/* 🔔 o sino com o contador vermelho */
+.expo-sino-b { position: relative; border-color: rgba(255,215,0,.7); }
+.expo-sino-b i { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px; background: #ef4444; color: #fff;
+  font: 700 12px/20px 'Inter', sans-serif; font-style: normal; text-align: center; box-shadow: 0 0 0 2px #0d0f1a; }
+.expo-sino-toast { position: fixed; z-index: 60; top: max(10px, var(--sa-t, 0px)); left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px);
+  background: #1c1f3a; border: 2px solid #ffd700; color: #fff; border-radius: 12px; padding: 8px 16px; font: 700 15px 'Inter', sans-serif; box-shadow: 0 6px 18px rgba(0,0,0,.5); pointer-events: none; }
+.expo-sino-toast.pop { animation: expoSinoPop .3s ease-out; }
+@keyframes expoSinoPop { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+.expo-sino-abas { display: flex; gap: 6px; flex: none; margin-bottom: 6px; }
+.expo-sino-abas button { flex: 1; border-radius: 10px; border: 2px solid rgba(255,255,255,.15); background: #15172a; color: #c9cbe0; padding: 7px; font: 700 16px 'Rajdhani', sans-serif; cursor: pointer; }
+.expo-sino-abas button.on { border-color: #ffd700; color: #ffd700; background: rgba(255,215,0,.08); }
+.expo-sino-abas i { font-style: normal; background: #ef4444; color: #fff; border-radius: 9px; padding: 0 6px; font: 700 12px 'Inter', sans-serif; }
+.expo-sino-abas i:empty { display: none; }
+.expo-sino-c { display: flex; flex-direction: column; gap: 8px; }
+.expo-sino-card { background: #15172a; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.expo-sino-nm { font: 700 20px 'Rajdhani', sans-serif; color: #fff; }
+.expo-sino-nm small { color: #c9cbe0; font-size: 16px; }
+.expo-sino-info { color: #8d8fa8; font-size: 13px; }
+.expo-sino-dup { margin: 0; color: #ffb020; font: 700 13px 'Inter', sans-serif; }
+.expo-sino-rec { margin: 0; color: #fff; font: 600 15px/1.35 'Inter', sans-serif; }
+.expo-sino-bts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.expo-sino-bts .jr-btn { padding: 8px 16px; font-size: 16px; }
+.expo-sino-ok { background: #00a86b; color: #fff; border: none; }
+.expo-sino-nao { background: #b42318; color: #fff; border: none; }
+.expo-sino-vazio { color: #8d8fa8; text-align: center; margin: 16px 0; }

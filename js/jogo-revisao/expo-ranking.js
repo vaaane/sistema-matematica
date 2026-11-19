@@ -60,3 +60,17 @@ export function montarCompletos(completos = {}, nomes = {}, status = {}, esconde
 // pessoas na exposição agora (a presença online), sem a professora e as contas de teste
 export const contarAgora = (online = {}, esconder = () => false, validade = 30000) =>
   Object.entries(online || {}).filter(([uid, r]) => r?.local === 'exposicao' && Date.now() - num(r.ts) < validade && !esconder(uid, r.apelido)).length;
+
+// 🏆 PROMPT-261: o ranking de cada jogo. exposicao_desafio/{uid}/rank/{id} = o número (vitórias, rodadas perfeitas ou o melhor de acertos)
+// e rank_ts/{id} = quando chegou a ele (desempate: quem chegou primeiro fica na frente). Só os aprovados; o mesmo nome aparece uma vez, com o maior.
+export function montarRankingJogo(desafio = {}, nomes = {}, status = {}, esconder = () => false, id = '') {
+  const melhor = new Map();
+  for (const [uid, reg] of Object.entries(desafio || {})) {
+    const n = nomes?.[uid], v = Math.max(0, Math.floor(num(reg?.rank?.[id])));
+    if (!v || status?.[uid] !== 'aprovado' || !n?.nome || esconder(uid, n.nome)) continue;
+    const e = { uid, chave: chaveNome(n), rotulo: rotuloNome(n), v, ts: num(reg?.rank_ts?.[id]) || Infinity };
+    const ant = melhor.get(e.chave);
+    if (!ant || e.v > ant.v || (e.v === ant.v && e.ts < ant.ts)) melhor.set(e.chave, e);
+  }
+  return [...melhor.values()].sort((a, b) => b.v - a.v || a.ts - b.ts);
+}

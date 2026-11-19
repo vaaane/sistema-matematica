@@ -8,6 +8,7 @@
 // 'a' é a peça 1 das regras (embaixo) e 'b' a peça 2; quem é 'b' vê o tabuleiro girado, com as suas peças embaixo.
 import { inicioShisima, movimentosShisima, moverShisima, linhaShisima, CENTRO,
   inicioYote, acoesYote, aplicarYote, removerYote, podeRemoverYote, pecasYote, escolhaRemocaoYote } from '/js/jogo-revisao/expo-jogos-regras.js';
+import { dimensionarTabExpo } from '/js/jogo-revisao/expo-jogos.js';   // 🎲 PROMPT-261: o tabuleiro no tamanho certo
 
 export const TEMPO_JOGADA_S = 30, PASSES_MAX = 3, CONVITE_S = 30, SAIU_S = 20;
 const $ = (id) => document.getElementById(id);
@@ -93,6 +94,7 @@ export function configurarDueloExpo(ctx) {
   $('ed-ajuda').addEventListener('click', () => { if (pt) C.comoJogar(pt.jogo); });
   $('ed-x').addEventListener('click', () => { if (!pt || pt.terminou) { fecharPartida(); return; } pedirDesistir(); });
   $('ed-c').addEventListener('click', cliqueNaPartida);
+  addEventListener('resize', () => { if (pt?.montado) dimensionarTabExpo($('ed-area'), $('ed-tab')); });
 }
 export const dueloAtivoExpo = () => !!(pt && !pt.terminou) || !!espera;
 const P = (...s) => C.fb.ref(C.fb.db, [C.base(), ...s].join('/'));
@@ -256,12 +258,15 @@ function montarPartida() {
   pt.montado = true;
   $('ed-tit').textContent = `${iconeJogo(pt.d.jogo)} ${nomeJogo(pt.d.jogo)} · ao vivo`;
   const yote = pt.d.jogo === 'yote', [L, Cc] = Array.isArray(pt.cfg.tabuleiro) ? pt.cfg.tabuleiro.map(Number) : [5, 6];
-  $('ed-c').innerHTML = `<div class="ed-topo"><b id="ed-vez"></b><div class="ed-barra"><i id="ed-tempo"></i></div></div>
-    <div class="ej-mesa"><div class="ej-tab${yote ? ' ej-yote' : ''}" id="ed-tab"${yote ? ` style="--cols:${Cc};--lins:${L}"` : ''}></div>
-      <div class="ej-lado"><div class="ed-quem op"><i class="ed-cor ej-p2"></i><b>${C.esc(nomeDe(opLado()))}</b>${yote ? '<button class="ej-mao op" data-ed="mao-op" id="ed-mao-op"></button>' : ''}</div>
-        <div class="ed-quem eu"><i class="ed-cor ej-p1"></i><b>Você</b>${yote ? '<span class="ej-mao eu" id="ed-mao-eu"></span>' : ''}</div>
-        <p class="ej-status" id="ed-status"></p><small class="ej-cont" id="ed-cont"></small></div>
-      <div class="ej-fim" id="ed-fim" hidden></div></div>`;
+  $('ed-c').innerHTML = `<div class="ej-jogo"><div class="ed-topo"><b id="ed-vez"></b><div class="ed-barra"><i id="ed-tempo"></i></div><small class="ej-cont" id="ed-cont"></small></div>
+    <p class="ej-status ed-status" id="ed-status"></p>
+    <div class="ej-area" id="ed-area">
+      <div class="ej-jog op"><span class="ej-op-ic">🧑</span><b><i class="ej-cor ej-p2"></i>${C.esc(nomeDe(opLado()))}</b>${yote ? '<button class="ej-mao op" data-ed="mao-op" id="ed-mao-op"></button>' : ''}</div>
+      <div class="ej-tab${yote ? ' ej-yote' : ''}" id="ed-tab"${yote ? ` style="--cols:${Cc};--lins:${L}"` : ''}></div>
+      <div class="ej-jog eu"><span class="ej-op-ic">🙂</span><b><i class="ej-cor ej-p1"></i>Você</b>${yote ? '<span class="ej-mao eu" id="ed-mao-eu"></span>' : ''}</div>
+    </div><div class="ej-fim" id="ed-fim" hidden></div></div>`;
+  dimensionarTabExpo($('ed-area'), $('ed-tab'));
+  requestAnimationFrame(() => dimensionarTabExpo($('ed-area'), $('ed-tab')));
 }
 // a visão de quem é 'b': o tabuleiro girado (as minhas peças embaixo) e as cores trocadas (eu sou sempre o amarelo)
 const girado = () => pt.lado === 'b';
@@ -277,7 +282,7 @@ function pintar() {
   $('ed-vez').textContent = r.fim ? '' : r.vez === pt.lado ? '🟡 Sua vez' : `Vez ${artigoDe(nomeDe(opLado()))}`;
   $('ed-vez').className = r.vez === pt.lado ? 'minha' : '';
   $('ed-cont').textContent = `Jogada ${Math.min(r.n + 1, Number(pt.cfg.limite_jogadas) || 30)}/${Number(pt.cfg.limite_jogadas) || 30}`
-    + (r.tempo[pt.lado] ? ` · ⏱ você perdeu a vez ${r.tempo[pt.lado]}×` : '');
+    + (r.tempo[pt.lado] ? ` · ⏱ ${r.tempo[pt.lado]}×` : '');
 }
 const artigoDe = (n) => `de ${n}`;
 function pintarShisima(r, eu) {
@@ -316,10 +321,10 @@ function pintarYote(r, eu) {
   $('ed-mao-op').classList.toggle('rm', !!pt.pend && st.mao[op] > 0);
   $('ed-mao-op').disabled = !(pt.pend && st.mao[op] > 0);
   $('ed-mao-eu').innerHTML = `✋ <b>${st.mao[eu]}</b>`;
-  $('ed-status').innerHTML = r.fim || pt.terminou ? '' : pt.pend ? '🎯 Bônus! Tire mais uma peça: toque numa peça <b>roxa</b>' + (st.mao[op] > 0 ? ' ou no ✋ dele' : '')
+  $('ed-status').innerHTML = r.fim || pt.terminou ? '' : pt.pend ? '🎯 Bônus! Tire uma peça <b>roxa</b>' + (st.mao[op] > 0 ? ' ou toque no ✋ dele' : '')
     : !minhaVez() ? (pt.enviando ? 'Enviando…' : `${C.esc(nomeDe(opLado()))} está pensando…`)
-    : pt.sel !== null ? 'Toque num lugar verde (andar) ou laranja (capturar)'
-    : st.mao[eu] > 0 ? 'Toque numa casa vazia para colocar, ou numa peça sua para andar' : 'Toque numa peça sua para andar';
+    : pt.sel !== null ? 'Verde: andar · laranja: capturar'
+    : st.mao[eu] > 0 ? 'Coloque numa casa vazia ou ande com uma peça' : 'Ande com uma peça sua';
 }
 function cliqueNaPartida(e) {
   if (!pt) return;
@@ -421,6 +426,7 @@ async function terminar(fim) {
     el.hidden = false;
   };
   pintarFim('');
+  if (res === 'vitoria') C.contar?.(jogo, 1);   // 🏆 só quem venceu soma (PROMPT-261)
   const st = await C.gravar(jogo, pts);   // vale o melhor do jogo, igual contra o computador
   pintarFim(st);
 }

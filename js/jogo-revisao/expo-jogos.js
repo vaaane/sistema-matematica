@@ -1,17 +1,17 @@
 // 🎲 PROMPT-259: os 4 jogos da Exposição (Shisima, Yoté, Linha do tempo, Mito ou verdade), com tutorial, e o menu dos NPCs.
 // dados/jogo/exposicao-jogos.json. O jogo principal passa as dependências em configurarJogosExpo(jogos, ctx):
 //   ctx = { pai (onde pôr as janelas), esc, tocar(som), lerLocal, gravarLocal, previa(), melhor(id), gravar(id, pts) → Promise<'ok'|'previa'|'prof'|'fechado'|'erro'|'teste'|''>,
-//           oponentePet() → { nome, img } | null, npc(id) → { nome, img } | null, salaDoJogo(id) → 'Porta 1 · Raízes' | '' }
+//           oponentePet() → { nome, img } | null, npc(id) → { nome, img } | null, salaDoJogo(id) → 'Porta 1 · Raízes' | '',
+//           ranking(id) → { lista: [{ rotulo, v }], eu: { pos, v } | { pendente } | null }, contar(id, valor) (🏆 PROMPT-261) }
 import { inicioShisima, movimentosShisima, moverShisima, linhaShisima, iaShisima, vizinhosShisima, CENTRO,
   inicioYote, acoesYote, aplicarYote, removerYote, podeRemoverYote, pecasYote, iaYote, escolhaRemocaoYote, outro } from '/js/jogo-revisao/expo-jogos-regras.js';
 
-let J = null, C = null, aberto = null, timers = [];
+let J = null, C = null, aberto = null, timers = [], rkTimer = 0;
 const $ = (id) => document.getElementById(id);
 const sortear = (l) => l[Math.floor(Math.random() * l.length)];
 const embaralhar = (l) => { const a = [...l]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const depois = (ms, f) => { const t = setTimeout(f, ms); timers.push(t); return t; };
 const limparTimers = () => { timers.forEach(clearTimeout); timers = []; };
-const tutMem = new Set();   // 👀 a prévia: "já viu o tutorial" só na memória
 
 export const jogosExpo = () => J?.jogos || {};
 export const npcsSaguaoExpo = () => (Array.isArray(J?.npcs_saguao) ? J.npcs_saguao : []);
@@ -35,18 +35,18 @@ export function configurarJogosExpo(jogos, ctx) {
   </div>
   <div id="expo-jogo" class="al-fundo expo-modal" hidden role="dialog" aria-label="Jogo">
     <div class="al-caixa expo-caixa expo-fixa ej-caixa">
-      <div class="al-topo"><b id="ej-tit">🎲</b><span class="ej-topo-bts"><button class="ej-ajuda" id="ej-ajuda" aria-label="Como jogar">❓</button><button class="bt-lista-x" id="ej-x" aria-label="Fechar">✕</button></span></div>
+      <div class="al-topo"><b id="ej-tit">🎲</b><span class="ej-topo-bts"><button class="ej-ajuda" id="ej-rk" aria-label="Ranking deste jogo">🏆</button><button class="ej-ajuda" id="ej-ajuda" aria-label="Como jogar">❓</button><button class="bt-lista-x" id="ej-x" aria-label="Fechar">✕</button></span></div>
       <div class="ej-c" id="ej-c"></div>
     </div>
   </div>`);
   $('ej-menu-x').addEventListener('click', fecharMenu);
   $('expo-jogos-menu').addEventListener('click', (e) => {
     if (e.target === $('expo-jogos-menu')) { fecharMenu(); return; }
-    const b = e.target.closest('[data-jogar],[data-tut]');
+    const b = e.target.closest('[data-jogar],[data-tut],[data-rk]');
     if (!b) return;
     const npc = $('expo-jogos-menu').dataset.npc || null;
     fecharMenu();
-    abrirJogoExpo(b.dataset.jogar || b.dataset.tut, { npc, soTutorial: !!b.dataset.tut });
+    abrirJogoExpo(b.dataset.jogar || b.dataset.tut || b.dataset.rk, { npc, soTutorial: !!b.dataset.tut, soRanking: !!b.dataset.rk });
   });
   $('ej-x').addEventListener('click', fecharJogo);
   $('expo-jogo').addEventListener('click', (e) => { if (e.target === $('expo-jogo')) fecharJogo(); });
@@ -56,6 +56,12 @@ export function configurarJogosExpo(jogos, ctx) {
     const emJogo = !!(aberto.sh || aberto.yo || aberto.li || aberto.mv) && !(aberto.tut && aberto.tut.fim !== 'voltar');
     mostrarTutorial(aberto.id, 0, emJogo ? 'voltar' : aberto.tut?.fim || 'jogar');
   });
+  $('ej-rk').addEventListener('click', () => {   // 🏆: no jogo, por cima; fora dele, na janela
+    if (!aberto) return;
+    C.tocar('clique');
+    mostrarRanking(aberto.id, !!(aberto.sh || aberto.yo || aberto.li || aberto.mv));
+  });
+  addEventListener('resize', () => { if (aberto?.sh || aberto?.yo) dimensionarTabExpo($('ej-area'), $('ej-tab')); });
   $('ej-c').addEventListener('click', cliqueNoJogo);
   $('ej-c').addEventListener('pointerdown', arrastarIni);
 }
@@ -71,7 +77,7 @@ export function abrirMenuJogosExpo(npcId) {
     return `<div class="ej-item${id === cfg.destaque ? ' fav' : ''}"><span class="ej-ic">${C.esc(j.icone)}</span>
       <div class="ej-item-t"><b>${C.esc(j.nome)}</b>${id === cfg.destaque ? `<em>⭐ favorito ${artigoDe(quem.nome)}</em>` : ''}
         <small>${sala ? `também na ${C.esc(sala)}` : ''}${m ? `${sala ? ' · ' : ''}sua melhor: <b>${m}</b> pts` : ''}</small></div>
-      <div class="ej-item-bts"><button class="jr-btn jr-btn-ouro" data-jogar="${id}">▶ Jogar</button><button class="jr-btn jr-btn-sec" data-tut="${id}">❓ Como jogar</button></div></div>`;
+      <div class="ej-item-bts"><button class="jr-btn jr-btn-ouro" data-jogar="${id}">▶ Jogar</button><button class="jr-btn jr-btn-sec" data-tut="${id}">❓ Como jogar</button><button class="jr-btn jr-btn-sec" data-rk="${id}">🏆 Ranking</button></div></div>`;
   }).join('');
   $('expo-jogos-menu').dataset.npc = npcId;
   $('expo-jogos-menu').hidden = false;
@@ -81,11 +87,8 @@ const artigo = (n) => `${FEM.has(n) ? 'a' : 'o'} ${n}`;
 const artigoDe = (n) => `${FEM.has(n) ? 'da' : 'do'} ${n}`;
 function fecharMenu() { $('expo-jogos-menu').hidden = true; }
 
-// ── abrir um jogo: na 1ª vez, o tutorial antes ──
-const chaveTut = (id) => `expo_jogo_tut_${id}`;
-const viuTutorial = (id) => (C.previa() ? tutMem.has(id) : !!C.lerLocal(chaveTut(id), false));
-function marcarTutorial(id) { if (C.previa()) tutMem.add(id); else C.gravarLocal(chaveTut(id), true); }
-export function abrirJogoExpo(id, { npc = null, soTutorial = false, soVer = false } = {}) {   // soVer: só o tutorial, termina em "✔ Entendi" (⚔️ PROMPT-260)
+// ── abrir um jogo (o tutorial só quando a pessoa pede: ❓ Como jogar ou o ❓ da janela, PROMPT-261) ──
+export function abrirJogoExpo(id, { npc = null, soTutorial = false, soVer = false, soRanking = false } = {}) {   // soVer: só o tutorial, termina em "✔ Entendi" (⚔️ PROMPT-260)
   const j = jogosExpo()[id];
   if (!j) return;
   limparTimers();
@@ -95,13 +98,14 @@ export function abrirJogoExpo(id, { npc = null, soTutorial = false, soVer = fals
   $('ej-tit').textContent = `${j.icone} ${j.nome}`;
   $('expo-jogo').hidden = false;
   if (soVer) mostrarTutorial(id, 0, 'ver');
-  else if (soTutorial || !viuTutorial(id)) mostrarTutorial(id, 0, soTutorial ? 'fechar-ou-jogar' : 'jogar');
+  else if (soTutorial) mostrarTutorial(id, 0, 'jogar');
+  else if (soRanking) mostrarRanking(id, false);
   else comecar();
 }
 export const fecharJogoExpo = () => { if (aberto) fecharJogo(); };
-function fecharJogo() { limparTimers(); aberto = null; $('expo-jogo').hidden = true; $('ej-c').innerHTML = ''; }
+function fecharJogo() { limparTimers(); clearInterval(rkTimer); aberto = null; $('expo-jogo').hidden = true; $('ej-c').innerHTML = ''; }
 function comecar() {
-  limparTimers();
+  limparTimers(); clearInterval(rkTimer);
   const id = aberto.id;
   $('expo-jogo').dataset.jogo = id;
   ({ shisima: comecarShisima, yote: comecarYote, linha_tempo: comecarLinha, mito_verdade: comecarMito })[id]?.();
@@ -116,11 +120,13 @@ function mostrarTutorial(id, i, fim) {
   let alvo = $('ej-c');
   if (sobre) { alvo = $('ej-tut-sobre'); if (!alvo) { alvo = document.createElement('div'); alvo.id = 'ej-tut-sobre'; alvo.className = 'ej-tut-sobre'; $('ej-c').append(alvo); } }
   else limparTimers();
-  const fimBt = sobre ? '<button class="jr-btn jr-btn-ouro" data-ej="tut-voltar">↩ Voltar ao jogo</button>' : fim === 'ver' ? '<button class="jr-btn jr-btn-ouro" data-ej="fechar">✔ Entendi</button>' : '<button class="jr-btn jr-btn-ouro" data-ej="tut-jogar">▶ Jogar</button>';
-  alvo.innerHTML = `<div class="ej-tut"><div class="ej-tut-fig">${figuraTutorial(id, i)}</div>
-    <div class="ej-tut-txt"><small>Como jogar · ${i + 1}/${n}</small><p>${C.esc(cards[i] || '')}</p>
-      <div class="ej-tut-bts"><button class="jr-btn jr-btn-sec" data-ej="tut-ant"${i === 0 ? ' disabled' : ''}>← Anterior</button>
-        ${ultimo ? fimBt : '<button class="jr-btn jr-btn-ouro" data-ej="tut-prox">Próximo →</button>'}</div></div></div>`;
+  const fimBt = sobre ? '<button class="jr-btn jr-btn-ouro" data-ej="tut-voltar">↩ Voltar ao jogo</button>' : fim === 'ver' ? '<button class="jr-btn jr-btn-ouro" data-ej="fechar">✔ Entendi</button>' : '<button class="jr-btn jr-btn-ouro" data-ej="tut-jogar">▶ Jogar agora</button>';
+  const bolinhas = cards.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('');
+  alvo.innerHTML = `<div class="ej-tut"><div class="ej-tut-faixa">❓ COMO JOGAR · ${C.esc(j.nome)}</div>
+    <p class="ej-tut-p">${C.esc(cards[i] || '')}</p>
+    <div class="ej-tut-fig ej-fig-${id}">${figuraTutorial(id, i)}</div>
+    <div class="ej-tut-bts"><button class="jr-btn jr-btn-sec" data-ej="tut-ant"${i === 0 ? ' disabled' : ''}>←</button><span class="ej-bolinhas" aria-label="Passo ${i + 1} de ${n}">${bolinhas}</span>
+      ${ultimo ? fimBt : '<button class="jr-btn jr-btn-ouro" data-ej="tut-prox">Próximo →</button>'}</div></div>`;
 }
 // desenhos simples (SVG) mostrando o que o cartão diz
 function svgShisima(pos, { setas = [], linha = null, centroBrilha = false } = {}) {
@@ -141,6 +147,31 @@ function svgYote(L, Cc, pecas, { setas = [], x = [], maos = null } = {}) {
   for (const [a, b] of setas) { const [x1, y1] = xy(a), [x2, y2] = xy(b); s += `<path class="ej-seta" d="M${x1} ${y1 - 15} Q ${(x1 + x2) / 2} ${Math.min(y1, y2) - 34} ${x2} ${y2 - 15}" fill="none" marker-end="url(#ej-ponta2)"/>`; }
   if (maos) s += `<text x="4" y="${h + 26}" class="ej-txt-svg">✋ ${maos[0]}</text><text x="${w - 4}" y="${h + 26}" text-anchor="end" class="ej-txt-svg ej-txt-op">✋ ${maos[1]}</text>`;
   return s + '</svg>';
+}
+// 🏆 o ranking de um jogo (PROMPT-261): os 10 primeiros com nome aprovado e "Você"; atualiza ao vivo enquanto está aberto
+const textoRk = (id, v) => (id === 'mito_verdade' ? `${v}/${Number(jogosExpo().mito_verdade?.por_rodada) || 15}`
+  : id === 'linha_tempo' ? `${v} ${v === 1 ? 'rodada perfeita' : 'rodadas perfeitas'}` : `${v} ${v === 1 ? 'vitória' : 'vitórias'}`);
+const criterioRk = (id) => (id === 'mito_verdade' ? 'O melhor número de acertos numa rodada' : id === 'linha_tempo' ? 'Rodadas com as 5 cartas no lugar certo'
+  : 'Vitórias contra o computador, o pet ou outra pessoa');
+function mostrarRanking(id, sobre) {
+  clearInterval(rkTimer);
+  let alvo = $('ej-c');
+  if (sobre) { alvo = $('ej-tut-sobre'); if (!alvo) { alvo = document.createElement('div'); alvo.id = 'ej-tut-sobre'; alvo.className = 'ej-tut-sobre'; $('ej-c').append(alvo); } }
+  else { limparTimers(); aberto.sh = aberto.yo = aberto.li = aberto.mv = null; aberto.tut = null; }
+  const pintar = () => {
+    if (!aberto || aberto.id !== id || !alvo.isConnected) { clearInterval(rkTimer); return; }
+    const rk = C.ranking(id) || { lista: [] }, med = ['p1', 'p2', 'p3'];
+    const eu = rk.eu?.pos ? `Você: ${rk.eu.pos}º · ${textoRk(id, rk.eu.v)}` : rk.eu?.pendente ? `Você: ${textoRk(id, rk.eu.v)} · nome aguardando aprovação`
+      : rk.eu?.semNome ? `Você: ${textoRk(id, rk.eu.v)} · faça o 📝 desafio de uma sala para pôr seu nome` : rk.eu?.previa ? '👀 prévia: nada é gravado' : '';
+    const html = `<div class="ej-rk"><div class="ej-tut-faixa rk">🏆 RANKING · ${C.esc(jogosExpo()[id]?.nome || '')}</div><small class="ej-rk-crit">${C.esc(criterioRk(id))}</small>
+      ${rk.lista.length ? `<ol class="ej-rk-l">${rk.lista.map((r, k) => `<li class="${med[k] || ''}"><span>${k + 1}º</span><b>${C.esc(r.rotulo)}</b><em>${C.esc(textoRk(id, r.v))}</em></li>`).join('')}</ol>`
+        : '<p class="ej-rk-vazio">Ninguém ainda. Seja o primeiro!</p>'}
+      ${eu ? `<p class="ej-rk-eu">${C.esc(eu)}</p>` : ''}
+      <div class="ej-tut-bts">${sobre ? '<button class="jr-btn jr-btn-ouro" data-ej="tut-voltar">↩ Voltar ao jogo</button>' : '<button class="jr-btn jr-btn-sec" data-ej="fechar">Fechar</button><button class="jr-btn jr-btn-ouro" data-ej="tut-jogar">▶ Jogar</button>'}</div></div>`;
+    if (alvo.dataset.h !== html) { alvo.innerHTML = html; alvo.dataset.h = html; }
+  };
+  pintar();
+  rkTimer = setInterval(pintar, 1000);
 }
 function figuraTutorial(id, i) {
   if (id === 'shisima') {
@@ -175,7 +206,27 @@ const FRASES = {
   perdi: ['Você ganhou! Muito bem!', 'Ah, não! Revanche!', 'Mandou bem demais!'],
   empate: ['Empate! Quase!', 'Ninguém ganhou… revanche?'],
 };
-const opHtml = () => `<div class="ej-op">${aberto.op.img ? `<img src="${C.esc(aberto.op.img)}" alt="" draggable="false"/>` : '<span class="ej-op-ic">🤖</span>'}<b>${C.esc(aberto.op.nome)}</b><div class="ej-balao" id="ej-balao" hidden></div></div>`;
+// 🎲 PROMPT-261: a mesa — o status numa linha, a jogada no canto e o tabuleiro grande entre os dois jogadores (rosto pequeno, nome e ✋)
+const mesaHtml = (yote, L = 5, Cc = 6) => `<div class="ej-jogo"><div class="ej-topo2"><p class="ej-status" id="ej-status"></p><small class="ej-cont" id="ej-cont"></small></div>
+  <div class="ej-area" id="ej-area">
+    <div class="ej-jog op">${aberto.op.img ? `<img src="${C.esc(aberto.op.img)}" alt="" draggable="false"/>` : '<span class="ej-op-ic">🤖</span>'}<b><i class="ej-cor ej-p2"></i>${C.esc(aberto.op.nome)}</b>
+      ${yote ? '<button class="ej-mao op" data-ej="mao-op" id="ej-mao-op"></button>' : ''}<div class="ej-balao" id="ej-balao" hidden></div></div>
+    <div class="ej-tab${yote ? ' ej-yote' : ''}" id="ej-tab"${yote ? ` style="--cols:${Cc};--lins:${L}"` : ''}></div>
+    <div class="ej-jog eu"><span class="ej-op-ic">🙂</span><b><i class="ej-cor ej-p1"></i>Você</b>${yote ? '<span class="ej-mao eu" id="ej-mao-eu"></span>' : ''}</div>
+  </div><div class="ej-fim" id="ej-fim" hidden></div></div>`;
+// o tamanho do tabuleiro pela área que sobra (px, sem depender de container query nem de flex sem tamanho)
+export function dimensionarTabExpo(area, tab) {
+  if (!area || !tab) return;
+  const ratio = tab.classList.contains('ej-yote') ? (Number(tab.style.getPropertyValue('--cols')) || 6) / (Number(tab.style.getPropertyValue('--lins')) || 5) : 1;
+  const ar = area.getBoundingClientRect(), gap = parseFloat(getComputedStyle(area).columnGap) || 10;
+  const lados = [...area.children].filter(e => e !== tab && !e.classList.contains('ej-fim')).reduce((t, e) => t + e.getBoundingClientRect().width, 0);
+  let h = area.clientHeight, w = area.clientWidth - lados - gap * 2;
+  if (h < 80) h = Math.max(160, innerHeight * 0.6);   // a área ainda sem altura: usa a tela
+  const bh = Math.max(110, Math.floor(Math.min(h, w / ratio)));
+  tab.style.height = bh + 'px';
+  tab.style.width = Math.floor(bh * ratio) + 'px';
+}
+const dimensionar = () => { dimensionarTabExpo($('ej-area'), $('ej-tab')); requestAnimationFrame(() => dimensionarTabExpo($('ej-area'), $('ej-tab'))); };
 function falar(tipo, txt) {
   const el = $('ej-balao');
   if (!el) return;
@@ -190,6 +241,7 @@ async function fimTabuleiro(res) {
   aberto.fim = res;
   falar(res === 'vitoria' ? 'perdi' : res === 'derrota' ? 'ganhei' : 'empate');
   C.tocar(res === 'vitoria' ? 'acerto' : res === 'derrota' ? 'erro' : 'clique');
+  if (res === 'vitoria') C.contar(aberto.id, 1);   // 🏆 +1 vitória (PROMPT-261)
   const st = await C.gravar(aberto.id, pts);
   const el = $('ej-fim');
   if (!el || !aberto) return;
@@ -207,8 +259,8 @@ function pontosShisima(cx, cy, r) { return [...Array(8).keys()].map(i => { const
 function comecarShisima() {
   const s = { pos: inicioShisima(), vez: Math.random() < 0.5 ? 1 : 2, sel: null, jogadas: 0, fim: null, ult: null };
   aberto.sh = s;
-  $('ej-c').innerHTML = `<div class="ej-mesa"><div class="ej-tab" id="ej-tab"></div><div class="ej-lado">${opHtml()}<p class="ej-status" id="ej-status"></p>
-    <small class="ej-cont" id="ej-cont"></small></div><div class="ej-fim" id="ej-fim" hidden></div></div>`;
+  $('ej-c').innerHTML = mesaHtml(false);
+  dimensionar();
   pintarShisima();
   if (s.vez === 2) { falar(null, 'Eu começo!'); depois(1100, jogaPcShisima); }
   else falar(null, 'Você começa!');
@@ -223,7 +275,7 @@ function pintarShisima() {
       + (v ? `<circle class="ej-p${v}${s.sel === k ? ' sel' : ''}${u ? ' ult' : ''}" cx="${x}" cy="${y}" r="18"/>` : `<circle class="ej-vazio${d ? ' dest' : ''}" cx="${x}" cy="${y}" r="${d ? 11 : 7}"/>`) + '</g>';
   }).join('');
   $('ej-tab').innerHTML = `<svg viewBox="0 0 300 300" class="ej-svg ej-jogo-svg"><g class="ej-linhas">${lin}</g>${linha ? `<polyline class="ej-linha" points="${linha.map(k => P[k].join(',')).join(' ')}"/>` : ''}${pts}</svg>`;
-  $('ej-status').innerHTML = s.fim ? '' : s.vez === 1 ? (s.sel === null ? '🟡 Sua vez: toque numa peça <b>amarela</b>' : 'Toque num ponto verde para mover') : `${C.esc(aberto.op.nome)} está pensando…`;
+  $('ej-status').innerHTML = s.fim ? '' : s.vez === 1 ? (s.sel === null ? '🟡 Sua vez: toque numa peça <b>amarela</b>' : '🟡 Toque num ponto verde para mover') : `${C.esc(aberto.op.nome)} está pensando…`;
   $('ej-cont').textContent = `Jogada ${Math.min(s.jogadas + 1, aberto.j.limite_jogadas)}/${aberto.j.limite_jogadas}`;
 }
 function tocarShisima(k) {
@@ -270,9 +322,8 @@ function comecarYote() {
   const j = aberto.j, [L, Cc] = Array.isArray(j.tabuleiro) ? j.tabuleiro.map(Number) : [5, 6];
   const y = { st: inicioYote(L, Cc, Number(j.pecas_na_mao) || 8), vez: Math.random() < 0.5 ? 1 : 2, sel: null, remover: false, jogadas: 0, fim: null, ult: [] };
   aberto.yo = y;
-  $('ej-c').innerHTML = `<div class="ej-mesa"><div class="ej-tab ej-yote" id="ej-tab" style="--cols:${Cc};--lins:${L}"></div><div class="ej-lado">${opHtml()}
-    <div class="ej-maos"><button class="ej-mao op" data-ej="mao-op" id="ej-mao-op"></button><span class="ej-mao eu" id="ej-mao-eu"></span></div>
-    <p class="ej-status" id="ej-status"></p><small class="ej-cont" id="ej-cont"></small></div><div class="ej-fim" id="ej-fim" hidden></div></div>`;
+  $('ej-c').innerHTML = mesaHtml(true, L, Cc);
+  dimensionar();
   pintarYote();
   if (y.vez === 2) { falar(null, 'Eu começo!'); depois(1100, jogaPcYote); }
   else falar(null, 'Você começa!');
@@ -288,15 +339,15 @@ function pintarYote() {
     const d = dest.get(i), rm = y.remover && v === 2;
     return `<button class="ej-cel${d ? (d.tipo === 'capturar' ? ' cap' : ' dest') : ''}${rm ? ' rm' : ''}${y.ult.includes(i) ? ' ult' : ''}" data-yo="${i}">${v ? `<i class="ej-p${v}${y.sel === i ? ' sel' : ''}"></i>` : ''}</button>`;
   }).join('');
-  $('ej-mao-op').innerHTML = `${C.esc(aberto.op.nome)} <b>✋ ${st.mao[2]}</b>`;
+  $('ej-mao-op').innerHTML = `✋ <b>${st.mao[2]}</b>`;
   $('ej-mao-op').classList.toggle('rm', y.remover && st.mao[2] > 0);
   $('ej-mao-op').disabled = !(y.remover && st.mao[2] > 0);
-  $('ej-mao-eu').innerHTML = `Você <b>✋ ${st.mao[1]}</b>`;
+  $('ej-mao-eu').innerHTML = `✋ <b>${st.mao[1]}</b>`;
   $('ej-status').innerHTML = y.fim ? '' : y.vez !== 1 ? `${C.esc(aberto.op.nome)} está pensando…`
-    : y.remover ? '🎯 Bônus! Tire mais uma peça: toque numa peça <b>roxa</b>' + (st.mao[2] > 0 ? ' ou no ✋ dele' : '')
-    : y.sel !== null ? 'Toque num lugar verde (andar) ou laranja (capturar)'
-    : st.mao[1] > 0 ? '🟡 Sua vez: toque numa casa vazia para colocar, ou numa peça sua para andar' : '🟡 Sua vez: toque numa peça sua para andar';
-  $('ej-cont').textContent = `Jogada ${Math.min(y.jogadas + 1, aberto.j.limite_jogadas)}/${aberto.j.limite_jogadas} · peças: você ${pecasYote(st, 1)} × ${pecasYote(st, 2)}`;
+    : y.remover ? '🎯 Bônus! Tire uma peça <b>roxa</b>' + (st.mao[2] > 0 ? ' ou toque no ✋ dele' : '')
+    : y.sel !== null ? '🟡 Verde: andar · laranja: capturar'
+    : st.mao[1] > 0 ? '🟡 Sua vez: coloque numa casa vazia ou ande com uma peça' : '🟡 Sua vez: ande com uma peça sua';
+  $('ej-cont').textContent = `Jogada ${Math.min(y.jogadas + 1, aberto.j.limite_jogadas)}/${aberto.j.limite_jogadas}`;
 }
 function tocarYote(i) {
   const y = aberto.yo, st = y.st;
@@ -367,12 +418,20 @@ function comecarLinha() {
 }
 function pintarLinha() {
   const li = aberto.li;
-  $('ej-c').innerHTML = `<div class="ej-linha-t"><span>⬅ mais antigo</span><span>${li.conferido ? '' : 'Arraste ou toque em duas cartas para trocar'}</span><span>mais recente ➡</span></div>
-    <div class="ej-cartas" id="ej-cartas">${li.cartas.map((c, k) => {
-      const cls = li.conferido ? (li.marcas?.[c.i] ? ' certa' : ' errada') : li.sel === k ? ' sel' : '';
-      return `<div class="ej-carta${cls}" data-carta="${k}">${li.conferido ? `<b>${c.ano}</b>` : `<em>${k + 1}</em>`}<span>${C.esc(c.txt)}</span></div>`;
-    }).join('')}</div>
-    <div class="ej-linha-rod" id="ej-linha-rod">${li.conferido ? li.rodape || '' : '<button class="jr-btn jr-btn-ouro" data-ej="conferir">✔ Conferir</button>'}</div>`;
+  if (li.conferido) {
+    const carta = (c, cls, marca) => `<div class="ej-carta comp${cls}" data-carta-ver="${c.i}">${marca}<b>${c.ano}</b><span>${C.esc(c.txt)}</span></div>`;
+    $('ej-c').innerHTML = `<div class="ej-linha-comp">
+      <div class="ej-linha-lbl">Sua ordem</div>
+      <div class="ej-cartas comp">${li.cartas.map(c => carta(c, li.marcas?.[c.i] ? ' certa' : ' errada', `<i class="ej-marca">${li.marcas?.[c.i] ? '✔' : '✖'}</i>`)).join('')}</div>
+      <div class="ej-linha-lbl ok">Ordem certa</div>
+      <div class="ej-cartas comp">${li.ordem.map(c => carta(c, ' certa', '')).join('')}</div>
+      <p class="ej-linha-zoom" id="ej-linha-zoom">${li.zoom ? li.zoom : '👆 Toque numa carta para ler o texto inteiro.'}</p>
+      <div class="ej-linha-rod">${li.rodape || ''}</div></div>`;
+    return;
+  }
+  $('ej-c').innerHTML = `<div class="ej-linha-t"><span>⬅ mais antigo</span><span>Arraste ou toque em duas cartas para trocar</span><span>mais recente ➡</span></div>
+    <div class="ej-cartas" id="ej-cartas">${li.cartas.map((c, k) => `<div class="ej-carta${li.sel === k ? ' sel' : ''}" data-carta="${k}"><em>${k + 1}</em><span>${C.esc(c.txt)}</span></div>`).join('')}</div>
+    <div class="ej-linha-rod" id="ej-linha-rod"><button class="jr-btn jr-btn-ouro" data-ej="conferir">✔ Conferir</button></div>`;
 }
 function trocarCartas(a, b) {
   const l = aberto.li.cartas;
@@ -384,20 +443,17 @@ async function conferirLinha() {
   const ordem = [...li.cartas].sort((a, b) => a.ano - b.ano);
   li.marcas = Object.fromEntries(li.cartas.map((c, k) => [c.i, ordem[k].i === c.i]));
   const certas = Object.values(li.marcas).filter(Boolean).length, pts = certas * (Number(j.pontos_carta) || 5);
-  li.conferido = true;
+  li.conferido = true; li.ordem = ordem; li.zoom = '';
   C.tocar(certas === li.cartas.length ? 'acerto' : 'clique');
-  li.rodape = `<p class="ej-linha-res"><b>${certas}/${li.cartas.length}</b> no lugar certo · +${pts} pts</p>`;
+  if (certas === li.cartas.length) C.contar(aberto.id, 1);   // 🏆 rodada perfeita (PROMPT-261)
+  const rod = (st) => `<p class="ej-linha-res">Você acertou <b>${certas}/${li.cartas.length}</b> · +${pts} pts${st === undefined ? '' : ` · sua melhor: <b>${C.melhor(aberto.id)}</b>${avisoGravar(st)}`}</p>
+    <button class="jr-btn jr-btn-sec" data-ej="fechar">Fechar</button><button class="jr-btn jr-btn-ouro" data-ej="de-novo">🔁 Nova rodada</button>`;
+  li.rodape = rod();
   pintarLinha();
   const st = await C.gravar(aberto.id, pts);
-  if (!aberto?.li) return;
-  // depois de 1,6 s: a ordem certa (as cartas mantêm a cor de onde você pôs)
-  depois(1600, () => {
-    if (!aberto?.li) return;
-    li.cartas = ordem;
-    li.rodape = `<p class="ej-linha-res">✔ Esta é a ordem certa. Você acertou <b>${certas}/${ordem.length}</b> · +${pts} pts · sua melhor: <b>${C.melhor(aberto.id)}</b>${avisoGravar(st)}</p>
-      <div class="ej-fim-bts"><button class="jr-btn jr-btn-sec" data-ej="fechar">Fechar</button><button class="jr-btn jr-btn-ouro" data-ej="de-novo">🔁 Nova rodada</button></div>`;
-    pintarLinha();
-  });
+  if (aberto?.li !== li) return;
+  li.rodape = rod(st);
+  pintarLinha();
 }
 // arrastar (computador e celular): segura a carta e solta em cima de outra. Toque rápido: escolhe; o 2º toque troca.
 let arr = null;
@@ -451,8 +507,8 @@ function pintarMito() {
   $('expo-jogo').classList.toggle('ej-mv-resp', r !== null);
   $('ej-c').innerHTML = `<div class="ej-mv"><div class="ej-mv-topo"><span>Frase ${mv.k + 1}/${mv.fs.length}</span><span>✔ ${mv.acertos}</span></div>
     <p class="ej-mv-frase">“${C.esc(f.t)}”</p>
-    ${r === null ? '<div class="ej-mv-bts"><button class="ej-mito" data-ej="mito">MITO</button><button class="ej-verd" data-ej="verdade">VERDADE</button></div>'
-      : `<div class="ej-mv-res ${r === f.v ? 'ok' : 'nao'}"><b>${r === f.v ? '✔ Acertou!' : '✖ Errou!'}</b> <strong>${f.v ? 'É VERDADE' : 'É MITO'}</strong></div>
+    ${r === null ? '<div class="ej-mv-bts"><button class="ej-mito" data-ej="mito">🙅 MITO</button><button class="ej-verd" data-ej="verdade">✅ VERDADE</button></div>'
+      : `<div class="ej-mv-res ${r === f.v ? 'ok' : 'nao'} ${f.v ? 'verd' : 'mito'}"><b>${r === f.v ? '✔ Acertou!' : '✖ Errou!'}</b> <strong>${f.v ? '✅ É VERDADE' : '🙅 É MITO'}</strong></div>
         <div class="ej-mv-exp"><p>💡 ${C.esc(f.e)}</p><button class="jr-btn jr-btn-ouro" data-ej="mv-prox">${mv.k + 1 >= mv.fs.length ? 'Ver resultado →' : 'Próxima →'}</button></div>`}</div>`;
 }
 function responderMito(v) {
@@ -473,6 +529,7 @@ async function proximaMito() {
   $('ej-c').innerHTML = `<div class="ej-mv-fim"><b class="ej-fim-t">Você acertou <em>${mv.acertos}</em> de ${mv.fs.length}</b><span id="ej-mv-pts">+${pts} pts</span>
     <div class="ej-fim-bts"><button class="jr-btn jr-btn-sec" data-ej="fechar">Fechar</button><button class="jr-btn jr-btn-ouro" data-ej="de-novo">🔁 Nova rodada</button></div></div>`;
   C.tocar(mv.acertos >= mv.fs.length * 0.7 ? 'acerto' : 'clique');
+  C.contar(aberto.id, mv.acertos);   // 🏆 o melhor de acertos (PROMPT-261)
   const st = await C.gravar(aberto.id, pts);
   if ($('ej-mv-pts')) $('ej-mv-pts').innerHTML = `+${pts} pts · sua melhor: <b>${C.melhor(aberto.id)}</b>${avisoGravar(st)}`;
 }
@@ -483,8 +540,14 @@ function cliqueNoJogo(e) {
   const b = e.target.closest('[data-ej]'), acao = b?.dataset.ej;
   if (acao === 'tut-ant') { mostrarTutorial(aberto.id, Math.max(0, aberto.tut.i - 1), aberto.tut.fim); return; }
   if (acao === 'tut-prox') { C.tocar('clique'); mostrarTutorial(aberto.id, aberto.tut.i + 1, aberto.tut.fim); return; }
-  if (acao === 'tut-voltar') { $('ej-tut-sobre')?.remove(); aberto.tut = null; C.tocar('clique'); return; }
-  if (acao === 'tut-jogar') { marcarTutorial(aberto.id); C.tocar('clique'); aberto.tut = null; comecar(); return; }
+  if (acao === 'tut-voltar') { clearInterval(rkTimer); $('ej-tut-sobre')?.remove(); aberto.tut = null; C.tocar('clique'); return; }
+  if (acao === 'tut-jogar') { C.tocar('clique'); aberto.tut = null; comecar(); return; }
+  const ver = e.target.closest('[data-carta-ver]');
+  if (ver && aberto.li?.conferido) {   // a carta inteira (no celular o texto fica cortado)
+    const c = (aberto.j.cartas || [])[Number(ver.dataset.cartaVer)];
+    if (c) { aberto.li.zoom = `📜 <b>${c.ano}</b> · ${C.esc(c.txt)}`; $('ej-linha-zoom').innerHTML = aberto.li.zoom; }
+    return;
+  }
   if (acao === 'fechar') { fecharJogo(); return; }
   if (acao === 'de-novo') { C.tocar('clique'); comecar(); return; }
   if (acao === 'conferir') { conferirLinha(); return; }

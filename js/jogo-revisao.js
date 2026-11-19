@@ -42,7 +42,7 @@ import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, t
 import { temPalavrao } from '/js/palavroes.js';
 import { configurarJogosExpo, jogoDaSalaExpo, abrirJogoExpo, abrirMenuJogosExpo, npcsSaguaoExpo, jogosExpo, jogoAbertoExpo, fecharJogoExpo, avisoGravar } from '/js/jogo-revisao/expo-jogos.js';   // 🎲 PROMPT-259
 import { configurarDueloExpo, ouvirConvitesDueloExpo, desafiarExpo, dueloAtivoExpo } from '/js/jogo-revisao/expo-duelo.js';   // ⚔️ PROMPT-260
-import { bonusDe, BONUS_ZERA_S, PONTOS_ACERTO, NOME_MAX, TURMA_MAX, limparNome, rotuloNome, chaveNome, totalDe, montarRanking, montarCompletos, contarAgora } from '/js/jogo-revisao/expo-ranking.js';   // 📝 PROMPT-257   // 🚫 PROMPT-246: recados do livro de visitas
+import { bonusDe, BONUS_ZERA_S, PONTOS_ACERTO, NOME_MAX, TURMA_MAX, limparNome, rotuloNome, chaveNome, totalDe, montarRanking, montarCompletos, contarAgora, montarRankingJogo } from '/js/jogo-revisao/expo-ranking.js';   // 📝 PROMPT-257   // 🚫 PROMPT-246: recados do livro de visitas
 import { lerTodos, lerRegistro, iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, soOuvirOnline, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 // 👀 PROMPT-253: a prévia da Exposição (/exposicao?previa=1) não grava NADA no Firebase. A guarda única: todo set/update/push/
 // remove/runTransaction/onDisconnect deste arquivo passa por aqui (o online.js tem os dele: a prévia não chama entrarOnline).
@@ -3907,10 +3907,14 @@ function itensParaPresente() {
   const ids = new Set([...Object.keys(estado.pets?.bolsa || {}), ...Object.keys(estado.pets?.itens || {}), 'isca']);
   return [...ids].map(id => { const it = itemPresente(id), n = qtdPresente(id); return it && n > 0 ? { ...it, id, n } : null; }).filter(Boolean);
 }
-const presenteBloqueado = (c) => !onlineAtivo() || c.uid === sessao.uid || desafiosOff?.todas || desafiosOff?.[sessao.turma] || desafiosOff?.[c.reg?.turma];
+// 🪪 PROMPT-262: na Exposição, entre visitante e qualquer pessoa: só 👋, 😀 e 🎲 (sem 🎁, 🏅, 🏠 nem amizade)
+const ehVisUid = (uid) => /^V_/.test(String(uid || ''));
+const semExtrasVisExpo = (uid) => !!sessao?.visitante || ehVisUid(uid);
+const presenteBloqueado = (c) => semExtrasVisExpo(c.uid) || !onlineAtivo() || c.uid === sessao.uid || desafiosOff?.todas || desafiosOff?.[sessao.turma] || desafiosOff?.[c.reg?.turma];
 
 // passo 1: o item · passo 2: o recado · passo 3: confirmar
 function escolherPresente(c, passo = 1, id = null, recado = null) {
+  if (semExtrasVisExpo(c?.uid)) return;
   const el = $('colega-cartao');
   clearTimeout(cartaoColega.timer);
   cartaoColega.timer = setTimeout(fecharCartaoColega, 20000);
@@ -4688,6 +4692,7 @@ const nomeRealProf = (uid, r) => {
   return n && n !== String(r?.apelido || '').trim() ? n : '';
 };
 const rotuloColega = (uid, r) => (/PROFESSOR/i.test(`${uid} ${r?.apelido || ''}`) ? 'Professora'
+  : r?.local === 'exposicao' && ehVisUid(uid) ? nomeAprovadoExpo(uid) || 'Visitante'   // 🪪 PROMPT-262: o visitante, só com o nome aprovado
   : r?.local === 'exposicao' ? String(nomeVisivel(r?.apelido) || nomeDoUid(uid) || 'Visitante').split(' ')[0]   // 🚪 PROMPT-246: na Exposição, só o primeiro nome
   : nomeVisivel(r?.apelido) || nomeDoUid(uid) || 'Colega') + (r?.local === 'exposicao' ? '' : medalhaPesca(uid));
 // Turma TESTE e alunos de teste nunca aparecem para os alunos (no modo teste, todos são de teste). A professora
@@ -4898,6 +4903,7 @@ function abrirCartaoColega(c) {
   const r = c.reg || {}, el = $('colega-cartao');
   const nome = emExpo() ? nomeExpoDe(c.uid, r) : rotuloColega(c.uid, r), turma = emExpo() && nome.includes(' – ') ? '' : nomeVisivel(r.turma);   // ⚔️ PROMPT-260: na Exposição, o nome aprovado do ranking
   const pet = petValido(petAtual(r.pet)) ? petAtual(r.pet) : null;
+  const so = semExtrasVisExpo(c.uid);   // 🪪 PROMPT-262: com visitante, só 👋, 😀 e 🎲
   el.innerHTML = `
     ${bustoHtml(urlQuadro('frente', -1, c.pers || PERS.padrao, c.cores), `jr-busto-colega${temBrilho(c.uid, c.reg) ? ' jr-brilho' : ''}`, BUSTO_PERS)}
     <span class="jr-colega-info">
@@ -4905,20 +4911,21 @@ function abrirCartaoColega(c) {
       ${tituloDe(c.uid, r) ? `<span class="jr-titulo-mestre ${tituloDe(c.uid, r) === 2 ? 'lenda' : ''}">${NOME_TITULO[tituloDe(c.uid, r)]}</span>` : ''}
       ${pet ? `<span class="jr-colega-pet"><span class="jr-icone-pet"><img src="${srcIcone(formaValida(pet, r.pet_forma))}" alt="" draggable="false" data-icone-pet${r.pet_tinta ? ` data-tinta="${esc(r.pet_tinta)}"` : ''}/></span>${r.pet_nome ? `${esc(r.pet_nome)} · ` : ''}${esc(NOME_PET[pet])}${Number(r.pet_nivel) >= 2 ? ` ❤️ ${Number(r.pet_nivel)}` : ''}</span>` : ''}
     </span>
-    ${podeDesafiar() && !r.sem_convites ? '<button class="jr-colega-oi jr-colega-desafiar" data-desafiar aria-label="Desafiar" title="Desafiar">⚔️</button>' : ''}
+    ${!so && podeDesafiar() && !r.sem_convites ? '<button class="jr-colega-oi jr-colega-desafiar" data-desafiar aria-label="Desafiar" title="Desafiar">⚔️</button>' : ''}
     ${presenteBloqueado(c) ? '' : '<button class="jr-colega-oi" data-presente aria-label="Presentear" title="Presentear">🎁</button>'}
-    ${casaPub(c.uid) ? BOTAO_VISITAR : ''}
+    ${!so && casaPub(c.uid) ? BOTAO_VISITAR : ''}
     ${botaoDueloExpo(c)}
     <button class="jr-colega-oi" data-oi aria-label="Acenar">👋</button>
     <button class="jr-colega-oi" data-emojis aria-label="Mandar um emoji" title="Emoji">😀</button>
-    <button class="jr-colega-oi" data-perfil aria-label="Ver perfil" title="Ver perfil">🏅</button>
-    ${botaoAmigo(c.uid, r)}`;
+    ${so ? '' : '<button class="jr-colega-oi" data-perfil aria-label="Ver perfil" title="Ver perfil">🏅</button>'}
+    ${so ? '' : botaoAmigo(c.uid, r)}`;
   const ti = el.querySelector('img[data-tinta]');
   if (ti) aplicarTinta(ti, ti.dataset.tinta);
   el.hidden = false;
   el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
   cartaoColega = { c, timer: setTimeout(fecharCartaoColega, MS_CARTAO_COLEGA) };   // 8 s para escolher (PROMPT-168)
   posicionarCartaoColega();
+  if (so) return;   // 🪪 visitante: sem casinha, visita nem convite
   carregarCasasPub().then(() => {   // 🏠 a lista das casinhas chegou agora: o botão aparece
     if (cartaoColega?.c !== c) return;
     if (casaPub(c.uid)) { if (!el.querySelector('[data-visitar]')) el.querySelector('[data-oi]')?.insertAdjacentHTML('beforebegin', BOTAO_VISITAR); }
@@ -7202,7 +7209,7 @@ function dicaEntrar() {
   let el = atores.querySelector('.jr-dica-entrar');
   if (!d || conversa.falando) { if (el) el.hidden = true; return; }
   if (!el) { el = document.createElement('div'); el.className = 'jr-rotulo-porta jr-dica-entrar'; el.innerHTML = '<span></span>'; atores.appendChild(el); }
-  const txt = d.tipo === 'saida' ? `${SETA_SAIDA[zonaSaida(d).lado]} Sair` : d.alvo === 'mesa_damas' ? '⬆ Damas' : d.alvo === 'estudos' ? '⬆ Ler' : String(d.alvo || '').startsWith('pc:') ? '⬆ Usar'
+  const txt = d.tipo === 'saida' ? `${SETA_SAIDA[zonaSaida(d).lado]} Sair` : d.alvo === 'expo-livro' ? '📖 Livro de visitas' : d.alvo === 'mesa_damas' ? '⬆ Damas' : d.alvo === 'estudos' ? '⬆ Ler' : String(d.alvo || '').startsWith('pc:') ? '⬆ Usar'
     : String(d.alvo || '').startsWith('expo:') && tituloTemaSala(Number(d.alvo.slice(5))) ? `⬆ Entrar · ${tituloTemaSala(Number(d.alvo.slice(5)))}` : '⬆ Entrar';   // 🏷️ PROMPT-251: a porta do saguão com o tema
   if (el.firstChild.textContent !== txt) el.firstChild.textContent = txt;
   const fs = 16 * escalaAtoresCena() / ESCALA_ATORES + 'px';   // maior que os rótulos: no celular deitado a cena encolhe pela metade (PROMPT-155)
@@ -9345,9 +9352,26 @@ function abrirEntradaVisitante() {
   $('expo-pers').onclick = (e) => { const b = e.target.closest('[data-pers]'); if (b) { sel = b.dataset.pers; pintar(); tocar('clique'); } };
   pintar();
   pintarPetsEntradaExpo();   // 🐾 PROMPT-255
+  ouvirDesafioExpo();
   $('expo-aviso').hidden = true;
   $('expo-entrada').hidden = false;
+  // 🪪 PROMPT-262: o nome (obrigatório) e a turma; o aparelho lembra para a próxima visita
+  const salvo = lerLocal(CHAVE_NOME_VIS, null) || {};
+  $('expo-entrada-nome').hidden = false;
+  if (!$('expo-ent-nome').value) $('expo-ent-nome').value = limparNome(salvo.nome || '');
+  if (!$('expo-ent-turma').value) $('expo-ent-turma').value = limparNome(salvo.turma || '', TURMA_MAX);
+  const avisoEnt = (t, erro) => { $('expo-ent-aviso').textContent = t; $('expo-ent-aviso').classList.toggle('erro', !!erro); };
+  const AVISO_ENT = '⚠️ Seu nome passa pela aprovação da professora. Se ele não for aprovado, seus pontos não entram no ranking.';
+  const conferir = () => { $('expo-entrar').disabled = !limparNome($('expo-ent-nome').value); };
+  $('expo-ent-nome').oninput = () => { conferir(); avisoEnt(AVISO_ENT, false); };
+  $('expo-ent-turma').oninput = () => avisoEnt(AVISO_ENT, false);
+  for (const i of [$('expo-ent-nome'), $('expo-ent-turma')]) i.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') $('expo-entrar').click(); };
+  conferir(); avisoEnt(AVISO_ENT, false);
   $('expo-entrar').onclick = async () => {
+    const nome = limparNome($('expo-ent-nome').value), turma = limparNome($('expo-ent-turma').value, TURMA_MAX);
+    if (!nome) { avisoEnt('✏️ Escreva seu nome para entrar.', true); $('expo-ent-nome').focus(); tocar('erro'); return; }
+    if (temPalavrao(nome) || temPalavrao(turma)) { avisoEnt('🚫 Esse nome tem uma palavra que não pode. Escreva de outro jeito.', true); tocar('erro'); return; }
+    salvarNomeExpo(nome, turma);   // não espera: entra já (o nome chega ao Firebase em seguida)
     $('expo-entrada').hidden = true;
     estado.personagem = sel;
     preCarregarQuadros(sel, null);
@@ -9776,6 +9800,13 @@ function ligarEventosPublicoExpo() {
   $('btn-expo-carimbos').addEventListener('click', () => { tocar('clique'); abrirCarimbosExpo(); });   // 🏅 PROMPT-254
   ligarEventosDesafioExpo();   // 📝 PROMPT-257
   ligarEventosCartaoExpo();    // ✨🖼️ PROMPT-258
+  $('btn-expo-sino').addEventListener('click', () => { tocar('clique'); abrirSinoExpo(); });   // 🔔 PROMPT-262
+  $('expo-sino-x').addEventListener('click', fecharSinoExpo);
+  $('expo-sino-p').addEventListener('click', (e) => { if (e.target === $('expo-sino-p')) fecharSinoExpo(); else cliqueSinoExpo(e); });
+  $('expo-sino-p').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && e.target.closest('.expo-sino-edit')) e.target.closest('.expo-sino-card').querySelector('[data-sino="salvar"]')?.click(); });
+  $('expo-nome-rec-x').addEventListener('click', () => { $('expo-nome-rec').hidden = true; soltouDesdeTroca = false; });
+  $('expo-rec-ok').addEventListener('click', salvarNomeRecusadoExpo);
+  $('expo-nome-rec').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') salvarNomeRecusadoExpo(); });
   $('btn-expo-jogo').addEventListener('click', () => { const id = jogoDaSalaExpo(temaDaSala(salaExpo())?.id); if (id) { tocar('clique'); abrirJogoExpo(id); } });   // 🎲 PROMPT-259
   if (window.visualViewport) {   // ⌨️ PROMPT-254: com o teclado aberto, o livro e os parabéns ficam na parte visível da tela
     const vv = window.visualViewport, seguir = () => { const g = document.documentElement.classList.contains('jr-girado'); for (const id of ['expo-livro', 'expo-parabens', 'expo-desafio']) { const el = $(id); el.style.top = g ? '' : vv.offsetTop + 'px'; el.style.height = g ? '' : vv.height + 'px'; } };   // girado: o jogo já cuida
@@ -9844,7 +9875,8 @@ function ouvirDesafioExpo() {
   desOuvindo = true;
   for (const [k, no] of [['desafio', 'exposicao_desafio'], ['nomes', 'exposicao_nomes'], ['status', 'exposicao_nomes_status'], ['completos', 'exposicao_completos']]) {
     try {
-      onValue(ref(db, noExpo(no)), (s) => { const v = s.exists() ? s.val() : null; desTodos[k] = v && typeof v === 'object' ? v : {}; desProxPainel = 0; },
+      onValue(ref(db, noExpo(no)), (s) => { const v = s.exists() ? s.val() : null; desTodos[k] = v && typeof v === 'object' ? v : {}; desProxPainel = 0;
+        if (k === 'nomes' || k === 'status') { repintarNomesExpo(); conferirMeuNomeExpo(); if (sinoOuvindo) sinoMudou(); } },
         (e) => console.warn(`[jogo-revisao] ${no} indisponível`, e?.code || e));
     } catch (e) { console.warn(`[jogo-revisao] ${no} indisponível`, e?.code || e); }
   }
@@ -9872,7 +9904,7 @@ function abrirDesafioExpo(n = salaExpo()) {
   ouvirDesafioExpo();
   $('expo-des-tit').textContent = `📝 Desafio · ${temaDaSala(n)?.nome || tituloTemaSala(n) || 'Porta ' + portaDaSala(n)}`;
   $('expo-desafio').hidden = false;
-  if (sessao.visitante && !meuNomeRk()) { pintarNomeDesafio(n); return; }
+  if (sessao.visitante && !meuNomeRk() && !lerLocal(CHAVE_NOME_VIS, null)?.nome) { pintarNomeDesafio(n); return; }   // 🪪 PROMPT-262: o nome vem da entrada (esta janela só se ele não existir)
   comecarRodadaDesafio(n);
 }
 function fecharDesafioExpo() {
@@ -9897,12 +9929,7 @@ async function confirmarNomeDesafio(b) {
   if (!nome) { avisoExpo('Escreva seu nome.'); return; }
   if (temPalavrao(nome) || temPalavrao(turma)) { avisoExpo('🚫 Esse nome tem uma palavra que não pode. Escreva de outro jeito.'); tocar('erro'); return; }
   if (meuStatusRk() === 'aprovado') { avisoExpo('Seu nome já foi aprovado: não dá mais para trocar.'); return; }
-  const r = { nome, turma, ts: Date.now() };
-  if (expoPrevia || ehProfessora()) desMem.nome = r;
-  else {
-    try { await set(ref(db, `${noExpo('exposicao_nomes')}/${sessao.uid}`), r); desTodos.nomes = { ...desTodos.nomes, [sessao.uid]: r }; }
-    catch (e) { console.warn('[jogo-revisao] nome do ranking', e?.code || e); avisoExpo('Não foi possível salvar o nome agora. Tente de novo.'); return; }
-  }
+  if (!await salvarNomeExpo(nome, turma, true)) { avisoExpo('Não foi possível salvar o nome agora. Tente de novo.'); return; }
   tocar('clique');
   if (b.dataset.trocando) { avisoExpo('✔ Nome trocado: espera a professora aprovar.'); pintarFimDesafio(); return; }
   comecarRodadaDesafio(n);
@@ -10311,6 +10338,7 @@ function carregarJogosExpo() {
       previa: () => expoPrevia,
       melhor: (id) => Number(meuDesafio()?.jogos?.[id]) || 0,
       gravar: gravarJogoExpo,
+      ranking: rankingJogoExpo, contar: contarRankExpo,   // 🏆 PROMPT-261
       npc: (id) => { const p = NPCS.find(x => x.id === id); return p ? { nome: p.nome, img: `${IMG}/npcs/${p.id}.webp` } : null; },
       oponentePet: () => (seguidor?.pet && !$('pet').hidden ? { nome: nomePet(seguidor.pet), img: srcIcone(seguidor.forma) } : null),
       salaDoJogo: (id) => { const ts = jogosExpo()[id]?.sala_tema || [], n = salasAbertasExpo().find(k => ts.includes(temaDaSala(k)?.id) || ts.includes(String(temaDaSala(k)?.id || '').replace(/_\d+$/, ''))); return n ? `Porta ${portaDaSala(n)}${tituloTemaSala(n) ? ' · ' + tituloTemaSala(n) : ''}` : ''; },
@@ -10319,11 +10347,198 @@ function carregarJogosExpo() {
     configurarDueloAoVivoExpo();   // ⚔️ PROMPT-260
   }).catch(() => console.warn('[jogo-revisao] exposicao-jogos.json indisponível'));
 }
+// ══ 🪪 PROMPT-262: o nome do visitante na entrada, o recusado e os nomes em cima dos personagens ══════════════════════
+const CHAVE_NOME_VIS = 'expo_nome_visitante';
+// grava exposicao_nomes/{uid} { nome, turma, ts }; se estava recusado, volta a pendente (tira o status). Prévia e professora: só na memória.
+async function salvarNomeExpo(nome, turma = '', trocar = false) {
+  const r = { nome, turma, ts: Date.now() };
+  if (sessao.visitante) gravarLocal(CHAVE_NOME_VIS, { nome, turma });
+  if (expoPrevia || ehProfessora()) { desMem.nome = r; return true; }
+  const pathSt = `${noExpo('exposicao_nomes_status')}/${sessao.uid}`;
+  let st = desTodos.status?.[sessao.uid] || null, ant = desTodos.nomes?.[sessao.uid] || null;
+  try { st = (await get(ref(db, pathSt))).val() || null; if (!ant) ant = (await get(ref(db, `${noExpo('exposicao_nomes')}/${sessao.uid}`))).val() || null; } catch (_) {}
+  if (st === 'aprovado') return !trocar || (ant?.nome === nome && (ant?.turma || '') === turma);   // aprovado: não troca mais
+  if (!trocar && st !== 'recusado' && ant?.nome === nome && (ant?.turma || '') === turma) return true;   // igual: não regrava (não perde a vez na fila)
+  try { await set(ref(db, `${noExpo('exposicao_nomes')}/${sessao.uid}`), r); desTodos.nomes = { ...desTodos.nomes, [sessao.uid]: r }; }
+  catch (e) { console.warn('[jogo-revisao] nome do ranking', e?.code || e); return false; }
+  if (st) {
+    try { await remove(ref(db, pathSt)); const t = { ...desTodos.status }; delete t[sessao.uid]; desTodos.status = t; }
+    catch (e) { console.warn('[jogo-revisao] nome de novo pendente', e?.code || e); }
+  }
+  nomeRecAvisado = false;
+  return true;
+}
+// a professora recusou: "Seu nome não foi aprovado. Escolha outro nome." (uma vez por recusa; o ✏️ Trocar do desafio continua)
+let nomeRecAvisado = false;
+function conferirMeuNomeExpo() {
+  if (expoPrevia || ehProfessora() || !sessao?.uid || !emExpo() || (sessao.visitante && !expoVisDentro)) return;
+  if (desTodos.status?.[sessao.uid] !== 'recusado' || !desTodos.nomes?.[sessao.uid]) { if (desTodos.status?.[sessao.uid] !== 'recusado') nomeRecAvisado = false; return; }
+  if (nomeRecAvisado || !$('expo-nome-rec').hidden) return;
+  nomeRecAvisado = true;
+  $('expo-rec-nome').value = ''; $('expo-rec-turma').value = desTodos.nomes[sessao.uid]?.turma || '';
+  $('expo-nome-rec').hidden = false;
+  tocar('erro');
+}
+async function salvarNomeRecusadoExpo() {
+  const nome = limparNome($('expo-rec-nome').value), turma = limparNome($('expo-rec-turma').value, TURMA_MAX);
+  if (!nome) { $('expo-rec-nome').focus(); tocar('erro'); return; }
+  if (temPalavrao(nome) || temPalavrao(turma)) { avisoExpo('🚫 Esse nome tem uma palavra que não pode. Escreva de outro jeito.'); tocar('erro'); return; }
+  if (!await salvarNomeExpo(nome, turma, true)) { avisoExpo('Não foi possível salvar o nome agora. Tente de novo.'); return; }
+  $('expo-nome-rec').hidden = true;
+  tocar('clique');
+  avisoExpo('✔ Nome trocado: espera a professora aprovar.');
+}
+// aprovou ou mudou: os nomes em cima dos personagens (visitante: "Visitante" até aprovar)
+function repintarNomesExpo() {
+  if (!emExpo()) return;
+  for (const c of colegas.values()) if (c?.nome && c.reg && ehVisUid(c.uid)) pintarNomeColega(c.nome, c.uid, c.reg, Number(c.reg.pet_nivel) >= 2 ? ` ❤️${Number(c.reg.pet_nivel)}` : '');
+}
+
+// ══ 🔔 PROMPT-262: a professora aprova nomes e recados sem sair do jogo ════════════════════════════════════════════════
+// Ao vivo: exposicao_nomes, exposicao_nomes_status e exposicao_livro (ou os _teste). Grava igual à página da professora:
+// status 'aprovado' | 'recusado'; ✏️ corrige nome/turma e aprova; recado: ok = true (aprovar) ou apagar (recusar).
+let sinoOuvindo = false, sinoRec = {}, sinoReac = {}, sinoVistos = null, sinoAba = 'nomes', sinoEditando = null, sinoToastT = 0;
+const sinoPodeVer = () => ehProfessora() && emExpo() && !expoPrevia;
+function ouvirSinoExpo() {
+  if (sinoOuvindo || !ehProfessora() || expoPrevia) return;
+  sinoOuvindo = true;
+  ouvirDesafioExpo();
+  try {
+    onValue(ref(db, `${noExpo('exposicao_livro')}/recados`), (s) => { const v = s.exists() ? s.val() : null; sinoRec = v && typeof v === 'object' ? v : {}; sinoMudou(); }, () => {});
+    onValue(ref(db, `${noExpo('exposicao_livro')}/reacoes`), (s) => { const v = s.exists() ? s.val() : null; sinoReac = v && typeof v === 'object' ? v : {}; if (!$('expo-sino-p').hidden) pintarSinoExpo(); }, () => {});
+  } catch (e) { console.warn('[jogo-revisao] livro para aprovar', e?.code || e); }
+}
+const nomesPendExpo = () => Object.entries(desTodos.nomes || {}).filter(([uid, n]) => n?.nome && !desTodos.status?.[uid] && !escondeRk(uid, n.nome))
+  .sort((a, b) => (Number(a[1].ts) || 0) - (Number(b[1].ts) || 0));
+const recadosPendExpo = () => Object.entries(sinoRec || {}).filter(([, r]) => r && typeof r.texto === 'string' && r.ok !== true)
+  .sort((a, b) => (Number(a[1].ts) || 0) - (Number(b[1].ts) || 0));
+function sinoMudou() {
+  const nomes = nomesPendExpo(), recs = recadosPendExpo();
+  const chaves = new Map([...nomes.map(([u, n]) => [`n:${u}:${n.ts}`, `📝 Nome para aprovar: ${rotuloNome(n)}`]), ...recs.map(([u, r]) => [`r:${u}:${r.ts}`, '📖 Recado novo no livro'])]);
+  if (sinoVistos) {   // a 1ª leitura só conta (sem aviso para o que já estava esperando)
+    const novos = [...chaves.keys()].filter(k => !sinoVistos.has(k));
+    if (novos.length && sinoPodeVer()) toastSinoExpo(novos.length === 1 ? chaves.get(novos[0]) : `🔔 ${novos.length} pedidos novos para aprovar`);
+  }
+  sinoVistos = new Set(chaves.keys());
+  const n = nomes.length + recs.length, b = $('expo-sino-n');
+  b.textContent = n > 99 ? '99+' : String(n); b.hidden = !n;
+  $('expo-sino-nn').textContent = nomes.length ? String(nomes.length) : ''; $('expo-sino-nr').textContent = recs.length ? String(recs.length) : '';
+  if (!$('expo-sino-p').hidden) pintarSinoExpo();
+}
+function toastSinoExpo(txt) {
+  const el = $('expo-sino-toast');
+  el.textContent = txt; el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  tocar('acerto');
+  clearTimeout(sinoToastT);
+  sinoToastT = setTimeout(() => { el.hidden = true; }, 5000);
+}
+function abrirSinoExpo() {
+  if (!sinoPodeVer()) return;
+  ouvirSinoExpo();
+  pararFalaPet();
+  sinoAba = nomesPendExpo().length || !recadosPendExpo().length ? 'nomes' : 'recados';
+  $('expo-sino-p').hidden = false;
+  pintarSinoExpo();
+}
+function fecharSinoExpo() { $('expo-sino-p').hidden = true; sinoEditando = null; soltouDesdeTroca = false; }
+function pintarSinoExpo() {
+  for (const b of $('expo-sino-abas').children) b.classList.toggle('on', b.dataset.sinoAba === sinoAba);
+  if (sinoEditando && document.activeElement?.closest?.('.expo-sino-edit')) return;   // não apaga o que está sendo digitado
+  let html;
+  if (sinoAba === 'nomes') {
+    const pend = nomesPendExpo(), rk = montarRanking(desTodos.desafio, desTodos.nomes, desTodos.status, escondeRk);
+    html = pend.length ? pend.map(([uid, n]) => {
+      const pts = totalDe(desTodos.desafio?.[uid]), dup = rk.find(r => r.chave === chaveNome(n) && r.uid !== uid), ed = sinoEditando === uid;
+      return `<div class="expo-sino-card" data-uid="${esc(uid)}">
+        ${ed ? `<div class="expo-des-nome expo-sino-edit"><label>Nome<input class="sn-nome" maxlength="${NOME_MAX}" value="${esc(n.nome)}"/></label><label>Turma<input class="sn-turma" maxlength="${TURMA_MAX}" value="${esc(n.turma || '')}"/></label></div>`
+          : `<b class="expo-sino-nm">${esc(n.nome)}${n.turma ? ` <small>· ${esc(n.turma)}</small>` : ''}</b>`}
+        <small class="expo-sino-info">${pts} pts · ${ehVisUid(uid) ? 'visitante' : 'aluno'}</small>
+        ${dup ? `<p class="expo-sino-dup">⚠️ Já existe um nome aprovado igual: ${esc(dup.rotulo)} (${dup.total} pts)</p>` : ''}
+        <div class="expo-sino-bts">${ed ? '<button class="jr-btn jr-btn-ouro" data-sino="salvar">✅ Salvar e aprovar</button><button class="jr-btn jr-btn-sec" data-sino="cancelar">Cancelar</button>'
+          : '<button class="jr-btn expo-sino-ok" data-sino="aprovar">✅ Aprovar</button><button class="jr-btn jr-btn-sec" data-sino="editar">✏️ Editar</button><button class="jr-btn expo-sino-nao" data-sino="recusar">❌ Recusar</button>'}</div></div>`;
+    }).join('') : '<p class="expo-sino-vazio">Nenhum nome esperando. ✔</p>';
+  } else {
+    const pend = recadosPendExpo();
+    html = pend.length ? pend.map(([uid, r]) => `<div class="expo-sino-card" data-uid="${esc(uid)}"><p class="expo-sino-rec">“${esc(r.texto)}”</p>
+      <small class="expo-sino-info">— ${esc(r.nome || 'Visitante')}${sinoReac[uid] ? ` · reação ${esc(sinoReac[uid])}` : ''}</small>
+      <div class="expo-sino-bts"><button class="jr-btn expo-sino-ok" data-sino="rec-ok">✅ Aprovar</button><button class="jr-btn expo-sino-nao" data-sino="rec-nao">❌ Recusar</button></div></div>`).join('')
+      : '<p class="expo-sino-vazio">Nenhum recado esperando. ✔</p>';
+  }
+  if ($('expo-sino-c').dataset.h !== html) { $('expo-sino-c').innerHTML = html; $('expo-sino-c').dataset.h = html; }
+}
+async function cliqueSinoExpo(e) {
+  const aba = e.target.closest('[data-sino-aba]');
+  if (aba) { sinoAba = aba.dataset.sinoAba; sinoEditando = null; tocar('clique'); pintarSinoExpo(); return; }
+  const b = e.target.closest('[data-sino]'), card = b?.closest('[data-uid]'), uid = card?.dataset.uid;
+  if (!b || !uid || b.disabled) return;
+  const acao = b.dataset.sino, st = (v) => set(ref(db, `${noExpo('exposicao_nomes_status')}/${uid}`), v);
+  const feito = async (promessa, txt) => {
+    b.disabled = true;
+    try { await promessa; tocar('clique'); toastSinoExpo(txt); return true; }
+    catch (err) { console.warn('[jogo-revisao] aprovar', err?.code || err); toastSinoExpo('⚠️ Não foi possível gravar. Tente de novo.'); b.disabled = false; return false; }
+  };
+  if (acao === 'editar') { sinoEditando = uid; pintarSinoExpo(); card.querySelector('.sn-nome')?.focus(); return; }
+  if (acao === 'cancelar') { sinoEditando = null; pintarSinoExpo(); return; }
+  if (acao === 'aprovar') await feito(st('aprovado'), `✅ ${rotuloNome(desTodos.nomes[uid] || {})} aprovado`);
+  else if (acao === 'recusar') await feito(st('recusado'), '❌ Recusado: a pessoa pode trocar o nome');
+  else if (acao === 'salvar') {
+    const nome = limparNome(card.querySelector('.sn-nome').value), turma = limparNome(card.querySelector('.sn-turma').value, TURMA_MAX);
+    if (!nome) { card.querySelector('.sn-nome').focus(); return; }
+    sinoEditando = null;
+    if (await feito(update(ref(db, `${noExpo('exposicao_nomes')}/${uid}`), { nome, turma }), '✏️ Nome corrigido')) await feito(st('aprovado'), `✅ ${rotuloNome({ nome, turma })} aprovado`);
+  } else if (acao === 'rec-ok') await feito(set(ref(db, `${noExpo('exposicao_livro')}/recados/${uid}/ok`), true), '📖 Recado aprovado: já aparece no livro');
+  else if (acao === 'rec-nao') await feito(remove(ref(db, `${noExpo('exposicao_livro')}/recados/${uid}`)), '📖 Recado recusado');
+  pintarSinoExpo();
+}
+
+// ══ 🏆 PROMPT-261: o ranking de cada jogo ═════════════════════════════════════════════════════════════════════════════
+// exposicao_desafio/{uid}/rank/{id} e rank_ts/{id}. Shisima e Yoté: +1 a cada vitória (computador, pet ou ao vivo); Linha do tempo:
+// +1 a cada rodada com 5 de 5; Mito ou verdade: o maior número de acertos numa rodada. Os pontos de jogos/{id} não mudam.
+// Prévia: nada é gravado (o ranking só é lido). A professora e as contas escondidas não gravam (não aparecem no ranking).
+const RANK_MAIOR = new Set(['mito_verdade']);
+async function contarRankExpo(id, valor = 1) {
+  if (expoPrevia || !gravaDesafio() || expoModo !== 'aberto' || !sessao?.uid) return;
+  const reg = meuDesafio() || {}, ant = Math.max(0, Number(reg.rank?.[id]) || 0), agora = Date.now();
+  const base = `${noExpo('exposicao_desafio')}/${sessao.uid}`;
+  try {
+    if (RANK_MAIOR.has(id)) {
+      const v = Math.max(0, Math.min(99999, Math.round(Number(valor) || 0)));
+      if (v <= ant) return;
+      await update(ref(db, base), { [`rank/${id}`]: v, [`rank_ts/${id}`]: agora, ...(reg.ts ? {} : { total: totalDe(reg), ts: agora }) });
+    } else {
+      // o nó precisa de total e ts (regra): na 1ª vez, cria com o total de agora
+      if (!reg.ts) await update(ref(db, base), { total: totalDe(reg), ts: agora });
+      await runTransaction(ref(db, `${base}/rank/${id}`), (cur) => Math.min(99999, (Number(cur) || 0) + 1));
+      await set(ref(db, `${base}/rank_ts/${id}`), Date.now());
+    }
+    await garantirNomeAlunoExpo();
+  } catch (e) { console.warn('[jogo-revisao] ranking do jogo', e?.code || e); }
+}
+// { lista: os 10 primeiros, eu: { pos, v } | { pendente, v } | { semNome, v } | { previa } | null }
+function rankingJogoExpo(id) {
+  ouvirDesafioExpo();   // o saguão também lê (o menu dos NPCs)
+  const rk = montarRankingJogo(desTodos.desafio, desTodos.nomes, desTodos.status, escondeRk, id);
+  const lista = rk.slice(0, 10);
+  if (expoPrevia) return { lista, eu: { previa: true } };
+  if (ehProfessora()) return { lista, eu: null };
+  const v = Math.max(0, Number(meuDesafio()?.rank?.[id]) || 0), nm = meuNomeRk(), st = meuStatusRk();
+  if (!v) return { lista, eu: null };
+  if (!nm) return { lista, eu: { semNome: true, v } };
+  if (st !== 'aprovado') return { lista, eu: { pendente: true, v } };
+  const k = rk.findIndex(r => r.chave === chaveNome(nm));
+  return { lista, eu: k >= 0 ? { pos: k + 1, v: rk[k].v } : { pendente: true, v } };
+}
+
 // ══ ⚔️ PROMPT-260: desafiar outra pessoa no Shisima e no Yoté, ao vivo (js/jogo-revisao/expo-duelo.js) ══════════════════
 // Como as Damas entre colegas, em jogo_revisao_praca{_teste}/expo/ (convites/{uid} e partidas/{id}). Na prévia não existe:
 // a prévia não entra no online (PROMPT-253), então ninguém aparece para ser desafiado.
 const JOGOS_DUELO_EXPO = ['shisima', 'yote'];
 // o nome na Exposição: o aprovado do ranking ("Maria – 7B"); sem ele, "Visitante" (ou o primeiro nome do aluno)
+function nomeAprovadoExpo(uid) {
+  const n = desTodos.nomes?.[uid];
+  return n?.nome && desTodos.status?.[uid] === 'aprovado' ? rotuloNome(n) : '';
+}
 function nomeExpoDe(uid, r) {
   const n = desTodos.nomes?.[uid];
   if (n?.nome && desTodos.status?.[uid] === 'aprovado') return rotuloNome(n);
@@ -10362,6 +10577,7 @@ function configurarDueloAoVivoExpo() {
     cfg: (id) => jogosExpo()[id] || null,
     melhor: (id) => Number(meuDesafio()?.jogos?.[id]) || 0,
     gravar: gravarJogoExpo,
+    contar: contarRankExpo,   // 🏆 PROMPT-261: a vitória ao vivo soma 1 (só quem venceu)
     avisoGravar,
     comoJogar: (id) => abrirJogoExpo(id, { soVer: true }),
     jogando: (v) => enviarOnline({ expo_jogando: v || null }),   // "🎲 jogando" no cartão de quem toca em mim
@@ -10369,7 +10585,7 @@ function configurarDueloAoVivoExpo() {
   });
 }
 // os NPCs do saguão: as imagens e os tamanhos do npcs.json; perto da entrada, sem tapar portas, o livro nem o caminho
-const POS_NPCS_SAGUAO = { duda: [585, 700], marcos: [470, 640], joana: [1190, 690] };
+const POS_NPCS_SAGUAO = { duda: [1190, 690], marcos: [470, 640], joana: [585, 700] };   // PROMPT-262: só a Duda, no lugar da Joana
 function npcsDoSaguaoExpo() {
   return npcsSaguaoExpo().map((c, i) => {
     const p = NPCS.find(x => x.id === c.id);
@@ -10397,6 +10613,9 @@ function falarNpcSaguaoExpo() {
 }
 const sortearDe = (l) => l[Math.floor(Math.random() * l.length)];
 function atualizarJogosExpo() {
+  const sino = !(sinoPodeVer() && !$('tela-cena').hidden && !ex?.editando);   // 🔔 PROMPT-262
+  if ($('btn-expo-sino').hidden !== sino) { $('btn-expo-sino').hidden = sino; if (!sino) ouvirSinoExpo(); }
+  if (sino && !$('expo-sino-p').hidden) fecharSinoExpo();
   const b = $('btn-expo-jogo'), n = salaExpo(), id = n && jogoDaSalaExpo(temaDaSala(n)?.id);
   const sem = !(id && !$('tela-cena').hidden && !ex?.editando && !ex?.ver);
   if (b.hidden !== sem) b.hidden = sem;
@@ -13927,6 +14146,7 @@ function insDe(chave) {
 const especiesCasa = () => (cs?.visita ? cs.visita.dados.peixes || {} : estado.pescaEspecies || {});
 
 async function visitarCasinha(uid, volta = null) {   // volta: { n: 'vila', lado } — entrou pela porta da vila
+  if (semExtrasVisExpo(uid)) return;
   if (!CASA || !uid || uid === sessao.uid || transicionando) return;
   let d = null;
   try { const s = await get(ref(db, `${basePraca()}/casinhas/${uid}`)); d = s.exists() ? s.val() : null; }
@@ -21141,6 +21361,7 @@ let pedidoVisita = null, ultimoPedidoVisita = 0;   // o meu pedido em andamento:
 const BOTAO_PEDIR_VISITA = '<button class="jr-colega-oi" data-pedir-visita aria-label="Pedir para visitar a casinha" title="Pedir para visitar">🚪</button>';
 const podePedirVisita = (c) => !!c && !c.reg?.sem_convites && !!CASA;   // o colega com "Não receber convites": sem o botão
 async function pedirVisita(c) {
+  if (semExtrasVisExpo(c?.uid)) return;
   if (!podePedirVisita(c)) return;
   const nome = rotuloColega(c.uid, c.reg);
   fecharCartaoColega();
@@ -21210,6 +21431,7 @@ async function responderPedidoVisita(deixar) {
 
 // ── 🏅 Perfil do colega ──
 async function abrirPerfilColega(c) {
+  if (semExtrasVisExpo(c?.uid)) return;
   if (!c) return;
   fecharCartaoColega();
   const r = c.reg || {}, nome = rotuloColega(c.uid, r), turma = nomeVisivel(r.turma), tit = tituloDe(c.uid, r);
@@ -22257,6 +22479,7 @@ function ligarEventos() {
     const em = e.target.closest('[data-emoji]');
     if (em) { mandarEmoji(cartaoColega.c, em.dataset.emoji); return; }
     if (e.target.closest('[data-perfil]')) { abrirPerfilColega(cartaoColega.c); return; }   // 🏅
+    if (semExtrasVisExpo(cartaoColega.c.uid) && e.target.closest('[data-amigo],[data-pedir-visita],[data-presente],[data-visitar],[data-vizinho],[data-desafiar],[data-dar],[data-dar-ok]')) return;   // 🪪 PROMPT-262
     if (e.target.closest('[data-amigo]')) { tocouBotaoAmigo(cartaoColega.c); return; }   // 🤝 (PROMPT-183)
     if (e.target.closest('[data-desfazer-amigo]')) { const c = cartaoColega.c; desfazerAmizade(c.uid); abrirCartaoColega(c); return; }
     if (e.target.closest('[data-amigo-voltar]')) { abrirCartaoColega(cartaoColega.c); return; }
