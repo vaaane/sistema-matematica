@@ -83,23 +83,34 @@
     </div>
     <div class="jr-hud jr-hud-topo">
       <button class="jr-btn jr-btn-sec" id="btn-cena-voltar">⟵ Mapa geral</button>
+      <!-- 📱 PROMPT-265: na Exposição, "← Saguão · Tema" numa pílula só (tocar no tema mostra os créditos) e o 👣 ao lado -->
+      <button class="expo-tema-b" id="btn-expo-tema" hidden aria-label="Ver os créditos da sala"></button>
+      <div id="expo-contador" class="expo-contador" hidden></div>
+      <div id="ex-creditos" class="ex-creditos" hidden></div>
       <div class="jr-hud-titulo" id="cena-titulo"></div>
+      <button class="expo-carimbos-b expo-des-b" id="btn-expo-desafio" hidden aria-label="Desafio da sala" data-nome="Desafio">📝</button>
+      <button class="expo-carimbos-b expo-jogo-b" id="btn-expo-jogo" hidden aria-label="Jogo da sala" data-nome="Jogo">🎲</button>
+      <button class="expo-carimbos-b" id="btn-expo-carimbos" hidden aria-label="Salas visitadas" data-nome="Carimbos">🏅</button>
+      <button class="expo-carimbos-b expo-sino-b" id="btn-expo-sino" hidden aria-label="Nomes e recados para aprovar" data-nome="Para aprovar">🔔<i id="expo-sino-n" hidden></i></button>
+      <button class="expo-av-b" id="expo-av-b" hidden aria-expanded="false" aria-label="Painel ao vivo" data-nome="Ao vivo">📺<span> Ao vivo</span></button>
+      <div class="expo-dica" id="expo-dica" hidden></div>
+      <button class="expo-tocando" id="expo-tocando" hidden aria-label="Tocando agora. Tocar para a próxima música" title="Próxima música"></button>
       <button class="jr-btn-hud" id="btn-relembre" hidden aria-label="Relembre o conteúdo do ginásio">📖<span>Relembre</span></button>
       <button class="jr-btn-hud" id="btn-praca" hidden aria-label="Ir para a Praça do Encontro">🏛️<span>Praça</span></button>
       <button class="jr-btn-hud" id="btn-casa" hidden aria-label="Ir para a minha casinha">🏠<span>Casa</span></button>
       <button class="jr-btn-hud" id="btn-online" hidden aria-label="Quem está online">👥<span>Online (<b id="online-n">0</b>)</span></button>
-      <button class="jr-btn-hud" id="btn-reacao" hidden aria-label="Mandar uma reação">😊</button>
-      <button class="jr-btn-hud ex-pend-selo" id="btn-expo-pend" hidden aria-label="Abrir a página de aprovação">⏳</button>
-      <button class="jr-btn-hud ex-curtir" id="btn-expo-curtir" hidden aria-label="Curtir a sala" aria-pressed="false">❤️ 0</button>
-      <button class="jr-btn-hud" id="btn-expo-musica" hidden aria-label="Desligar a música">🔈</button>
-      <button class="jr-btn-hud jr-btn-decorar" id="btn-expo-decorar" hidden aria-label="Decorar a sala">✏️<span>Decorar</span></button>
-      <button class="jr-btn-hud jr-btn-decorar" id="btn-expo-votar" hidden aria-label="Votar na sala favorita">🗳️<span>Votar</span></button>
+      <button class="jr-btn-hud" id="btn-reacao" hidden aria-label="Mandar uma reação" data-nome="Emoji">😊</button>
+      <button class="jr-btn-hud ex-pend-selo" id="btn-expo-pend" hidden aria-label="Abrir a página de aprovação" data-nome="Aprovar">⏳</button>
+      <button class="jr-btn-hud ex-curtir" id="btn-expo-curtir" hidden aria-label="Curtir a sala" aria-pressed="false" data-nome="Curtir">❤️ 0</button>
+      <button class="jr-btn-hud" id="btn-expo-musica" hidden aria-label="Desligar a música" data-nome="Música">🔈</button>
+      <button class="jr-btn-hud jr-btn-decorar" id="btn-expo-decorar" hidden aria-label="Decorar a sala" data-nome="Decorar">✏️<span>Decorar</span></button>
+      <button class="jr-btn-hud jr-btn-decorar" id="btn-expo-votar" hidden aria-label="Votar na sala favorita" data-nome="Votar">🗳️<span>Votar</span></button>
       <button class="jr-btn-hud jr-btn-missoes" id="btn-missoes" hidden aria-label="Missões do dia">📜<span id="missoes-cont">0/3</span></button>
       <button class="jr-btn-pet" id="btn-pet" hidden aria-label="Meus pets"><img alt="" draggable="false"/></button>
       <button class="jr-btn-hud jr-btn-batalhar" id="btn-batalhar" hidden aria-label="Duelos">⚔️<span>Duelos</span></button>
       <button class="jr-btn-hud jr-btn-batalhar jr-btn-deq" id="btn-duelo-equipe" hidden aria-label="Duelar com a equipe">🤝<span>Duelar com a equipe</span></button>
-      <button class="jr-btn-som jr-btn-ajuda" id="btn-ajuda" data-ajuda aria-label="Como jogar" title="Como jogar">❓</button>
-      <button class="jr-btn-som jr-btn-config" id="btn-config" data-config aria-label="Configuração" title="Configuração">⚙️</button>
+      <button class="jr-btn-som jr-btn-ajuda" id="btn-ajuda" data-ajuda aria-label="Como jogar" title="Como jogar" data-nome="Ajuda">❓</button>
+      <button class="jr-btn-som jr-btn-config" id="btn-config" data-config aria-label="Configuração" title="Configuração" data-nome="Ajustes">⚙️</button>
       <span class="jr-moedas jr-moedas-topo" data-moedas-topo aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span data-moedas-n>0</span></span>
       <button class="jr-btn-estojo" id="btn-insignias-2" aria-label="Minhas insígnias">
         <img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>
@@ -457,7 +468,16 @@
     </div>
   </div>
   <div class="expo-sino-toast" id="expo-sino-toast" hidden></div>
-  <button class="expo-tocando" id="expo-tocando" hidden aria-label="Tocando agora. Tocar para a próxima música" title="Próxima música"></button>
+  <!-- 👋 PROMPT-266: boas-vindas da Exposição (1ª entrada no aparelho; de novo pela ⚙️ "Como funciona a exposição") -->
+  <div id="expo-bv" class="al-fundo expo-modal expo-bv" hidden role="dialog" aria-labelledby="expo-bv-tit">
+    <div class="expo-bv-caixa">
+      <button class="bt-lista-x expo-bv-x" id="expo-bv-x" aria-label="Fechar">✕</button>
+      <div class="expo-bv-topo"><div class="expo-bv-img" id="expo-bv-img"></div>
+        <div><h2 id="expo-bv-tit">Bem-vindo à Exposição Virtual! 🖼️</h2><p>História, saberes e resistência da população negra, montados pelos alunos do 8º ano.</p></div></div>
+      <div class="expo-bv-grade" id="expo-bv-grade"></div>
+      <div class="expo-bv-rod"><small>Você pode ver isto de novo no ⚙️.</small><button class="jr-btn jr-btn-ouro" id="expo-bv-ok">Bora explorar! →</button></div>
+    </div>
+  </div>
   <div id="expo-aviso" class="al-fundo expo-modal" hidden role="dialog" aria-live="polite">
     <div class="al-caixa expo-caixa"><div class="expo-aviso-txt" id="expo-aviso-txt"></div></div>
   </div>
@@ -481,11 +501,7 @@
     </div>
   </div>
   <div id="expo-podio" class="expo-podio" hidden aria-live="polite"></div>
-  <!-- 🏅 PROMPT-254: o canto de baixo à esquerda: o contador, o botão dos carimbos e (na sala) os créditos -->
-  <div class="expo-canto">
-    <div id="ex-creditos" class="ex-creditos" hidden></div>
-    <button class="expo-carimbos-b expo-jogo-b" id="btn-expo-jogo" hidden aria-label="Jogo da sala">🎲 Jogo</button><div class="expo-canto-l"><div id="expo-contador" class="expo-contador" hidden></div><button class="expo-carimbos-b expo-sino-b" id="btn-expo-sino" hidden aria-label="Nomes e recados para aprovar">🔔<i id="expo-sino-n" hidden></i></button><button class="expo-carimbos-b" id="btn-expo-carimbos" hidden aria-label="Salas visitadas">🏅</button><button class="expo-carimbos-b expo-des-b" id="btn-expo-desafio" hidden aria-label="Desafio da sala">📝 Desafio</button></div>
-  </div>
+  <!-- 🏅 PROMPT-254 → 📱 PROMPT-265: o contador, os carimbos, o jogo, o desafio, o 🔔 e os créditos foram para a fileira do topo (#tela-cena) -->
   <!-- 📝 PROMPT-257: o desafio da sala (3 perguntas), a janelinha "antes de sair" e o 📺 painel ao vivo do saguão -->
   <div id="expo-desafio" class="al-fundo expo-modal" hidden role="dialog" aria-label="Desafio da sala">
     <div class="al-caixa expo-caixa expo-fixa expo-des-caixa">
@@ -498,8 +514,9 @@
       <div class="expo-par-bts"><button class="jr-btn jr-btn-sec" id="expo-conv-sair">Sair</button><button class="jr-btn jr-btn-ouro" id="expo-conv-fazer">Fazer</button></div></div>
   </div>
   <!-- ✨ PROMPT-258: reações no ar (só nas salas) e o cartão "Eu visitei a exposição" -->
-  <div id="expo-reac-barra" class="expo-reac-barra" hidden>
-    <button data-reac-expo="❤️" aria-label="Reagir ❤️">❤️</button><button data-reac-expo="👏" aria-label="Reagir 👏">👏</button><button data-reac-expo="✊🏾" aria-label="Reagir ✊🏾">✊🏾</button><button data-reac-expo="🌟" aria-label="Reagir 🌟">🌟</button>
+  <div id="expo-reac-barra" class="expo-reac-barra" hidden>   <!-- 📱 PROMPT-265: um ✨ que abre os 4 emojis para a esquerda -->
+    <div class="expo-reac-leque" id="expo-reac-leque"><button data-reac-expo="❤️" aria-label="Reagir ❤️">❤️</button><button data-reac-expo="👏" aria-label="Reagir 👏">👏</button><button data-reac-expo="✊🏾" aria-label="Reagir ✊🏾">✊🏾</button><button data-reac-expo="🌟" aria-label="Reagir 🌟">🌟</button></div>
+    <button class="expo-reac-abrir" id="expo-reac-abrir" aria-label="Reações" aria-expanded="false">✨</button>
   </div>
   <div id="expo-cartao" class="al-fundo expo-modal expo-cartao-m" hidden role="dialog" aria-label="Meu cartão">
     <div class="al-caixa expo-caixa expo-fixa expo-cartao-caixa">
@@ -512,7 +529,6 @@
     </div>
   </div>
   <div id="expo-aovivo" class="expo-aovivo" hidden>
-    <button class="expo-av-b" id="expo-av-b" aria-expanded="false">📺 Ao vivo</button>
     <div class="expo-av-c" id="expo-av-c" hidden></div>
   </div>
   <div id="expo-parabens" class="al-fundo expo-modal expo-parabens" hidden role="dialog" aria-label="Você visitou todas as salas">

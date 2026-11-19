@@ -9741,6 +9741,11 @@ let completoPrevia = null;   // 👀 { ts, total, nome }
 const completoExpo = () => (expoPrevia ? completoPrevia : lerLocal(chaveCompletoExpo(), null));
 function guardarCompletoExpo(c) { if (expoPrevia) completoPrevia = c; else gravarLocal(chaveCompletoExpo(), c); }
 const nomeAlunoExpo = () => (sessao.visitante ? '' : `${sessao.nome || ''}${sessao.turma ? ' · ' + sessao.turma : ''}`);
+function seloCarimbosExpo() {   // 📱 PROMPT-265: "6/13" ou "✓"
+  if (!ehProfessora() && completoExpo()) return '✓';
+  const ab = salasAbertasExpo(), vis = visitadasExpo();
+  return `${ab.filter(n => vis.has(n)).length}/${ab.length}`;
+}
 function textoCarimbosExpo() {
   if (!ehProfessora() && completoExpo()) return '🏅 Completo!';
   const ab = salasAbertasExpo(), vis = visitadasExpo();
@@ -9863,8 +9868,9 @@ function pintarCreditosExpo(n) {
   const nomes = (g.membros || []).filter(nm => { const uid = `${g.turma}_${nm}`.replace(/[.#$[\]/\s]/g, '_'); return !contaEscondida(uid, nm); })
     .map(nm => String(nm).trim().split(/\s+/)[0]).filter(Boolean);
   const nome = tituloTemaSala(n) || `Sala da porta ${portaDaSala(n)}`;
-  el.innerHTML = `<b>${esc(nome)}</b>${g.turma && !/TESTE/i.test(g.turma) ? `<span>Turma ${esc(g.turma)}</span>` : ''}${nomes.length ? `<span class="nomes">${nomes.map(esc).join(', ')}</span>` : ''}`;
+  el.innerHTML = `<span class="ex-cr-l1"><b>${esc(nome)}</b>${g.turma && !/TESTE/i.test(g.turma) ? ` · ${esc(g.turma)}` : ''}</span>${nomes.length ? `<span class="nomes">${nomes.map(esc).join(', ')}</span>` : ''}`;
   el.dataset.sala = String(n);
+  expoCredAte = performance.now() + 8000;   // 📱 PROMPT-265: 8 s ao entrar
 }
 
 // 🏆 pódio no saguão (exposicao_config/resultado_visivel + podio [1º, 2º, 3º], gravados pela professora); confete uma vez
@@ -10193,6 +10199,7 @@ function pintarPainelExpo() {
 function atualizarPainelExpo() {
   const el = $('expo-aovivo'), mostra = ehSaguao() && !$('tela-cena').hidden && (!sessao.visitante || expoVisDentro) && !!DESAFIO;
   if (el.hidden === mostra) el.hidden = !mostra;
+  if ($('expo-av-b').hidden === mostra) $('expo-av-b').hidden = !mostra;   // 📱 PROMPT-265: o 📺 fica na fileira do topo
   if (!mostra) return;
   ouvirDesafioExpo();
   const agora = performance.now();
@@ -10204,8 +10211,7 @@ function atualizarBotaoDesafio() {
   const b = $('btn-expo-desafio'), n = salaExpo(), sem = !(n && desafioNaSala(n) && !$('tela-cena').hidden && !ex?.editando && !ex?.ver);
   if (b.hidden !== sem) b.hidden = sem;
   if (sem) return;
-  const t = fezDesafio(n) ? `📝 ${melhorSala(n)}` : '📝 Desafio';
-  if (b.textContent !== t) b.textContent = t;
+  iconeSeloExpo(b, '📝', fezDesafio(n) ? melhorSala(n) : '');   // 📱 PROMPT-265: os pontos no selinho
 }
 
 // 🏅 completou os carimbos: exposicao_completos/{uid} = ts (uma vez; a professora e a prévia não)
@@ -10262,6 +10268,14 @@ function subirEmojiExpo(x, y, e) {
   el.style.cssText = `left:${x + (Math.random() * 24 - 12) * escala}px;top:${y}px;font-size:${34 * escala}px;--sobe:${-170 * escala}px;--bal:${8 * escala}px`;
   $('cena-palco').append(el);
   setTimeout(() => el.remove(), 2600);
+}
+// 📱 PROMPT-265: o ✨ abre o leque dos 4 emojis; fecha sozinho depois de 3 s sem toque
+function abrirLequeReac(sim) {
+  const rb = $('expo-reac-barra');
+  clearTimeout(abrirLequeReac.t);
+  rb.classList.toggle('aberta', !!sim);
+  $('expo-reac-abrir').setAttribute('aria-expanded', String(!!sim));
+  if (sim) abrirLequeReac.t = setTimeout(() => abrirLequeReac(false), 3000);
 }
 function reagirExpo(e) {
   if (!REACOES_EXPO.includes(e) || !salaExpo()) return;
@@ -10398,7 +10412,11 @@ function fecharCartaoExpo() {
   $('expo-cartao-img').innerHTML = '';
 }
 function ligarEventosCartaoExpo() {
-  $('expo-reac-barra').addEventListener('click', (e) => { const b = e.target.closest('[data-reac-expo]'); if (b) reagirExpo(b.dataset.reacExpo); });
+  $('expo-reac-barra').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-reac-expo]');
+    if (b) { reagirExpo(b.dataset.reacExpo); abrirLequeReac(true); return; }   // 3 s sem toque: fecha
+    if (e.target.closest('#expo-reac-abrir')) { tocar('clique'); abrirLequeReac(!$('expo-reac-barra').classList.contains('aberta')); }
+  });
   $('expo-cartao-x').addEventListener('click', fecharCartaoExpo);
   $('expo-cartao').addEventListener('click', (e) => { if (e.target === $('expo-cartao')) fecharCartaoExpo(); });
   $('expo-cartao-baixar').addEventListener('click', () => {
@@ -10831,6 +10849,40 @@ async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (ap
   if (privilegioExpo()) ouvirPendentesExpo();   // ⏳ {n} para aprovar
   registrarVisitaExpo();   // 👣 PROMPT-246
   pintarPodioExpo(true);
+  setTimeout(talvezBoasVindasExpo, 700);   // 👋 PROMPT-266: a 1ª vez no aparelho
+}
+// ══ 👋 PROMPT-266: a janela de boas-vindas (o que dá para fazer na Exposição) ══
+// Uma vez por aparelho (expo_boas_vindas; a prévia só na memória). A professora não vê sozinha. ⚙️ → "Como funciona a exposição".
+const CHAVE_BV_EXPO = 'expo_boas_vindas';
+let bvPrevia = false;
+const bvVista = () => (expoPrevia ? bvPrevia : !!lerLocal(CHAVE_BV_EXPO, false));
+function talvezBoasVindasExpo() {
+  if (!ehSaguao() || ehProfessora() || bvVista() || (sessao.visitante && !expoVisDentro) || !$('expo-entrada').hidden || transicionando) return;
+  abrirBoasVindasExpo();
+}
+function abrirBoasVindasExpo() {
+  if (expoPrevia) bvPrevia = true; else gravarLocal(CHAVE_BV_EXPO, 1);
+  const pet = estado?.pets?.ativo || '', forma = pet ? formaDe(pet) : '', fq = forma ? quadrosDe(forma, 'feliz')[0] : '';
+  $('expo-bv-img').innerHTML = fq ? `<img src="${fq}" alt="${esc(NOME_PET[pet] || 'Seu pet')}" draggable="false"/>`
+    : bustoHtml(`${IMG}/npcs/duda.webp`, 'expo-bv-duda', BUSTO_NPC);
+  const n = salasAbertasExpo().length || 13;
+  const cartoes = [
+    ['🚪', `${n} salas, ${n} temas`, 'Cada sala foi montada por um grupo. Ande até uma porta para entrar.'],
+    fq ? ['🐾', 'Seu pet fala', 'Ele conta curiosidades sobre o tema de cada sala.'] : ['💬', 'A Duda fala', 'Ela conta curiosidades e te chama para jogar.'],
+    ['📝', 'Desafio da sala', '3 perguntas rápidas. Pontos para o ranking!'],
+    ['🎲', 'Jogos', 'Shisima, Yoté, Linha do tempo e Mito ou verdade. Fale com a Duda!'],
+    ['🏅', 'Carimbos', 'Visite todas as salas e ganhe seu cartão para compartilhar.'],
+    expoModo === 'encerrado' ? null : ['🗳️', 'Vote e deixe um recado', 'Escolha sua sala favorita e assine o livro de visitas.'],
+  ].filter(Boolean);
+  $('expo-bv-grade').innerHTML = cartoes.map(([ic, t, d]) => `<div class="expo-bv-c"><span class="expo-bv-ic" aria-hidden="true">${ic}</span><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join('');
+  pararFalaPet(); fecharBalaoPessoa();   // o pet e a Duda não falam com a janela aberta (sobreposicaoAberta: .expo-modal)
+  $('expo-bv').hidden = false;
+}
+function fecharBoasVindasExpo() {
+  if ($('expo-bv').hidden) return;
+  $('expo-bv').hidden = true;
+  tocar('clique');
+  fexp.prox = Math.max(fexp.prox, performance.now() + 2500);   // o pet espera um pouco antes de falar
 }
 // voltando de uma sala, virado para o saguão (PROMPT-245, pela posição da placa): parede da esquerda (portas 1–3) para a direita,
 // fundo (4–10) de frente, parede da direita (11–13) para a esquerda
@@ -11004,22 +11056,37 @@ function musicaDaSala(ignorarMudo = false) {
   if (!mu || (musicaMudaExpo() && !ignorarMudo)) return null;
   return srcMusicaExpo(mu);
 }
+// 📱 PROMPT-265: ícone + selinho (o selinho só quando tem valor); só repinta quando muda
+function iconeSeloExpo(b, ic, selo = '') {
+  const k = `${ic}|${selo}`;
+  if (b.dataset.k === k) return;
+  b.dataset.k = k;
+  b.innerHTML = `${ic}${selo !== '' && selo != null ? `<i class="expo-selo">${esc(String(selo))}</i>` : ''}`;
+}
+let expoCredAte = 0;   // 📱 PROMPT-265: a placa de créditos aparece por 8 s ao entrar na sala (e ao tocar no nome do tema)
 function atualizarHudExpo() {
+  const naExpo = emExpo(), rz = document.documentElement;
+  if (rz.classList.contains('expo-hud') !== naExpo) rz.classList.toggle('expo-hud', naExpo);   // 📱 PROMPT-265: a fileira de ícones
+  const bt = $('btn-expo-tema'), semT = !naExpo, nt = salaExpo() ? (tituloTemaSala(salaExpo()) || `Porta ${portaDaSala(salaExpo())}`) : 'Exposição';
+  if (bt.hidden !== semT) bt.hidden = semT;
+  if (!semT && bt.textContent !== nt) bt.textContent = nt;
   pintarGrio();
   atualizarBotaoDesafio(); atualizarPainelExpo();   // 📝📺 PROMPT-257
   atualizarJogosExpo();   // 🎲 PROMPT-259
   const rb = $('expo-reac-barra'), semR = !(salaExpo() && !$('tela-cena').hidden && !ex?.editando && !ex?.ver);   // ✨ PROMPT-258: só nas salas
-  if (rb.hidden !== semR) rb.hidden = semR;
+  if (rb.hidden !== semR) { rb.hidden = semR; if (semR) abrirLequeReac(false); }
   const bv = $('btn-expo-votar'), semV = !(ehSaguao() && expoModo === 'aberto' && !ehProfessora());   // 🗳️ PROMPT-246
   if (bv.hidden !== semV) bv.hidden = semV;
-  const cr = $('ex-creditos'), semCr = !(salaExpo() && cr.dataset.sala === String(salaExpo()) && $('tela-cena').hidden === false && !ex?.editando && !ex?.ver);
+  const agoraH = performance.now(), cr = $('ex-creditos'), semCr = !(salaExpo() && cr.dataset.sala === String(salaExpo()) && $('tela-cena').hidden === false && !ex?.editando && !ex?.ver && agoraH < expoCredAte);
   if (cr.hidden !== semCr) cr.hidden = semCr;
+  const fadeCr = !semCr && agoraH > expoCredAte - 600;   // some com um fade
+  if (cr.classList.contains('sumindo') !== fadeCr) cr.classList.toggle('sumindo', fadeCr);
   const bk = $('btn-expo-carimbos'), semK = !((ehSaguao() || salaExpo()) && !$('tela-cena').hidden && !ex?.editando && !ex?.ver && (!sessao.visitante || expoVisDentro));   // 🏅 PROMPT-254
   if (bk.hidden !== semK) bk.hidden = semK;
-  if (!semK && performance.now() - (bk._t || 0) > 400) { bk._t = performance.now(); const tk = textoCarimbosExpo(); if (bk.textContent !== tk) bk.textContent = tk; }   // lê o aparelho no máximo 2,5× por segundo
-  const ct = $('expo-contador'), semCt = !(ehSaguao() && expoModo !== 'montagem' && !$('tela-cena').hidden), tt = `👣 ${expoTotalVis} visitante${expoTotalVis === 1 ? '' : 's'}`;
+  if (!semK && performance.now() - (bk._t || 0) > 400) { bk._t = performance.now(); iconeSeloExpo(bk, '🏅', seloCarimbosExpo()); bk.setAttribute('aria-label', `Salas visitadas: ${textoCarimbosExpo().replace('🏅 ', '')}`); }   // lê o aparelho no máximo 2,5× por segundo
+  const ct = $('expo-contador'), semCt = !(ehSaguao() && expoModo !== 'montagem' && !$('tela-cena').hidden), tt = `👣 ${expoTotalVis}`;
   if (ct.hidden !== semCt) ct.hidden = semCt;
-  if (!semCt && ct.textContent !== tt) ct.textContent = tt;
+  if (!semCt && ct.textContent !== tt) { ct.textContent = tt; ct.title = `${expoTotalVis} visitante${expoTotalVis === 1 ? '' : 's'}`; }
   const pd = $('expo-podio');
   if (!pd.hidden && !ehSaguao()) pd.hidden = true;
   if (!salaExpo() && cr.dataset.sala) cr.dataset.sala = '';
@@ -11028,16 +11095,15 @@ function atualizarHudExpo() {
   const bc = $('btn-expo-curtir'), semC = !n;   // ❤️ N: a própria sala (e a professora) só vê o número
   if (bc.hidden !== semC) bc.hidden = semC;
   if (!semC) {
-    const pode = podeCurtirSala(n), tc = `${pode && !curtiSala(n) ? '🤍' : '❤️'} ${curtidasSala(n)}`;
-    if (bc.textContent !== tc) bc.textContent = tc;
+    const pode = podeCurtirSala(n), nc = curtidasSala(n);
+    iconeSeloExpo(bc, pode && !curtiSala(n) ? '🤍' : '❤️', nc > 0 ? nc : '');   // 📱 PROMPT-265: o número no selinho
     if (bc.classList.contains('so-ver') === pode) { bc.classList.toggle('so-ver', !pode); bc.setAttribute('aria-pressed', String(curtiSala(n))); }
   }
   const bm = $('btn-expo-musica'), comPl = tocaPlaylistExpo(), semM = !((n && musicaDaSala(true)) || comPl);
   if (bm.hidden !== semM) bm.hidden = semM;
   const bp = $('btn-expo-pend'), semP = !(ehSaguao() && expoPendN > 0 && privilegioExpo());
   if (bp.hidden !== semP) bp.hidden = semP;
-  const tp = `⏳ ${expoPendN} para aprovar`;
-  if (!semP && bp.textContent !== tp) bp.textContent = tp;
+  if (!semP) { iconeSeloExpo(bp, '⏳', expoPendN); bp.setAttribute('aria-label', `${expoPendN} para aprovar`); }
   const mudo = musicaMudaExpo() || (comPl && musicaBloqueada()), ic = mudo ? '🔇' : comPl ? '🎵' : '🔈';
   if (!semM && bm.textContent !== ic) { bm.textContent = ic; bm.classList.toggle('mudo', mudo); bm.setAttribute('aria-label', mudo ? 'Ligar a música' : 'Desligar a música'); }
   if (semM || !emExpo()) esconderTocandoExpo();
@@ -11048,11 +11114,42 @@ function mostrarTocandoExpo(i) {
   if (!m || !el || !emExpo() || bm.hidden || $('tela-cena').hidden) return;
   el.textContent = `🎵 ${m.nome || m.id}${m.artista ? ' · ' + m.artista : ''}`;
   el.hidden = false;
-  const r = bm.getBoundingClientRect(), w = el.offsetWidth, vw = document.documentElement.clientWidth;
-  el.style.top = `${Math.round(r.bottom + 6)}px`;
-  el.style.left = `${Math.round(Math.max(8, Math.min(vw - w - 8, r.right - w)))}px`;
+  posicionarSobBotaoExpo(el, bm, 'direita');
   clearTimeout(mostrarTocandoExpo.t);
   mostrarTocandoExpo.t = setTimeout(esconderTocandoExpo, 6000);
+}
+// 📱 PROMPT-265: rótulos embaixo de um botão da fileira do topo (pelas coordenadas da própria fileira: vale com a tela girada)
+function posicionarSobBotaoExpo(el, b, alinhar = 'centro') {
+  const w = el.offsetWidth, vw = el.offsetParent?.clientWidth || innerWidth;
+  const x = alinhar === 'direita' ? b.offsetLeft + b.offsetWidth - w : b.offsetLeft + b.offsetWidth / 2 - w / 2;
+  el.style.left = `${Math.round(Math.max(8, Math.min(vw - w - 8, x)))}px`;
+  el.style.top = `${Math.round(b.offsetTop + b.offsetHeight + 6)}px`;
+}
+// segurar o dedo (~500 ms) ou passar o mouse: o nome do botão embaixo dele; o toque longo não aciona o botão
+function ligarDicasExpo() {
+  const topo = document.querySelector('#tela-cena .jr-hud-topo'), dica = $('expo-dica');
+  if (!topo || !dica) return;
+  let t = 0, t2 = 0, segurou = false;
+  const alvo = (e) => document.documentElement.classList.contains('expo-hud') && e.target.closest?.('.jr-hud-topo > button:not(#btn-cena-voltar):not(#btn-expo-tema):not(.expo-tocando)');
+  const mostrar = (b) => {
+    const nome = b.dataset.nome || b.getAttribute('aria-label') || b.title || '';
+    if (!nome) return;
+    esconderTocandoExpo();   // o rótulo da música não fica por baixo
+    dica.textContent = nome; dica.hidden = false;
+    posicionarSobBotaoExpo(dica, b);
+  };
+  const esconder = () => { clearTimeout(t); clearTimeout(t2); dica.hidden = true; };
+  topo.addEventListener('pointerover', (e) => { if (e.pointerType === 'mouse') { const b = alvo(e); if (b) mostrar(b); } });
+  topo.addEventListener('pointerout', (e) => { if (e.pointerType === 'mouse') esconder(); });
+  topo.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;
+    const b = alvo(e);
+    segurou = false; esconder();
+    if (b) t = setTimeout(() => { segurou = true; mostrar(b); t2 = setTimeout(esconder, 1500); }, 500);
+  });
+  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) topo.addEventListener(ev, () => clearTimeout(t));
+  topo.addEventListener('click', (e) => { if (segurou) { segurou = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  topo.addEventListener('contextmenu', (e) => { if (alvo(e)) e.preventDefault(); });   // o menu do toque longo (Android)
 }
 function esconderTocandoExpo() { const el = $('expo-tocando'); if (el && !el.hidden) el.hidden = true; }
 // tocar curte; tocar de novo descurte (grava só a minha curtida)
@@ -11074,6 +11171,16 @@ function ligarExposicao() {
     if (!musicaExpoLigada()) esconderTocandoExpo();
   });
   $('expo-tocando').addEventListener('click', (e) => { e.stopPropagation(); proximaFaixa(); });
+  $('expo-bv-ok').addEventListener('click', fecharBoasVindasExpo);   // 👋 PROMPT-266
+  $('expo-bv-x').addEventListener('click', fecharBoasVindasExpo);
+  $('expo-bv').addEventListener('click', (e) => { if (e.target === $('expo-bv')) fecharBoasVindasExpo(); });
+  $('btn-expo-tema').addEventListener('click', (e) => {   // 📱 PROMPT-265: tocar no nome do tema mostra (ou esconde) os créditos
+    e.stopPropagation();
+    if (!salaExpo()) return;
+    expoCredAte = $('ex-creditos').hidden ? performance.now() + 8000 : 0;
+    tocar('clique');
+  });
+  ligarDicasExpo();
   aoTrocarFaixa((i) => mostrarTocandoExpo(i));
   $('btn-expo-curtir').addEventListener('click', (e) => { e.stopPropagation(); curtirSala(); });
   $('btn-expo-pend').addEventListener('click', (e) => { e.stopPropagation(); window.open('/professor/p-exposicao.html', '_blank', 'noopener'); });   // só um aviso: a aprovação é na página
@@ -21625,6 +21732,7 @@ function renderConfig() {
     chave('conversa', '💬', 'Conversa do pet', !petCalado, 'Os avisos importantes continuam') +
     chave('convites', '⚔️', 'Receber convites', !estado.semConvites, 'Duelos, damas e chamados da Praça') +
     chave('nomes', '🏷️', 'Nomes dos colegas', nomesColegasVisiveis(), 'Em cima dos colegas no mapa') +
+    (emExpo() ? abre('expo-bv', '❓', 'Como funciona a exposição') : '') +   // 👋 PROMPT-266
     abre('tutorial', '❓', 'Como jogar') +
     abre('presentes', '📜', 'Presentes recebidos') +
     (ehProfessora() ? abre('zerar', '🧪', 'Professora: zerar ginásio', 'Apaga o progresso de um ginásio só na sua conta') : '');
@@ -21632,6 +21740,7 @@ function renderConfig() {
 function acaoConfig(id) {
   if (id === 'personagem') { fecharConfig(); abrirEscolhaPersonagem(); return; }
   if (id === 'tutorial') { fecharConfig(); abrirTutorial(true); return; }
+  if (id === 'expo-bv') { fecharConfig(); abrirBoasVindasExpo(); return; }   // 👋 PROMPT-266
   if (id === 'presentes') { abrirHistoricoPresentes(); return; }
   if (id === 'zerar') { abrirZerarGinasio(); return; }
   if (id === 'som') { alternarSom(); pintarSom(); }

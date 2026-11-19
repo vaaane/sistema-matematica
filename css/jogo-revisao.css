@@ -6735,9 +6735,134 @@ html.jr-girado #expo-entrada .expo-entrada-caixa { width: min(860px, calc(100dvh
 #expo-entrada.teclado .expo-ent-rod .jr-btn { padding: 5px 16px; }
 
 /* 🎵 PROMPT-264: "tocando agora" da playlist da Exposição (6 s embaixo do 🎵; tocar pula para a próxima) */
-.expo-tocando { position: fixed; z-index: 40; max-width: min(320px, calc(100vw - 16px)); padding: 4px 10px; border-radius: 999px;
+.expo-tocando { position: absolute; z-index: 40; max-width: min(320px, calc(100vw - 16px)); padding: 4px 10px; border-radius: 999px;
   border: 1px solid rgba(124,92,252,.45); background: rgba(13,15,26,.82); color: #e8e6f5; font: 600 12px/1.3 Inter, system-ui, sans-serif;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; animation: expoTocando .35s ease-out; }
 .expo-tocando[hidden] { display: none; }
 @keyframes expoTocando { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 @media (max-height: 500px) { .expo-tocando { font-size: 11px; padding: 3px 8px; max-width: min(260px, calc(100vw - 16px)); } }
+
+/* ══ 📱 PROMPT-265: a Exposição com o HUD compacto (html.expo-hud, no saguão e nas salas; um layout só para celular e computador) ══
+   No alto: a pílula "← Saguão · Tema" (e o 👣) à esquerda; à direita, uma fileira de ícones redondos de 38 px com selinhos.
+   A placa de créditos embaixo da pílula (8 s), o ✨ das reações no canto de baixo à direita e o joystick menor à esquerda. */
+html.expo-hud .jr-hud-topo { background: none; gap: 6px; align-items: center; padding-top: max(8px, var(--sa-t)); padding-bottom: 0; }
+html.expo-hud .jr-hud-topo > * { order: 20; }
+html.expo-hud #btn-cena-voltar { order: 0; }
+html.expo-hud #btn-expo-tema { order: 1; }
+html.expo-hud #expo-contador { order: 2; }
+html.expo-hud #cena-titulo { order: 3; visibility: hidden; flex: 1 1 0; min-width: 0; }   /* o título grande some (fica o espaço) */
+html.expo-hud #btn-expo-desafio { order: 10; }
+html.expo-hud #btn-expo-jogo { order: 11; }
+html.expo-hud #btn-expo-carimbos { order: 12; }
+html.expo-hud #btn-expo-curtir { order: 13; }
+html.expo-hud #btn-reacao { order: 14; }
+html.expo-hud #btn-ajuda { order: 30; }
+html.expo-hud #btn-config { order: 31; }
+/* a pílula: "← Saguão" + "· Tema" (dourado) */
+html.expo-hud #btn-cena-voltar { flex: none; height: 32px; min-height: 0; padding: 0 4px 0 12px; margin: 0; border-radius: 999px 0 0 999px; border: 0; box-shadow: none;
+  background: rgba(20,18,40,.72); color: #fff; font: 700 12.5px/32px 'Inter', sans-serif; white-space: nowrap; }
+html.expo-hud #btn-expo-tema { flex: 0 1 auto; min-width: 0; max-width: 34vw; height: 32px; padding: 0 12px 0 0; margin: 0 0 0 -6px; border: 0; border-radius: 0 999px 999px 0;
+  background: rgba(20,18,40,.72); color: #ffd700; font: 700 12.5px/32px 'Inter', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+html.expo-hud #btn-expo-tema::before { content: '· '; color: #fff; }
+.expo-tema-b { display: none; }
+html.expo-hud .expo-tema-b { display: block; }
+/* 👣 visitantes: selinho discreto ao lado da pílula */
+html.expo-hud #expo-contador { position: static; flex: none; padding: 3px 8px; border-radius: 999px; border: 0; background: rgba(20,18,40,.6); color: #9fe8ff;
+  font: 700 11px/1.2 'Inter', sans-serif; pointer-events: auto; }
+/* a fileira de ícones */
+html.expo-hud .jr-hud-topo > :is(.jr-btn-hud, .jr-btn-som, .expo-carimbos-b, .expo-av-b) {
+  flex: none; position: relative; width: 38px; height: 38px; min-width: 38px; padding: 0; margin: 0; border-radius: 50%; box-sizing: border-box;
+  display: inline-flex; align-items: center; justify-content: center; background: rgba(20,18,40,.72); border: 1px solid rgba(255,255,255,.16);
+  color: #fff; font: 400 18px/1 'Inter', sans-serif !important; white-space: nowrap; text-decoration: none; -webkit-touch-callout: none; user-select: none; }
+html.expo-hud .jr-hud-topo > :is(.jr-btn-hud, .expo-av-b) span { display: none; }
+html.expo-hud .jr-hud-topo > :is(.jr-btn-hud, .jr-btn-som, .expo-carimbos-b, .expo-av-b):active { transform: scale(.92); }
+html.expo-hud .jr-hud-topo > .jr-btn-som::before { inset: -3px; }
+html.expo-hud #btn-expo-desafio { background: #7c5cfc; border: 2px solid rgba(255,255,255,.85); box-shadow: 0 0 10px rgba(124,92,252,.6); }
+html.expo-hud #btn-expo-musica.mudo { opacity: .7; }
+html.expo-hud .expo-av-b.aberto { border-color: #ffd700; box-shadow: 0 0 0 1px #ffd700 inset; }
+html.expo-hud .ex-pend-selo { border-color: var(--jr-ouro); }
+/* o selinho: embaixo do ícone, amarelo */
+.expo-selo { position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); min-width: 14px; padding: 2px 4px; box-sizing: border-box; border-radius: 7px;
+  background: #ffd700; color: #1a1300; font: 800 9.5px/1 'Inter', sans-serif; font-style: normal; text-align: center; white-space: nowrap; pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,.45); }
+html.expo-hud .expo-sino-b i { top: -4px; right: -4px; min-width: 16px; height: 16px; font-size: 10px; line-height: 16px; padding: 0 4px; }
+/* o nome do botão (segurar o dedo ou passar o mouse) */
+.expo-dica { position: absolute; z-index: 41; padding: 3px 8px; border-radius: 6px; background: rgba(13,15,26,.92); color: #fff; border: 1px solid rgba(255,255,255,.2);
+  font: 600 11px/1.2 'Inter', sans-serif; white-space: nowrap; pointer-events: none !important; }
+/* a placa de créditos: embaixo da pílula, creme, 8 s (some com um fade) */
+html.expo-hud #ex-creditos { position: absolute; z-index: 15; left: max(12px, var(--sa-l, 0px)); top: calc(100% + 4px); bottom: auto; max-width: 190px; box-sizing: border-box;
+  padding: 5px 10px; border: 0; border-radius: 10px; background: rgba(255,246,225,.9); color: #3b2a14; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  font: 400 11.5px/1.3 'Inter', sans-serif; gap: 1px; pointer-events: none; transition: opacity .6s ease; }
+html.expo-hud #ex-creditos .ex-cr-l1 { color: #5b4526; }
+html.expo-hud #ex-creditos b { font: 700 12px/1.25 'Inter', sans-serif; color: #2a1c0a; }
+html.expo-hud #ex-creditos .nomes { color: #4a3a22; font-size: 11px; }
+html.expo-hud #ex-creditos.sumindo { opacity: 0; }
+/* ✨ reações: um botão no canto de baixo à direita; os 4 emojis abrem para a esquerda */
+html.expo-hud .expo-reac-barra { left: auto; right: max(12px, var(--sa-r, 0px)); bottom: max(12px, var(--sa-b, 0px)); transform: none; padding: 0; gap: 6px;
+  background: none; border: 0; align-items: center; }
+.expo-reac-abrir { display: none; }
+html.expo-hud .expo-reac-abrir { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; padding: 0; border-radius: 50%;
+  background: rgba(20,18,40,.72) !important; border: 1px solid rgba(255,215,0,.5) !important; font-size: 20px !important; }
+html.expo-hud .expo-reac-barra.aberta .expo-reac-abrir { border-color: #ffd700 !important; box-shadow: 0 0 0 2px rgba(255,215,0,.35); }
+.expo-reac-leque { display: flex; gap: 4px; }
+html.expo-hud .expo-reac-leque { display: none; background: rgba(20,18,40,.8); border: 1px solid rgba(255,215,0,.45); border-radius: 999px; padding: 2px 4px; }
+html.expo-hud .expo-reac-barra.aberta .expo-reac-leque { display: flex; animation: expoLeque .18s ease-out; }
+html.expo-hud .expo-reac-leque button { font-size: 21px; padding: 4px 5px; }
+@keyframes expoLeque { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
+/* joystick menor e mais transparente, à esquerda (a área de toque continua grande) */
+html.expo-hud .jr-joy { right: auto; left: max(16px, calc(var(--sa-l, 0px) + 8px)); bottom: max(14px, calc(var(--sa-b, 0px) + 8px)); }
+html.expo-hud .jr-joy-base { width: 84px; height: 84px; background: radial-gradient(circle, rgba(13,15,26,.12) 0%, rgba(13,15,26,.3) 100%);
+  border-color: rgba(255,255,255,.3); box-shadow: none; }
+html.expo-hud .jr-joy-base::before { content: ''; position: absolute; inset: -20px; border-radius: 50%; }
+html.expo-hud .jr-joy-bola { width: 36px; height: 36px; margin: -18px 0 0 -18px; opacity: .85; }
+/* o balão do pet: pequeno (13 px, até 210 px), em cima do pet */
+html.expo-hud .jr-pet-fala.expo-fala, html.expo-hud .jr-pet-fala.expo-fala.largo { max-width: min(210px, 60vw); font-size: calc(13px * var(--letra, 1)); padding: 6px 10px; }
+/* 📺 o painel ao vivo: o botão está na fileira; o painel aberto fica embaixo dela */
+html.expo-hud .expo-aovivo { top: calc(max(8px, var(--sa-t, 0px)) + 46px); }
+@media (max-height: 500px) {
+  html.expo-hud .expo-av-c { max-height: calc(100dvh - 120px); }
+}
+
+/* ══ 👋 PROMPT-266: boas-vindas da Exposição (cabe sem rolar no celular deitado; em pé, 2 colunas com rolagem) ══ */
+.expo-bv { z-index: 72; }
+.expo-bv-caixa { position: relative; box-sizing: border-box; width: min(800px, calc(100vw - 24px)); max-height: calc(100dvh - 20px); overflow-y: auto; overscroll-behavior: contain;
+  background: #171531; border: 3px solid #ffd700; border-radius: 18px; padding: 16px 18px 14px; color: #e8e6f5; font-family: 'Inter', sans-serif;
+  display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+.expo-bv-x { position: absolute; top: 8px; right: 8px; }
+.expo-bv-topo { display: flex; align-items: center; gap: 14px; padding-right: 30px; }
+.expo-bv-img { flex: none; width: 64px; height: 56px; display: flex; align-items: center; justify-content: center; }
+.expo-bv-img > img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.expo-bv-img .jr-busto { width: 56px; height: 56px; border-radius: 50%; }
+.expo-bv-topo h2 { margin: 0; font: 800 22px/1.15 'Inter', sans-serif; color: #ffd700; }
+.expo-bv-topo p { margin: 3px 0 0; font-size: 13px; line-height: 1.3; color: #d6d4ea; }
+.expo-bv-grade { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.expo-bv-c { display: flex; align-items: center; gap: 10px; background: #24223f; border-radius: 12px; padding: 9px 11px; min-width: 0; }
+.expo-bv-ic { flex: none; font-size: 26px; line-height: 1; width: 32px; text-align: center; }
+.expo-bv-c b { display: block; font: 700 14px/1.2 'Inter', sans-serif; color: #fff; margin-bottom: 2px; }
+.expo-bv-c span:not(.expo-bv-ic) { display: block; font-size: 12.5px; line-height: 1.35; color: #c9c7e0; }
+.expo-bv-rod { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.expo-bv-rod small { font-size: 12px; color: #9a98b8; }
+.expo-bv-rod .jr-btn { flex: none; padding: 10px 22px; font-size: 17px; }
+@media (max-height: 500px) {
+  .expo-bv-caixa { padding: 10px 14px 10px; gap: 7px; border-width: 2px; }
+  .expo-bv-topo { gap: 10px; }
+  .expo-bv-img { width: 48px; height: 42px; }
+  .expo-bv-img .jr-busto { width: 42px; height: 42px; }
+  .expo-bv-topo h2 { font-size: 17px; }
+  .expo-bv-topo p { font-size: 11.5px; margin-top: 1px; }
+  .expo-bv-grade { gap: 6px; }
+  .expo-bv-c { padding: 6px 9px; gap: 8px; }
+  .expo-bv-ic { font-size: 21px; width: 26px; }
+  .expo-bv-c b { font-size: 12.5px; margin-bottom: 1px; }
+  .expo-bv-c span:not(.expo-bv-ic) { font-size: 11px; line-height: 1.3; }
+  .expo-bv-rod small { font-size: 11px; }
+  .expo-bv-rod .jr-btn { padding: 7px 18px; font-size: 15px; }
+}
+/* o jogo girado (celular em pé mostrando deitado): mede pela altura */
+html.jr-girado .expo-bv-caixa { width: min(800px, calc(100dvh - 24px)); max-height: calc(100vw - 20px); }
+/* celular em pé (sem girar): 2 colunas, com rolagem */
+@media (orientation: portrait) and (max-width: 600px) {
+  html:not(.jr-girado) .expo-bv-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html:not(.jr-girado) .expo-bv-c { flex-direction: column; align-items: flex-start; }
+  html:not(.jr-girado) .expo-bv-rod { flex-direction: column-reverse; align-items: stretch; text-align: center; }
+}
