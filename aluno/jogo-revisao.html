@@ -428,31 +428,24 @@
   <!-- 🎨 Reformas (PROMPT-112): trocar o tema do quarto (só os comprados) -->
   <!-- 🖼️ Exposição (PROMPT-EXPOSICAO-2): tema da sala, conteúdo do item e o visualizador -->
   <!-- 🚪 PROMPT-246: Exposição aberta ao público -->
-  <div id="expo-entrada" class="al-fundo expo-modal" hidden role="dialog" aria-label="Escolha seu personagem">
-    <div class="al-caixa expo-caixa expo-fixa expo-entrada-caixa">
-      <div class="al-topo expo-topo"><b>🖼️ Exposição Virtual da Consciência Negra</b></div>
-      <!-- 🐾 PROMPT-255: o personagem e o pet lado a lado (no celular deitado cabe tudo com o Entrar) -->
-      <div class="expo-entrada-corpo">
-        <div class="expo-entrada-col"><p class="expo-txt">Escolha seu personagem e entre</p><div class="expo-pers" id="expo-pers"></div></div>
-        <div class="expo-entrada-col" id="expo-pets-col" hidden><p class="expo-txt">🐾 Escolha um pet para te acompanhar</p><div class="expo-pets" id="expo-pets"></div></div>
-      </div>
-      <!-- 🪪 PROMPT-262: o nome e a turma na entrada (o visitante; o aluno logado não vê) -->
-      <div class="expo-entrada-nome" id="expo-entrada-nome" hidden>
-        <label>Seu nome<input id="expo-ent-nome" maxlength="20" autocomplete="off" placeholder="Seu nome"/></label>
-        <label>Turma <small>(opcional)</small><input id="expo-ent-turma" maxlength="6" autocomplete="off" placeholder="ex.: 7B"/></label>
-        <button class="jr-btn jr-btn-ouro expo-entrar" id="expo-entrar">Entrar ➜</button>
-        <small class="expo-ent-aviso" id="expo-ent-aviso">⚠️ Seu nome passa pela aprovação da professora. Se ele não for aprovado, seus pontos não entram no ranking.</small>
-      </div>
-    </div>
-  </div>
-  <!-- 🪪 PROMPT-262: a professora recusou o nome: escolher outro -->
-  <div id="expo-nome-rec" class="al-fundo expo-modal" hidden role="dialog" aria-label="Escolha outro nome">
-    <div class="al-caixa expo-caixa">
-      <div class="al-topo"><b>🪪 Seu nome não foi aprovado</b><button class="bt-lista-x" id="expo-nome-rec-x" aria-label="Fechar">✕</button></div>
-      <p class="expo-txt">Seu nome não foi aprovado. Escolha outro nome.</p>
-      <div class="expo-des-nome"><label>Nome<input id="expo-rec-nome" maxlength="20" autocomplete="off"/></label>
-        <label>Turma <small>(opcional)</small><input id="expo-rec-turma" maxlength="6" autocomplete="off" placeholder="ex.: 7B"/></label></div>
-      <div class="expo-par-bts"><button class="jr-btn jr-btn-ouro" id="expo-rec-ok">Salvar</button></div>
+  <!-- 🪪 PROMPT-263: a entrada do visitante em 3 passos (personagem → pet → nome); a troca do nome recusado abre no passo 3 -->
+  <div id="expo-entrada" class="al-fundo expo-modal" hidden role="dialog" aria-label="Entrar na exposição">
+    <div class="al-caixa expo-caixa expo-entrada-caixa">
+      <div class="expo-ent-topo"><b class="expo-ent-tit">🖼️ Exposição Virtual · Consciência Negra</b>
+        <ol class="expo-passos" id="expo-passos"><li data-passo="1"><i>1</i><span>Personagem</span></li><li class="expo-passos-sep" data-sep="2"></li><li data-passo="2"><i>2</i><span>Pet</span></li><li class="expo-passos-sep"></li><li data-passo="3"><i>3</i><span>Nome</span></li></ol></div>
+      <p class="expo-ent-msg" id="expo-ent-msg" hidden>❌ Seu nome não foi aprovado. Escolha outro nome.</p>
+      <section class="expo-passo" data-p="1"><h3 class="expo-passo-t">Escolha seu personagem</h3><div class="expo-pers" id="expo-pers"></div></section>
+      <section class="expo-passo" data-p="2" hidden><h3 class="expo-passo-t">Escolha um pet <small>ele te acompanha e conta curiosidades</small></h3><div class="expo-pets" id="expo-pets"></div></section>
+      <section class="expo-passo" data-p="3" hidden><h3 class="expo-passo-t">Como você quer aparecer?</h3>
+        <div class="expo-ent-p3"><div class="expo-ent-previa" id="expo-ent-previa"></div>
+          <div class="expo-ent-campos">
+            <div class="expo-ent-linha"><label class="expo-ent-l-nome"><span>Seu nome</span><input id="expo-ent-nome" maxlength="20" autocomplete="off" enterkeyhint="go" placeholder="Seu nome"/></label>
+              <label class="expo-ent-l-turma"><span>Turma <small>(opcional)</small></span><input id="expo-ent-turma" maxlength="6" autocomplete="off" enterkeyhint="go" placeholder="ex.: 7B"/></label></div>
+            <small class="expo-ent-erro" id="expo-ent-erro" hidden></small>
+            <p class="expo-ent-aviso">⚠️ Seu nome passa pela aprovação da professora. Enquanto não for aprovado, você aparece como <b>Visitante</b>. Se ele for recusado, seus pontos não entram no ranking.</p>
+          </div></div></section>
+      <div class="expo-ent-rod"><button class="jr-btn jr-btn-sec" id="expo-ent-voltar">← Voltar</button><span></span>
+        <button class="jr-btn jr-btn-ouro" id="expo-ent-prox">Próximo →</button><button class="jr-btn jr-btn-ouro" id="expo-entrar" hidden>Entrar →</button></div>
     </div>
   </div>
   <!-- 🔔 PROMPT-262: a professora aprova nomes e recados sem sair do jogo -->

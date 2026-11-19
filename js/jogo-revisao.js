@@ -9343,43 +9343,130 @@ async function iniciarVisitante() {
   if (expoModo === 'aberto') abrirEntradaVisitante(); else avisoModoExpo();
 }
 // o personagem: 8 prontos (exposicao.json → visitante.personagens; sem ela, os 8 primeiros), um já sorteado
-function abrirEntradaVisitante() {
+// 🪪 PROMPT-263: a entrada do visitante em 3 passos, um por vez: ① personagem → ② pet → ③ nome. Quem já entrou neste aparelho
+// (personagem, pet e nome guardados) abre no passo 3, tudo preenchido; os passos feitos (✔) voltam ao tocar. O nome recusado
+// abre esta mesma tela no passo 3 (modo 'recusado': só o nome muda). Sem pets na lista, o passo 2 some.
+const CHAVE_PERS_VIS = 'expo_pers_visitante';
+const ent = { passo: 1, modo: 'entrar', sel: null, lista: [], feitos: new Set() };
+const temPassoPet = () => ent.modo !== 'recusado' && petsDoVisitante().length > 0;
+function abrirEntradaVisitante(modo = 'entrar') {
+  ent.modo = modo;
   const ids = (Array.isArray(EXPO.visitante?.personagens) ? EXPO.visitante.personagens.filter(persValido) : []).slice(0, 8);
-  const lista = ids.length ? ids : PERS.lista.slice(0, 8).map(p => p.id);
-  let sel = lista[Math.floor(Math.random() * lista.length)];
-  const pintar = () => { for (const b of $('expo-pers').children) b.classList.toggle('sel', b.dataset.pers === sel); };
-  $('expo-pers').innerHTML = lista.map(id => `<button class="expo-pers-b" data-pers="${esc(id)}" aria-label="Personagem"><img src="${urlQuadro('frente', -1, id, null)}" alt="" draggable="false"/></button>`).join('');
-  $('expo-pers').onclick = (e) => { const b = e.target.closest('[data-pers]'); if (b) { sel = b.dataset.pers; pintar(); tocar('clique'); } };
-  pintar();
-  pintarPetsEntradaExpo();   // 🐾 PROMPT-255
+  ent.lista = ids.length ? ids : PERS.lista.slice(0, 8).map(p => p.id);
+  const salvoP = lerLocal(CHAVE_PERS_VIS, null), salvo = lerLocal(CHAVE_NOME_VIS, null) || {};
+  if (modo === 'recusado') ent.sel = estado.personagem || ent.sel;
+  else if (!ent.lista.includes(ent.sel)) ent.sel = ent.lista.includes(salvoP) ? salvoP : ent.lista[Math.floor(Math.random() * ent.lista.length)];
+  $('expo-pers').style.setProperty('--n', ent.lista.length);
+  $('expo-pers').innerHTML = ent.lista.map(id => `<button class="expo-pers-b" data-pers="${esc(id)}" aria-label="Personagem"><img src="${urlQuadro('frente', -1, id, null)}" alt="" draggable="false"/></button>`).join('');
+  marcarPersEntrada();
+  if (modo !== 'recusado') pintarPetsEntradaExpo();   // 🐾 PROMPT-255
   ouvirDesafioExpo();
+  if (modo === 'recusado') { $('expo-ent-nome').value = ''; $('expo-ent-turma').value = limparNome(desTodos.nomes?.[sessao.uid]?.turma || salvo.turma || '', TURMA_MAX); }
+  else {
+    if (!$('expo-ent-nome').value) $('expo-ent-nome').value = limparNome(salvo.nome || '');
+    if (!$('expo-ent-turma').value) $('expo-ent-turma').value = limparNome(salvo.turma || '', TURMA_MAX);
+  }
+  $('expo-ent-msg').hidden = modo !== 'recusado';
+  $('expo-entrar').textContent = modo === 'recusado' ? '✔ Salvar' : 'Entrar →';
+  $('expo-passos').querySelector('[data-passo="2"]').hidden = !temPassoPet();
+  $('expo-passos').querySelector('[data-sep="2"]').hidden = !temPassoPet();
+  const volta = modo === 'recusado' || (ent.lista.includes(salvoP) && !!salvo.nome);
+  ent.feitos = new Set(volta ? [1, 2] : []);
   $('expo-aviso').hidden = true;
   $('expo-entrada').hidden = false;
-  // 🪪 PROMPT-262: o nome (obrigatório) e a turma; o aparelho lembra para a próxima visita
-  const salvo = lerLocal(CHAVE_NOME_VIS, null) || {};
-  $('expo-entrada-nome').hidden = false;
-  if (!$('expo-ent-nome').value) $('expo-ent-nome').value = limparNome(salvo.nome || '');
-  if (!$('expo-ent-turma').value) $('expo-ent-turma').value = limparNome(salvo.turma || '', TURMA_MAX);
-  const avisoEnt = (t, erro) => { $('expo-ent-aviso').textContent = t; $('expo-ent-aviso').classList.toggle('erro', !!erro); };
-  const AVISO_ENT = '⚠️ Seu nome passa pela aprovação da professora. Se ele não for aprovado, seus pontos não entram no ranking.';
-  const conferir = () => { $('expo-entrar').disabled = !limparNome($('expo-ent-nome').value); };
-  $('expo-ent-nome').oninput = () => { conferir(); avisoEnt(AVISO_ENT, false); };
-  $('expo-ent-turma').oninput = () => avisoEnt(AVISO_ENT, false);
-  for (const i of [$('expo-ent-nome'), $('expo-ent-turma')]) i.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') $('expo-entrar').click(); };
-  conferir(); avisoEnt(AVISO_ENT, false);
-  $('expo-entrar').onclick = async () => {
-    const nome = limparNome($('expo-ent-nome').value), turma = limparNome($('expo-ent-turma').value, TURMA_MAX);
-    if (!nome) { avisoEnt('✏️ Escreva seu nome para entrar.', true); $('expo-ent-nome').focus(); tocar('erro'); return; }
-    if (temPalavrao(nome) || temPalavrao(turma)) { avisoEnt('🚫 Esse nome tem uma palavra que não pode. Escreva de outro jeito.', true); tocar('erro'); return; }
-    salvarNomeExpo(nome, turma);   // não espera: entra já (o nome chega ao Firebase em seguida)
-    $('expo-entrada').hidden = true;
-    estado.personagem = sel;
-    preCarregarQuadros(sel, null);
-    ligarPetVisitante();   // 🐾 PROMPT-255: só agora as animações do pet escolhido
-    expoVisDentro = true;
-    await transicao(() => abrirSaguao());
-    if (!expoPrevia) entrarOnline().catch(() => {});   // 👀 a prévia não aparece para os outros
-  };
+  irPassoEntrada(volta ? 3 : 1);
+  conferirNomeEntrada();
+}
+function marcarPersEntrada() { for (const b of $('expo-pers').children) b.classList.toggle('sel', b.dataset.pers === ent.sel); }
+function irPassoEntrada(n) {
+  if (n === 2 && !temPassoPet()) n = ent.passo === 3 ? 1 : 3;
+  for (let k = 1; k < n; k++) ent.feitos.add(k);
+  ent.passo = n;
+  for (const sec of $('expo-entrada').querySelectorAll('.expo-passo')) sec.hidden = Number(sec.dataset.p) !== n;
+  for (const li of $('expo-passos').querySelectorAll('[data-passo]')) {
+    const k = Number(li.dataset.passo), feito = k !== n && ent.feitos.has(k);
+    li.className = k === n ? 'atual' : feito ? 'feito' : 'prox';
+    li.querySelector('i').textContent = feito ? '✔' : String(temPassoPet() || k < 2 ? k : k - 1);
+    li.classList.toggle('volta', feito && ent.modo !== 'recusado');
+  }
+  $('expo-ent-voltar').hidden = n === 1 || ent.modo === 'recusado';
+  $('expo-ent-prox').hidden = n === 3;
+  $('expo-entrar').hidden = n !== 3;
+  $('expo-entrada').classList.toggle('no-p3', n !== 3);
+  if (n === 3) {
+    pintarPreviaEntrada();
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches) setTimeout(() => $('expo-ent-nome').focus(), 50);   // no celular não abre o teclado sozinho
+  }
+}
+function pintarPreviaEntrada() {
+  const pet = ent.modo === 'recusado' ? (seguidor?.pet || '') : (petVisSel && petsDoVisitante().includes(petVisSel) ? petVisSel : '');
+  $('expo-ent-previa').innerHTML = `<img class="expo-ent-pv-pers" src="${urlQuadro('frente', -1, ent.sel || PERS.padrao, null)}" alt="" draggable="false"/>`
+    + (pet ? `<img class="expo-ent-pv-pet" src="${quadrosDe(pet, 'sentado_girando')[0]}" alt="" draggable="false"/>` : '');
+}
+// o nome vale? (obrigatório, sem palavrão; a turma também sem palavrão). O erro aparece embaixo do campo, sem outra janela.
+function conferirNomeEntrada(mostrar = true) {
+  const nome = limparNome($('expo-ent-nome').value), turma = limparNome($('expo-ent-turma').value, TURMA_MAX);
+  const erro = (temPalavrao(nome) || temPalavrao(turma)) ? '🚫 Esse nome tem uma palavra que não pode. Escreva de outro jeito.' : '';
+  $('expo-ent-erro').textContent = erro; $('expo-ent-erro').hidden = !(erro && mostrar);
+  $('expo-entrar').disabled = !nome || !!erro;
+  return !nome || erro ? null : { nome, turma };
+}
+async function confirmarEntradaExpo() {
+  const v = conferirNomeEntrada();
+  if (!v) { if (!limparNome($('expo-ent-nome').value)) { $('expo-ent-erro').textContent = '✏️ Escreva seu nome para entrar.'; $('expo-ent-erro').hidden = false; } $('expo-ent-nome').focus(); tocar('erro'); return; }
+  if (ent.modo === 'recusado') {
+    $('expo-entrar').disabled = true;
+    const ok = await salvarNomeExpo(v.nome, v.turma, true);
+    $('expo-entrar').disabled = false;
+    if (!ok) { $('expo-ent-erro').textContent = '📡 Não foi possível salvar agora. Tente de novo.'; $('expo-ent-erro').hidden = false; return; }
+    fecharEntradaExpo();
+    tocar('clique');
+    avisoExpo('✔ Nome trocado: espera a professora aprovar.');
+    return;
+  }
+  gravarLocal(CHAVE_PERS_VIS, ent.sel);
+  salvarNomeExpo(v.nome, v.turma);   // não espera: entra já (o nome chega ao Firebase em seguida)
+  fecharEntradaExpo();
+  estado.personagem = ent.sel;
+  preCarregarQuadros(ent.sel, null);
+  ligarPetVisitante();   // 🐾 PROMPT-255: só agora as animações do pet escolhido
+  expoVisDentro = true;
+  await transicao(() => abrirSaguao());
+  if (!expoPrevia) entrarOnline().catch(() => {});   // 👀 a prévia não aparece para os outros
+}
+function fecharEntradaExpo() {
+  $('expo-entrada').hidden = true;
+  $('expo-entrada').classList.remove('teclado');
+  $('expo-entrada').style.removeProperty('top'); $('expo-entrada').style.removeProperty('height');
+  document.activeElement?.blur?.();
+  soltouDesdeTroca = false;
+}
+// ⌨️ o teclado do celular aberto: a prévia some e a janela cabe acima dele (visualViewport)
+function ajustarTecladoEntrada() {
+  const el = $('expo-entrada'), vv = window.visualViewport;
+  if (!vv || el.hidden || document.documentElement.classList.contains('jr-girado')) return;
+  const teclado = ent.passo === 3 && vv.height < innerHeight - 100 && /^expo-ent-(nome|turma)$/.test(document.activeElement?.id || '');
+  el.classList.toggle('teclado', teclado);
+  if (teclado) { el.style.top = vv.offsetTop + 'px'; el.style.height = vv.height + 'px'; }
+  else { el.style.removeProperty('top'); el.style.removeProperty('height'); }
+}
+function ligarEntradaExpo() {
+  $('expo-pers').addEventListener('click', (e) => { const b = e.target.closest('[data-pers]'); if (b) { ent.sel = b.dataset.pers; marcarPersEntrada(); tocar('clique'); } });
+  $('expo-passos').addEventListener('click', (e) => {
+    const li = e.target.closest('li.volta[data-passo]');
+    if (li) { tocar('clique'); irPassoEntrada(Number(li.dataset.passo)); }
+  });
+  $('expo-ent-prox').addEventListener('click', () => { tocar('clique'); irPassoEntrada(ent.passo + 1); });
+  $('expo-ent-voltar').addEventListener('click', () => { tocar('clique'); irPassoEntrada(ent.passo === 3 && !temPassoPet() ? 1 : ent.passo - 1); });
+  $('expo-entrar').addEventListener('click', confirmarEntradaExpo);
+  for (const i of [$('expo-ent-nome'), $('expo-ent-turma')]) {
+    i.addEventListener('input', () => conferirNomeEntrada());
+    i.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); confirmarEntradaExpo(); } });
+    i.addEventListener('focus', () => setTimeout(ajustarTecladoEntrada, 300));
+    i.addEventListener('blur', () => setTimeout(ajustarTecladoEntrada, 150));
+  }
+  window.visualViewport?.addEventListener('resize', ajustarTecladoEntrada);
+  window.visualViewport?.addEventListener('scroll', ajustarTecladoEntrada);
 }
 let expoVisDentro = false;
 
@@ -9389,8 +9476,7 @@ const CHAVE_PET_VIS = 'expo_pet_visitante';
 let petVisSel = null;   // id do pet ou '' (sem pet)
 const petsDoVisitante = () => (Array.isArray(FALAS_EXPO?.pets_visitante) ? FALAS_EXPO.pets_visitante : []).filter(p => petsOk && petValido(p));
 function pintarPetsEntradaExpo() {
-  const lista = petsDoVisitante(), col = $('expo-pets-col');
-  col.hidden = !lista.length;
+  const lista = petsDoVisitante();
   if (!lista.length) { petVisSel = ''; return; }
   if (petVisSel === null) {
     const salvo = lerLocal(CHAVE_PET_VIS, null);
@@ -9399,7 +9485,7 @@ function pintarPetsEntradaExpo() {
   $('expo-pets').innerHTML = `<button class="expo-pet-b expo-sem-pet" data-pet="" aria-label="Sem pet"><span>🚫</span><small>Sem pet</small></button>`
     + lista.map(p => `<button class="expo-pet-b" data-pet="${esc(p)}" aria-label="${esc(NOME_PET[p] || p)}"><img src="${quadrosDe(p, 'sentado_girando')[0]}" alt="" draggable="false"/><small>${esc(NOME_PET[p] || p)}</small></button>`).join('');
   const marcar = () => { for (const b of $('expo-pets').children) b.classList.toggle('sel', b.dataset.pet === petVisSel); };
-  $('expo-pets').onclick = (e) => { const b = e.target.closest('[data-pet]'); if (b) { petVisSel = b.dataset.pet; marcar(); tocar('clique'); } };
+  $('expo-pets').onclick = (e) => { const b = e.target.closest('[data-pet]'); if (b) { petVisSel = b.dataset.pet; marcar(); tocar('clique'); } };   // a prévia do passo 3 pinta ao chegar lá
   marcar();
 }
 function ligarPetVisitante() {
@@ -9804,9 +9890,7 @@ function ligarEventosPublicoExpo() {
   $('expo-sino-x').addEventListener('click', fecharSinoExpo);
   $('expo-sino-p').addEventListener('click', (e) => { if (e.target === $('expo-sino-p')) fecharSinoExpo(); else cliqueSinoExpo(e); });
   $('expo-sino-p').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && e.target.closest('.expo-sino-edit')) e.target.closest('.expo-sino-card').querySelector('[data-sino="salvar"]')?.click(); });
-  $('expo-nome-rec-x').addEventListener('click', () => { $('expo-nome-rec').hidden = true; soltouDesdeTroca = false; });
-  $('expo-rec-ok').addEventListener('click', salvarNomeRecusadoExpo);
-  $('expo-nome-rec').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') salvarNomeRecusadoExpo(); });
+  ligarEntradaExpo();   // 🪪 PROMPT-263
   $('btn-expo-jogo').addEventListener('click', () => { const id = jogoDaSalaExpo(temaDaSala(salaExpo())?.id); if (id) { tocar('clique'); abrirJogoExpo(id); } });   // 🎲 PROMPT-259
   if (window.visualViewport) {   // ⌨️ PROMPT-254: com o teclado aberto, o livro e os parabéns ficam na parte visível da tela
     const vv = window.visualViewport, seguir = () => { const g = document.documentElement.classList.contains('jr-girado'); for (const id of ['expo-livro', 'expo-parabens', 'expo-desafio']) { const el = $(id); el.style.top = g ? '' : vv.offsetTop + 'px'; el.style.height = g ? '' : vv.height + 'px'; } };   // girado: o jogo já cuida
@@ -10373,20 +10457,10 @@ let nomeRecAvisado = false;
 function conferirMeuNomeExpo() {
   if (expoPrevia || ehProfessora() || !sessao?.uid || !emExpo() || (sessao.visitante && !expoVisDentro)) return;
   if (desTodos.status?.[sessao.uid] !== 'recusado' || !desTodos.nomes?.[sessao.uid]) { if (desTodos.status?.[sessao.uid] !== 'recusado') nomeRecAvisado = false; return; }
-  if (nomeRecAvisado || !$('expo-nome-rec').hidden) return;
+  if (nomeRecAvisado || !$('expo-entrada').hidden) return;
   nomeRecAvisado = true;
-  $('expo-rec-nome').value = ''; $('expo-rec-turma').value = desTodos.nomes[sessao.uid]?.turma || '';
-  $('expo-nome-rec').hidden = false;
+  abrirEntradaVisitante('recusado');   // 🪪 PROMPT-263: a tela de entrada, no passo 3, com a mensagem em cima
   tocar('erro');
-}
-async function salvarNomeRecusadoExpo() {
-  const nome = limparNome($('expo-rec-nome').value), turma = limparNome($('expo-rec-turma').value, TURMA_MAX);
-  if (!nome) { $('expo-rec-nome').focus(); tocar('erro'); return; }
-  if (temPalavrao(nome) || temPalavrao(turma)) { avisoExpo('🚫 Esse nome tem uma palavra que não pode. Escreva de outro jeito.'); tocar('erro'); return; }
-  if (!await salvarNomeExpo(nome, turma, true)) { avisoExpo('Não foi possível salvar o nome agora. Tente de novo.'); return; }
-  $('expo-nome-rec').hidden = true;
-  tocar('clique');
-  avisoExpo('✔ Nome trocado: espera a professora aprovar.');
 }
 // aprovou ou mudou: os nomes em cima dos personagens (visitante: "Visitante" até aprovar)
 function repintarNomesExpo() {

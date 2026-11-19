@@ -6201,12 +6201,6 @@ html.jr-girado .expo-fixa { max-height: min(100%, calc(100vw - 24px)); }
 .jr-pet-fala.expo-fala { font-size: calc(14px * var(--letra, 1)); max-width: min(300px, 80vw); }
 /* a entrada: o personagem e o pet lado a lado; o Entrar sempre à vista */
 .expo-entrada-caixa { max-width: min(860px, calc(100vw - 24px)); }
-.expo-entrada-corpo { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px 16px; }
-.expo-entrada-corpo:has(> #expo-pets-col:not([hidden])) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.expo-entrada-col { min-width: 0; display: flex; flex-direction: column; }
-.expo-entrada-col .expo-txt { margin: 2px 0 8px; }
-.expo-entrada-caixa .expo-pers { margin-bottom: 4px; }
-.expo-entrada-caixa .expo-entrar { flex: none; align-self: center; margin-top: 6px; }
 .expo-pets { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
 .expo-pet-b { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; padding: 4px 2px; border-radius: 12px;
   border: 2px solid transparent; background: rgba(255,255,255,.06); cursor: pointer; color: #c9cbe0; min-width: 0; }
@@ -6215,16 +6209,8 @@ html.jr-girado .expo-fixa { max-height: min(100%, calc(100vw - 24px)); }
 .expo-pet-b.sel { border-color: #ffd700; background: rgba(255,215,0,.12); color: #fff; }
 .expo-sem-pet span { font-size: 28px; line-height: 58px; opacity: .8; }
 /* celular/tablet (deitado ou girado): personagens menores (4 × 2 cabe ao lado dos pets) */
-html.jr-deitado .expo-entrada-caixa .expo-pers { gap: 6px; }
-html.jr-deitado .expo-entrada-caixa .expo-pers-b { padding: 3px; aspect-ratio: auto; height: min(118px, calc((100dvh - 190px) / 2)); }
-html.jr-girado .expo-entrada-caixa .expo-pers-b { height: min(118px, calc((100vw - 190px) / 2)); }
-html.jr-deitado .expo-entrada-caixa .expo-pers-b img { height: 100%; width: auto; }
 html.jr-deitado .expo-pet-b img { max-height: 46px; }
 html.jr-deitado .expo-sem-pet span { line-height: 46px; font-size: 24px; }
-html.jr-deitado .expo-entrada-caixa .expo-entrar { font-size: 16px; padding: 6px 26px; }
-@media (orientation: portrait) and (max-width: 600px) {   /* em pé sem o jogo girado: um embaixo do outro */
-  html:not(.jr-girado) .expo-entrada-corpo:has(> #expo-pets-col:not([hidden])) { grid-template-columns: minmax(0, 1fr); }
-}
 
 /* ══ 📝 PROMPT-257: o desafio da sala, o nome no ranking e o 📺 painel ao vivo do saguão ══ */
 .expo-des-b { border-color: rgba(0,212,255,.6); color: #00d4ff; }
@@ -6646,21 +6632,6 @@ html.jr-girado .ed-fundo .ed-caixa-p { width: min(420px, calc(100dvh - 32px)); }
 }
 
 /* ══ 🪪 PROMPT-262: o nome na entrada, o 🔔 da professora (aprovar sem sair do jogo) ══ */
-.expo-entrada-nome { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) 120px auto; align-items: end; gap: 4px 10px; margin-top: 6px; }
-.expo-entrada-nome label { display: flex; flex-direction: column; gap: 3px; text-align: left; font: 600 13px 'Inter', sans-serif; color: #c9cbe0; min-width: 0; }
-.expo-entrada-nome label small { font-weight: 400; color: #8d8fa8; }
-.expo-entrada-nome input { min-width: 0; width: 100%; box-sizing: border-box; border-radius: 10px; border: 1px solid rgba(255,255,255,.25); background: #11131f; color: #fff; padding: 7px 10px; font: 16px 'Inter', sans-serif; }
-.expo-entrada-nome input:focus { outline: none; border-color: #ffd700; }
-.expo-entrada-caixa .expo-entrada-nome .expo-entrar { margin: 0; align-self: end; }
-.expo-entrada-nome .expo-entrar:disabled { opacity: .45; filter: grayscale(.6); cursor: not-allowed; }
-.expo-ent-aviso { grid-column: 1 / -1; font: 12px/1.3 'Inter', sans-serif; color: #ffd27a; text-align: left; }
-.expo-ent-aviso.erro { color: #ff8a7a; font-weight: 700; }
-html.jr-deitado .expo-entrada-caixa .expo-pers-b { height: min(118px, calc((100dvh - 262px) / 2)); }
-html.jr-girado .expo-entrada-caixa .expo-pers-b { height: min(118px, calc((100vw - 262px) / 2)); }
-html.jr-deitado .expo-entrada-caixa .expo-entrada-corpo .expo-txt { margin: 0 0 4px; font-size: 14px; }
-html.jr-deitado .expo-entrada-nome input { padding: 5px 9px; font-size: 15px; }
-html.jr-deitado .expo-ent-aviso { font-size: 11px; }
-@media (max-width: 480px) { .expo-entrada-nome { grid-template-columns: minmax(0, 1fr) 90px; } .expo-entrada-nome .expo-entrar { grid-column: 1 / -1; justify-self: center; } }
 /* 🔔 o sino com o contador vermelho */
 .expo-sino-b { position: relative; border-color: rgba(255,215,0,.7); }
 .expo-sino-b i { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px; background: #ef4444; color: #fff;
@@ -6686,3 +6657,79 @@ html.jr-deitado .expo-ent-aviso { font-size: 11px; }
 .expo-sino-ok { background: #00a86b; color: #fff; border: none; }
 .expo-sino-nao { background: #b42318; color: #fff; border: none; }
 .expo-sino-vazio { color: #8d8fa8; text-align: center; margin: 16px 0; }
+
+/* ══ 🪪 PROMPT-263: a entrada do visitante em 3 passos (personagem → pet → nome), sem rolar ══ */
+#expo-entrada .expo-entrada-caixa { max-width: none; width: min(860px, calc(100vw - 24px)); height: min(500px, calc(100dvh - 16px)); max-height: none;
+  display: flex; flex-direction: column; gap: 8px; padding: 10px 14px; text-align: left; overflow: hidden; box-sizing: border-box; }
+#expo-entrada .expo-entrada-caixa > * { flex: none; }
+#expo-entrada .expo-entrada-caixa > .expo-passo { flex: 1 1 auto; min-height: 0; }
+html.jr-girado #expo-entrada .expo-entrada-caixa { width: min(860px, calc(100dvh - 24px)); height: min(500px, calc(100vw - 16px)); }
+.expo-ent-topo { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.expo-ent-tit { font: 700 17px 'Rajdhani', sans-serif; color: #ffd700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.expo-passos { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 6px; flex: none; }
+.expo-passos li[data-passo] { display: flex; align-items: center; gap: 5px; font: 700 14px 'Rajdhani', sans-serif; color: #6e7090; }
+.expo-passos li[data-passo] i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 12px 'Inter', sans-serif; font-style: normal; border: 2px solid #4a4c66; color: #8d8fa8; box-sizing: border-box; }
+.expo-passos li.atual { color: #ffd700; }
+.expo-passos li.atual i { background: #ffd700; border-color: #ffd700; color: #1a1205; }
+.expo-passos li.feito { color: #4fd1a5; }
+.expo-passos li.feito i { background: #00a86b; border-color: #00a86b; color: #fff; }
+.expo-passos li.volta { cursor: pointer; }
+.expo-passos li.volta:hover span { text-decoration: underline; }
+.expo-passos-sep { width: 18px; height: 2px; background: #3a3c56; border-radius: 1px; }
+.expo-ent-msg { margin: 0; background: rgba(239,68,68,.14); border: 1px solid #ef4444; color: #ffb4a8; border-radius: 10px; padding: 6px 10px; font: 700 14px 'Inter', sans-serif; text-align: center; }
+.expo-passo { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.expo-passo[hidden] { display: none; }
+.expo-passo-t { margin: 0; font: 700 20px 'Rajdhani', sans-serif; color: #fff; flex: none; }
+.expo-passo-t small { font: 400 13px 'Inter', sans-serif; color: #8d8fa8; margin-left: 6px; }
+/* ① os personagens lado a lado, na altura que sobra */
+#expo-entrada .expo-pers { flex: 1 1 auto; min-height: 0; margin: 0; display: grid; grid-template-columns: repeat(var(--n, 8), minmax(0, 1fr)); gap: 8px; }
+#expo-entrada .expo-passo .expo-pers-b { height: 100%; aspect-ratio: auto; padding: 6px 2px; min-width: 0; box-sizing: border-box; }
+#expo-entrada .expo-passo .expo-pers-b img { height: 100%; width: 100%; object-fit: contain; max-height: none; }
+/* ② os pets: 5 × 2, com o nome inteiro */
+#expo-entrada .expo-pets { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px; }
+#expo-entrada .expo-pet-b { min-height: 0; padding: 6px 4px; justify-content: center; gap: 4px; }
+#expo-entrada .expo-pet-b img { flex: 1 1 auto; min-height: 0; max-height: 100%; width: 100%; object-fit: contain; }
+#expo-entrada .expo-pet-b small { flex: none; font: 700 13px 'Inter', sans-serif; white-space: nowrap; overflow: visible; text-overflow: clip; }
+#expo-entrada .expo-sem-pet span { flex: 1 1 auto; display: grid; place-items: center; line-height: 1; font-size: 30px; }
+/* ③ a prévia à esquerda; o nome e a turma lado a lado, e o aviso */
+.expo-ent-p3 { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(120px, 30%) minmax(0, 1fr); gap: 14px; align-items: center; }
+.expo-ent-previa { position: relative; height: 100%; min-height: 0; display: flex; align-items: flex-end; justify-content: center; background: radial-gradient(ellipse at 50% 85%, rgba(255,215,0,.16), transparent 65%); border-radius: 14px; }
+.expo-ent-pv-pers { height: 100%; max-height: 260px; width: auto; object-fit: contain; }
+.expo-ent-pv-pet { position: absolute; bottom: 4px; right: 8%; height: 42%; max-height: 110px; width: auto; object-fit: contain; }
+.expo-ent-campos { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.expo-ent-linha { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 10px; align-items: end; }
+.expo-ent-linha label { display: flex; flex-direction: column; gap: 4px; font: 700 14px 'Inter', sans-serif; color: #e6e7f2; min-width: 0; white-space: nowrap; }
+.expo-ent-linha label small { font-weight: 400; color: #8d8fa8; }
+.expo-ent-linha input { width: 100%; min-width: 0; box-sizing: border-box; border-radius: 10px; border: 2px solid rgba(255,255,255,.22); background: #11131f; color: #fff; padding: 9px 12px; font: 17px 'Inter', sans-serif; }
+.expo-ent-linha input:focus { outline: none; border-color: #ffd700; }
+.expo-ent-erro { color: #ff8a7a; font: 700 13px 'Inter', sans-serif; }
+.expo-ent-aviso { margin: 0; background: rgba(255,215,0,.1); border: 1px solid rgba(255,215,0,.55); color: #ffe7a0; border-radius: 10px; padding: 8px 10px; font: 13px/1.35 'Inter', sans-serif; }
+.expo-ent-aviso b { color: #fff; }
+/* o rodapé: ← Voltar à esquerda; Próximo / Entrar à direita */
+.expo-ent-rod { display: flex; align-items: center; gap: 8px; }
+.expo-ent-rod > span { flex: 1 1 auto; }
+.expo-ent-rod .jr-btn { padding: 8px 22px; font-size: 17px; }
+.expo-ent-rod .jr-btn[hidden] { display: none; }
+#expo-entrar:disabled { opacity: .45; filter: grayscale(.6); cursor: not-allowed; }
+/* celular deitado: tudo um pouco menor */
+@media (max-height: 430px) {
+  #expo-entrada .expo-entrada-caixa { gap: 6px; padding: 8px 12px; }
+  .expo-ent-tit { font-size: 15px; }
+  .expo-passos li[data-passo] { font-size: 13px; }
+  .expo-passo-t { font-size: 17px; }
+  .expo-ent-rod .jr-btn { padding: 6px 18px; font-size: 16px; }
+  .expo-ent-linha input { padding: 7px 10px; font-size: 16px; }
+  .expo-ent-aviso { font-size: 12px; padding: 6px 9px; }
+  #expo-entrada .expo-pet-b small { font-size: 12px; }
+}
+@media (max-width: 700px) { .expo-passos li[data-passo] span { display: none; } .expo-passos li.atual span { display: inline; } }
+/* ⌨️ teclado aberto: a janela acima dele, sem a prévia nem os títulos */
+#expo-entrada.teclado { bottom: auto; padding: 4px; align-items: stretch; }
+#expo-entrada.teclado .expo-entrada-caixa { height: 100%; gap: 4px; padding: 6px 10px; }
+#expo-entrada.teclado .expo-ent-topo, #expo-entrada.teclado .expo-passo-t, #expo-entrada.teclado .expo-ent-previa { display: none; }
+#expo-entrada.teclado .expo-ent-p3 { grid-template-columns: minmax(0, 1fr); align-items: start; }
+#expo-entrada.teclado .expo-ent-aviso { font-size: 11px; padding: 3px 8px; }
+#expo-entrada.teclado .expo-ent-linha label > span { display: none; }
+#expo-entrada.teclado .expo-ent-campos { gap: 4px; }
+#expo-entrada.teclado .expo-ent-linha input { padding: 6px 10px; }
+#expo-entrada.teclado .expo-ent-rod .jr-btn { padding: 5px 16px; }
