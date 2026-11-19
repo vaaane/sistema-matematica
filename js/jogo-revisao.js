@@ -13,7 +13,7 @@ import { urlSprite as spriteComCor, coresValidas, semCor, CORES_CABELO, CORES_BL
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE, ALUNOS_POR_TURMA, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
 import { gerarQuestoes, gerarUma, assuntoDe, nPerguntas } from '/js/jogo-revisao/geradores.js';
-import { tocar, somLigado, alternarSom, tocarArquivo, pararEfeitos, musicaPara, musicaLigada, alternarMusica, pausarMusica, musicaBloqueada, abaixarMusica } from '/js/jogo-revisao/sons.js';
+import { tocar, somLigado, alternarSom, tocarArquivo, pararEfeitos, musicaPara, musicaLigada, alternarMusica, pausarMusica, musicaBloqueada, abaixarMusica, definirPlaylist, playlistBaixa, musicaExpoLigada, alternarMusicaExpo, proximaFaixa, aoTrocarFaixa } from '/js/jogo-revisao/sons.js';
 import { srcAudioGrio, temAudioGrio, legendaGrio, tempoDasLinhas, fraseNoTempo } from '/js/jogo-revisao/grio.js';   // 🎙️ PROMPT-234
 import { EMBLEMAS, CORES_EQUIPE, MAX_MEMBROS as MAX_MEMBROS_EQ, NOME_MAX as NOME_MAX_EQ, emblemaDe, corValida as corEquipeValida, htmlEmblema, htmlRotuloEquipe, bases as basesEquipe,
   membrosDe as membrosDeEq, naEquipe as naEquipeEq, equipeVale as equipeValeEq, lerAlunos as lerAlunosEq, criarEquipe as criarEquipeEq, editarEquipe as editarEquipeEq, pedirNome as pedirNomeEq,
@@ -8036,6 +8036,12 @@ let duelo = null;            // { id, souA, eu, outro, d (dados), tema, timers, 
 // lab: Laboratório, Programe o pet, Caça ao bug, "O que o pet vai fazer?", Ilha dos Robôs
 const visivel = (id) => { const e = $(id); return !!e && !e.hidden; };
 function lugarDaMusica() {
+  const plx = emExpo() ? playlistExpo() : [];   // 🎵 PROMPT-264: saguão e salas sem música própria; nunca a do duelo
+  definirPlaylist(plx.map(srcMusicaExpo));
+  if (plx.length) {
+    playlistBaixa(visivel('expo-jogo') || visivel('ed-jogo'));
+    return musicaDaSala() || 'playlist';
+  }
   if (visivel('batalha') || visivel('pergunta') || duelo || visivel('damas')) return 'ginasio';   // a corrida é um duelo
   if (salaExpo()) return musicaDaSala();   // 🖼️ a música da sala (caminho do arquivo) ou silêncio
   if (visivel('programe') || visivel('pg-mapa') || cena?.n === 'laboratorio') return 'lab';
@@ -8057,8 +8063,9 @@ function pintarSom() {
     b.classList.toggle('mudo', !on);
   });
 }
+const tocaPlaylistExpo = () => emExpo() && playlistExpo().length > 0;   // 🎵 PROMPT-264: na Exposição vale 'jr_musica_expo'
 function pintarMusica() {
-  const bloq = musicaBloqueada(), on = musicaLigada() && !bloq;
+  const bloq = musicaBloqueada(), on = (tocaPlaylistExpo() ? musicaExpoLigada() : musicaLigada()) && !bloq;
   document.querySelectorAll('[data-musica]').forEach(b => {
     b.classList.toggle('mudo', !on);
     b.classList.toggle('bloqueada', bloq);
@@ -9216,7 +9223,7 @@ function ligarEdicaoPraca() {
 let EXPO = null;
 const expoSalas = {};             // n → { tema, musica, nome } lidos ao vivo
 let expoOuvindo = false, pararOuvirExpo = () => {};
-let expoMusicaMudo = false;       // 🔈 silenciar só a música da sala
+const musicaMudaExpo = () => !musicaExpoLigada();   // 🎵 PROMPT-264: 'jr_musica_expo' (começa ligada); era o 🔈 só da sala
 let expoSoAluno = false;          // ?expo=aluno (modo teste): sem os privilégios do modo teste, para testar como aluno
 let expoTesteProf = false;        // ?sala=N&teste=1 (a professora pelo "Ver sala" da página dela, no modo teste): só os nós *_teste
 let expoVisTeste = false;         // 🚪 PROMPT-246: /exposicao/?teste=1 (o visitante nos nós *_teste)
@@ -10987,11 +10994,14 @@ function pararExpo() {
 
 // 🎵 música da sala (PROMPT-182): exposicao.json → musicas [{ id, nome, arquivo }] (audio/jogo/exposicao/); a sala guarda o id.
 // Sem a música na lista (ou lista vazia): silêncio
-const musicasExpo = () => (Array.isArray(EXPO?.musicas) ? EXPO.musicas : []).filter(m => m && typeof m.id === 'string' && typeof m.arquivo === 'string' && /^[\w .()-]+$/.test(m.arquivo));
+const musicaValidaExpo = (m) => m && typeof m.id === 'string' && typeof m.arquivo === 'string' && /^[\w .()-]+$/.test(m.arquivo);
+const musicasExpo = () => (Array.isArray(EXPO?.musicas) ? EXPO.musicas : []).filter(musicaValidaExpo);
+// 🎵 PROMPT-264: playlist do saguão e das salas sem música (playlist_ligada: false desliga tudo)
+const playlistExpo = () => (EXPO?.playlist_ligada === true && Array.isArray(EXPO.playlist) ? EXPO.playlist : []).filter(musicaValidaExpo);
 const srcMusicaExpo = (mu) => `/audio/jogo/exposicao/${encodeURIComponent(mu.arquivo)}`;
 function musicaDaSala(ignorarMudo = false) {
   const n = salaExpo(), id = n && estadoSala(n).musica, mu = id && musicasExpo().find(x => x.id === id);
-  if (!mu || (expoMusicaMudo && !ignorarMudo)) return null;
+  if (!mu || (musicaMudaExpo() && !ignorarMudo)) return null;
   return srcMusicaExpo(mu);
 }
 function atualizarHudExpo() {
@@ -11022,15 +11032,29 @@ function atualizarHudExpo() {
     if (bc.textContent !== tc) bc.textContent = tc;
     if (bc.classList.contains('so-ver') === pode) { bc.classList.toggle('so-ver', !pode); bc.setAttribute('aria-pressed', String(curtiSala(n))); }
   }
-  const bm = $('btn-expo-musica'), semM = !(n && musicaDaSala(true));
+  const bm = $('btn-expo-musica'), comPl = tocaPlaylistExpo(), semM = !((n && musicaDaSala(true)) || comPl);
   if (bm.hidden !== semM) bm.hidden = semM;
   const bp = $('btn-expo-pend'), semP = !(ehSaguao() && expoPendN > 0 && privilegioExpo());
   if (bp.hidden !== semP) bp.hidden = semP;
   const tp = `⏳ ${expoPendN} para aprovar`;
   if (!semP && bp.textContent !== tp) bp.textContent = tp;
-  const ic = expoMusicaMudo ? '🔇' : '🔈';
-  if (!semM && bm.textContent !== ic) bm.textContent = ic;
+  const mudo = musicaMudaExpo() || (comPl && musicaBloqueada()), ic = mudo ? '🔇' : comPl ? '🎵' : '🔈';
+  if (!semM && bm.textContent !== ic) { bm.textContent = ic; bm.classList.toggle('mudo', mudo); bm.setAttribute('aria-label', mudo ? 'Ligar a música' : 'Desligar a música'); }
+  if (semM || !emExpo()) esconderTocandoExpo();
 }
+// 🎵 PROMPT-264: "tocando agora" por 6 s a cada música nova, embaixo do 🎵; tocar nele pula para a próxima
+function mostrarTocandoExpo(i) {
+  const m = playlistExpo()[i], el = $('expo-tocando'), bm = $('btn-expo-musica');
+  if (!m || !el || !emExpo() || bm.hidden || $('tela-cena').hidden) return;
+  el.textContent = `🎵 ${m.nome || m.id}${m.artista ? ' · ' + m.artista : ''}`;
+  el.hidden = false;
+  const r = bm.getBoundingClientRect(), w = el.offsetWidth, vw = document.documentElement.clientWidth;
+  el.style.top = `${Math.round(r.bottom + 6)}px`;
+  el.style.left = `${Math.round(Math.max(8, Math.min(vw - w - 8, r.right - w)))}px`;
+  clearTimeout(mostrarTocandoExpo.t);
+  mostrarTocandoExpo.t = setTimeout(esconderTocandoExpo, 6000);
+}
+function esconderTocandoExpo() { const el = $('expo-tocando'); if (el && !el.hidden) el.hidden = true; }
 // tocar curte; tocar de novo descurte (grava só a minha curtida)
 function curtirSala() {
   const n = salaExpo();
@@ -11043,7 +11067,14 @@ function curtirSala() {
   salvarExpo(sim ? set(r, true) : remove(r));
 }
 function ligarExposicao() {
-  $('btn-expo-musica').addEventListener('click', (e) => { e.stopPropagation(); expoMusicaMudo = !expoMusicaMudo; });
+  $('btn-expo-musica').addEventListener('click', (e) => {   // 🎵 PROMPT-264: grava 'jr_musica_expo' (vale para a playlist e a música da sala)
+    e.stopPropagation();
+    if (musicaBloqueada()) { avisoTopo('A professora desligou a música'); return; }
+    alternarMusicaExpo(); pintarMusica();
+    if (!musicaExpoLigada()) esconderTocandoExpo();
+  });
+  $('expo-tocando').addEventListener('click', (e) => { e.stopPropagation(); proximaFaixa(); });
+  aoTrocarFaixa((i) => mostrarTocandoExpo(i));
   $('btn-expo-curtir').addEventListener('click', (e) => { e.stopPropagation(); curtirSala(); });
   $('btn-expo-pend').addEventListener('click', (e) => { e.stopPropagation(); window.open('/professor/p-exposicao.html', '_blank', 'noopener'); });   // só um aviso: a aprovação é na página
   ligarEditorExpo();
@@ -21589,7 +21620,7 @@ function renderConfig() {
   $('cfg-lista').innerHTML =
     abre('personagem', '👤', 'Personagem e cores') +
     chave('som', '🔊', 'Efeitos sonoros', somLigado()) +
-    chave('musica', '🎵', 'Música', musicaLigada() && !bloq, bloq ? 'A professora desligou a música' : '') +
+    chave('musica', '🎵', 'Música', (tocaPlaylistExpo() ? musicaExpoLigada() : musicaLigada()) && !bloq, bloq ? 'A professora desligou a música' : '') +
     chave('letra', 'Aa', 'Letra grande', !!estado.letraGrande, 'Textos das perguntas e dos balões maiores') +
     chave('conversa', '💬', 'Conversa do pet', !petCalado, 'Os avisos importantes continuam') +
     chave('convites', '⚔️', 'Receber convites', !estado.semConvites, 'Duelos, damas e chamados da Praça') +
@@ -21604,7 +21635,7 @@ function acaoConfig(id) {
   if (id === 'presentes') { abrirHistoricoPresentes(); return; }
   if (id === 'zerar') { abrirZerarGinasio(); return; }
   if (id === 'som') { alternarSom(); pintarSom(); }
-  else if (id === 'musica') { if (musicaBloqueada()) { avisoTopo('A professora desligou a música'); return; } alternarMusica(); pintarMusica(); }
+  else if (id === 'musica') { if (musicaBloqueada()) { avisoTopo('A professora desligou a música'); return; } if (tocaPlaylistExpo()) alternarMusicaExpo(); else alternarMusica(); pintarMusica(); }
   else if (id === 'conversa') alternarPetCalado();
   else if (id === 'convites') alternarSemConvites();
   else if (id === 'letra') alternarLetra();

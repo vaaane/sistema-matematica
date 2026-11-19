@@ -46,6 +46,7 @@ function desbloquear() {
       ganhoMusica = ctx.createGain(); ganhoMusica.gain.value = VOL_MUSICA * abaixada; ganhoMusica.connect(ctx.destination);
     } catch (_) { ctx = null; saida = null; return; }
   }
+  destravarPlaylist();   // 🎵 PROMPT-264: dentro do toque (exigência do iPhone para o <audio>)
   if (ctx.state === 'suspended' && !document.hidden) ctx.resume().then(atualizarMusica).catch(() => {});
   else atualizarMusica();
 }
@@ -191,6 +192,7 @@ export function abaixarMusica(f = 1) {
     const t = ctx.currentTime, g = ganhoMusica.gain;
     g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(VOL_MUSICA * abaixada, t + 0.4);
   } catch (_) {}
+  if (pl && !pl.g) volPlaylist();
 }
 export function pararEfeitos(fadeMs = 150) { for (const c of [...tocando.values()]) c.parar(fadeMs); }
 
@@ -234,10 +236,14 @@ function soltarFaixa(fadeMs) {
   } catch (_) {}
 }
 // lugar '/audio/exposicao/…' (sala da Exposição): toca com o 🔊 ligado (o 🎵 geral começa desligado e calaria a sala)
-const podeTocar = (lugar) => (String(lugar || '').startsWith('/') ? ligado : musicaOn) && !bloqueada && !pausas.size;
+// 'playlist' (saguão e salas sem música da Exposição): o 🔊 e o 🎵 da Exposição ('jr_musica_expo', começa ligado)
+const podeTocar = (lugar) => (lugar === PLAYLIST ? ligado && expoOn && lista.length > 0
+  : String(lugar || '').startsWith('/') ? ligado : musicaOn) && !bloqueada && !pausas.size;
 function atualizarMusica() {
   if (!ctx || !ganhoMusica) return;
-  const lugar = podeTocar(lugarPedido) ? lugarPedido : null;
+  const quer = podeTocar(lugarPedido) ? lugarPedido : null;
+  tocarPlaylist(quer === PLAYLIST && ctx.state === 'running');   // pausa guardando o ponto; volta de onde parou
+  const lugar = quer === PLAYLIST ? null : quer;
   if ((faixa?.lugar || null) === lugar) return;   // a mesma música continua, sem recomeçar
   soltarFaixa(400);
   if (!lugar || ctx.state !== 'running') return;
@@ -255,9 +261,118 @@ function atualizarMusica() {
     } catch (_) {}
   });
 }
+
+// ── 🎵 Playlist da Exposição (PROMPT-264) ──
+// Um único <audio> passando pelo ganho da música (abaixa junto com o griô): toca a lista em ordem e volta à primeira;
+// pausar (sala com música própria, mapas, 🎵 desligado) guarda a faixa e o tempo, e a playlist continua dali.
+// Volume: 60% da música do jogo; 40% com um jogo da Exposição aberto (playlistBaixa).
+//   definirPlaylist([src])   musicaPara('playlist')   musicaExpoLigada() / alternarMusicaExpo()
+//   proximaFaixa()   aoTrocarFaixa(cb(i))   faixaPlaylist() → índice tocando ou -1
+const PLAYLIST = 'playlist';
+let expoOn = true;
+try { expoOn = localStorage.getItem('jr_musica_expo') !== '0'; } catch (_) {}
+let lista = [];          // caminhos dos arquivos, em ordem
+let faixaI = 0;          // a faixa atual (guardada também com a playlist pausada)
+let pl = null;           // { el: <audio>, g: GainNode | null }
+let plBaixa = false;
+let plDestravado = false;
+let plErros = 0;
+let aoTrocar = null;
+
+export const musicaExpoLigada = () => expoOn;
+export function alternarMusicaExpo() {
+  expoOn = !expoOn;
+  try { localStorage.setItem('jr_musica_expo', expoOn ? '1' : '0'); } catch (_) {}
+  atualizarMusica();
+  return expoOn;
+}
+export function definirPlaylist(srcs) {
+  const nova = (Array.isArray(srcs) ? srcs : []).filter(x => typeof x === 'string' && x);
+  if (nova.join('|') === lista.join('|')) return;
+  lista = nova; faixaI = 0; plErros = 0;
+  if (pl) { try { pl.el.pause(); pl.el.removeAttribute('src'); pl.el.load(); } catch (_) {} }
+  atualizarMusica();
+}
+export function playlistBaixa(sim) {
+  sim = !!sim;
+  if (sim === plBaixa) return;
+  plBaixa = sim; volPlaylist(0.5);
+}
+export const faixaPlaylist = () => (pl && !pl.el.paused && !pl.el.muted ? faixaI : -1);
+export function aoTrocarFaixa(cb) { aoTrocar = typeof cb === 'function' ? cb : null; }
+export function proximaFaixa() {
+  if (!pl || !lista.length) return;
+  irParaFaixa((faixaI + 1) % lista.length);
+}
+function criarPlaylist() {
+  if (pl) return pl;
+  if (!ctx || !ganhoMusica) return null;
+  const el = new Audio();
+  el.preload = 'auto';
+  let g = null;
+  try { const s = ctx.createMediaElementSource(el); g = ctx.createGain(); g.gain.value = 0; s.connect(g).connect(ganhoMusica); } catch (_) { g = null; }
+  el.addEventListener('playing', () => {
+    plErros = 0;
+    if (el.muted) return;
+    plDestravado = true;
+    if (el._mostrar) { el._mostrar = false; try { aoTrocar?.(faixaI); } catch (_) {} }
+  });
+  el.addEventListener('ended', () => { if (lista.length) irParaFaixa((faixaI + 1) % lista.length); });
+  el.addEventListener('error', () => {   // arquivo que não carregou: pula (e para se nenhum carregar)
+    if (!lista.length || !el.getAttribute('src') || ++plErros >= lista.length) return;
+    irParaFaixa((faixaI + 1) % lista.length);
+  });
+  pl = { el, g };
+  return pl;
+}
+function volPlaylist(rampa = 0.3) {
+  if (!pl) return;
+  const v = plBaixa ? 0.4 : 0.6;
+  if (pl.g) {
+    try { const t = ctx.currentTime, g = pl.g.gain; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(v, t + rampa); } catch (_) {}
+  } else { try { pl.el.volume = Math.min(1, v * VOL_MUSICA * abaixada); } catch (_) {} }
+}
+function irParaFaixa(i) {
+  const el = pl.el;
+  faixaI = i;
+  el.src = lista[faixaI]; el._mostrar = true;
+  if (lugarPedido === PLAYLIST && podeTocar(PLAYLIST) && ctx?.state === 'running') { const p = el.play(); if (p) p.catch(() => {}); }
+}
+function tocarPlaylist(quer) {
+  if (!quer) { if (pl && !pl.el.paused && !pl.el.muted) pl.el.pause(); return; }
+  if (!criarPlaylist()) return;
+  const el = pl.el;
+  if (el.muted) {   // o play mudo do destravarPlaylist ainda tocando: só solta o som
+    el.muted = false;
+    if (!el.paused) { plDestravado = true; volPlaylist(0.6); try { aoTrocar?.(faixaI); } catch (_) {} return; }
+  }
+  if (!el.getAttribute('src')) el.src = lista[faixaI] || lista[0];
+  if (!el.paused) return;
+  el._mostrar = true;
+  if (pl.g) { try { const t = ctx.currentTime; pl.g.gain.cancelScheduledValues(t); pl.g.gain.setValueAtTime(0, t); } catch (_) {} }
+  const p = el.play();   // bloqueado pelo navegador: tenta de novo no próximo toque (desbloquear), sem aviso
+  if (p) p.then(() => volPlaylist(0.6)).catch(() => {}); else volPlaylist(0.6);
+}
+// no primeiro toque: um play mudo libera o <audio> (o iPhone só deixa tocar depois disso, mesmo fora do toque)
+function destravarPlaylist() {
+  if (plDestravado || !lista.length || !criarPlaylist()) return;
+  const el = pl.el;
+  if (!el.paused) return;
+  if (!el.getAttribute('src')) el.src = lista[faixaI] || lista[0];
+  el.muted = true;
+  const p = el.play();
+  if (!p) { el.pause(); el.muted = false; return; }
+  p.then(() => {
+    plDestravado = true;
+    if (!el.muted) return;   // tocarPlaylist já assumiu
+    el.pause(); el.muted = false;
+    atualizarMusica();
+  }).catch(() => { el.muted = false; });
+}
+
 // aba escondida ou celular bloqueado: tudo pausa (o AudioContext inteiro); ao voltar, continua de onde parou
 document.addEventListener('visibilitychange', () => {
   if (!ctx) return;
-  if (document.hidden) { if (ctx.state === 'running') ctx.suspend().catch(() => {}); }
+  if (document.hidden) { if (pl && !pl.el.paused) pl.el.pause(); if (ctx.state === 'running') ctx.suspend().catch(() => {}); }
   else if (ctx.state === 'suspended') ctx.resume().then(atualizarMusica).catch(() => {});
 });
