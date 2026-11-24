@@ -1,0 +1,650 @@
+{
+ "_nota": "PROMPT-269: notas do 1º e do 2º bimestre copiadas do diário oficial (Rendimento médio do estudante). Chave = nome do aluno como em ALUNOS_POR_TURMA. null = sem nota no bimestre (chegou depois). Alunos que trocaram de turma levam a nota da turma em que estavam (Dandara 8D→8H, Sandra 8G→8D, Pedro Riquelme 8H→8D). _excluir = contas de teste que não aparecem na nota final.",
+ "_excluir": {
+  "8H": [
+   "Ricardo"
+  ]
+ },
+ "8D": {
+  "Alice Tavares": {
+   "b1": 7,
+   "b2": 6.1
+  },
+  "Alice Paz": {
+   "b1": 7.5,
+   "b2": 4.6
+  },
+  "Ana Julia": {
+   "b1": 3.65,
+   "b2": 4.2
+  },
+  "Arthur": {
+   "b1": 9,
+   "b2": 6.5
+  },
+  "Francisco": {
+   "b1": 5,
+   "b2": 6
+  },
+  "João Pedro": {
+   "b1": 1.9,
+   "b2": 2.4
+  },
+  "Karolinny": {
+   "b1": 3.2,
+   "b2": 1.6
+  },
+  "Ketelly": {
+   "b1": 7.4,
+   "b2": 2.45
+  },
+  "Keyvison": {
+   "b1": null,
+   "b2": null
+  },
+  "Leticia": {
+   "b1": 7.1,
+   "b2": 2.9
+  },
+  "Lucas Gabriel": {
+   "b1": 1.7,
+   "b2": 2.5
+  },
+  "Lucas Matheus": {
+   "b1": 5.3,
+   "b2": 2.7
+  },
+  "Luis Gabriel": {
+   "b1": 1.1,
+   "b2": 1.42
+  },
+  "Luis Miguel": {
+   "b1": 1.1,
+   "b2": 2.8
+  },
+  "Miguel Henrique": {
+   "b1": 1.2,
+   "b2": 3.5
+  },
+  "Miguel Nascimento": {
+   "b1": 1.5,
+   "b2": 2.7
+  },
+  "Wanderson": {
+   "b1": 1.2,
+   "b2": 5
+  },
+  "Izabelly Monik": {
+   "b1": null,
+   "b2": 5.06
+  },
+  "Nixmarys": {
+   "b1": null,
+   "b2": null
+  },
+  "Thalles Davi": {
+   "b1": null,
+   "b2": null
+  },
+  "Pedro Riquelme": {
+   "b1": 1.94,
+   "b2": 5.2
+  },
+  "Sandra": {
+   "b1": 8.5,
+   "b2": 5.22
+  }
+ },
+ "8E": {
+  "Ana Beatriz": {
+   "b1": 5.1,
+   "b2": 3.5
+  },
+  "Arthur": {
+   "b1": 3,
+   "b2": 4.6
+  },
+  "Caio": {
+   "b1": 6.5,
+   "b2": 3.9
+  },
+  "Davi Felipe": {
+   "b1": 9.5,
+   "b2": 7
+  },
+  "Davi Francisco": {
+   "b1": 8.5,
+   "b2": 4.5
+  },
+  "Davi Henrique": {
+   "b1": 5.5,
+   "b2": 3.9
+  },
+  "Gabriel": {
+   "b1": 8.3,
+   "b2": 7.3
+  },
+  "Gustavo": {
+   "b1": 6.2,
+   "b2": 4.3
+  },
+  "Isaque": {
+   "b1": 3.7,
+   "b2": 5
+  },
+  "Jonathan": {
+   "b1": 2.7,
+   "b2": 3.3
+  },
+  "Kauã": {
+   "b1": 3.4,
+   "b2": 5
+  },
+  "Lívia": {
+   "b1": 3.9,
+   "b2": 5.35
+  },
+  "Luiz Felipe": {
+   "b1": 4.1,
+   "b2": 4.6
+  },
+  "Manuella": {
+   "b1": 4.6,
+   "b2": 5.25
+  },
+  "Maria Clara": {
+   "b1": 4.6,
+   "b2": 5.1
+  },
+  "Maria Eduarda": {
+   "b1": 6,
+   "b2": 6.8
+  },
+  "Maria Luisa": {
+   "b1": 3,
+   "b2": 3.3
+  },
+  "Mateus": {
+   "b1": 9.5,
+   "b2": 8.9
+  },
+  "Matheus": {
+   "b1": 6.2,
+   "b2": 6
+  },
+  "Natanael": {
+   "b1": 5.2,
+   "b2": 3.9
+  },
+  "Natielle": {
+   "b1": 7,
+   "b2": 5
+  },
+  "Nicollas": {
+   "b1": 5.1,
+   "b2": 6.6
+  },
+  "Paulo": {
+   "b1": 6,
+   "b2": 6.2
+  },
+  "Rafaela": {
+   "b1": 9,
+   "b2": 6.5
+  },
+  "Rafael": {
+   "b1": 5,
+   "b2": 2
+  },
+  "Raissa": {
+   "b1": 6.1,
+   "b2": 5
+  },
+  "Rebeca": {
+   "b1": 5.4,
+   "b2": 6.4
+  },
+  "Sofia": {
+   "b1": 6.2,
+   "b2": 5.2
+  },
+  "Sophie": {
+   "b1": 10,
+   "b2": 7.7
+  },
+  "Talysson": {
+   "b1": 3,
+   "b2": 3.65
+  },
+  "Vicktor": {
+   "b1": 5.2,
+   "b2": 5.2
+  },
+  "Victor Bernardo": {
+   "b1": 9.5,
+   "b2": 7.8
+  },
+  "Victor Manuel": {
+   "b1": 6.4,
+   "b2": 5.4
+  },
+  "William": {
+   "b1": 0.6,
+   "b2": 3
+  },
+  "Yago": {
+   "b1": 9,
+   "b2": 7.1
+  },
+  "Yasmin": {
+   "b1": 9.5,
+   "b2": 6
+  },
+  "João Gabriel": {
+   "b1": null,
+   "b2": 4
+  }
+ },
+ "8F": {
+  "Ana Beatriz": {
+   "b1": 2.4,
+   "b2": 7.8
+  },
+  "Ana Clara": {
+   "b1": 10,
+   "b2": 8.3
+  },
+  "Arthur Daniel": {
+   "b1": 2.4,
+   "b2": 6.3
+  },
+  "Arthur Martins": {
+   "b1": 9,
+   "b2": 8.8
+  },
+  "Carlos": {
+   "b1": 1.9,
+   "b2": 3.5
+  },
+  "Evellyn": {
+   "b1": 1.7,
+   "b2": 6.7
+  },
+  "Fábio": {
+   "b1": 9,
+   "b2": 6.5
+  },
+  "Fellype": {
+   "b1": 7,
+   "b2": 6.1
+  },
+  "Guilherme": {
+   "b1": 0,
+   "b2": 3
+  },
+  "Heitor": {
+   "b1": 0.5,
+   "b2": 5.6
+  },
+  "Joao Pedro": {
+   "b1": 6.5,
+   "b2": 5.6
+  },
+  "Joaquim": {
+   "b1": 5.5,
+   "b2": 4.5
+  },
+  "Kayla": {
+   "b1": 4.4,
+   "b2": 4.3
+  },
+  "Luana": {
+   "b1": 1.9,
+   "b2": 5
+  },
+  "Maria Elisangela": {
+   "b1": 8.5,
+   "b2": 5
+  },
+  "Maria Santa": {
+   "b1": 9,
+   "b2": 6
+  },
+  "Marlon": {
+   "b1": 9.5,
+   "b2": 10
+  },
+  "Miguel": {
+   "b1": 0.5,
+   "b2": 0
+  },
+  "Mycaela": {
+   "b1": 3.7,
+   "b2": 6.8
+  },
+  "Nathalia": {
+   "b1": 1.6,
+   "b2": 4.35
+  },
+  "Pedro Lucas": {
+   "b1": 2.3,
+   "b2": 2.6
+  },
+  "Rafael": {
+   "b1": 4.3,
+   "b2": 3.7
+  },
+  "Renato": {
+   "b1": 3.6,
+   "b2": 6.9
+  },
+  "Ryan": {
+   "b1": 4,
+   "b2": 4.6
+  },
+  "Sara": {
+   "b1": 4.1,
+   "b2": 5.9
+  },
+  "Sofia": {
+   "b1": 6,
+   "b2": 4.9
+  },
+  "Victor Conceicao": {
+   "b1": 4.4,
+   "b2": 5.3
+  },
+  "Victor Hugo": {
+   "b1": 8.5,
+   "b2": 1
+  },
+  "Wesley": {
+   "b1": 1.3,
+   "b2": 4.2
+  },
+  "Ycaro": {
+   "b1": 1,
+   "b2": 8.1
+  },
+  "Pedro Lukas": {
+   "b1": null,
+   "b2": 3.5
+  },
+  "Dariannys": {
+   "b1": null,
+   "b2": null
+  }
+ },
+ "8G": {
+  "Ana Clara": {
+   "b1": 3.9,
+   "b2": 5
+  },
+  "Ana Gabryella": {
+   "b1": 4,
+   "b2": 4.6
+  },
+  "Ana Maria": {
+   "b1": 2.9,
+   "b2": 4.74
+  },
+  "Davi Emanoel": {
+   "b1": 5,
+   "b2": 5.6
+  },
+  "Davi Francisco": {
+   "b1": 9,
+   "b2": 7.2
+  },
+  "Helena": {
+   "b1": 6.3,
+   "b2": 5.7
+  },
+  "Isabela": {
+   "b1": 2.3,
+   "b2": 4.7
+  },
+  "Karlos": {
+   "b1": 2.14,
+   "b2": 5
+  },
+  "Ketelen": {
+   "b1": 9,
+   "b2": 5.3
+  },
+  "Lorran": {
+   "b1": 4.45,
+   "b2": 4.5
+  },
+  "Maria Clara": {
+   "b1": 3.65,
+   "b2": 4.7
+  },
+  "Maria Eduarda": {
+   "b1": 10,
+   "b2": 8
+  },
+  "Maria Laura": {
+   "b1": 8.5,
+   "b2": 5.8
+  },
+  "Maria Sophia": {
+   "b1": 2.9,
+   "b2": 7
+  },
+  "Natalya": {
+   "b1": 8.5,
+   "b2": 6.5
+  },
+  "Pablo": {
+   "b1": 2.2,
+   "b2": 6.1
+  },
+  "Paulo Henrique": {
+   "b1": 5,
+   "b2": 5.2
+  },
+  "Pedro Gabriel": {
+   "b1": 8.5,
+   "b2": 9.1
+  },
+  "Pedro Vaz": {
+   "b1": 3.4,
+   "b2": 4.14
+  },
+  "Pedro Henryque": {
+   "b1": 1.6,
+   "b2": 4.64
+  },
+  "Pietro": {
+   "b1": 5.1,
+   "b2": 5.8
+  },
+  "Pyetro": {
+   "b1": 2,
+   "b2": 5
+  },
+  "Renan": {
+   "b1": 5.06,
+   "b2": 6.14
+  },
+  "Sophia": {
+   "b1": 4.32,
+   "b2": 4.7
+  },
+  "Thays": {
+   "b1": 1.5,
+   "b2": 4.6
+  },
+  "Victor": {
+   "b1": 7.2,
+   "b2": 5.06
+  },
+  "Beatriz": {
+   "b1": null,
+   "b2": null
+  },
+  "Letícia": {
+   "b1": null,
+   "b2": null
+  },
+  "Erik": {
+   "b1": null,
+   "b2": null
+  },
+  "Yanny": {
+   "b1": null,
+   "b2": null
+  },
+  "Laura": {
+   "b1": null,
+   "b2": null
+  },
+  "Isack": {
+   "b1": null,
+   "b2": null
+  }
+ },
+ "8H": {
+  "Ana Beatriz": {
+   "b1": 3,
+   "b2": 6.2
+  },
+  "Ana Clara": {
+   "b1": 3.4,
+   "b2": 6.5
+  },
+  "Ana Gabrieli": {
+   "b1": 5.5,
+   "b2": 4.72
+  },
+  "Anderson": {
+   "b1": 4.6,
+   "b2": 5.6
+  },
+  "Bruno": {
+   "b1": 7.1,
+   "b2": 7.52
+  },
+  "Emanuelle": {
+   "b1": 9.5,
+   "b2": 6.6
+  },
+  "Esllinder": {
+   "b1": 5.1,
+   "b2": 7
+  },
+  "Honny": {
+   "b1": 9,
+   "b2": 8.5
+  },
+  "Laryssa": {
+   "b1": 6.6,
+   "b2": 7.3
+  },
+  "Leonardo": {
+   "b1": 5.1,
+   "b2": 6.4
+  },
+  "Levi": {
+   "b1": 4.2,
+   "b2": 6.2
+  },
+  "Marcus Vinicius": {
+   "b1": 6.6,
+   "b2": 5.1
+  },
+  "Maria Fernanda": {
+   "b1": 9,
+   "b2": 8.9
+  },
+  "Matheus Henrique": {
+   "b1": 2.4,
+   "b2": 4
+  },
+  "Murillo": {
+   "b1": 9.5,
+   "b2": 8.4
+  },
+  "Nicolas": {
+   "b1": 9.5,
+   "b2": 7.7
+  },
+  "Nicolle": {
+   "b1": 3.3,
+   "b2": 5.7
+  },
+  "Nicolly": {
+   "b1": 2.8,
+   "b2": 4
+  },
+  "Pedro Jorge": {
+   "b1": 9.5,
+   "b2": 8.1
+  },
+  "Pedro Willian": {
+   "b1": 3,
+   "b2": 6.7
+  },
+  "Rana": {
+   "b1": 10,
+   "b2": 10
+  },
+  "Riquelme": {
+   "b1": 4.7,
+   "b2": 6.5
+  },
+  "Samuel": {
+   "b1": 5.2,
+   "b2": 5
+  },
+  "Sophia": {
+   "b1": 2.44,
+   "b2": 6
+  },
+  "Thayanne": {
+   "b1": 3.4,
+   "b2": 5.2
+  },
+  "Victor Gabriel": {
+   "b1": 3.14,
+   "b2": 4.7
+  },
+  "Victor Hugo": {
+   "b1": 9.5,
+   "b2": 10
+  },
+  "Victória": {
+   "b1": 2.2,
+   "b2": 4
+  },
+  "Vinícius": {
+   "b1": 4.4,
+   "b2": 5.5
+  },
+  "Yann": {
+   "b1": 3.2,
+   "b2": 7.1
+  },
+  "Yasmin": {
+   "b1": 9,
+   "b2": 7.4
+  },
+  "Yoxiris": {
+   "b1": 2,
+   "b2": 6.2
+  },
+  "Dandara": {
+   "b1": 2.5,
+   "b2": 5.5
+  },
+  "Jessier": {
+   "b1": null,
+   "b2": 4.8
+  },
+  "Mary Ana": {
+   "b1": null,
+   "b2": 0.5
+  }
+ }
+}

@@ -89,7 +89,32 @@
     .modal-foot .bonus-total{font-size:12.5px;color:var(--text-muted)}
     .modal-foot .bonus-total b{color:var(--gold);font-size:14.5px}
 
-    @media print{.sidebar,.topbar,.notas-toolbar,.legenda-extras{display:none!important}.main{margin:0!important}}
+    /* 📊 Nota final (PROMPT-269) */
+    .final-topo{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+    .final-avisos{flex:1;min-width:220px;display:flex;flex-direction:column;gap:4px}
+    .final-aviso{font-size:11.5px;color:var(--orange);display:flex;align-items:center;gap:6px}
+    .tbl-final col.c-aluno{width:30%}
+    .tbl-final thead th.ordenavel{cursor:pointer;user-select:none}
+    .tbl-final thead th.ordenavel:hover{color:var(--text)}
+    .tbl-final .vazio{color:var(--text-muted)}
+    .tag-parcial{display:block;margin-top:2px;font-size:8.5px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.3px}
+
+    /* 📥 Importar Prova Multi (PROMPT-270) */
+    #btnImportarPM:disabled{opacity:.5;cursor:not-allowed}
+    .pm-modal{width:440px}
+    .pm-body{max-height:60dvh;overflow-y:auto;padding-bottom:10px}
+    .pm-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+    .pm-tbl th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);padding:6px 4px;border-bottom:2px solid var(--border);position:sticky;top:0;background:var(--card)}
+    .pm-tbl td{padding:6px 4px;border-bottom:1px solid var(--border)}
+    .pm-tbl td:nth-child(n+2),.pm-tbl th:nth-child(n+2){text-align:center}
+    .pm-novo{color:var(--green);font-weight:700}
+    .pm-igual{color:var(--text-muted)}
+    .pm-troca{color:var(--orange);font-weight:700}
+    .pm-troca small{display:block;font-size:10px;font-weight:600}
+    .pm-sem{margin-top:12px;font-size:11.5px;color:var(--text-muted)}
+    .pm-sem b{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+
+    @media print{.sidebar,.topbar,.notas-toolbar,.legenda-extras,#btnPlanilha{display:none!important}.main{margin:0!important}}
   </style>
 </head>
 <body>
@@ -126,6 +151,7 @@
           <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
           Exportar CSV
         </button>
+        <button class="btn btn-ghost" id="btnImportarPM" style="display:none">📥 Importar Prova Multi</button>
         <span class="notas-status" id="status"></span>
       </div>
 
@@ -172,6 +198,27 @@
         </table>
       </div>
 
+      <!-- 📊 Nota final: os 4 bimestres e a soma (PROMPT-269) -->
+      <div id="finalWrap" hidden>
+        <div class="final-topo">
+          <div class="final-avisos" id="finalAvisos"></div>
+          <button class="btn btn-ghost" id="btnPlanilha">📥 Baixar planilha</button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl-notas tbl-final">
+            <colgroup><col class="c-aluno"><col><col><col><col><col></colgroup>
+            <thead>
+              <tr>
+                <th class="col-aluno">Aluno</th><th>1º</th><th>2º</th><th>3º</th><th>4º</th>
+                <th class="ordenavel" id="thSoma" title="Clique para ordenar pela soma">Soma ⇅</th>
+              </tr>
+            </thead>
+            <tbody id="finalBody"></tbody>
+            <tfoot><tr id="finalFoot"></tr></tfoot>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -194,6 +241,33 @@
     <div class="modal-foot">
       <span class="bonus-total">Bônus total: <b id="ex-bonus">+0,0</b></span>
       <button class="btn btn-blue" id="ex-ok">Concluído</button>
+    </div>
+  </div>
+</div>
+
+<!-- 📥 Importar Prova Multi: conferência antes de mudar (PROMPT-270) -->
+<div id="pm-overlay" class="modal-overlay">
+  <div class="modal pm-modal">
+    <div class="modal-head">
+      <div>
+        <div class="nm">📥 Importar Prova Multi</div>
+        <div class="sub" id="pm-sub"></div>
+      </div>
+      <button class="modal-close" id="pm-close">&times;</button>
+    </div>
+    <div class="modal-body pm-body">
+      <table class="pm-tbl">
+        <thead><tr><th>Aluno</th><th>Atual</th><th>Nova</th></tr></thead>
+        <tbody id="pm-linhas"></tbody>
+      </table>
+      <div id="pm-sem"></div>
+    </div>
+    <div class="modal-foot">
+      <span class="bonus-total" id="pm-resumo"></span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" id="pm-cancelar">Cancelar</button>
+        <button class="btn btn-blue" id="pm-importar">Importar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -639,10 +713,31 @@ BIMESTRES.forEach(b => {
   opt.value = String(b.n); opt.textContent = `${b.n}º bimestre`;
   bimSel.appendChild(opt);
 });
+{ const opt = document.createElement("option"); opt.value = "final"; opt.textContent = "📊 Nota final"; bimSel.appendChild(opt); }   // PROMPT-269
 const bimInicial = String(bimestreAtual());
 bimSel.value = bimInicial;
 setBimestre(bimInicial);
-bimSel.addEventListener("change", () => {
+let bimReal = bimInicial;   // o último bimestre de verdade escolhido (a Nota final não é um bimestre)
+const modoFinal = () => bimSel.value === "final";
+// grava já uma edição que ainda esperava os 0,8 s, antes de trocar de bimestre ou de turma
+async function salvarPendente() {
+  if (!notasSaveTimer) return;
+  clearTimeout(notasSaveTimer); notasSaveTimer = null;
+  await salvarNotas();
+}
+function mostrarModo() {
+  const fin = modoFinal();
+  document.querySelector(".tbl-wrap").hidden = fin;
+  document.getElementById("finalWrap").hidden = !fin;
+  ["btnCongelar", "btnLiberar", "btnExportar"].forEach(id => { document.getElementById(id).style.display = fin ? "none" : ""; });
+  document.querySelector(".legenda-extras").style.display = fin || !bonusAtivo() ? "none" : "";
+  atualizarBotaoImportar();
+}
+bimSel.addEventListener("change", async () => {
+  await salvarPendente();
+  mostrarModo();
+  if (modoFinal()) { mostrarNotaFinal(turmaAtual); return; }
+  bimReal = bimSel.value;
   setBimestre(bimSel.value);
   carregarTurma(turmaAtual);   // recarrega a turma atual no bimestre escolhido
 });
@@ -686,16 +781,30 @@ async function carregarTurma(turma) {
   status.textContent = "Buscando progresso no banco…";
   status.classList.remove("saved");
 
+  carregandoTurma = true; atualizarBotaoImportar();   // só importa depois de as notas salvas chegarem
+  const { liberada, congelado } = await carregarDadosBimestre(turma, primeiraVez);
+  carregandoTurma = false;
+  liberadaAtual = liberada;
+  congeladoAtual = congelado;
+  atualizarBotaoLiberar();
+  atualizarBotaoCongelar();
+
+  status.textContent = "";
+  renderTabela();
+}
+
+// Carrega o bimestre BIMESTRE da turma em dados/autoDados, sem desenhar nada e sem mexer em
+// liberadaAtual/congeladoAtual (a Nota final usa isto para o 3º e o 4º — PROMPT-269)
+async function carregarDadosBimestre(turma, primeiraVez) {
+  const chave = chaveTurma(turma);
+  if (!dados[chave]) dados[chave] = turmaVazia(turma);
+  if (!autoDados[turma]) autoDados[turma] = {};
   const alunos = ALUNOS_POR_TURMA[turma] || [];
   const temAutoNovos = camposAtivos().some(c => ["cadernoVistos", "conselheiro", "pd", "cadernoB4", "comportamento"].includes(c.key));
   const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), carregarAutoEquacoes(turma), carregarAutoRazaoProp(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos), buscarCongelamento(turma),
                  temAutoNovos ? carregarAutoCadernoConselheiro(turma) : Promise.resolve({})];
   if (primeiraVez) tasks.push(carregarNotasSalvas(turma));
   const [_, areaPorAluno, eqPorAluno, rpPorAluno, liberada, ativ4Map, cong, ccPorAluno] = await Promise.all(tasks);
-  liberadaAtual = liberada;
-  congeladoAtual = cong.congelado;
-  atualizarBotaoLiberar();
-  atualizarBotaoCongelar();
 
   alunos.forEach(nome => {
     const a4 = ativ4Map[nome] || { fez:false, posicao:0, bonusRank:0 };
@@ -768,8 +877,7 @@ async function carregarTurma(turma) {
     });
   }
 
-  status.textContent = "";
-  renderTabela();
+  return { liberada, congelado: !!cong.congelado };
 }
 
 function atualizarBotaoLiberar() {
@@ -787,6 +895,7 @@ function atualizarBotaoCongelar() {
   btn.innerHTML = congeladoAtual
     ? `🔓 Reabrir ${BIMESTRE}º bim`
     : `🔒 Fechar ${BIMESTRE}º bim`;
+  atualizarBotaoImportar();   // 📥 fechado = importar desabilitado
 }
 
 document.getElementById("btnCongelar").addEventListener("click", async () => {
@@ -840,7 +949,11 @@ document.getElementById("btnCongelar").addEventListener("click", async () => {
   }
 });
 
-turmaSel.addEventListener("change", () => carregarTurma(turmaSel.value));
+turmaSel.addEventListener("change", async () => {
+  await salvarPendente();
+  if (modoFinal()) mostrarNotaFinal(turmaSel.value);
+  else carregarTurma(turmaSel.value);
+});
 
 document.getElementById("btnLiberar").addEventListener("click", async () => {
   const status = document.getElementById("status");
@@ -948,8 +1061,169 @@ function exportarCSV(){
   URL.revokeObjectURL(url);
 }
 document.getElementById("btnExportar").addEventListener("click", exportarCSV);
+
+// ── 📊 Nota final: 1º e 2º do diário (dados/notas-anteriores.json), 3º e 4º = o Total da página (PROMPT-269) ──
+let notasAnteriores = null;
+async function carregarNotasAnteriores() {
+  if (notasAnteriores) return notasAnteriores;
+  try {
+    const r = await fetch("/dados/notas-anteriores.json", { cache: "no-cache" });
+    notasAnteriores = r.ok ? await r.json() : {};
+  } catch (e) { console.error("Falha ao ler notas-anteriores.json:", e); notasAnteriores = {}; }
+  return notasAnteriores;
+}
+// notas em centésimos inteiros: até 2 casas, sem arredondar (o 1e-6 corrige 5,35 × 100 = 534,999…)
+const centesimos = v => (v == null || v === "" || !isFinite(+v)) ? null : Math.floor(+v * 100 + 1e-6);
+const fmtCent = c => c == null ? "—" : (c / 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+const pilula = (c, classe, extra = "") => c == null ? `<span class="vazio">—</span>` : `<span class="total-pill ${classe}">${fmtCent(c)}</span>${extra}`;
+
+let finalLinhas = [], finalParcial = {}, finalTurma = "", finalOrdemSoma = false, finalGeracao = 0;
+
+async function mostrarNotaFinal(turma) {
+  const ger = ++finalGeracao;
+  turmaAtual = turma;
+  finalTurma = turma;
+  const status = document.getElementById("status");
+  status.textContent = "Calculando a nota final…"; status.classList.remove("saved");
+  document.getElementById("finalBody").innerHTML = `<tr><td colspan="6" class="vazio">Carregando…</td></tr>`;
+  document.getElementById("finalFoot").innerHTML = "";
+  document.getElementById("finalAvisos").innerHTML = "";
+  bimSel.disabled = turmaSel.disabled = true;   // o BIMESTRE é global: ninguém troca no meio da conta
+
+  const ant = await carregarNotasAnteriores();
+  const fora = new Set(ant._excluir?.[turma] || []);
+  const alunos = (ALUNOS_POR_TURMA[turma] || []).filter(n => !fora.has(n));
+  const totais = { 3: {}, 4: {} }, parcial = {};
+  try {
+    // o mesmo caminho da tabela de cada bimestre (carregarDadosBimestre + calcularTotal), só sem desenhar
+    for (const b of ["3", "4"]) {
+      setBimestre(b);
+      const { congelado } = await carregarDadosBimestre(turma, !dados[chaveTurma(turma)]);
+      parcial[b] = !congelado;
+      alunos.forEach(nome => { totais[b][nome] = calcularTotal(nome, dados[chaveTurma(turma)][nome]); });
+    }
+  } catch (e) {
+    console.error("Falha ao calcular a nota final:", e);
+    status.textContent = "❌ Erro ao buscar o 3º/4º bimestre — tente de novo.";
+  } finally {
+    setBimestre(bimReal);   // devolve o bimestre de verdade (BIMESTRE e congeladoAtual ficam como estavam)
+    bimSel.disabled = turmaSel.disabled = false;
+  }
+  if (ger !== finalGeracao || !modoFinal()) return;
+
+  finalParcial = parcial;
+  finalLinhas = alunos.map((nome, i) => {
+    const a = ant[turma]?.[nome] || {};
+    const notas = [centesimos(a.b1), centesimos(a.b2), centesimos(totais[3][nome]), centesimos(totais[4][nome])];
+    const tem = notas.filter(c => c != null);
+    return { i, nome, notas, soma: tem.length ? tem.reduce((s, c) => s + c, 0) : null };
+  });
+  if (!status.textContent.startsWith("❌")) status.textContent = "";
+  renderNotaFinal();
+}
+
+function renderNotaFinal() {
+  const abertos = ["3", "4"].filter(b => finalParcial[b]);
+  document.getElementById("finalAvisos").innerHTML = abertos.length === 1
+    ? `<div class="final-aviso">⚠️ O ${abertos[0]}º bimestre ainda não foi fechado: as notas dele podem mudar.</div>`
+    : abertos.length === 2 ? `<div class="final-aviso">⚠️ O 3º e o 4º bimestres ainda não foram fechados: as notas deles podem mudar.</div>` : "";
+
+  const linhas = [...finalLinhas];
+  if (finalOrdemSoma) linhas.sort((x, y) => (y.soma ?? -1) - (x.soma ?? -1) || x.i - y.i);
+  document.getElementById("thSoma").textContent = finalOrdemSoma ? "Soma ↓" : "Soma ⇅";
+  document.getElementById("finalBody").innerHTML = linhas.length ? linhas.map(l => `
+    <tr>
+      <td class="col-aluno" title="${l.nome}">${l.nome}</td>
+      ${l.notas.map((c, k) => `<td>${pilula(c, classeTotal(c / 100), k >= 2 && c != null && finalParcial[String(k + 1)] ? `<span class="tag-parcial">parcial</span>` : "")}</td>`).join("")}
+      <td>${pilula(l.soma, classeTotal(l.soma / 100 / 4))}</td>
+    </tr>`).join("") : `<tr><td colspan="6" class="vazio">Nenhum aluno nesta turma.</td></tr>`;
+
+  // rodapé: a média de cada coluna, sem contar os "—"
+  const media = vals => { const v = vals.filter(c => c != null); return v.length ? Math.floor(v.reduce((s, c) => s + c, 0) / v.length) : null; };
+  const cols = [0, 1, 2, 3].map(k => media(finalLinhas.map(l => l.notas[k])));
+  document.getElementById("finalFoot").innerHTML = `<td class="col-aluno">Média da turma</td>` +
+    cols.map(c => `<td>${fmtCent(c)}</td>`).join("") + `<td>${fmtCent(media(finalLinhas.map(l => l.soma)))}</td>`;
+}
+document.getElementById("thSoma").addEventListener("click", () => { finalOrdemSoma = !finalOrdemSoma; renderNotaFinal(); });
+
+document.getElementById("btnPlanilha").addEventListener("click", () => {
+  if (!finalLinhas.length) return;
+  const esc = s => `"${String(s).replace(/"/g, '""')}"`;
+  const cel = c => c == null ? "" : fmtCent(c);   // "—" vira célula vazia
+  const linhas = [["Aluno", "1º", "2º", "3º", "4º", "Soma"].join(";"),
+    ...finalLinhas.map(l => [esc(l.nome), ...l.notas.map(cel), cel(l.soma)].join(";"))];
+  const blob = new Blob(["﻿" + linhas.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = `nota-final-${finalTurma}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
 const _btnSalvar = document.getElementById("btnSalvar");
 if (_btnSalvar) _btnSalvar.style.display = "none";
+
+// ── 📥 Importar Prova Multi (dados/prova-multi-importar.json → campo provaMulti do bimestre do arquivo) — PROMPT-270 ──
+let provaMultiArq = null, carregandoTurma = false;
+async function carregarProvaMultiArq() {
+  try {
+    const r = await fetch("/dados/prova-multi-importar.json", { cache: "no-cache" });
+    provaMultiArq = r.ok ? await r.json() : {};
+  } catch (e) { console.error("Falha ao ler prova-multi-importar.json:", e); provaMultiArq = {}; }
+  atualizarBotaoImportar();
+}
+const notasImportarDaTurma = () => provaMultiArq?.turmas?.[turmaAtual] || null;
+const campoImportar = () => provaMultiArq?.campo || "provaMulti";
+function atualizarBotaoImportar() {
+  const btn = document.getElementById("btnImportarPM");
+  if (!btn) return;
+  const mostra = !!notasImportarDaTurma() && !modoFinal() && String(BIMESTRE) === String(provaMultiArq?.bimestre ?? 4)
+    && camposAtivos().some(c => c.key === campoImportar());
+  btn.style.display = mostra ? "" : "none";
+  btn.disabled = congeladoAtual || carregandoTurma;
+  btn.title = congeladoAtual ? "Abra o bimestre para importar" : carregandoTurma ? "Carregando as notas…" : "";
+}
+const cent = v => (v === "" || v == null || !isFinite(parseFloat(v))) ? null : Math.round(parseFloat(v) * 100);
+const fmt2 = v => Number(v).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+const pmOverlay = document.getElementById("pm-overlay");
+function abrirImportarPM() {
+  const notas = notasImportarDaTurma();
+  if (!notas || congeladoAtual || carregandoTurma) return;
+  const campo = campoImportar(), alunos = ALUNOS_POR_TURMA[turmaAtual] || [], reg = dados[chaveTurma(turmaAtual)];
+  const comNota = alunos.filter(n => notas[n] != null), semNota = alunos.filter(n => n in notas && notas[n] == null);
+  let novas = 0, trocas = 0;
+  document.getElementById("pm-linhas").innerHTML = comNota.map(nome => {
+    const atual = reg[nome]?.[campo], ca = cent(atual), cn = cent(notas[nome]);
+    let nova;
+    if (ca == null) { novas++; nova = `<span class="pm-novo">${fmt2(notas[nome])}</span>`; }
+    else if (ca === cn) nova = `<span class="pm-igual">✔ já está</span>`;
+    else { trocas++; nova = `<span class="pm-troca">${fmt2(notas[nome])}<small>⚠️ vai substituir</small></span>`; }
+    return `<tr><td>${nome}</td><td>${ca == null ? "—" : fmt2(atual)}</td><td>${nova}</td></tr>`;
+  }).join("");
+  document.getElementById("pm-sem").innerHTML = semNota.length
+    ? `<div class="pm-sem"><b>Sem nota (fica vazio)</b>${semNota.join(", ")}</div>` : "";
+  document.getElementById("pm-sub").textContent = `Turma ${turmaAtual} · ${BIMESTRE}º bimestre`;
+  document.getElementById("pm-resumo").textContent = `${comNota.length} com nota · ${novas} novas · ${trocas} substituídas`;
+  pmOverlay.classList.add("open");
+}
+const fecharImportarPM = () => pmOverlay.classList.remove("open");
+async function importarPM() {
+  const notas = notasImportarDaTurma();
+  fecharImportarPM();
+  if (!notas || congeladoAtual || carregandoTurma) return;
+  const campo = campoImportar(), reg = dados[chaveTurma(turmaAtual)];
+  (ALUNOS_POR_TURMA[turmaAtual] || []).forEach(nome => {
+    if (notas[nome] == null || !reg[nome]) return;   // null = não fez: o campo fica como está
+    reg[nome][campo] = notas[nome];                   // como se fosse digitado (2 casas, sem arredondar)
+  });
+  renderTabela();   // recalcula totais e média
+  clearTimeout(notasSaveTimer); notasSaveTimer = null;
+  await salvarNotas();   // o mesmo caminho do salvamento automático ao digitar
+}
+document.getElementById("btnImportarPM").addEventListener("click", abrirImportarPM);
+document.getElementById("pm-importar").addEventListener("click", importarPM);
+document.getElementById("pm-cancelar").addEventListener("click", fecharImportarPM);
+document.getElementById("pm-close").addEventListener("click", fecharImportarPM);
+pmOverlay.addEventListener("click", e => { if (e.target === pmOverlay) fecharImportarPM(); });
+carregarProvaMultiArq();
 
 carregarTurma("8D");
 </script>

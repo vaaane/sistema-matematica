@@ -1,0 +1,41 @@
+{
+ "_nota": "PROMPT-270: nota final da Prova Multidisciplinar do 4º bimestre (soma das duas partes), por turma e pelo nome de ALUNOS_POR_TURMA. Vai para o campo provaMulti (máx. 3) do 4º bimestre. null = não fez a prova: o campo fica vazio (não importar).",
+ "bimestre": 4,
+ "campo": "provaMulti",
+ "turmas": {
+  "8F": {
+   "Ana Beatriz": 1.95,
+   "Ana Clara": null,
+   "Arthur Daniel": 0,
+   "Arthur Martins": 1.2,
+   "Carlos": 0.9,
+   "Dariannys": null,
+   "Evellyn": 1.35,
+   "Fellype": 1.5,
+   "Fábio": 1.5,
+   "Guilherme": 0.6,
+   "Heitor": 0.4,
+   "Joao Pedro": 0.8,
+   "Joaquim": 1.1,
+   "Kayla": null,
+   "Luana": 1.3,
+   "Maria Elisangela": 1.15,
+   "Maria Santa": null,
+   "Marlon": 1.85,
+   "Miguel": 0,
+   "Mycaela": null,
+   "Nathalia": 1.1,
+   "Pedro Lucas": 0.95,
+   "Pedro Lukas": null,
+   "Rafael": 0.9,
+   "Renato": 1.25,
+   "Ryan": 1,
+   "Sara": 2.1,
+   "Sofia": 0.75,
+   "Victor Conceicao": 0.9,
+   "Victor Hugo": 0.6,
+   "Wesley": 0.7,
+   "Ycaro": 1.5
+  }
+ }
+}
