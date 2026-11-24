@@ -289,6 +289,7 @@ function comemorarPetNaCena() {
 
 // Festa em tela cheia: confete, o pet comemorando grande e o personagem
 function mostrarFestaMestre(tipo) {
+  if (tipo === 'porta') { mostrarPortaTorre(); return; }   // 🏆 PROMPT-267 (a fila da festa também leva a cena da porta)
   const el = $('festa-mestre');
   const lenda = tipo === 'lenda';
   $('fm-tit').textContent = lenda ? '🌟 Você conquistou TODAS as insígnias douradas!' : '🏆 Você conquistou TODAS as insígnias!';
@@ -347,6 +348,7 @@ function tocarTrofeu() {
 }
 function verMeuTrofeu() {
   fecharFestaMestre();
+  if (portaTorrePendente()) { mostrarPortaTorre(verMeuTrofeu); return; }   // 🏆 PROMPT-267: a porta da torre abre antes (uma vez)
   const mostra = () => {
     const t = D.geral.trofeu, sc = $('geral-scroll'), palco = $('geral-palco');
     if (t) {
@@ -551,6 +553,7 @@ async function carregarEstado() {
     estado.programe = v.programe && typeof v.programe === 'object' ? { ...v.programe, fases: { ...(v.programe.fases || {}) } } : { fases: {} };   // PROMPT-50
     estado.mestre = v.mestre?.data ? { data: v.mestre.data } : null;   // Mestre da Revisão: as 26 insígnias (PROMPT-57)
     estado.lenda = v.lenda?.data ? { data: v.lenda.data } : null;      // Lenda da Revisão: as 26 douradas
+    estado.torreAbertaVista = !!v.torre_aberta_vista;   // 🏆 PROMPT-267: a cena da porta da torre abrindo já foi vista
     estado.letraGrande = !!v.preferencias?.letra_grande;   // Aa Letra grande (PROMPT-49), salva por aluno
     aplicarLetra();
     estado.missoes = v.missoes_dia && typeof v.missoes_dia === 'object' ? v.missoes_dia : null;
@@ -952,7 +955,7 @@ export async function iniciarJogo(sess) {
     batalhar: (id) => iniciarBatalha(id), pg: () => pg, meuPet: () => (abrirMeuPet(), mp), mp: () => mp, carinho: () => carinhoPet(),
     truque: (id) => fazerTruque(id), comer: (id) => darComida(id),
     tamanho: (f) => ({ alt: +altPet(f).toFixed(2), dist: +distPet(f).toFixed(2), rel: +relDuelo(f).toFixed(3) }),   // 🐘 PROMPT-213: conferir a tabela
-    torre: (a) => abrirTorre(a), bau: (a) => abrirBau(a), premiosTorre: () => abrirPremiosTorre(), quadroTorre: () => abrirQuadroTorre(), torreTrein: (i) => abrirPerguntaTorre(i), casinha: () => abrirCasinha(), temas: () => abrirTemasCasa(),
+    torre: (a) => abrirTorre(a), portaTorre: () => mostrarPortaTorre(null, { gravarVista: false }), entrarTorre: () => entrarNaTorre(), bau: (a) => abrirBau(a), premiosTorre: () => abrirPremiosTorre(), quadroTorre: () => abrirQuadroTorre(), torreTrein: (i) => abrirPerguntaTorre(i), casinha: () => abrirCasinha(), temas: () => abrirTemasCasa(),
     aula: (chave, i = 0) => { abrirAula(chave, 'menu'); irPaginaAula(i); }, aulaPags: (chave) => aulaDe(chave)?.paginas?.length || 0,
     perguntaPet: (enun, opcoes) => desenharPerguntaPet(enun, opcoes), falaPet: (txt) => mostrarFalaPet([{ texto: txt, espera: 0, fixo: 8000 }]), irPara: (x, y) => posicionarJogador(x, y, 'frente'), loja: (aba) => abrirLoja(aba), saguao: () => abrirSaguao(), salaExpo: (n) => abrirSalaExpo(n), porta: (k) => entrarSalaExpo(cena.expoPortas[k - 1].n), portasExpo: () => cena?.expoPortas?.map(p => [p.k, p.n]), cena: () => cena, jog: () => jog, joy: () => joy, expo: () => EXPO, temasExpo: () => abrirTemasExpo(), decorar: () => entrarEdicaoExpo(), conteudoExpo: (id) => abrirConteudoExpo(id), grio: () => grio };   // 💬 PROMPT-232   // 🔠 PROMPT-231: conferir as letras   // 🏆 PROMPT-230
 
@@ -1080,7 +1083,7 @@ export async function iniciarJogo(sess) {
   if (comecaNaSala) abrirSalaExpo(salaDireto).catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   else if (comecaNoSaguao) abrirSaguao().catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   else if (!comecaNaPraca) { abrirMapaGeral(); $('jr-carregando').hidden = true; }
-  { const f = verificarMestre(); if (f) setTimeout(() => mostrarFestaMestre(f), 1500); }
+  { const f = verificarMestre(); if (f) setTimeout(() => mostrarFestaMestre(f), 1500); else verificarPortaTorre(2200); }   // 🏆 PROMPT-267: quem já tem as 26 vê a porta abrindo (uma vez)
   carregarTitulos();
   iniciarAlbum();
   iniciarPet();
@@ -6424,7 +6427,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !!torreModal || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('equipe').hidden || !$('equipe-convite').hidden || !$('favores').hidden || !$('fv-conta').hidden || !$('amigo-presente').hidden || !$('cs-visitas-escolha').hidden || !!deq || ($('deq-convite') && !$('deq-convite').hidden) || !!document.querySelector('.expo-modal:not([hidden])');   // 🤝 PROMPT-236   // 🚪 PROMPT-246
+  perguntaAberta || !!torreModal || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('torre-aberta').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden || !$('tutorial').hidden || !$('config').hidden || !$('visita-pedido').hidden || !$('perfil-colega').hidden || !$('amizade-pedido').hidden || !$('equipe').hidden || !$('equipe-convite').hidden || !$('favores').hidden || !$('fv-conta').hidden || !$('amigo-presente').hidden || !$('cs-visitas-escolha').hidden || !!deq || ($('deq-convite') && !$('deq-convite').hidden) || !!document.querySelector('.expo-modal:not([hidden])');   // 🤝 PROMPT-236   // 🚪 PROMPT-246
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -6862,7 +6865,7 @@ async function abrirMapa(n, onde) {
   mostrarTela('tela-cena');
   $('cena-palco').style.visibility = 'hidden';
 
-  const [grade] = await Promise.all([carregarGrade(cfg.trilha), trocarFundo(`${IMG}/mapas/mapa${n}.webp`)]);
+  const [grade] = await Promise.all([carregarGrade(cfg.trilha), trocarFundo(`${IMG}/mapas/mapa${n}.webp${cfg.v ? `?v=${cfg.v}` : ''}`)]);   // mapas.json → v: a imagem nova sem cache velho (PROMPT-267: mapa 13 sem o troféu)
   bloquearQuadroEstudos(grade, n);   // o personagem não atravessa a base do quadro de estudos
 
   // pontos da trilha mais próximos das portas e saídas
@@ -6897,6 +6900,7 @@ async function abrirMapa(n, onde) {
   fecharBalaoPorta();
 
   if (onde === 'loja' && cena.portaLoja) posicionarJogador(cena.portaLoja.trilha[0], cena.portaLoja.trilha[1], 'frente');   // saiu da loja
+  else if (onde === 'torre' && cena.torrePorta) posicionarJogador(cena.torrePorta.trilha[0], cena.torrePorta.trilha[1], 'frente');   // 🏆 saiu da torre: na frente da porta (PROMPT-267)
   else if (onde === 'A' || onde === 'B') {
     const [x, y] = pontoAntesDaPorta(n, onde);
     posicionarJogador(x, y, 'frente');
@@ -7055,6 +7059,7 @@ function destinoPertoDoToque(p) {
   let perto = null, melhor = DIST_TOQUE;
   for (const d of destinosDoMapa()) {
     if (d.faixa && dentroDe(zonaSaida(d), p.x, p.y)) return d;   // 🖼️ a faixa da saída embaixo (saguão e salas da Exposição)
+    if (d.alvo === 'torre' && dentroDe(cena.torrePorta?.caixa, p.x, p.y)) return d;   // 🏆 tocar no desenho da porta (PROMPT-267)
     const dd = Math.min(dist(p.x, p.y, d.x, d.y), dist(p.x, p.y, d.trilha[0], d.trilha[1]));
     if (dd < melhor) { melhor = dd; perto = d; }
   }
@@ -9886,12 +9891,13 @@ function pintarPodioExpo(entrando = false) {
   const k = `expo_confete_${noExpo('x')}_${el.dataset.chave}`;
   if (!lerLocal(k, false)) { gravarLocal(k, true); confeteExpo(); }
 }
-function confeteExpo() {
+function confeteExpo(pai = document.body) {   // pai: outra tela por cima (🏆 a porta da torre, PROMPT-267)
   const box = document.createElement('div');
   box.className = 'expo-confete';
+  if (pai !== document.body) box.style.position = 'absolute';
   const cores = ['#ffd700', '#7c5cfc', '#00d4ff', '#ff7b2e', '#00e676', '#ff4d8d'];
   box.innerHTML = Array.from({ length: 80 }, (_, i) => `<i style="left:${Math.random() * 100}%;background:${cores[i % cores.length]};animation-delay:${(Math.random() * 1.2).toFixed(2)}s;animation-duration:${(2.2 + Math.random() * 1.6).toFixed(2)}s;transform:rotate(${Math.floor(Math.random() * 360)}deg)"></i>`).join('');
-  document.body.append(box);
+  pai.append(box);
   setTimeout(() => box.remove(), 5000);
 }
 function ligarEventosPublicoExpo() {
@@ -15021,8 +15027,10 @@ function lerTorre(t) {
 }
 const torreEst = () => (estado.torre ||= lerTorre(null));
 const venceuLider = (chave) => !!estado?.ginasios?.[chave]?.lider?.vencido;
-const torreLiberada = () => ehProfessora() || (venceuLider('mapa13-A') && venceuLider('mapa13-B'));
-const torreVisivel = () => ehProfessora() || venceuLider('mapa13-A') || venceuLider('mapa13-B');
+// 🏆 PROMPT-267: a porta fica sempre no mapa 13 e só abre com TODAS as insígnias (o total vem dos dados: os líderes, 2 por mapa = 26)
+const totalInsignias = () => Array.from({ length: NUM_MAPAS }, (_, i) => ['A', 'B'].filter(G => D.questoes[i + 1]?.ginasios?.[G]?.personagens?.lider)).flat().length || NUM_MAPAS * 2;
+const torreLiberada = () => ehProfessora() || insigniasGanhas().length >= totalInsignias();
+const torreVisivel = () => true;
 const andarCfg = (a) => TORRE?.andares?.[a - 1] || null;
 const salaoDe = (a) => TORRE?.saloes?.[String(andarCfg(a)?.salao || 1)] || null;
 const cfgPremios = () => TORRE?.premios || {};
@@ -15082,26 +15090,92 @@ function treinadoresDoAndar(a) {
   });
 }
 
-// ── 🏰 a torre num mapa (torre.json → local): visível depois da 1ª vitória no mapa 13; trancada até vencer os 2 ──
+// ── 🏰 a torre num mapa (torre.json → local). PROMPT-267: imagem "porta" = a porta de pedra (porta_1…4), sempre visível;
+//    trancada (🔒) até as 26 insígnias. Sem imagem: o prédio torre.webp, como antes ──
+const PORTA_W = 273 / 400;   // proporção de porta_1…4 (273 × 400, alinhadas pela base)
+const urlPortaTorre = (k) => `${IMG}/torre/porta_${k}.webp`;
 function montarTorreNoMapa(n) {
   cena.torrePorta = null;
   const L = TORRE?.local;
   if (!L || L.mapa !== n || !torreVisivel()) return;
-  const alt = Number(L.altura) || 330;
-  cena.torrePorta = { x: L.x, y: L.y, trilha: centroCelula(celulaMaisProxima(cena.grade, L.x, L.y + 12)) };
-  $('cena-atores').insertAdjacentHTML('beforeend', `<img class="jr-ator jr-torre-predio" src="${IMG}/torre/torre.webp" style="left:${L.x}px;top:${L.y + alt * 0.04}px;height:${alt}px;z-index:${Math.round(L.y)}" alt="" draggable="false"/>` +
-    `<div class="jr-rotulo-porta jr-rotulo-praca" style="left:${L.x}px;top:${L.y - alt * 0.32}px"><span>🏆 Torre dos Campeões${torreLiberada() ? '' : ' 🔒'}</span></div>`);
+  const porta = L.imagem === 'porta', alt = Number(L.altura) || (porta ? 150 : 330), larg = alt * PORTA_W;
+  cena.torrePorta = { x: L.x, y: L.y, porta, trilha: centroCelula(celulaMaisProxima(cena.grade, L.x, L.y + 12)),
+    caixa: porta ? { x0: L.x - larg / 2, x1: L.x + larg / 2, y0: L.y - alt, y1: L.y + 8 } : null };   // tocar no desenho da porta também vale
+  if (porta) {   // ninguém atravessa a porta: ~110 × 60 px em volta da base ficam fora da trilha (a frente da escada continua andável)
+    const g = cena.grade, x0 = Math.floor((L.x - 55) / CEL), x1 = Math.floor((L.x + 55) / CEL), y0 = Math.floor((L.y - 60) / CEL), y1 = Math.floor((L.y - 2) / CEL);
+    for (let cy = Math.max(0, y0); cy <= Math.min(GH - 1, y1); cy++) for (let cx = Math.max(0, x0); cx <= Math.min(GW - 1, x1); cx++) g[cy * GW + cx] = 0;
+    for (let k = 2; k <= 4; k++) new Image().src = urlPortaTorre(k);   // a animação de abrir já fica no cache
+  }
+  const src = porta ? urlPortaTorre(1) : `${IMG}/torre/torre.webp`;
+  $('cena-atores').insertAdjacentHTML('beforeend', `<img class="jr-ator jr-torre-predio${porta ? ' jr-torre-porta' : ''}" id="torre-porta-img" src="${src}" style="left:${L.x}px;top:${porta ? L.y : L.y + alt * 0.04}px;height:${alt}px;z-index:${Math.round(L.y)}" alt="" draggable="false"/>` +
+    `<div class="jr-rotulo-porta jr-rotulo-praca" style="left:${L.x}px;top:${porta ? L.y - alt - 4 : L.y - alt * 0.32}px"><span>🏆 Torre dos Campeões${torreLiberada() ? '' : ' 🔒'}</span></div>`);
 }
+// 🔒 sem as 26: o aviso com o "X/26" e a barrinha
+function avisarTorreTrancada() {
+  const tem = insigniasGanhas().length, total = totalInsignias(), pct = Math.round(100 * Math.min(tem, total) / total);
+  const m = modalTorre('torre-trancada', '🔒 Torre dos Campeões',
+    `<p class="jr-torre-trancada-txt">Só abre para quem conquistar <b>todas as insígnias</b>.</p>
+     <p class="jr-torre-trancada-txt">Você tem <b>${tem}/${total}</b>.</p>
+     <div class="jr-torre-barra" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${tem}"><i style="width:${pct}%"></i></div>
+     <button class="jr-btn" data-torre="entendi">Entendi</button>`, { classe: 'jr-torre-trancada' });
+  m.querySelector('[data-torre="entendi"]').addEventListener('click', () => { tocar('clique'); fecharModalTorre(); });
+  tocar('erro');
+}
+// troca porta_1 → 2 → 3 → 4 num <img> (ms = o tempo de cada quadro)
+function abrirPortaAnim(img, ms, fim) {
+  if (!img || semMovimento()) { if (img) img.src = urlPortaTorre(4); setTimeout(() => fim?.(), semMovimento() ? 150 : 0); return; }
+  let k = 1;
+  const t = setInterval(() => { k++; img.src = urlPortaTorre(k); if (k >= 4) { clearInterval(t); setTimeout(() => fim?.(), ms); } }, ms);
+}
+let entrandoTorre = false;
 function entrarNaTorre() {
-  if (!TORRE) return;
-  if (!torreLiberada()) { avisarEm('Vença todos os ginásios para entrar 🔒', jog.x, jog.y - altJogCena() - 10); tocar('erro'); return; }
+  if (!TORRE || entrandoTorre) return;
+  if (!torreLiberada()) { avisarTorreTrancada(); return; }
   torreOrigem = cena?.tipo === 'mapa' && typeof cena.n === 'number' ? { tipo: 'mapa', n: cena.n } : null;
-  transicao(() => abrirTorre());
+  const img = cena?.torrePorta?.porta ? $('torre-porta-img') : null;
+  if (!img) { transicao(() => abrirTorre()); return; }
+  entrandoTorre = true;   // a porta abre no mapa (~0,5 s) e depois entra
+  jog.dir = 'costas'; desenharJogador();
+  tocar('porta');
+  abrirPortaAnim(img, 130, () => { entrandoTorre = false; transicao(() => abrirTorre()); });
+}
+// ── 🏆 PROMPT-267: a cena da porta abrindo, uma vez (torre_aberta_vista), ao completar as 26 insígnias ──
+// Depois da 26ª: vem depois da festa do Mestre (no "Ver meu troféu"). Quem já tinha as 26: na próxima entrada no jogo.
+const portaTorrePendente = () => !!TORRE?.local && carregouProgresso && !ehProfessora() && !sessao?.visitante && !estado?.torreAbertaVista
+  && insigniasGanhas().length >= totalInsignias();
+function verificarPortaTorre(atraso = 0) {
+  if (!portaTorrePendente()) return false;
+  setTimeout(() => { if (portaTorrePendente() && $('festa-mestre').hidden) mostrarPortaTorre(); }, atraso);
+  return true;
+}
+// professora: jogoRevisaoDev.portaTorre() mostra a cena sem gravar nada
+function mostrarPortaTorre(aoFechar, { gravarVista = true } = {}) {
+  const el = $('torre-aberta'), img = $('ta-porta');
+  if (gravarVista && !ehProfessora()) { estado.torreAbertaVista = true; gravar({ torre_aberta_vista: true }); }
+  clearTimeout(mostrarPortaTorre.t); clearTimeout(mostrarPortaTorre.t2);
+  el.classList.remove('aberta');
+  img.src = urlPortaTorre(1);
+  el._aoFechar = aoFechar || null;
+  el.hidden = false;
+  $('ta-vamos').focus({ preventScroll: true });
+  const fim = () => { if (el.hidden) return; el.classList.add('aberta'); confeteExpo(el); tocar('insignia'); };
+  if (semMovimento()) { img.src = urlPortaTorre(4); fim(); return; }
+  mostrarPortaTorre.t = setTimeout(() => abrirPortaAnim(img, 150, null), 1000);   // ~1 s fechada, depois 150 ms por quadro
+  mostrarPortaTorre.t2 = setTimeout(fim, 1000 + 150 * 3);
+}
+function fecharPortaTorre() {
+  const el = $('torre-aberta');
+  if (el.hidden) return;
+  tocar('clique');
+  el.hidden = true;
+  el.classList.remove('aberta');
+  const f = el._aoFechar; el._aoFechar = null;
+  f?.();
 }
 function sairDaTorre() {
   const o = torreOrigem;
   $('torre-faixa')?.remove();
-  transicao(() => (o?.tipo === 'mapa' ? abrirMapa(o.n) : abrirMapaGeral()));
+  transicao(() => (o?.tipo === 'mapa' ? abrirMapa(o.n, o.n === TORRE?.local?.mapa ? 'torre' : undefined) : abrirMapaGeral()));   // volta para a frente da porta (fechada)
 }
 
 // ── o salão do andar ──
@@ -18320,7 +18394,7 @@ function meusDadosDeq(tipo, alvoId) {
 // por que não dá para entrar (null: pode)
 function motivoSemDueloEquipe(tipo) {
   if (!podeDuelarEquipe()) return 'Você precisa de uma equipe com 2 ou 3 alunos.';
-  if (tipo === 'torre' && !torreLiberada()) return 'Vença todos os ginásios para entrar na Torre 🔒';
+  if (tipo === 'torre' && !torreLiberada()) return `Conquiste todas as insígnias (${insigniasGanhas().length}/${totalInsignias()}) para entrar na Torre 🔒`;   // 🏆 PROMPT-267
   if (tipo === 'mapa' && !ehProfessora() && barrigaDe(estado.pets.ativo) < (cfgBatalha().barriga_minima ?? 25)) return `${nomePet(estado.pets.ativo)} está com fome. Dê comida antes de batalhar.`;
   return null;
 }
@@ -20535,7 +20609,7 @@ function vencer() {
     else darXP(XP_TREINADOR);
     ganharXPJogo(p === 'lider' ? XP_JOGO.lider : p === 'revanche' ? XP_JOGO.revanche : XP_JOGO.treinador, p);   // ⭐ (PROMPT-156)
   }
-  if (ganhou) { const f = verificarMestre(); if (f) festaPendente = f; }   // a 26ª insígnia (ou a 26ª dourada): festa depois da insígnia voar
+  if (ganhou) { const f = verificarMestre(); if (f) festaPendente = f; else if (portaTorrePendente()) festaPendente = 'porta'; }   // 🏆 PROMPT-267: sem festa nova, a porta da torre vem no lugar dela   // a 26ª insígnia (ou a 26ª dourada): festa depois da insígnia voar
   if (ganhou) publicarResumoInsignias();
   if (ganhou === 'normal') publicarNoFeed('insignia', chave);
   if (ganhou === 'dourada') publicarNoFeed('insignia_dourada', chave);
@@ -22609,6 +22683,7 @@ function ligarEventos() {
   $('av-convite-nao').addEventListener('click', (e) => { e.stopPropagation(); responderConviteAV(false); });
   $('btn-pesca-ranking').addEventListener('click', (e) => { e.stopPropagation(); abrirRankingPesca(); });
   $('fm-trofeu').addEventListener('click', verMeuTrofeu);
+  $('ta-vamos').addEventListener('click', fecharPortaTorre);   // 🏆 PROMPT-267
   $('hm-fechar').addEventListener('click', () => { $('hall-mestres').hidden = true; });
   $('hall-mestres').addEventListener('click', (e) => { e.stopPropagation(); if (e.target === $('hall-mestres')) $('hall-mestres').hidden = true; });
   // 🧮 calculadora: abre/fecha no botão; fecha tocando fora ou no ✕

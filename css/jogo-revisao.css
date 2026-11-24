@@ -6866,3 +6866,28 @@ html.jr-girado .expo-bv-caixa { width: min(800px, calc(100dvh - 24px)); max-heig
   html:not(.jr-girado) .expo-bv-c { flex-direction: column; align-items: flex-start; }
   html:not(.jr-girado) .expo-bv-rod { flex-direction: column-reverse; align-items: stretch; text-align: center; }
 }
+
+/* 🏆 PROMPT-267: a porta da torre no mapa 13, o aviso do cadeado e a cena da porta abrindo */
+.jr-torre-porta { filter: drop-shadow(0 4px 4px rgba(0,0,0,.4)); }
+.jr-torre-trancada .jr-torre-caixa { width: min(380px, 100%); text-align: center; }
+.jr-torre-trancada-txt { margin: 0 0 8px; font-size: calc(16px * var(--letra, 1)); color: #e3e5f0; }
+.jr-torre-trancada-txt b { color: #ffd700; }
+.jr-torre-barra { height: 12px; margin: 4px 0 16px; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; border: 1px solid rgba(255,215,0,.35); }
+.jr-torre-barra i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ff7b2e, #ffd700); }
+.jr-torre-trancada .jr-btn { min-height: 48px; padding: 6px 30px; font-size: 18px; }
+.jr-torre-aberta { position: absolute; inset: 0; z-index: 450; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 14px;
+  box-sizing: border-box; overflow: hidden; text-align: center; background: radial-gradient(ellipse at 50% 45%, #1d1838 0%, #0d0f1a 70%); }
+.jr-torre-aberta[hidden] { display: none; }
+.ta-tit { position: relative; z-index: 2; font: 700 clamp(20px, 3.4vw, 28px) 'Rajdhani', sans-serif; color: #ffd700; line-height: 1.1; }
+.ta-palco { position: relative; height: min(50%, 320px); min-height: 140px; aspect-ratio: 273 / 400; }
+#jr-app .ta-porta { position: relative; z-index: 1; height: 100%; width: auto; image-rendering: auto; filter: drop-shadow(0 8px 12px rgba(0,0,0,.6)); }
+.ta-brilho { position: absolute; z-index: 2; left: 50%; top: 42%; width: 70%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; opacity: 0; transform: translate(-50%, -50%) scale(.3);
+  background: radial-gradient(circle, rgba(255,245,190,.95), rgba(255,200,60,.5) 40%, transparent 70%); mix-blend-mode: screen; transition: opacity .6s ease-out, transform .8s ease-out; }
+.jr-torre-aberta.aberta .ta-brilho { opacity: 1; transform: translate(-50%, -50%) scale(1.5); animation: jrTaBrilho 1.6s ease-in-out .8s infinite alternate; }
+@keyframes jrTaBrilho { from { opacity: 1; } to { opacity: .65; } }
+.ta-txt { position: relative; z-index: 2; margin: 0; max-width: 520px; font: 600 calc(16px * var(--letra, 1)) 'Inter', sans-serif; color: #e3e5f0; opacity: 0; transition: opacity .5s; }
+.jr-torre-aberta.aberta .ta-txt { opacity: 1; }
+.jr-torre-aberta .jr-btn { position: relative; z-index: 2; min-height: 52px; padding: 6px 34px; font-size: 18px; }
+.jr-torre-aberta .expo-confete { z-index: 3; }
+@media (max-height: 430px) { .ta-palco { height: 46%; min-height: 110px; } .jr-torre-aberta { gap: 6px; } .jr-torre-aberta .jr-btn { min-height: 46px; } }
+@media (prefers-reduced-motion: reduce) { .jr-torre-aberta.aberta .ta-brilho { animation: none; } }
