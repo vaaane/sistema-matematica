@@ -69,6 +69,35 @@
     .rank-crown{position:absolute;top:-12px;right:0;font-size:18px;filter:drop-shadow(0 2px 8px rgba(250,184,0,.9));pointer-events:none}
     .rank-star{position:absolute;top:-4px;right:0;font-size:9px;pointer-events:none}
     .card-count{font-size:11px;font-weight:600;color:var(--text-muted);background:#F1F5F9;padding:2px 8px;border-radius:20px;margin-left:6px}
+
+    /* ⚠️ Abaixo de 20 na nota final (PROMPT-271) */
+    .p20-wrap{flex:none;padding-bottom:0!important}
+    .p20{margin-bottom:0;border-color:rgba(255,123,46,.3)}
+    .p20-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .p20-tit{font-size:14px;font-weight:700;color:var(--orange);display:flex;align-items:center;gap:8px}
+    .p20-num{font-size:11px;font-weight:700;color:var(--text);background:var(--orange-pale);border-radius:20px;padding:2px 9px}
+    .p20-recolher{margin-left:auto;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);border-radius:8px;padding:4px 10px;font:inherit;font-size:11.5px;font-weight:600;cursor:pointer}
+    .p20-recolher:hover{color:var(--text)}
+    .p20.recolhido .p20-corpo{display:none}
+    .p20-corpo{margin-top:12px}
+    .p20-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .p20-chip{border:1.5px solid var(--border);background:var(--bg);color:var(--text-muted);border-radius:20px;padding:4px 11px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+    .p20-chip.on{border-color:var(--orange);color:var(--orange);background:var(--orange-pale)}
+    .p20-chip small{font-weight:600;opacity:.75;margin-left:3px}
+    .p20-avisos{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+    .p20-aviso{font-size:11.5px;color:var(--orange)}
+    .p20-erro{font-size:11.5px;color:var(--red)}
+    .p20-msg{font-size:12.5px;color:var(--text-muted);padding:8px 0}
+    .p20-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px;max-height:340px;overflow-y:auto}
+    .p20-aluno{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);text-decoration:none}
+    .p20-aluno:hover{border-color:var(--orange)}
+    .p20-nome{flex:1;min-width:0;font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .p20-nome small{display:block;font-size:10px;font-weight:500;color:var(--orange)}
+    .p20-turma{font-size:10.5px;font-weight:700;color:var(--text-muted)}
+    .total-pill{display:inline-flex;min-width:46px;justify-content:center;padding:4px 6px;border-radius:9px;font-weight:800;font-size:12.5px}
+    .total-pill.bom{background:var(--green-pale);color:#15803D}
+    .total-pill.medio{background:var(--orange-pale);color:var(--orange-dark)}
+    .total-pill.baixo{background:var(--red-pale);color:#B91C1C}
   </style>
 </head>
 <body>
@@ -82,6 +111,8 @@
       </div>
       <div class="topbar-right"><div class="avatar avatar-blue">P</div></div>
     </div>
+    <!-- ⚠️ Alunos abaixo de 20 na nota final (PROMPT-271) -->
+    <div class="content p20-wrap"><div id="painel20" class="card p20"></div></div>
     <div class="content" id="content">
       <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
     </div>
@@ -961,6 +992,78 @@ window.encerrarTodasSessoes = async function() {
     if (card) { card.querySelector('#analise-count').textContent = suspeitos; card.style.display = 'flex'; }
   }
 })();
+</script>
+
+<!-- ⚠️ Alunos abaixo de 20 na nota final: a mesma conta da "📊 Nota final" da página de notas (js/nota-final.js) — PROMPT-271 -->
+<script type="module">
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { calcularNotaFinalTurmas, fmtCent, classeTotal } from "/js/nota-final.js";
+
+const LIMITE = 2000;   // 20 pontos, em centésimos
+const TURMAS = Object.keys(ALUNOS_POR_TURMA);
+const K_RECOLHIDO = "painel20_recolhido";
+const el = document.getElementById("painel20");
+const res = {};          // turma → { linhas, parciais } | { erro }
+let filtro = "todas";
+let recolhido = localStorage.getItem(K_RECOLHIDO) === "1";
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const abaixo = (t) => (res[t]?.linhas || []).filter(l => (l.soma ?? 0) < LIMITE).map(l => ({ ...l, turma: t }));
+
+function render() {
+  const prontas = TURMAS.filter(t => res[t]), calculando = prontas.length < TURMAS.length;
+  const todos = TURMAS.flatMap(abaixo);
+  const lista = (filtro === "todas" ? todos : todos.filter(a => a.turma === filtro))
+    .sort((a, b) => (a.soma ?? -1) - (b.soma ?? -1) || a.nome.localeCompare(b.nome, "pt-BR"));
+  const qtd = n => `${n} aluno${n === 1 ? "" : "s"}`;
+
+  // ⚠️ bimestres ainda abertos (em alguma turma)
+  const abertos = ["3", "4"].filter(b => TURMAS.some(t => res[t]?.parciais?.[b]));
+  const aviso = abertos.length === 2 ? "⚠️ O 3º e o 4º bimestres ainda estão abertos: as somas podem mudar."
+    : abertos.length === 1 ? `⚠️ O ${abertos[0]}º bimestre ainda está aberto: as somas podem mudar.` : "";
+  const erros = TURMAS.filter(t => res[t]?.erro).map(t => `<div class="p20-erro">❌ Não foi possível calcular a turma ${t}</div>`).join("");
+
+  let corpo;
+  if (lista.length) corpo = `<div class="p20-lista">${lista.map(a => `
+      <a class="p20-aluno" href="/professor/p-notas.html?bim=final&turma=${encodeURIComponent(a.turma)}" title="Abrir a Nota final do ${esc(a.turma)}">
+        <span class="p20-nome">${esc(a.nome)}${a.faltam ? `<small>faltam notas de ${a.faltam} bimestre${a.faltam > 1 ? "s" : ""}</small>` : ""}</span>
+        <span class="p20-turma">${esc(a.turma)}</span>
+        <span class="total-pill ${classeTotal((a.soma ?? 0) / 100 / 4)}">${fmtCent(a.soma)}</span>
+      </a>`).join("")}</div>`;
+  else if (calculando) corpo = "";
+  else corpo = `<div class="p20-msg">✅ Nenhum aluno abaixo de 20.</div>`;
+
+  el.classList.toggle("recolhido", recolhido);
+  el.innerHTML = `
+    <div class="p20-head">
+      <div class="p20-tit">⚠️ Abaixo de 20 na nota final</div>
+      <span class="p20-num">${calculando && !todos.length ? "Calculando…" : qtd(lista.length)}</span>
+      ${calculando && todos.length ? `<span class="p20-turma">calculando… ${prontas.length}/${TURMAS.length} turmas</span>` : ""}
+      <button class="p20-recolher" id="p20-recolher" aria-expanded="${!recolhido}">${recolhido ? "▸ Mostrar" : "▾ Recolher"}</button>
+    </div>
+    <div class="p20-corpo">
+      <div class="p20-chips">${["todas", ...TURMAS].map(t => {
+        const n = t === "todas" ? todos.length : abaixo(t).length;
+        return `<button class="p20-chip${filtro === t ? " on" : ""}" data-t="${esc(t)}">${t === "todas" ? "Todas" : esc(t)}${res[t] || t === "todas" ? `<small>${n}</small>` : ""}</button>`;
+      }).join("")}</div>
+      ${aviso || erros ? `<div class="p20-avisos">${aviso ? `<div class="p20-aviso">${aviso}</div>` : ""}${erros}</div>` : ""}
+      ${calculando && !lista.length ? `<div class="p20-msg">Calculando…</div>` : corpo}
+    </div>`;
+}
+
+el.addEventListener("click", (e) => {
+  const chip = e.target.closest(".p20-chip");
+  if (chip) { filtro = chip.dataset.t; render(); return; }
+  if (e.target.closest("#p20-recolher")) {
+    recolhido = !recolhido;
+    localStorage.setItem(K_RECOLHIDO, recolhido ? "1" : "0");
+    render();
+  }
+});
+
+render();
+calcularNotaFinalTurmas(TURMAS, (t, r, erro) => { res[t] = erro ? { erro: true } : r; render(); })
+  .catch(e => { console.error("Painel abaixo de 20:", e); TURMAS.forEach(t => { res[t] ||= { erro: true }; }); render(); });
 </script>
 </body>
 </html>

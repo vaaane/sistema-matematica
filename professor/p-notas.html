@@ -289,55 +289,29 @@ import {
   buscarCongelamento, congelarBimestre, descongelarBimestre,
   camposAtivos, bonusAtivo, bonusConfig, campoAuto, razaoPropEhAuto,
 } from "/js/notas.js";
+import {
+  criarContexto, chaveTurma as chaveTurmaNF, turmaVazia, calcularBonus as calcularBonusNF, calcularTotal as calcularTotalNF, classeTotal,
+  carregarDadosBimestre as carregarDadosBimestreNF, calcularNotaFinalTurma, fmtCent,
+} from "/js/nota-final.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "notas");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-let dados = {}; // dados[`${turma}|${bimestre}`][aluno] = registro de notas
-const chaveTurma = t => `${t}|${BIMESTRE}`;
-let autoDados = {}; // autoDados[turma][aluno] = { melhorTabuada, melhorNeg }
+// O estado e a conta do Total vêm de js/nota-final.js (PROMPT-271): o painel do dashboard usa o mesmo código
+const CTX = criarContexto();
+const dados = CTX.dados;          // dados["turma|bimestre"][aluno] = registro de notas
+const autoDados = CTX.autoDados;  // autoDados[turma][aluno] = { melhorTabuada, melhorNeg, … }
+const chaveTurma = t => chaveTurmaNF(t);
 let turmaAtual = "";
 let liberadaAtual = false;
 let congeladoAtual = false;
-
-function turmaVazia(turma) {
-  const obj = {};
-  (ALUNOS_POR_TURMA[turma] || []).forEach(nome => {
-    obj[nome] = {
-      provaMulti:"", projeto:"", caderno:"", equacoes:"", ativ4:"", triangulos:"", participacao:0.5,
-      cadernoVistos:null, razaoProp:null, conselheiro:null, pd:null,
-      cadernoB4:null, comportamento:null, consciencia:"",
-      ativ4Auto:false, triangulosAuto:false, equacoesAuto:false,
-      extras: {}
-    };
-  });
-  return obj;
-}
 
 function extrasAutoAtivos(nome) {
   const a = autoDados[turmaAtual]?.[nome] || { melhorTabuada:0, melhorNeg:0 };
   return extrasAtivosDoProgresso(a);
 }
-function calcularBonus(nome, registro) {
-  const cfg = bonusConfig();
-  if (!cfg) return 0;
-  const a = autoDados[turmaAtual]?.[nome] || { melhorTabuada:0, melhorNeg:0, rankAtiv4Bonus:0, nivelPerfil:0 };
-  const auto = extrasAtivosDoProgresso(a);
-  const bAuto = EXTRAS_AUTO.reduce((s,e) => {
-    const incluido = cfg.autoExtras === null || cfg.autoExtras.includes(e.key);
-    return s + (incluido && auto[e.key] ? e.valor : 0);
-  }, 0);
-  const bCadExtra    = (cfg.cadExtra && cadernoExtraAtivo(registro)) ? CADERNO_EXTRA.valor : 0;
-  const bBonusCad    = (cfg.bonusCadernoVistos && bonusCadernoVistosAtivo(a.pctCaderno)) ? BONUS_CADERNO_VISTOS.valor : 0;
-  const bFixo        = cfg.bonusFixo ? BONUS_FIXO.valor : 0;
-  const bRankAtiv4   = cfg.rank ? (a.rankAtiv4Bonus ?? 0) : 0;
-  const bNivelPerfil = cfg.nivelPerfil ? ((a.nivelPerfil || 0) * EXTRA_NIVEL_PERFIL.valorPorNivel) : 0;
-  const bCadCompl    = (cfg.cadernoCompleto && cadernoCompletoAtivo(a.pctCaderno)) ? CADERNO_COMPLETO.valor : 0;
-  const bRevisao     = cfg.revisao ? (a.notaRevisao ?? 0) : 0;
-  const bManual      = EXTRAS_MANUAL.reduce((s,e) => s + (registro.extras[e.key] ? e.valor : 0), 0);
-  return bAuto + bCadExtra + bBonusCad + bFixo + bRankAtiv4 + bNivelPerfil + bCadCompl + bRevisao + bManual;
-}
+const calcularBonus = (nome, registro) => calcularBonusNF(CTX, turmaAtual, nome, registro);
 
 // ── 4º bim em diante: cada extra em coluna própria (1º–3º usam a coluna "Extras") ──
 const extrasEmColunas = () => +BIMESTRE >= 4;
@@ -355,114 +329,7 @@ const COLUNAS_EXTRAS_B4 = [
   { k:"revisao",  t:"Revisão",  max:`0 a ${EXTRA_REVISAO.max}`,
     valor: (a) => a.notaRevisao || 0,                                titulo:() => "nota do Jogo de Revisão (entra inteira)" },
 ];
-function calcularTotal(nome, registro) {
-  const base = camposAtivos().reduce((s,c) => s + (parseFloat(registro[c.key]) || 0), 0);
-  const baseCapada = Math.min(base, 10);
-  return baseCapada + calcularBonus(nome, registro);
-}
-function classeTotal(total) {
-  if (total >= 6) return "bom";
-  if (total >= 4) return "medio";
-  return "baixo";
-}
-
-// ── Busca no banco: progresso de tabuada (150/300) e tabuada negativa (50) ──
-async function carregarAutoTabuada(turma) {
-  const alunos = ALUNOS_POR_TURMA[turma] || [];
-  autoDados[turma] = autoDados[turma] || {};
-  await Promise.all(alunos.map(async nome => {
-    const [prog, nivelPerfil] = await Promise.all([
-      buscarProgressoTabuada(turma, nome),
-      buscarNivelPerfil(turma, nome)
-    ]);
-    autoDados[turma][nome] = { ...prog, nivelPerfil };
-  }));
-}
-
-// ── Busca no banco: nota da fase 1 da Atividade 5 → preenche "Ativ. Área" ──
-// Confirmado em 30/06: a nota da fase 1 vem em escala 0–10, então convertemos
-// dividindo por 10 antes de aplicar ao máx de 1 ponto da coluna Área.
-async function carregarAutoArea(turma) {
-  const porAluno = {};
-  try {
-    const q = query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma));
-    const snap = await get(q);
-    if (snap.exists()) {
-      snap.forEach(child => {
-        const v = child.val();
-        if (v.atividade !== NOME_ATIV5 || !v.aluno) return;
-        const bruto = v.pontos_fase1 ?? v.pontuacao ?? null;
-        if (bruto == null) return;
-        if (!(v.aluno in porAluno) || bruto > porAluno[v.aluno]) porAluno[v.aluno] = bruto;
-      });
-    }
-  } catch(e) { console.error("Falha ao buscar nota da Atividade 5:", e); }
-  return porAluno;
-}
-
-// ── Busca no banco: melhor pontuação da Atividade 1 - Equações → coluna "Equações" ──
-// Resultado vem em escala 0–10 (pontuacao_bruta); convertemos para o máx de 1,5 na hora de aplicar.
-async function carregarAutoEquacoes(turma) {
-  const porAluno = {};
-  try {
-    const q = query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma));
-    const snap = await get(q);
-    if (snap.exists()) {
-      snap.forEach(child => {
-        const v = child.val();
-        if (v.atividade !== NOME_ATIV1_EQ || !v.aluno) return;
-        if (v.concluido !== true || v.modo_teste) return;
-        const bruto = v.pontuacao_bruta ?? v.pontuacao ?? null;
-        if (bruto == null) return;
-        if (!(v.aluno in porAluno) || bruto > porAluno[v.aluno]) porAluno[v.aluno] = bruto;
-      });
-    }
-  } catch(e) { console.error("Falha ao buscar Atividade 1 - Equações:", e); }
-  return porAluno;
-}
-
-// ── Busca no banco: melhor pontuação da Atividade 2 - Regra de três → coluna "Atividade 2" ──
-// Mesmo padrão de carregarAutoEquacoes acima (escala 0–10 → máx 1,5).
-async function carregarAutoRazaoProp(turma) {
-  const porAluno = {};
-  try {
-    const q = query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma));
-    const snap = await get(q);
-    if (snap.exists()) {
-      snap.forEach(child => {
-        const v = child.val();
-        if (v.atividade !== NOME_ATIV2_RP || !v.aluno) return;
-        if (v.concluido !== true || v.modo_teste) return;
-        const bruto = v.pontuacao_bruta ?? v.pontuacao ?? null;
-        if (bruto == null) return;
-        if (!(v.aluno in porAluno) || bruto > porAluno[v.aluno]) porAluno[v.aluno] = bruto;
-      });
-    }
-  } catch(e) { console.error("Falha ao buscar Atividade 2 - Regra de três:", e); }
-  return porAluno;
-}
-
-// ── 3º bim: Caderno automático (proporção de vistos), Professor Conselheiro (ocorrências) e PD - Geometria (vistos Canudos Parte 1+2) ──
-// ── 4º bim: Caderno (vistos × 5), Comportamento (base 2,0) e nota do Jogo de Revisão ──
-async function carregarAutoCadernoConselheiro(turma) {
-  const alunos = ALUNOS_POR_TURMA[turma] || [];
-  const ativos = new Set(camposAtivos().map(c => c.key));
-  const cfg = bonusConfig() || {};
-  const out = {};
-  await Promise.all(alunos.map(async nome => {
-    const [caderno, conselheiro, pd, pctCaderno, cadernoB4, comportamento, notaRevisao] = await Promise.all([
-      buscarCadernoVistos(turma, nome),
-      buscarConselheiro(turma, nome),
-      buscarPDGeometria(turma, nome),
-      (cfg.bonusCadernoVistos || cfg.cadernoCompleto) ? buscarPctCaderno(turma, nome) : Promise.resolve(null),
-      ativos.has("cadernoB4")     ? buscarCadernoVistos(turma, nome, 5) : Promise.resolve(null),
-      ativos.has("comportamento") ? buscarConselheiro(turma, nome, 2)   : Promise.resolve(null),
-      cfg.revisao                 ? buscarNotaRevisao(turma, nome)      : Promise.resolve(null),
-    ]);
-    out[nome] = { caderno, conselheiro, pd, pctCaderno, cadernoB4, comportamento, notaRevisao };
-  }));
-  return out;
-}
+const calcularTotal = (nome, registro) => calcularTotalNF(CTX, turmaAtual, nome, registro);
 
 // ── Render ──────────────────────────────────────────────────
 const colgroupOriginal = document.querySelector(".tbl-notas colgroup")?.innerHTML || "";
@@ -742,33 +609,6 @@ bimSel.addEventListener("change", async () => {
   carregarTurma(turmaAtual);   // recarrega a turma atual no bimestre escolhido
 });
 
-// ── Busca notas já lançadas neste bimestre (carregadas uma vez por turma) ──
-async function carregarNotasSalvas(turma) {
-  try {
-    const snap = await get(ref(db, `notas_bimestre/${BIMESTRE}/${turma}`));
-    if (!snap.exists()) return;
-    (ALUNOS_POR_TURMA[turma] || []).forEach(nome => {
-      const v = snap.child(slug(nome)).val();
-      if (!v) return;
-      const r = dados[chaveTurma(turma)][nome];
-      // null = ainda não lançado → campo fica vazio; número = nota real (mesmo 0)
-      const fromNota = val => (val === null || val === undefined) ? "" : val;
-      Object.assign(r, {
-        provaMulti: fromNota(v.provaMulti),
-        projeto:    fromNota(v.projeto),
-        caderno:    fromNota(v.caderno),
-        equacoes:   v.equacoes ?? "", equacoesAuto: !!v.equacoesAuto,
-        ativ4: v.ativ4 ?? "", ativ4Auto: !!v.ativ4Auto,
-        participacao: v.participacao ?? v.lista ?? 0.5, // fallback lista (dados antigos), default 0.5
-        triangulos: v.triangulos ?? v.area ?? "", triangulosAuto: !!v.triangulosAuto ?? !!v.areaAuto,
-        razaoProp: fromNota(v.razaoProp),   // só usado nas turmas fora da 8E (manual)
-        consciencia: fromNota(v.consciencia),   // 4º bim (manual)
-      });
-      r.extras = {};
-    });
-  } catch (e) { console.error("Falha ao carregar notas salvas:", e); }
-}
-
 async function carregarTurma(turma) {
   turmaAtual = turma;
   const chave = chaveTurma(turma);
@@ -781,9 +621,11 @@ async function carregarTurma(turma) {
   status.textContent = "Buscando progresso no banco…";
   status.classList.remove("saved");
 
-  carregandoTurma = true; atualizarBotaoImportar();   // só importa depois de as notas salvas chegarem
-  const { liberada, congelado } = await carregarDadosBimestre(turma, primeiraVez);
-  carregandoTurma = false;
+  carregandoTurma++; atualizarBotaoImportar();   // só importa depois de as notas salvas chegarem (contador: cargas podem se sobrepor)
+  let carga;
+  try { carga = await carregarDadosBimestre(turma, primeiraVez); }
+  finally { carregandoTurma--; }
+  const { liberada, congelado } = carga;
   liberadaAtual = liberada;
   congeladoAtual = congelado;
   atualizarBotaoLiberar();
@@ -793,92 +635,8 @@ async function carregarTurma(turma) {
   renderTabela();
 }
 
-// Carrega o bimestre BIMESTRE da turma em dados/autoDados, sem desenhar nada e sem mexer em
-// liberadaAtual/congeladoAtual (a Nota final usa isto para o 3º e o 4º — PROMPT-269)
-async function carregarDadosBimestre(turma, primeiraVez) {
-  const chave = chaveTurma(turma);
-  if (!dados[chave]) dados[chave] = turmaVazia(turma);
-  if (!autoDados[turma]) autoDados[turma] = {};
-  const alunos = ALUNOS_POR_TURMA[turma] || [];
-  const temAutoNovos = camposAtivos().some(c => ["cadernoVistos", "conselheiro", "pd", "cadernoB4", "comportamento"].includes(c.key));
-  const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), carregarAutoEquacoes(turma), carregarAutoRazaoProp(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos), buscarCongelamento(turma),
-                 temAutoNovos ? carregarAutoCadernoConselheiro(turma) : Promise.resolve({})];
-  if (primeiraVez) tasks.push(carregarNotasSalvas(turma));
-  const [_, areaPorAluno, eqPorAluno, rpPorAluno, liberada, ativ4Map, cong, ccPorAluno] = await Promise.all(tasks);
-
-  alunos.forEach(nome => {
-    const a4 = ativ4Map[nome] || { fez:false, posicao:0, bonusRank:0 };
-    autoDados[turma][nome] = autoDados[turma][nome] || {};
-    autoDados[turma][nome].rankAtiv4Posicao = a4.posicao;
-    autoDados[turma][nome].rankAtiv4Bonus   = a4.bonusRank;
-
-    const r = dados[chave][nome];
-
-    // Ativ.4 — 0,5 se participou, null se não fez (não conta como zero)
-    r.ativ4     = a4.fez ? 0.5 : null;
-    r.ativ4Auto = true;
-
-    // Triângulos — preenche se jogou (null = nunca jogou, não conta como zero)
-    if (areaPorAluno[nome] != null) {
-      r.triangulos     = Math.min(1, areaPorAluno[nome] / 10);
-      r.triangulosAuto = true;
-    } else if (!r.triangulos) {
-      r.triangulos = null;
-    }
-
-    // Atividade 1 - Equações — auto: pontuação 0–10 → nota de 0 a 1,5 (null = nunca fez)
-    if (eqPorAluno[nome] != null) {
-      r.equacoes     = Math.min(1.5, (eqPorAluno[nome] / 10) * 1.5);
-      r.equacoesAuto = true;
-    } else if (!r.equacoes) {
-      r.equacoes = null;
-    }
-
-    // Atividade 2 - Regra de três — só 8E é automática (pontuação 0–10 → nota 0–1,5).
-    // Nas demais turmas é manual: não sobrescreve o que carregarNotasSalvas já pôs em r.razaoProp.
-    if (razaoPropEhAuto(turma)) {
-      r.razaoProp = rpPorAluno[nome] != null ? Math.min(1.5, (rpPorAluno[nome] / 10) * 1.5) : null;
-    }
-
-    // 3º bim — Caderno (proporção de vistos × 2) e Professor Conselheiro (1,0 − 0,3/ocorrência)
-    const cc = ccPorAluno[nome] || {};
-    r.cadernoVistos = cc.caderno ?? null;      // null = nenhum visto aplicado ainda
-    r.conselheiro   = cc.conselheiro ?? null;  // null só quando o campo não é deste bimestre
-    r.pd            = cc.pd ?? null;           // null = nenhuma das duas partes de Geometria aplicada ainda
-    autoDados[turma][nome].pctCaderno = cc.pctCaderno ?? null;   // % de vistos feitos (Bônus caderno / Caderno completo)
-    // 4º bim — Caderno (vistos × 5), Comportamento (2,0 ± 0,3/ocorrência) e nota do Jogo de Revisão (0–10)
-    r.cadernoB4     = cc.cadernoB4 ?? null;
-    r.comportamento = cc.comportamento ?? null;
-    autoDados[turma][nome].notaRevisao = cc.notaRevisao ?? null;
-  });
-
-  // Se congelado, sobrepõe os automáticos pela foto (trava o bônus)
-  if (cong.congelado) {
-    alunos.forEach(nome => {
-      const f = cong.alunos[slug(nome)]; if (!f) return;
-      const ad = autoDados[turma][nome] = autoDados[turma][nome] || {};
-      ad.melhorTabuada  = f.melhorTabuada  ?? 0;
-      ad.melhorNeg      = f.melhorNeg      ?? 0;
-      ad.melhorEscalada = f.melhorEscalada ?? 0;
-      ad.nivelPerfil    = f.nivelPerfil    ?? 0;
-      ad.rankAtiv4Bonus = f.rankAtiv4Bonus ?? 0;
-      ad.pctCaderno     = f.pctCaderno     ?? null;
-      if (f.notaRevisao !== undefined)   ad.notaRevisao  = f.notaRevisao;
-      const r = dados[chave][nome];
-      if (f.ativ4 !== undefined)         r.ativ4         = f.ativ4;
-      if (f.triangulos !== undefined)    r.triangulos    = f.triangulos;
-      if (f.equacoes !== undefined)      r.equacoes      = f.equacoes;
-      if (f.cadernoVistos !== undefined) r.cadernoVistos = f.cadernoVistos;
-      if (f.conselheiro !== undefined)   r.conselheiro   = f.conselheiro;
-      if (f.razaoProp !== undefined)     r.razaoProp     = f.razaoProp;
-      if (f.pd !== undefined)            r.pd            = f.pd;
-      if (f.cadernoB4 !== undefined)     r.cadernoB4     = f.cadernoB4;
-      if (f.comportamento !== undefined) r.comportamento = f.comportamento;
-    });
-  }
-
-  return { liberada, congelado: !!cong.congelado };
-}
+// Carrega o bimestre BIMESTRE da turma (js/nota-final.js), sem desenhar e sem mexer em liberadaAtual/congeladoAtual
+const carregarDadosBimestre = (turma, primeiraVez) => carregarDadosBimestreNF(CTX, turma, primeiraVez);
 
 function atualizarBotaoLiberar() {
   const btn = document.getElementById("btnLiberar");
@@ -1063,18 +821,7 @@ function exportarCSV(){
 document.getElementById("btnExportar").addEventListener("click", exportarCSV);
 
 // ── 📊 Nota final: 1º e 2º do diário (dados/notas-anteriores.json), 3º e 4º = o Total da página (PROMPT-269) ──
-let notasAnteriores = null;
-async function carregarNotasAnteriores() {
-  if (notasAnteriores) return notasAnteriores;
-  try {
-    const r = await fetch("/dados/notas-anteriores.json", { cache: "no-cache" });
-    notasAnteriores = r.ok ? await r.json() : {};
-  } catch (e) { console.error("Falha ao ler notas-anteriores.json:", e); notasAnteriores = {}; }
-  return notasAnteriores;
-}
-// notas em centésimos inteiros: até 2 casas, sem arredondar (o 1e-6 corrige 5,35 × 100 = 534,999…)
-const centesimos = v => (v == null || v === "" || !isFinite(+v)) ? null : Math.floor(+v * 100 + 1e-6);
-const fmtCent = c => c == null ? "—" : (c / 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+// (a conta está em js/nota-final.js → calcularNotaFinalTurma, a mesma do painel do dashboard — PROMPT-271)
 const pilula = (c, classe, extra = "") => c == null ? `<span class="vazio">—</span>` : `<span class="total-pill ${classe}">${fmtCent(c)}</span>${extra}`;
 
 let finalLinhas = [], finalParcial = {}, finalTurma = "", finalOrdemSoma = false, finalGeracao = 0;
@@ -1090,18 +837,10 @@ async function mostrarNotaFinal(turma) {
   document.getElementById("finalAvisos").innerHTML = "";
   bimSel.disabled = turmaSel.disabled = true;   // o BIMESTRE é global: ninguém troca no meio da conta
 
-  const ant = await carregarNotasAnteriores();
-  const fora = new Set(ant._excluir?.[turma] || []);
-  const alunos = (ALUNOS_POR_TURMA[turma] || []).filter(n => !fora.has(n));
-  const totais = { 3: {}, 4: {} }, parcial = {};
+  let res = { linhas: [], parciais: {} };
   try {
     // o mesmo caminho da tabela de cada bimestre (carregarDadosBimestre + calcularTotal), só sem desenhar
-    for (const b of ["3", "4"]) {
-      setBimestre(b);
-      const { congelado } = await carregarDadosBimestre(turma, !dados[chaveTurma(turma)]);
-      parcial[b] = !congelado;
-      alunos.forEach(nome => { totais[b][nome] = calcularTotal(nome, dados[chaveTurma(turma)][nome]); });
-    }
+    res = await calcularNotaFinalTurma(CTX, turma);
   } catch (e) {
     console.error("Falha ao calcular a nota final:", e);
     status.textContent = "❌ Erro ao buscar o 3º/4º bimestre — tente de novo.";
@@ -1111,13 +850,8 @@ async function mostrarNotaFinal(turma) {
   }
   if (ger !== finalGeracao || !modoFinal()) return;
 
-  finalParcial = parcial;
-  finalLinhas = alunos.map((nome, i) => {
-    const a = ant[turma]?.[nome] || {};
-    const notas = [centesimos(a.b1), centesimos(a.b2), centesimos(totais[3][nome]), centesimos(totais[4][nome])];
-    const tem = notas.filter(c => c != null);
-    return { i, nome, notas, soma: tem.length ? tem.reduce((s, c) => s + c, 0) : null };
-  });
+  finalParcial = res.parciais;
+  finalLinhas = res.linhas;
   if (!status.textContent.startsWith("❌")) status.textContent = "";
   renderNotaFinal();
 }
@@ -1162,7 +896,7 @@ const _btnSalvar = document.getElementById("btnSalvar");
 if (_btnSalvar) _btnSalvar.style.display = "none";
 
 // ── 📥 Importar Prova Multi (dados/prova-multi-importar.json → campo provaMulti do bimestre do arquivo) — PROMPT-270 ──
-let provaMultiArq = null, carregandoTurma = false;
+let provaMultiArq = null, carregandoTurma = 0;   // quantas cargas de turma estão em andamento
 async function carregarProvaMultiArq() {
   try {
     const r = await fetch("/dados/prova-multi-importar.json", { cache: "no-cache" });
@@ -1178,7 +912,7 @@ function atualizarBotaoImportar() {
   const mostra = !!notasImportarDaTurma() && !modoFinal() && String(BIMESTRE) === String(provaMultiArq?.bimestre ?? 4)
     && camposAtivos().some(c => c.key === campoImportar());
   btn.style.display = mostra ? "" : "none";
-  btn.disabled = congeladoAtual || carregandoTurma;
+  btn.disabled = congeladoAtual || carregandoTurma > 0;
   btn.title = congeladoAtual ? "Abra o bimestre para importar" : carregandoTurma ? "Carregando as notas…" : "";
 }
 const cent = v => (v === "" || v == null || !isFinite(parseFloat(v))) ? null : Math.round(parseFloat(v) * 100);
@@ -1225,7 +959,18 @@ document.getElementById("pm-close").addEventListener("click", fecharImportarPM);
 pmOverlay.addEventListener("click", e => { if (e.target === pmOverlay) fecharImportarPM(); });
 carregarProvaMultiArq();
 
-carregarTurma("8D");
+// Abrir já num bimestre/turma pelo endereço: ?bim=final&turma=8E ou ?bim=4&turma=8F (PROMPT-271: o painel do dashboard)
+{
+  const qs = new URLSearchParams(location.search);
+  const turma = ALUNOS_POR_TURMA[qs.get("turma")] ? qs.get("turma") : "8D";
+  const bim = qs.get("bim");
+  turmaSel.value = turma;
+  if (bim === "final") { bimSel.value = "final"; turmaAtual = turma; mostrarModo(); mostrarNotaFinal(turma); }
+  else {
+    if (BIMESTRES.some(b => String(b.n) === bim)) { bimSel.value = bim; bimReal = bim; setBimestre(bim); }
+    carregarTurma(turma);
+  }
+}
 </script>
 </body>
 </html>
