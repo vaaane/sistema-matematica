@@ -100,7 +100,7 @@
     .tag-parcial{display:block;margin-top:2px;font-size:8.5px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.3px}
 
     /* 📥 Importar Prova Multi (PROMPT-270) */
-    #btnImportarPM:disabled{opacity:.5;cursor:not-allowed}
+    .btn-importar:disabled{opacity:.5;cursor:not-allowed}
     .pm-modal{width:440px}
     .pm-body{max-height:60dvh;overflow-y:auto;padding-bottom:10px}
     .pm-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
@@ -151,7 +151,7 @@
           <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
           Exportar CSV
         </button>
-        <button class="btn btn-ghost" id="btnImportarPM" style="display:none">📥 Importar Prova Multi</button>
+        <span id="importarBtns" style="display:contents"></span>
         <span class="notas-status" id="status"></span>
       </div>
 
@@ -245,12 +245,12 @@
   </div>
 </div>
 
-<!-- 📥 Importar Prova Multi: conferência antes de mudar (PROMPT-270) -->
+<!-- 📥 Importar notas de um arquivo (Prova Multi, Consciência Negra…): conferência antes de mudar (PROMPT-270, PROMPT-272) -->
 <div id="pm-overlay" class="modal-overlay">
   <div class="modal pm-modal">
     <div class="modal-head">
       <div>
-        <div class="nm">📥 Importar Prova Multi</div>
+        <div class="nm" id="pm-tit">📥 Importar</div>
         <div class="sub" id="pm-sub"></div>
       </div>
       <button class="modal-close" id="pm-close">&times;</button>
@@ -895,33 +895,43 @@ document.getElementById("btnPlanilha").addEventListener("click", () => {
 const _btnSalvar = document.getElementById("btnSalvar");
 if (_btnSalvar) _btnSalvar.style.display = "none";
 
-// ── 📥 Importar Prova Multi (dados/prova-multi-importar.json → campo provaMulti do bimestre do arquivo) — PROMPT-270 ──
-let provaMultiArq = null, carregandoTurma = 0;   // quantas cargas de turma estão em andamento
-async function carregarProvaMultiArq() {
-  try {
-    const r = await fetch("/dados/prova-multi-importar.json", { cache: "no-cache" });
-    provaMultiArq = r.ok ? await r.json() : {};
-  } catch (e) { console.error("Falha ao ler prova-multi-importar.json:", e); provaMultiArq = {}; }
+// ── 📥 Importar notas de arquivos (PROMPT-270; PROMPT-272: mais de um arquivo) ──
+// Cada arquivo: { bimestre, campo, rotulo?, turmas: { turma: { aluno: nota | null } } } → um botão "📥 Importar {rotulo}".
+// null = não fez: o campo fica como está. Sem rotulo: o nome do campo na tabela.
+const ARQS_IMPORTAR = ["/dados/prova-multi-importar.json", "/dados/consciencia-importar.json"];
+let arqsImportar = [], carregandoTurma = 0;   // carregandoTurma: quantas cargas de turma estão em andamento
+async function carregarArqsImportar() {
+  arqsImportar = (await Promise.all(ARQS_IMPORTAR.map(async url => {
+    try {
+      const r = await fetch(url, { cache: "no-cache" });
+      return r.ok ? await r.json() : null;
+    } catch (e) { console.error(`Falha ao ler ${url}:`, e); return null; }
+  }))).filter(a => a && a.campo && a.turmas);
+  document.getElementById("importarBtns").innerHTML = arqsImportar.map((a, i) =>
+    `<button class="btn btn-ghost btn-importar" data-imp="${i}" style="display:none">📥 Importar ${rotuloImportar(a)}</button>`).join("");
   atualizarBotaoImportar();
 }
-const notasImportarDaTurma = () => provaMultiArq?.turmas?.[turmaAtual] || null;
-const campoImportar = () => provaMultiArq?.campo || "provaMulti";
+const rotuloImportar = (a) => a.rotulo || CAMPOS.find(c => c.key === a.campo)?.label || a.campo;
+const notasImportarDaTurma = (a) => a?.turmas?.[turmaAtual] || null;
 function atualizarBotaoImportar() {
-  const btn = document.getElementById("btnImportarPM");
-  if (!btn) return;
-  const mostra = !!notasImportarDaTurma() && !modoFinal() && String(BIMESTRE) === String(provaMultiArq?.bimestre ?? 4)
-    && camposAtivos().some(c => c.key === campoImportar());
-  btn.style.display = mostra ? "" : "none";
-  btn.disabled = congeladoAtual || carregandoTurma > 0;
-  btn.title = congeladoAtual ? "Abra o bimestre para importar" : carregandoTurma ? "Carregando as notas…" : "";
+  document.querySelectorAll(".btn-importar").forEach(btn => {
+    const a = arqsImportar[+btn.dataset.imp];
+    const mostra = !!notasImportarDaTurma(a) && !modoFinal() && String(BIMESTRE) === String(a?.bimestre ?? 4)
+      && camposAtivos().some(c => c.key === a.campo);
+    btn.style.display = mostra ? "" : "none";
+    btn.disabled = congeladoAtual || carregandoTurma > 0;
+    btn.title = congeladoAtual ? "Abra o bimestre para importar" : carregandoTurma ? "Carregando as notas…" : "";
+  });
 }
 const cent = v => (v === "" || v == null || !isFinite(parseFloat(v))) ? null : Math.round(parseFloat(v) * 100);
 const fmt2 = v => Number(v).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
 const pmOverlay = document.getElementById("pm-overlay");
-function abrirImportarPM() {
-  const notas = notasImportarDaTurma();
+let arqAberto = null;   // o arquivo da janela aberta
+function abrirImportar(a) {
+  const notas = notasImportarDaTurma(a);
   if (!notas || congeladoAtual || carregandoTurma) return;
-  const campo = campoImportar(), alunos = ALUNOS_POR_TURMA[turmaAtual] || [], reg = dados[chaveTurma(turmaAtual)];
+  arqAberto = a;
+  const campo = a.campo, alunos = ALUNOS_POR_TURMA[turmaAtual] || [], reg = dados[chaveTurma(turmaAtual)];
   const comNota = alunos.filter(n => notas[n] != null), semNota = alunos.filter(n => n in notas && notas[n] == null);
   let novas = 0, trocas = 0;
   document.getElementById("pm-linhas").innerHTML = comNota.map(nome => {
@@ -934,16 +944,18 @@ function abrirImportarPM() {
   }).join("");
   document.getElementById("pm-sem").innerHTML = semNota.length
     ? `<div class="pm-sem"><b>Sem nota (fica vazio)</b>${semNota.join(", ")}</div>` : "";
+  document.getElementById("pm-tit").textContent = `📥 Importar ${rotuloImportar(a)}`;
   document.getElementById("pm-sub").textContent = `Turma ${turmaAtual} · ${BIMESTRE}º bimestre`;
   document.getElementById("pm-resumo").textContent = `${comNota.length} com nota · ${novas} novas · ${trocas} substituídas`;
   pmOverlay.classList.add("open");
 }
-const fecharImportarPM = () => pmOverlay.classList.remove("open");
+const fecharImportarPM = () => { pmOverlay.classList.remove("open"); };
 async function importarPM() {
-  const notas = notasImportarDaTurma();
+  const a = arqAberto, notas = notasImportarDaTurma(a);
   fecharImportarPM();
+  arqAberto = null;
   if (!notas || congeladoAtual || carregandoTurma) return;
-  const campo = campoImportar(), reg = dados[chaveTurma(turmaAtual)];
+  const campo = a.campo, reg = dados[chaveTurma(turmaAtual)];   // só o campo deste arquivo
   (ALUNOS_POR_TURMA[turmaAtual] || []).forEach(nome => {
     if (notas[nome] == null || !reg[nome]) return;   // null = não fez: o campo fica como está
     reg[nome][campo] = notas[nome];                   // como se fosse digitado (2 casas, sem arredondar)
@@ -952,12 +964,15 @@ async function importarPM() {
   clearTimeout(notasSaveTimer); notasSaveTimer = null;
   await salvarNotas();   // o mesmo caminho do salvamento automático ao digitar
 }
-document.getElementById("btnImportarPM").addEventListener("click", abrirImportarPM);
+document.getElementById("importarBtns").addEventListener("click", e => {
+  const btn = e.target.closest(".btn-importar");
+  if (btn && !btn.disabled) abrirImportar(arqsImportar[+btn.dataset.imp]);
+});
 document.getElementById("pm-importar").addEventListener("click", importarPM);
 document.getElementById("pm-cancelar").addEventListener("click", fecharImportarPM);
 document.getElementById("pm-close").addEventListener("click", fecharImportarPM);
 pmOverlay.addEventListener("click", e => { if (e.target === pmOverlay) fecharImportarPM(); });
-carregarProvaMultiArq();
+carregarArqsImportar();
 
 // Abrir já num bimestre/turma pelo endereço: ?bim=final&turma=8E ou ?bim=4&turma=8F (PROMPT-271: o painel do dashboard)
 {

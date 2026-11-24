@@ -1,0 +1,48 @@
+{
+ "_nota": "PROMPT-272: nota do projeto da Consciência Negra (4º bimestre, campo consciencia, máx. 3), por turma e pelo nome de ALUNOS_POR_TURMA. null = sem nota (o campo fica vazio). Pedro Riquelme está na lista do 8H do projeto, mas no sistema é do 8D: a nota dele vai no 8D.",
+ "rotulo": "Consciência Negra",
+ "bimestre": 4,
+ "campo": "consciencia",
+ "turmas": {
+  "8H": {
+   "Ana Beatriz": 3,
+   "Ana Clara": 3,
+   "Ana Gabrieli": 3,
+   "Anderson": 3,
+   "Bruno": 3,
+   "Emanuelle": 3,
+   "Esllinder": 3,
+   "Honny": 3,
+   "Laryssa": 3,
+   "Leonardo": 3,
+   "Levi": 3,
+   "Marcus Vinicius": 3,
+   "Maria Fernanda": 3,
+   "Matheus Henrique": 3,
+   "Murillo": 3,
+   "Nicolas": 3,
+   "Nicolle": 3,
+   "Nicolly": 3,
+   "Pedro Jorge": 3,
+   "Pedro Willian": 3,
+   "Rana": 3,
+   "Riquelme": 3,
+   "Samuel": 3,
+   "Sophia": 3,
+   "Thayanne": 3,
+   "Victor Gabriel": 3,
+   "Victor Hugo": 3,
+   "Victória": 3,
+   "Vinícius": 3,
+   "Yann": 3,
+   "Yasmin": 3,
+   "Yoxiris": 3,
+   "Dandara": 3,
+   "Jessier": 3,
+   "Mary Ana": 3
+  },
+  "8D": {
+   "Pedro Riquelme": 3
+  }
+ }
+}
