@@ -15788,10 +15788,12 @@ function acrescentarPremiosTorreNaCasa() {
 }
 const acabamentoDe = (m) => { const it = itemCasa(m?.id); return it?.acabamento_fixo || (m?.acab && estado?.torre?.premios?.acabamentos?.[m.acab] ? m.acab : ''); };
 const acabamentosMeus = () => (cfgPremios().acabamentos || []).filter(a => casaSemGravar || estado?.torre?.premios?.acabamentos?.[a.id]);
-// temas com camadas (neon, livre): a cor de cada camada (casinha/cores_tema/{tema}/{camada})
+// temas com camadas (neon, livre, livre_pedra): a cor de cada camada (casinha/cores_tema/{tema}/{camada})
+// sem escolha salva: a cor inicial do tema (torre.json → temas[].cores_iniciais, PROMPT-268); sem ela, como antes
 const corDaCamada = (tema, camada, visita = null) => {
   const lista = camada === 'neon' ? cfgPremios().cores_neon : cfgPremios().cores_livre, salvo = (visita ? visita.dados.cores_tema : estado?.casinha?.cores_tema)?.[tema]?.[camada];
-  return (lista || []).find(c => c.id === salvo)?.cor || (lista || [])[camada === 'chao' ? 6 : 0]?.cor || '#ff3df2';
+  const inicial = (cfgPremios().temas || []).find(t => t.id === tema)?.cores_iniciais?.[camada];
+  return (lista || []).find(c => c.id === salvo)?.cor || (lista || []).find(c => c.id === inicial)?.cor || (lista || [])[camada === 'chao' ? 6 : 0]?.cor || '#ff3df2';
 };
 // a escolha da cor de cada camada (na lista de temas da casinha)
 function htmlCoresTema(tema) {

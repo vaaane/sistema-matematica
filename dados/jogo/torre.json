@@ -73,7 +73,9 @@
    { "id": "castelo_real", "nome": "Castelo Real", "emoji": "👑", "imagem": "temas/castelo_real.webp" },
    { "id": "nuvens", "nome": "Nuvens", "emoji": "☁️", "imagem": "temas/nuvens.webp" },
    { "id": "neon", "nome": "Neon", "emoji": "🌃", "imagem": "temas/neon_base.webp", "camadas": [{ "mascara": "temas/neon_luz.png", "cor": "neon" }] },
-   { "id": "livre", "nome": "Tema Livre", "emoji": "🖌️", "imagem": "temas/livre_base.webp", "camadas": [{ "mascara": "temas/livre_parede.png", "cor": "parede" }, { "mascara": "temas/livre_chao.png", "cor": "chao" }], "ativo": false }
+   { "id": "livre", "nome": "Tema Livre: madeira", "emoji": "🖌️", "imagem": "temas/livre_base.webp", "camadas": [{ "mascara": "temas/livre_parede.png", "cor": "parede" }, { "mascara": "temas/livre_chao.png", "cor": "chao" }], "cores_iniciais": { "parede": "azul_claro", "chao": "madeira_clara" } },
+   { "id": "livre_pedra", "nome": "Tema Livre: pedra", "emoji": "🧱", "imagem": "temas/livre_pedra_base.webp",
+     "camadas": [{ "mascara": "temas/livre_pedra_parede.png", "cor": "parede" }, { "mascara": "temas/livre_pedra_chao.png", "cor": "chao" }], "cores_iniciais": { "parede": "creme", "chao": "pedra" } }
   ],
   "cores_neon": [
    { "id": "rosa", "nome": "Rosa", "cor": "#ff3df2" }, { "id": "azul", "nome": "Azul", "cor": "#00d4ff" }, { "id": "verde", "nome": "Verde", "cor": "#39ff88" },
@@ -81,7 +83,8 @@
   ],
   "cores_livre": [
    { "id": "creme", "nome": "Creme", "cor": "#f3e3c3" }, { "id": "azul", "nome": "Azul", "cor": "#8db8e8" }, { "id": "verde", "nome": "Verde", "cor": "#9bd49b" },
-   { "id": "rosa", "nome": "Rosa", "cor": "#f2a7c3" }, { "id": "lilas", "nome": "Lilás", "cor": "#c3a7f2" }, { "id": "cinza", "nome": "Cinza", "cor": "#a9acb8" }, { "id": "madeira", "nome": "Madeira", "cor": "#a8693c" }
+   { "id": "rosa", "nome": "Rosa", "cor": "#f2a7c3" }, { "id": "lilas", "nome": "Lilás", "cor": "#c3a7f2" }, { "id": "cinza", "nome": "Cinza", "cor": "#a9acb8" }, { "id": "madeira", "nome": "Madeira", "cor": "#a8693c" },
+   { "id": "azul_claro", "nome": "Azul-claro", "cor": "#cfe3ff" }, { "id": "madeira_clara", "nome": "Madeira clara", "cor": "#b07a4a" }, { "id": "pedra", "nome": "Pedra", "cor": "#9a9a9a" }
   ],
   "moveis": [
    { "id": "poltrona_gamer", "nome": "Poltrona gamer", "emoji": "🎮", "tipo": "chao", "largura": 130, "grupo": "Gamer" },
