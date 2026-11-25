@@ -15,15 +15,15 @@ let SPR = null;
 export async function carregarSprites() {
   if (!SPR) {
     const [j, cores] = await Promise.all([
-      fetch(BASE + 'pets/sprites.json?v=277').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228, 232, 233, 277)
-      fetch(BASE + 'pets/sprites-pets-cores.json?v=277').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
+      fetch(BASE + 'pets/sprites.json?v=279').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228, 232, 233, 277, 279)
+      fetch(BASE + 'pets/sprites-pets-cores.json?v=279').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
     ]);
     for (const [f, a] of Object.entries(cores?.pets || {})) if ((petDaCor(f) || adultoDaCor(f)) && !j.pets[f]) j.pets[f] = a;
     await conferirFormasNovas(j);   // 🦇 PROMPT-277: o morcego rosa e o adulto só valem quando as imagens chegarem
     // a forma colorida usa as sequências do pet (o sprites-pets-cores.json só tem as animações); o adulto colorido, também o quadro do adulto
     for (const f of Object.keys(j.pets)) {
       const p = petDaCor(f) || adultoDaCor(f);
-      if (p && j.sequencias?.[p] && !j.sequencias[f]) j.sequencias[f] = j.sequencias[p];
+      if (p && j.sequencias?.[p] && !j.sequencias[f]) j.sequencias[f] = trocarQuadrosQueFaltam(j.sequencias[p], j.pets[f]);
       if (adultoDaCor(f) && j.quadro_por_pet?.[p] && !j.quadro_por_pet[f]) j.quadro_por_pet[f] = j.quadro_por_pet[p];
     }
     // 🐱 PROMPT-209: o adulto do gato e do axolote é o próprio filhote, 50% maior: as mesmas imagens (e as das cores),
@@ -73,6 +73,18 @@ export const petDaCor = (forma) => { const m = /^([a-z]+)_([a-z]+)$/.exec(forma 
 // 🐯 adulto com cor (PROMPT-181): tigre_adulto_azul → 'tigre_adulto'; o resto → null
 // 🐱 PROMPT-209: pets cujo adulto é o filhote 50% maior (sem desenho próprio de adulto)
 export const ADULTO_E_FILHOTE = ['gato', 'axolote'];
+// 🦇 PROMPT-279: a cor que ainda não tem uma ação (as cores do morcego adulto vêm sem flor e carinho) usa outra pose DA MESMA COR
+// nas sequências herdadas do pet (nunca a imagem do preto no meio). Quando os quadros chegarem no JSON, voltam a valer sozinhos.
+const POSE_NO_LUGAR = { carinho: ['feliz'], flor: ['orgulhoso', 'calmo'] };
+function trocarQuadrosQueFaltam(seqs, quadros) {
+  const falta = Object.keys(POSE_NO_LUGAR).filter(a => !quadros?.[a]?.length);
+  if (!falta.length) return seqs;
+  return Object.fromEntries(Object.entries(seqs).map(([nome, passos]) => [nome, passos.map(([a, q, ms]) => {
+    if (!falta.includes(a)) return [a, q, ms];
+    const troca = POSE_NO_LUGAR[a].filter(x => quadros[x]?.length);
+    return troca.length ? [troca[(q - 1) % troca.length], 1, ms] : ['sentado_girando', 1, ms];
+  })]));
+}
 // 🦇 PROMPT-277: formas que já estão nos JSONs, mas cujas imagens vêm num pacote depois (o morcego rosa e o morcego adulto, com as
 // cores dele). Cada uma só vale se a 1ª imagem (sentado_girando) carregar; senão sai do SPR com tudo o que começa com o nome dela
 // (morcego_adulto → morcego_adulto_rosa…) e a evolução para ela: a cor rosa não aparece e o morcego evoluído continua filhote.
