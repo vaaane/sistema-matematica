@@ -59,6 +59,8 @@
   "_nota_musicas": "PROMPT-182: [{ \"id\", \"nome\", \"arquivo\" }], arquivo em audio/jogo/exposicao/. A sala guarda o id (exposicao_salas/{n}/musica). Lista vazia: o seletor de música some.",
  "musicas": [],
   "_nota_playlist": "PROMPT-264: playlist de fundo da Exposição (arquivos em audio/jogo/exposicao/). Toca no saguão e nas salas sem música própria (a sala com música da lista musicas continua com a dela), em ordem e em loop, continuando de onde parou ao trocar de sala; 60% do volume da música do jogo (40% com Shisima/Yoté abertos). Começa ligada (preferência jr_musica_expo do aparelho; o 🎵 liga e desliga). playlist_ligada: false desliga tudo, sem apagar os arquivos. As gravações são comerciais: desligar e tirar do site depois da exposição.",
+  "_nota_encerrar": "PROMPT-273: encerrar_apos = o último dia (AAAA-MM-DD, data de Brasília). Do dia seguinte em diante a Exposição fica 🎉 Encerrada (mesmo com o modo Aberto) e a playlist não toca. Para reabrir depois dessa data, apague encerrar_apos.",
+  "encerrar_apos": "2026-12-21",
   "playlist_ligada": true,
   "playlist": [
     { "id": "kaira",     "nome": "Kaira",             "artista": "Toumani Diabaté (Mali)",        "arquivo": "kaira.mp3" },

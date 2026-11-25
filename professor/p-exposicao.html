@@ -199,7 +199,8 @@
             <div class="pub-modo" id="pub-modo">
               <button class="btn-sec" data-modo="montagem">🚧 Montagem</button><button class="btn-sec" data-modo="aberto">🚪 Aberto</button><button class="btn-sec" data-modo="encerrado">🎉 Encerrado</button>
             </div>
-            <p class="muted" style="font-size:13px;margin:10px 0 0" id="pub-modo-txt"></p></div>
+            <p class="muted" style="font-size:13px;margin:10px 0 0" id="pub-modo-txt"></p>
+            <p style="font-size:13px;margin:8px 0 0;color:#ffd700" id="pub-encerrar" hidden></p></div>
           <div class="pub-card"><h3>👣 Visitantes</h3><div class="num" id="pub-total">…</div>
             <p class="muted" style="font-size:13px;margin:4px 0 10px" id="pub-online"></p><div class="pub-lista" id="pub-salas"></div></div>
           <div class="pub-card"><h3>🗳️ Votos do público</h3><div class="pub-lista" id="pub-votos"></div>
@@ -682,6 +683,12 @@ function renderPublico() {
   const modo = ["montagem", "aberto", "encerrado"].includes(config?.modo) ? config.modo : "montagem";
   document.querySelectorAll("#pub-modo [data-modo]").forEach(b => b.classList.toggle("ativo", b.dataset.modo === modo));
   $("pub-modo-txt").textContent = MODOS[modo];
+  // 🗓️ PROMPT-273: exposicao.json → encerrar_apos (o jogo fecha sozinho no dia seguinte, data de Brasília)
+  const fim = /^\d{4}-\d{2}-\d{2}$/.test(EXPO?.encerrar_apos || "") ? EXPO.encerrar_apos : null;
+  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const br = fim ? fim.split("-").reverse().join("/") : "";
+  $("pub-encerrar").hidden = !fim;
+  $("pub-encerrar").textContent = !fim ? "" : hoje > fim ? `🗓️ Encerrada automaticamente em ${br.slice(0, 5)}. Para reabrir, apague encerrar_apos no exposicao.json.` : `🗓️ Fecha sozinha em ${br}.`;
   // visitas: o total contado pelos registros (o número do saguão é o total/+1)
   const geral = Object.keys(pub.visitas?.geral || {}).filter(u => !contaTeste(u));
   $("pub-total").textContent = geral.length;

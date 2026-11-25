@@ -456,10 +456,9 @@ export function forca(t, d) {
   return { acerto, tempo, contas };
 }
 
-// Dano de um acerto em t segundos (crítico até critico_ate_s)
-export function dano(t) {
+// Dano de um acerto em t segundos (crítico até critico_ate_s). T: o tempo da pergunta (padrão: tempo_s; ⚔️ a torre usa o dela, PROMPT-273)
+export function dano(t, T = cfgBatalha().tempo_s || 15) {
   const c = cfgBatalha();
-  const T = c.tempo_s || 15;
   const critico = t <= (c.critico_ate_s ?? 3);
   return { n: Math.round((c.dano_base ?? 10) + (c.dano_rapidez ?? 18) * Math.max(0, 1 - t / T)) + (critico ? (c.bonus_critico ?? 4) : 0), critico };
 }

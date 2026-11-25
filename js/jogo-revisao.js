@@ -952,7 +952,7 @@ export async function iniciarJogo(sess) {
     desafiar: (uid, modo, aposta) => desafiarColega(colegas.get(uid), modo, aposta), colegas: () => [...colegas.keys()],
     mapa: (n) => abrirMapa(n, 'entrada'), pescar: () => { const p = pontosDoMapa(cena.n)[0]; if (p) sentarPesca(p); return !!p; }, pergunta: (chave, p) => abrirPergunta(chave, p),
     festa: (t) => mostrarFestaMestre(t || 'mestre'), hall: () => abrirHallMestres(), estado: () => estado, geral: () => abrirMapaGeral(),
-    batalhar: (id) => iniciarBatalha(id), pg: () => pg, meuPet: () => (abrirMeuPet(), mp), mp: () => mp, carinho: () => carinhoPet(),
+    batalhar: (id) => iniciarBatalha(id), bt: () => bt, pg: () => pg, meuPet: () => (abrirMeuPet(), mp), mp: () => mp, carinho: () => carinhoPet(),
     truque: (id) => fazerTruque(id), comer: (id) => darComida(id),
     tamanho: (f) => ({ alt: +altPet(f).toFixed(2), dist: +distPet(f).toFixed(2), rel: +relDuelo(f).toFixed(3) }),   // 🐘 PROMPT-213: conferir a tabela
     torre: (a) => abrirTorre(a), portaTorre: () => mostrarPortaTorre(null, { gravarVista: false }), entrarTorre: () => entrarNaTorre(), bau: (a) => abrirBau(a), premiosTorre: () => abrirPremiosTorre(), quadroTorre: () => abrirQuadroTorre(), torreTrein: (i) => abrirPerguntaTorre(i), casinha: () => abrirCasinha(), temas: () => abrirTemasCasa(),
@@ -9293,7 +9293,7 @@ function iniciarExposicao(j) {
       const antes = expoModo;
       expoCfg = s.exists() && s.val() && typeof s.val() === 'object' ? s.val() : {};
       expoOrdemFb = expoCfg.ordem_salas ?? null;
-      expoModo = expoPrevia ? 'aberto' : MODOS_EXPO.includes(expoCfg.modo) ? expoCfg.modo : 'montagem';   // 👀 a prévia ignora o modo (vê como aberto)
+      expoModo = expoPrevia ? 'aberto' : expoFechouSozinha() ? 'encerrado' : MODOS_EXPO.includes(expoCfg.modo) ? expoCfg.modo : 'montagem';   // 👀 a prévia ignora o modo (vê como aberto); 🗓️ depois de encerrar_apos: encerrada
       if (ehSaguao()) { mapearPortasExpo(); desenharPlacasExpo(); }
       mudouModoExpo(antes);
     }, (e) => { console.warn('[jogo-revisao] exposicao_config indisponível', e?.code || e); mudouModoExpo(expoModo); });
@@ -9314,6 +9314,10 @@ function iniciarExposicao(j) {
 // (guardado no aparelho), "Visitante" para os outros. Visitas: exposicao_visitas/geral|salas/{n}/{uid} = ts (só cria)
 // + total (+1). Voto: exposicao_votos/{uid} = n. Livro: exposicao_livro/reacoes/{uid} = emoji e recados/{uid}.
 const MODOS_EXPO = ['montagem', 'aberto', 'encerrado'];
+// 🗓️ PROMPT-273: exposicao.json → encerrar_apos = 'AAAA-MM-DD'. Do dia seguinte em diante (data de Brasília), a Exposição fica
+// 🎉 Encerrada (mesmo com exposicao_config/modo = 'aberto') e a playlist não toca. Sem a data: só o modo da professora vale.
+const hojeBrasilia = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+const expoFechouSozinha = () => /^\d{4}-\d{2}-\d{2}$/.test(EXPO?.encerrar_apos || '') && hojeBrasilia() > EXPO.encerrar_apos;
 let expoModo = 'montagem', expoCfg = {}, expoTotalVis = 0;
 let expoCfgPronto = null;     // resolve na 1ª leitura do exposicao_config (o visitante espera o modo)
 const contaNaoConta = () => ehProfessora() || contaEscondida(sessao.uid, sessao.nome);   // professora e teste: não contam
@@ -11055,7 +11059,7 @@ function pararExpo() {
 const musicaValidaExpo = (m) => m && typeof m.id === 'string' && typeof m.arquivo === 'string' && /^[\w .()-]+$/.test(m.arquivo);
 const musicasExpo = () => (Array.isArray(EXPO?.musicas) ? EXPO.musicas : []).filter(musicaValidaExpo);
 // 🎵 PROMPT-264: playlist do saguão e das salas sem música (playlist_ligada: false desliga tudo)
-const playlistExpo = () => (EXPO?.playlist_ligada === true && Array.isArray(EXPO.playlist) ? EXPO.playlist : []).filter(musicaValidaExpo);
+const playlistExpo = () => (EXPO?.playlist_ligada === true && !expoFechouSozinha() && Array.isArray(EXPO.playlist) ? EXPO.playlist : []).filter(musicaValidaExpo);   // 🗓️ encerrada sozinha: não toca
 const srcMusicaExpo = (mu) => `/audio/jogo/exposicao/${encodeURIComponent(mu.arquivo)}`;
 function musicaDaSala(ignorarMudo = false) {
   const n = salaExpo(), id = n && estadoSala(n).musica, mu = id && musicasExpo().find(x => x.id === id);
@@ -15000,9 +15004,9 @@ function ligarVila() {
 
 // ============================================================
 //  🏆 TORRE DOS CAMPEÕES (PROMPT-230) — dados/jogo/torre.json; imagens em img/jogo/torre/
-//  Entra quem venceu os 2 ginásios do mapa 13 (a professora, sempre). 10 andares × 4 treinadores: os 3 primeiros com 4 perguntas
-//  e o chefe com 5 (o Campeão do andar 10, 6). Sem tempo e sem o "Pular". Errou metade com um treinador (2 de 4, 3 de 5, 3 de 6):
-//  volta ao 1º treinador do mesmo andar. Moedas a cada treinador; baú a cada andar (o do 10 é o baú de ouro).
+//  Entra quem tem as 26 insígnias (a professora, sempre). 10 andares × 4 treinadores (3 + o chefe). ⚔️ PROMPT-273: cada batalha é o
+//  duelo dos treinadores dos mapas (sozinho: tela #batalha; em equipe: #deq), com tempo_torre_s por pergunta e as contas do duelo nos
+//  níveis da faixa do andar. Perdeu o duelo: volta ao 1º treinador do mesmo andar. Moedas a cada treinador; baú a cada andar (o do 10 é o baú de ouro).
 //  jogo_revisao/{uid}/torre = { andar, treinador, andares_vencidos: { n: data }, premios: { auras, fumacas, estilos, moveis,
 //    acabamentos, temas: { id: data } }, aura_ativa, fumaca_ativa, estilo_ativo, bau_pendente: { andar, opcoes }, insignias: { andar5, campeao } }
 //  Quadro dos campeões (público): jogo_revisao_torre/{uid} = { nome, turma, andar, data } (modo teste: jogo_revisao_torre_teste)
@@ -15240,7 +15244,7 @@ async function abrirTorre(andar = torreEst().andar) {
   $('cena-palco').style.visibility = '';
   $('btn-reacao').hidden = true;
   atualizarBotaoPet();
-  if (torreEst().bau && torreEst().bau.andar) setTimeout(() => { if (ehTorre() && !perguntaAberta) abrirBau(torreEst().bau.andar); }, 700);   // baú que ficou sem escolher
+  if (torreEst().bau && torreEst().bau.andar) setTimeout(() => { if (ehTorre() && !perguntaAberta && $('batalha').hidden) abrirBau(torreEst().bau.andar); }, 700);   // baú que ficou sem escolher
 }
 const urlPetTorre = (pet) => quadrosDe(pet, 'sentado_girando')[0] || '';
 const classeEstilo = (id) => (id ? ` jr-est jr-est-${id}` : '');
@@ -15328,101 +15332,85 @@ function subirTorre() {
   transicao(() => abrirTorre(prox));
 }
 
-// ── a batalha na torre (a mesma tela do ginásio, com o fundo da torre) ──
-const MAPAS_LADOS = (mapas) => mapas.flatMap(m => (m === 13 ? ['A'] : ['A', 'B']).map(l => [m, l]));   // 13 B são tabelas: fica de fora
-function perguntasTorre(T, t) {
-  const pares = MAPAS_LADOS(T.A.mapas), dif = !!T.A.dificil, out = [];
-  const ordem = [...pares].sort(() => Math.random() - 0.5);
-  for (let k = 0; out.length < t.n && k < t.n * 12; k++) {
-    const [mapa, lado] = ordem[k % ordem.length];
-    const personagem = t.chefe ? 'lider' : pick3(['treinador1', 'treinador2', 'treinador3']), indice = Math.floor(Math.random() * 8);
-    const q = gerarUma(mapa, lado, personagem, indice, { dificil: dif });
-    if (!q || T.vistos.has(q.enunciado)) continue;   // não repete a mesma questão no mesmo andar
-    T.vistos.add(q.enunciado);
-    out.push({ ...q, id: `torre${T.andar}-${q.id}`, mapa, lado, personagem, indice, dif, pos: out.length });
-  }
-  return out;
+// ── ⚔️ a batalha na torre (PROMPT-273): o mesmo duelo dos treinadores dos mapas (tela #batalha), com o tempo da torre ──
+// Sozinho e em equipe, treinadores e chefes. As contas são as do duelo (batalha.js), dos tipos dos mapas do andar
+// (torre.json → contas_por_mapa), nos níveis da faixa do andar (niveis_duelo: 1–6 → 1 e 2; 7–10 → 2 e 3).
+// Perdeu o duelo: volta ao 1º treinador do andar. Fugir no meio: recomeça só este treinador (como antes).
+const tempoTorre = () => Number(TORRE?.tempo_torre_s) || 25;
+// o valor de uma faixa de andares ("1-6", "7-10") de um objeto do torre.json
+function faixaTorre(obj, andar) {
+  for (const [k, v] of Object.entries(obj || {})) { const [a, b = a] = k.split('-').map(Number); if (andar >= a && andar <= b) return v; }
+  return null;
 }
+const niveisDueloTorre = (andar) => { const n = (faixaTorre(TORRE?.niveis_duelo, andar) || [1, 2]).map(Number).filter(x => x >= 1 && x <= 5); return n.length ? n : [1, 2]; };
+function contasDoAndar(andar) {
+  const cpm = TORRE?.contas_por_mapa || {}, tipos = new Set();
+  for (const m of andarCfg(andar)?.mapas || []) for (const t of cpm[m] || []) tipos.add(t);
+  return tipos.size ? [...tipos] : ['tabuada'];
+}
+// a força do treinador no duelo: { acerto, tempo: [min, max] s, contas: [níveis] } (o mesmo formato do forca() dos mapas)
+function forcaDueloTorre(andar, chefe) {
+  const f = faixaTorre(TORRE?.forca_duelo, andar) || {};
+  const x = (chefe && andar === N_ANDARES && f.campeao) || (chefe && f.chefe) || f.treinador || { acerto: 0.6, tempo_s: [8, 15] };
+  const [a, b] = (Array.isArray(x.tempo_s) ? x.tempo_s : [8, 15]).map(v => Math.min(Number(v) || 8, tempoTorre()));
+  return { acerto: Math.min(0.95, Number(x.acerto) || 0.6), tempo: [a, Math.max(a, b)], contas: niveisDueloTorre(andar) };
+}
+// a conta de uma rodada do duelo da torre (sozinho e em equipe)
+const contaDueloTorre = (andar) => gerarConta(contasDoAndar(andar), sortear(niveisDueloTorre(andar)));
 const pick3 = (a) => a[Math.floor(Math.random() * a.length)];
-const FALAS_TORRE = ['Só sobe quem acerta. Vamos lá!', 'Chegou até aqui? Quero ver!', 'Na torre não tem moleza!', 'Pense com calma e responda!', 'Mostre o que aprendeu nos ginásios!'];
+const FALAS_TORRE = ['Só sobe quem acerta. Vamos lá!', 'Chegou até aqui? Quero ver!', 'Na torre não tem moleza!', 'Pense rápido e responda!', 'Mostre o que aprendeu nos mapas!'];
 const FALAS_TORRE_VENCIDO = ['Você é forte! Siga em frente.', 'Mandou bem! O próximo te espera.', 'Uau, que cabeça boa!', 'Pode passar, campeão!'];
-function abrirPerguntaTorre(i) {
-  const T = cena.torre, t = T.trein[i];
-  const qs = perguntasTorre(T, t);
-  if (!qs.length) { avisoTopo('Não consegui montar as perguntas. Tente de novo.'); return; }
-  // as falas são da torre (as do ginásio falam do assunto do ginásio)
-  const A = T.A, chefeFala = T.andar === N_ANDARES ? 'Eu sou o Campeão. Mostre que merece o topo! 🏆' : A.dificil ? 'Bem-vindo à Câmara Sombria. Aqui as contas são difíceis!' : `Sou o chefe do ${A.nome}. Prepare-se!`;
-  const pers = { sprite: t.pers.sprite, fala: pick3(FALAS_TORRE), falas: { abertura: chefeFala }, fala_vencido: pick3(FALAS_TORRE_VENCIDO) };
-  pers.falas.derrota = t.pers.falas?.derrota || 'Volte quando estiver pronto!';
-  pg = {
-    modo: 'torre', dificil: true, torre: { andar: T.andar, i, t }, p: t.chefe ? 'lider' : `treinador${i + 1}`, pers,
-    fila: qs, total: qs.length, acertos: 0, errouIds: new Set(), errosPorIndice: {}, errosT: 0, limite: Math.ceil(qs.length / 2),
-    travado: false, fim: false,
+// o treinador i do andar no formato de um treinador do batalhas.json (nome, pet, contas, falas) + torre: { andar, i, t }
+function treinadorDueloTorre(andar, i) {
+  const T = cena.torre, t = T.trein[i], A = T.A;
+  t.petDuelo ||= t.pet || sortear(PETS.filter(p => petValido(p)));   // andares 1 a 6: um pet sorteado (o mesmo na revanche)
+  const chefeFala = andar === N_ANDARES ? 'Eu sou o Campeão. Mostre que merece o topo! 🏆' : A?.dificil ? 'Bem-vindo à Câmara Sombria. Aqui as contas são mais difíceis!' : `Sou o chefe do ${A?.nome || 'andar'}. Prepare-se!`;
+  return {
+    id: `torre${andar}-${i}`, nome: andar === N_ANDARES && t.chefe ? 'Campeão' : t.nome, pet: t.petDuelo, contas: contasDoAndar(andar),
+    sprite: t.pers?.sprite || '', aura: t.aura || null, estilo: t.estilo || null,
+    fala_inicio: t.chefe ? chefeFala : pick3(FALAS_TORRE), fala_perdeu: pick3(FALAS_TORRE_VENCIDO),
+    fala_venceu: 'Perdeu o duelo! Você volta para o 1º treinador do andar. 💪',
+    reage_acerto_aluno: ['Rápido, hein!', 'Essa você acertou… mas não vai ser fácil!'], reage_erro_aluno: ['Errou! Na torre não tem moleza.', 'Quase! Presta atenção.'],
+    reage_ele_acertou: ['Acertei! Toma essa!', 'Essa foi minha!'],
+    torre: { andar, i, t, chefe: !!t.chefe, forca: forcaDueloTorre(andar, !!t.chefe) },
   };
-  cena.torre.jogando = true;
-  perguntaAberta = true;
-  soltarJoystick();
-  $('tela-cena').classList.add('jr-com-pergunta');
-  $('perg-busto').src = `${IMG}/bustos/${pers.sprite}.webp`;
-  $('perg-confirma').querySelector('p').textContent = 'Fugir da batalha? Você vai recomeçar este treinador.';
-  $('perg-caixa').classList.remove('dificil');
-  falar(t.chefe ? pers.falas.abertura : pers.fala);
-  $('perg-desistir').hidden = false;
-  $('perg-confirma').hidden = true;
-  $('pergunta').hidden = false;
-  montarArena();
-  atualizarMoedasPergunta();
-  renderPergunta();
-  $('pergunta').querySelector('.jr-perg-caixa').scrollTop = 0;
 }
-// o fundo, a placa e o pet do treinador (andares 7 a 10) na arena — chamado pelo montarArena
+function abrirPerguntaTorre(i) {
+  if (!podeBatalhar()) { avisoPet(estado?.pets?.ativo ? 'A batalha ainda está carregando. Tente de novo.' : 'Escolha um pet para batalhar na torre!', true); return; }
+  const tr = treinadorDueloTorre(cena.torre.andar, i);
+  cena.torre.jogando = true;
+  tr.torre.depois = () => { if (cena?.torre) cena.torre.jogando = false; atualizarTreinadoresTorre(); };   // fugiu: só fecha
+  iniciarBatalha(tr.id, 'torre', tr);
+}
+// o fundo, a placa e o pet do treinador na tela de pergunta (de antes do PROMPT-273: a torre não usa mais essa tela; só limpa)
 function arenaTorre() {
   const el = $('pergunta'), torre = pg?.modo === 'torre';
   el.classList.toggle('jr-perg-torre', torre);
   $('perg-arena').querySelector('.jr-arena-advpet')?.remove();
   $('perg-arena').querySelector('.jr-perg-faixa-torre')?.remove();
   $('perg-adv').classList.remove('jr-aura', ...[...$('perg-adv').classList].filter(c => c.startsWith('jr-aura-')));
-  if (!torre) { el.style.removeProperty('--torre-bg'); return; }
-  const { andar, t } = pg.torre, S = salaoDe(andar), A = andarCfg(andar);
-  el.style.setProperty('--torre-bg', `url("${IMG}/torre/${S.batalha}")`);
-  $('perg-adv-nome').textContent = `Andar ${andar} · ${t.nome}`;
-  $('perg-arena').insertAdjacentHTML('afterbegin', `<div class="jr-perg-faixa-torre"><b>ANDAR ${andar}</b> · ${esc(A?.nome || '')}</div>`);
-  if (t.aura) $('perg-adv').classList.add('jr-aura', `jr-aura-${t.aura}`);
-  if (t.pet) $('perg-adv').insertAdjacentHTML('afterend', `<img class="jr-arena-advpet${classeEstilo(t.estilo)}" src="${urlPetTorre(t.pet)}" alt="" draggable="false"/>`);
+  if (!torre) el.style.removeProperty('--torre-bg');
 }
-// errou: a pergunta volta com outros números; errou metade com este treinador → volta ao 1º do andar
-function errarNaTorre(q, btn, certa) {
-  pg.errosT++;
-  pg.fila.shift();
-  if (pg.errosT >= pg.limite) {
-    falar('Errou metade! Você volta para o 1º treinador do andar. 💪');
-    pg.aoContinuar = voltarAoPrimeiroTorre;
-    mostrarCartaoErro(q, btn.dataset.v, certa, false);
-    return;
+// fim do duelo da torre: as moedas e o progresso (venceu) ou a volta ao 1º treinador do andar (perdeu). Devolve os prêmios
+// no formato do registrarBatalha, para a faixa de fim do duelo.
+function fimDueloTorre(venceu, b = bt) {
+  const { andar, i, t } = b.t.torre, te = torreEst(), agora = Date.now(), patch = {};
+  const pr = { xp: 0, moedas: 0, lealdade: 0, bonusPrimeira: 0, cortado: false };
+  if (b.contas.length) patch[`respostas/torre-${agora}`] = { tipo: 'torre', andar, treinador: i, resultado: venceu ? 'venceu' : 'perdeu', data: agora, contas: b.contas };
+  if (!venceu) {
+    if (andar === te.andar && te.treinador !== 0) { te.treinador = 0; patch['torre/treinador'] = 0; }
+    gravar(patch);
+    b.t.torre.depois = () => {
+      if (cena?.torre) cena.torre.jogando = false;
+      atualizarTreinadoresTorre();
+      avisoPet('Você volta para o 1º treinador do andar. Respire e tente de novo! 💪', true);
+    };
+    return pr;
   }
-  const nova = gerarUma(q.mapa, q.lado, q.personagem, q.indice, { dificil: q.dif });
-  pg.fila.push(nova ? { ...nova, id: `torre${pg.torre.andar}-${nova.id}`, mapa: q.mapa, lado: q.lado, personagem: q.personagem, indice: q.indice, dif: q.dif, pos: q.pos } : q);
-  const falta = pg.limite - pg.errosT;
-  falar(falta === 1 ? 'Cuidado: mais um erro e você volta ao 1º treinador!' : `Cuidado: mais ${falta} erros e você volta ao 1º treinador!`);
-  pg.aoContinuar = renderPergunta;
-  mostrarCartaoErro(q, btn.dataset.v, certa, !!nova);
-}
-function voltarAoPrimeiroTorre() {
-  const te = torreEst(), andar = pg?.torre?.andar;
-  fecharPergunta();
-  if (cena?.torre) cena.torre.jogando = false;
-  if (andar === te.andar && te.treinador !== 0) { te.treinador = 0; gravar({ 'torre/treinador': 0 }); }
-  atualizarTreinadoresTorre();
-  avisoPet('Você volta para o 1º treinador do andar. Respire e tente de novo! 💪', true);
-}
-function vencerTorre() {
-  const { andar, i, t } = pg.torre, te = torreEst(), agora = Date.now();
-  pg.fim = true;
-  const acertosPrimeira = pg.total - pg.errouIds.size, patch = {};
-  const moedas = comMult(t.chefe ? Number(TORRE.moedas_chefe) || 20 : Number(TORRE.moedas_treinador) || 10);
-  estado.pets.moedas = (Number(estado.pets.moedas) || 0) + moedas;
+  pr.moedas = comMult(t.chefe ? Number(TORRE.moedas_chefe) || 20 : Number(TORRE.moedas_treinador) || 10);
+  estado.pets.moedas = (Number(estado.pets.moedas) || 0) + pr.moedas;
   patch['pets/moedas'] = estado.pets.moedas;
-  registrarGanho('torre', moedas, patch);
+  registrarGanho('torre', pr.moedas, patch);
   let andarNovo = false;
   if (andar === te.andar && i >= te.treinador) {   // progresso (a professora jogando fora de ordem não mexe nele)
     if (!t.chefe) { te.treinador = i + 1; patch['torre/treinador'] = te.treinador; }
@@ -15438,28 +15426,15 @@ function vencerTorre() {
   gravar(patch);
   if (t.chefe && andarNovo) publicarCampeaoTorre(andar);
   registrarDiaJogado();
-  tocar('vitoria');
   petAnimadoAte = Date.now() + 5 * 60e3;
-  falar(t.chefe ? (andar === N_ANDARES ? 'Você é o Campeão da Torre! 🏆' : `Andar ${andar} vencido! A escada está liberada.`) : pg.pers.fala_vencido);
-  $('perg-contador').innerHTML = `Acertou ${acertosPrimeira} de ${pg.total} de primeira · +${moedas} ${moedaHtml()}`;
-  $('perg-contador').hidden = false;
-  desenharBolinhas();
-  $('perg-enunciado').hidden = true;
-  $('perg-alternativas').hidden = true;
-  $('perg-explica').hidden = true; $('perg-guiado').hidden = true; $('perg-corpo').classList.remove('guiado');
-  $('perg-tabela').innerHTML = '';
-  $('perg-desistir').hidden = true;
-  $('perg-ajuda').hidden = true;
-  $('perg-continuar').textContent = t.chefe ? '🎁 Abrir o baú' : 'Continuar';
-  $('perg-continuar').hidden = false;
-  pg.aoContinuar = () => {
-    fecharPergunta();
+  b.t.torre.depois = () => {
     if (cena?.torre) cena.torre.jogando = false;
     atualizarTreinadoresTorre();
     reagirSeguidor('comemora', 'feliz');
     if (t.chefe) abrirBau(andar);
     else if (t.estilo || t.fumaca) setTimeout(() => avisoPet('Gostou do brilho? Ele pode sair no baú! ✨', true), 500);
   };
+  return pr;
 }
 // 📋 quadro dos campeões: o andar mais alto vencido de cada aluno (primeiro nome e turma). Professora e contas de teste ficam de fora.
 async function publicarCampeaoTorre(andar) {
@@ -15470,8 +15445,17 @@ async function publicarCampeaoTorre(andar) {
     await set(r, { nome: String(sessao.nome || '').split(' ')[0], turma: sessao.turma || '', andar, data: Date.now() });
   } catch (e) { console.warn('[jogo-revisao] quadro da torre indisponível', e?.code || e); }
 }
+// ❓ Como funciona (PROMPT-273): na placa do salão, em cima do quadro
+const htmlRegrasTorre = () => `<details class="jr-torre-regras"><summary>❓ Como funciona</summary><ul>
+  <li>Cada andar tem <b>3 treinadores e o chefe</b>. Vença os 4 para subir a escada.</li>
+  <li>Cada batalha é um <b>duelo</b>, como os dos mapas: barra de vida e <b>${tempoTorre()} s</b> por conta. Acertar rápido tira mais vida.</li>
+  <li>As contas são do conteúdo dos mapas do andar. Da Câmara Sombria (andar 7) em diante, ficam mais difíceis.</li>
+  <li><b>Perdeu o duelo, volta ao 1º treinador do andar.</b></li>
+  <li>Moedas a cada treinador vencido e um baú a cada andar. Dá para subir em equipe também.</li>
+</ul></details>`;
 async function abrirQuadroTorre() {
   const m = modalTorre('torre-quadro', '🏆 Campeões da Torre', '<div class="jr-torre-carregando">Carregando…</div>');
+  m.querySelector('.jr-torre-corpo').insertAdjacentHTML('beforebegin', htmlRegrasTorre());
   try {
     const s = await get(ref(db, baseTorre()));
     const lista = Object.entries(s.exists() ? s.val() || {} : {}).map(([uid, v]) => ({ uid, ...v }))
@@ -16659,18 +16643,19 @@ function ajustarLutadores() {
 }
 addEventListener('resize', () => { if (bt && !$('batalha').hidden) ajustarLutadores(); });
 
-function iniciarBatalha(id, origem = 'lista') {
-  const t = treinador(id);
-  if (!t || !podeBatalhar() || petComFomeParaBatalha()) return;
-  const d = desafioCom(id);
-  if (situacao(d) === 'descansando') return;
+// ⚔️ tTorre (PROMPT-273): o treinador da torre (treinadorDueloTorre), sem fome, descanso nem nível de desafio; o tempo é o da torre
+function iniciarBatalha(id, origem = 'lista', tTorre = null) {
+  const t = tTorre || treinador(id);
+  if (!t || !podeBatalhar() || (!tTorre && petComFomeParaBatalha())) return;
+  const d = tTorre ? desafioDe(null) : desafioCom(id);
+  if (!tTorre && situacao(d) === 'descansando') return;
   $('bt-lista').hidden = true;
   if (mp) fecharMeuPet();
   limparBatalha();
   const c = cfgBatalha();
-  const f = forca(t, d);
+  const f = tTorre ? tTorre.torre.forca : forca(t, d);
   const vida = c.vida || 100, extra = vidaExtraLealdade(cuidadosDe(estado.pets.ativo)?.lealdade);   // lealdade alta: vida extra
-  bt = { t, d, f, origem, pet: estado.pets.ativo, forma: formaDe(estado.pets.ativo), rod: 0, hp: { L: vida + extra, R: vida }, max: { L: vida + extra, R: vida }, extra, seq: 0,
+  bt = { t, d, f, origem, T: tTorre ? tempoTorre() : c.tempo_s || 15, pet: estado.pets.ativo, forma: formaDe(estado.pets.ativo), rod: 0, hp: { L: vida + extra, R: vida }, max: { L: vida + extra, R: vida }, extra, seq: 0,
     tempoTot: { L: 0, R: 0 }, timers: [], anim: { L: 0, R: 0 }, contas: [], revisao: [], fechou: true, fim: false, raf: 0 };
   soltarJoystick();
   pararFalaPet();
@@ -16696,7 +16681,12 @@ function iniciarBatalha(id, origem = 'lista') {
   $('bt-corpoR').classList.toggle('brilho-arco', brilhoArco(formaR));   // pet do adversário: só se o treinador tiver tinta no batalhas.json
   $('bt-nomeR').innerHTML = `<small>${NOME_PET[t.pet]} ·</small>${esc(t.nome)}`;
   $('bt-bustoL').outerHTML = bustoHtml(urlQuadro('direita', -1), `bt-busto L${temBrilho() ? ' jr-brilho' : ''}`, BUSTO_PERS, false, 'bt-bustoL');
-  $('bt-bustoR').outerHTML = bustoHtml(`${IMG}/npcs/${t.id}.webp`, 'bt-busto R', BUSTO_NPC, true, 'bt-bustoR');
+  $('bt-bustoR').outerHTML = bustoHtml(t.torre ? `${IMG}/personagens/${esc(t.sprite)}.webp` : `${IMG}/npcs/${t.id}.webp`, `bt-busto R${t.aura ? ` jr-aura jr-aura-${esc(t.aura)}` : ''}`, BUSTO_NPC, true, 'bt-bustoR');
+  $('bt-imgR').classList.remove('jr-est', ...[...$('bt-imgR').classList].filter(k => k.startsWith('jr-est-')));
+  if (t.estilo) $('bt-imgR').classList.add('jr-est', `jr-est-${t.estilo}`);   // 🏆 andares 7 a 10: o pet do treinador com brilho
+  $('bt-arena').style.backgroundImage = t.torre ? `url("${IMG}/torre/${salaoDe(t.torre.andar).batalha}")` : '';   // 🏆 o salão da torre no fundo
+  $('bt-revanche').textContent = t.torre ? '↺ Tentar de novo' : '🔁 Revanche';
+  $('bt-voltar').textContent = 'Voltar';
   if (NPCS.find(p => p.id === t.id)?.piscar) {   // o busto do treinador pisca como a pessoa no mapa
     bt.pisca = { p: { id: t.id }, img: $('bt-bustoR').querySelector('img'), timer: 0 };
     agendarPiscar(bt.pisca);
@@ -16734,12 +16724,15 @@ function fecharBatalha(voltarLista = true) {
   $('bt-calc').hidden = true; fecharCalc();
   limparBatalha();
   if (bt?.origem !== 'lista') voltarLista = false;
+  const depois = bt?.t?.torre?.depois;   // 🏆 torre: o que vem depois (o baú, a volta ao 1º treinador)
   bt = null;
+  $('bt-arena').style.backgroundImage = '';
   atualizarIconesPessoas();
   $('batalha').hidden = true;
   $('bt-fala').hidden = true;
   $('bt-revisao').hidden = true;
   if (voltarLista) { $('bt-lista').hidden = false; renderListaBatalha(); }
+  depois?.();
 }
 
 // sprites: lado L = pet do aluno; R = pet do treinador, espelhado
@@ -17078,10 +17071,10 @@ function btTempoBarra(lado, frac, txt) { $('bt-t' + lado).style.width = Math.max
 
 function btRodada() {
   if (!bt) return;
-  const c = cfgBatalha(), T = c.tempo_s || 15;
+  const c = cfgBatalha(), T = bt.T;
   bt.rod++;
   $('bt-rodada').innerHTML = `<small>Rodada</small>${bt.rod} / ${c.rodadas || 7}`;
-  const p = gerarConta(bt.t.contas, bt.f.contas);
+  const p = bt.t.torre ? contaDueloTorre(bt.t.torre.andar) : gerarConta(bt.t.contas, bt.f.contas);   // 🏆 torre: os níveis da faixa do andar
   Object.assign(bt, { p, resp: { L: null, R: null }, lim: { L: T, R: T }, t0: performance.now(), fechou: false });
   for (const l of ['L', 'R']) $('bt-st' + l).className = 'bt-status';
   $('bt-conta').textContent = p.conta;
@@ -17105,7 +17098,7 @@ function btRodada() {
 const btAgora = () => (performance.now() - bt.t0) / 1000;
 function btTick() {
   if (!bt || bt.fechou) return;
-  const t = btAgora(), T = cfgBatalha().tempo_s || 15;
+  const t = btAgora(), T = bt.T;
   for (const l of ['L', 'R']) {
     const resp = bt.resp[l] !== null, rest = resp ? 0 : Math.max(0, bt.lim[l] - t);
     btTempoBarra(l, rest / T, resp ? 'respondeu' : Math.ceil(rest) + ' s');
@@ -17188,7 +17181,7 @@ async function btFechar() {
   for (const l of ordem) {
     if (!bt || bt.hp.L <= 0 || bt.hp.R <= 0) break;
     const o = l === 'L' ? 'R' : 'L', pet = l === 'L' ? bt.pet : bt.t.pet;
-    let { n, critico } = dano(R[l].t);
+    let { n, critico } = dano(R[l].t, bt.T);
     const especial = l === 'L' && bt.seq >= (c.sequencia?.acertos ?? 3);
     bt.tempoTot[l] += R[l].t;
     if (especial) {   // ATAQUE ESPECIAL: cambalhota antes, projétil maior, tela treme
@@ -17279,7 +17272,7 @@ function btFim() {
   btConfete(v);
   btFala(venceu ? bt.t.fala_perdeu : bt.t.fala_venceu, 0);
   tocar(venceu ? 'vitoria' : 'erro');
-  const pr = registrarBatalha(venceu ? 'venceu' : 'perdeu');
+  const pr = bt.t.torre ? fimDueloTorre(venceu) : registrarBatalha(venceu ? 'venceu' : 'perdeu');   // 🏆 torre: moedas e o andar (PROMPT-273)
   $('bt-ops').hidden = $('bt-conta').hidden = true;
   $('bt-msg').textContent = '';
   $('bt-calc').hidden = true; fecharCalc();
@@ -17303,6 +17296,15 @@ function btFim() {
   $('bt-fim-sub').textContent = pr.cortado ? 'Limite de prêmios de hoje atingido — amanhã tem mais!' : '';
   $('bt-fim-sub').hidden = !pr.cortado || !$('bt-fim-perfeito').hidden;
   $('bt-rever').hidden = !revisar;
+  if (bt.t.torre) {   // 🏆 a torre não tem limite do dia: o andar, e perdeu → volta ao 1º treinador
+    const { andar, chefe } = bt.t.torre;
+    $('bt-fim-dia').innerHTML = `<span>🏆 Andar ${andar} · ${esc(bt.t.nome)}</span>`;
+    $('bt-fim-sub').textContent = !venceu ? 'Você volta para o 1º treinador do andar. 💪'
+      : chefe ? (andar === N_ANDARES ? 'Você é o Campeão da Torre! 🏆' : `Andar ${andar} vencido! A escada está liberada.`) : 'O próximo treinador te espera.';
+    $('bt-fim-sub').hidden = venceu && !chefe && !$('bt-fim-perfeito').hidden;
+    if (venceu && chefe) $('bt-fim-perfeito').hidden = true;
+    if (venceu && chefe) $('bt-voltar').textContent = '🎁 Abrir o baú';
+  }
   $('bt-fim-botoes').hidden = false;
   $('batalha').classList.add('bt-acabou');   // 🏁 PROMPT-250: some o painel da pergunta e as barras de tempo; a arena cresce
   $('bt-fim').hidden = false;
@@ -17376,7 +17378,7 @@ function registrarBatalha(resultado, b = bt) {   // b: a batalha sozinho (bt) ou
 // Sair no meio: conta como derrota, sem prêmio (o treinador fica disponível para revanche)
 function sairDaBatalha() {
   if (!bt || bt.fim) return;
-  registrarBatalha('saiu');
+  if (!bt.t.torre) registrarBatalha('saiu');   // 🏆 torre: fugir só recomeça este treinador
   fecharBatalha(true);
 }
 
@@ -18528,9 +18530,12 @@ async function vigiarConducaoDeq(s) {
   }
   for (const u of lutadoresDeq(s)) if (u !== sessao.uid && deq.vistosOn.has(u) && !s.on?.[u] && s.luta?.fora?.[u] !== 'saiu') deq.condutor.saiu(u);
 }
+const tempoDeq = (s) => (s?.tipo === 'torre' ? tempoTorre() : cfgBatalha().tempo_s || 15);
 function condutorCbDeq() {
   const c = cfgBatalha();
-  return { T: c.tempo_s || 15, depois: c.depois_s ?? 6, torre: deq.sala?.tipo === 'torre', danoDe: (t) => dano(t), gerar: gerarPerguntaDeq };
+  // ⚔️ PROMPT-273: a torre também tem tempo (tempo_torre_s) e o treinador respondendo, como nos mapas (torre: false no condutor)
+  const T = tempoDeq(deq.sala);
+  return { T, depois: c.depois_s ?? 6, torre: false, danoDe: (t) => dano(t, T), gerar: gerarPerguntaDeq };
 }
 // a pergunta da rodada (só quem conduz sorteia)
 function gerarPerguntaDeq(s) {
@@ -18541,17 +18546,11 @@ function gerarPerguntaDeq(s) {
     return { txt: p.conta, opcoes: p.opcoes, resposta: p.resposta, explica: p.explica || '', tipo: p.tipo, dificuldade: p.dificuldade,
       npc: { ok: certo, v: certo ? p.resposta : sortear(p.opcoes.filter(v => v !== p.resposta)), t: tR } };
   }
-  const A = andarCfg(s.alvo.andar), pares = MAPAS_LADOS(A?.mapas || [1]), chave = `${s.luta_n}`;
-  if (deq.vistosQ?.chave !== chave) deq.vistosQ = { chave, set: new Set() };   // não repete a mesma questão na mesma luta
-  const vistos = deq.vistosQ.set;
-  for (let k = 0; k < 40; k++) {
-    const [mapa, lado] = sortear(pares), personagem = s.alvo.chefe ? 'lider' : sortear(['treinador1', 'treinador2', 'treinador3']);
-    const q = gerarUma(mapa, lado, personagem, Math.floor(Math.random() * 8), { dificil: !!A?.dificil });
-    if (!q || q.tabela || (vistos.has(q.enunciado) && k < 30)) continue;
-    vistos.add(q.enunciado);
-    return { txt: String(q.enunciado), opcoes: embaralhar([String(q.resposta), ...q.erradas.map(String).filter(v => v !== String(q.resposta)).slice(0, 3)]), resposta: String(q.resposta), explica: q.explicacao || '' };
-  }
-  return { txt: '7 × 8', opcoes: embaralhar(['56', '54', '48', '64']), resposta: '56', explica: '7 × 8 = 56.' };
+  // ⚔️ torre (PROMPT-273): a conta do duelo (os tipos dos mapas do andar, nos níveis da faixa) e o treinador respondendo
+  const f = forcaDueloTorre(s.alvo.andar, !!s.alvo.chefe), p = contaDueloTorre(s.alvo.andar);
+  const tR = +(f.tempo[0] + Math.random() * (f.tempo[1] - f.tempo[0])).toFixed(2), certo = Math.random() < f.acerto;
+  return { txt: p.conta, opcoes: p.opcoes, resposta: p.resposta, explica: p.explica || '', tipo: p.tipo, dificuldade: p.dificuldade,
+    npc: { ok: certo, v: certo ? p.resposta : sortear(p.opcoes.filter(v => v !== p.resposta)), t: tR } };
 }
 // o criador começa a luta (ou cancela, sem ninguém)
 async function comecarDeq() {
@@ -18590,7 +18589,7 @@ async function seguirTorreDeq(acao) {
   const { andar, i, chefe } = s.alvo;
   let a = andar, k = i;
   if (acao === 'proximo') { if (chefe) return; k = i + 1; }   // depois do chefe a sala termina: cada um abre o seu baú
-  else if (s.fim?.resultado === 'volta') k = 0;
+  else if (s.fim?.resultado !== 'venceu') k = 0;   // ⚔️ perdeu o duelo: de novo do 1º treinador do andar
   const vivosOn = lutadoresDeq(s).filter(u => s.on?.[u] && s.luta?.fora?.[u] !== 'saiu');
   if (vivosOn.length < 2) { avisoPet('A equipe precisa de pelo menos 2 alunos na sala.'); return; }
   const base = { ...s, membros: Object.fromEntries(Object.entries(s.membros).map(([u, m]) => [u, vivosOn.includes(u) ? m : { ...m, status: 'recusou' }])) };
@@ -18704,13 +18703,13 @@ function renderPerguntaDeq(s) {
   const fora = L.fora?.[sessao.uid];
   msg.textContent = fora === 'desmaiou' ? 'Seu pet desmaiou. Torça pelo seu colega! 📣'
     : pode.motivo === 'vez' ? 'Deixe um colega responder 😉'
-    : s.tipo === 'mapa' && q.npc_ja ? `${treinador(s.alvo.treinador)?.nome || 'O treinador'} já respondeu!` : '';
+    : q.npc_ja ? `${s.tipo === 'mapa' ? treinador(s.alvo.treinador)?.nome || 'O treinador' : s.alvo.nome} já respondeu!` : '';
   if (pode.motivo === 'vez') deq.timerVez = setTimeout(() => { if (deq?.sala === s) renderPerguntaDeq(s); }, Math.max(200, (Number(q.inicio) || 0) + LIBERA_DEQ_MS - agoraServ() + 100));
-  // o tempo (só nos mapas; a torre não tem tempo)
+  // o tempo (mapas: tempo_s; ⚔️ torre: tempo_torre_s, PROMPT-273)
   const barra = el.querySelector('.deq-tempo');
-  barra.hidden = s.tipo !== 'mapa';
-  if (s.tipo === 'mapa') {
-    const T = (cfgBatalha().tempo_s || 15) * 1000;
+  barra.hidden = !q.lim;
+  if (q.lim) {
+    const T = tempoDeq(s) * 1000;
     const passo = () => {
       if (!deq || deq.sala !== s) return;
       const rest = Math.max(0, (Number(q.lim) || 0) - agoraServ());
@@ -18747,10 +18746,10 @@ async function animarEvDeq(s, ev) {
     }
     if (ev.quem === sessao.uid) deq.contas.push({ treinador: s.tipo === 'mapa' ? s.alvo.treinador : `torre${s.alvo.andar}-${s.alvo.i}`, tipo: q.tipo || 'torre', dificuldade: q.dificuldade || null,
       conta: q.txt, certa: q.resposta, resposta: ev.v, acertou: ev.ok, tempo_s: ev.t, equipe: true, data: Date.now() });
-    if (ev.quem === sessao.uid && !ev.ok && s.tipo === 'mapa') caixaErrou(`bt-${q.tipo}-${q.dificuldade}`);
+    if (ev.quem === sessao.uid && !ev.ok && q.tipo) caixaErrou(`bt-${q.tipo}-${q.dificuldade}`);
   }
   const quem = ev.quem ? nomeMembroDeq(s, ev.quem) : null;
-  msg.textContent = !quem ? (s.tipo === 'mapa' ? '⏱ O tempo acabou!' : '') : ev.ok ? `✔ ${quem} acertou!` : `✘ ${quem} errou. A certa era ${q?.resposta ?? ''}.`;
+  msg.textContent = !quem ? '⏱ O tempo acabou!' : ev.ok ? `✔ ${quem} acertou!` : `✘ ${quem} errou. A certa era ${q?.resposta ?? ''}.`;
   tocar(ev.ok ? 'acerto' : 'erro');
   await esperarDeq(1100);
   for (const a of ev.acoes || []) {
@@ -18798,8 +18797,8 @@ function mostrarFimDeq(s) {
   if (!conduz && continua && quemConduzDeq(s)) botoes += `<p class="deq-dica">${esc(nomeMembroDeq(s, quemConduzDeq(s)))} escolhe se a equipe continua.</p>`;
   botoes += `<button class="jr-btn" data-deq="fechar">${pr.bau ? '🎁 Abrir o baú' : 'Fechar'}</button>`;
   // 🏁 PROMPT-250: uma faixa de uma linha embaixo da arena (título e aviso | prêmios | botões)
-  const tit = r === 'venceu' ? '🎉 A equipe venceu!' : r === 'volta' ? 'Errou metade! 💪' : `${nomeT} venceu desta vez`;
-  const sub = r === 'volta' ? 'A equipe volta para o 1º treinador do andar.' : pr.aviso || '';
+  const tit = r === 'venceu' ? '🎉 A equipe venceu!' : `${nomeT} venceu desta vez`;
+  const sub = s.tipo === 'torre' && r !== 'venceu' ? 'A equipe volta para o 1º treinador do andar. 💪' : pr.aviso || '';   // ⚔️ PROMPT-273
   box.innerHTML = `<div class="deq-fim-esq"><h2 class="${r === 'venceu' ? 'venceu' : ''}" title="${esc(tit)}">${esc(tit)}</h2>${sub ? `<p class="deq-fim-sub" title="${esc(sub)}">${esc(sub)}</p>` : ''}</div>
     <div class="deq-fim-meio"><div class="bt-premios">${chips}</div></div><div class="deq-fim-bts">${botoes}</div>`;
   el.classList.add('deq-acabou');
@@ -18846,7 +18845,7 @@ function aplicarFimDeq(s) {
     registrarGanho('torre', moedas, patch);
     out.chips.push(`<span class="bt-premio mo">+${moedas} ${moedaHtml()}</span>`);
     registrarDiaJogado();
-  } else if (r === 'volta' && te.andar === andar && te.treinador !== 0) { te.treinador = 0; patch['torre/treinador'] = 0; }
+  } else if (te.andar === andar && te.treinador !== 0) { te.treinador = 0; patch['torre/treinador'] = 0; }   // ⚔️ perdeu: volta ao 1º treinador do andar
   if (deq.contas.length) patch[`respostas/torre-equipe-${agora}`] = { tipo: 'torre_equipe', andar, treinador: i, resultado: r, data: agora, contas: deq.contas };
   if (Object.keys(patch).length) gravar(patch);
   if (ehTorre()) atualizarTreinadoresTorre();
@@ -20478,7 +20477,6 @@ function errarPergunta(btn, q, certa, botoes) {
   pg.status[posDe(q)] = 'errada';
   reagirArena(false);
   desenharBolinhas();
-  if (pg.modo === 'torre') { errarNaTorre(q, btn, certa); return; }   // 🏆 errou metade: volta ao 1º treinador do andar
   if (pg.dificil) { errarNoDificil(q, btn, certa); return; }   // ⭐ PROMPT-230: 2 erros recomeçam o treinador
   if (pg.modo !== 'treino' || RE_ID.test(q.id)) {
     gravar({ [`respostas/${q.id}/ultima`]: Date.now(), [`respostas/${q.id}/assunto`]: assuntoDe(q.enunciado) }, q.id);   // erros += 1; assunto: o formato da conta (painel "Travados")
@@ -20570,7 +20568,6 @@ function vencerDificil() {
 
 function vencer() {
   if (pg.modo === 'revisao') { concluirRevisao(); return; }
-  if (pg.modo === 'torre') { vencerTorre(); return; }   // 🏆 PROMPT-230
   if (pg.dificil) { vencerDificil(); return; }   // ⭐ PROMPT-230
   if (pg.modo === 'treino') { concluirTreino(); return; }
   const { chave, p, pers, total } = pg;
@@ -22812,7 +22809,16 @@ function ligarEventos() {
   }, true);
   $('bt-sair').addEventListener('click', sairDaBatalha);
   $('bt-voltar').addEventListener('click', () => fecharBatalha(true));
-  $('bt-revanche').addEventListener('click', () => { const id = bt?.t.id, origem = bt?.origem; fecharBatalha(false); if (id) iniciarBatalha(id, origem); });
+  $('bt-revanche').addEventListener('click', () => {
+    const tt = bt?.t?.torre, id = bt?.t.id, origem = bt?.origem;
+    if (tt) {   // 🏆 torre: perdeu → de novo do 1º treinador do andar (a professora repete o mesmo)
+      tt.depois = null;
+      fecharBatalha(false);
+      if (cena?.torre) { cena.torre.jogando = false; atualizarTreinadoresTorre(); abrirPerguntaTorre(ehProfessora() ? tt.i : 0); }
+      return;
+    }
+    fecharBatalha(false); if (id) iniciarBatalha(id, origem);
+  });
   $('pessoa-balao').addEventListener('click', acaoBalaoPessoa);
   $('porta-balao').addEventListener('click', acaoBalaoPorta);
   $('pesca-aviso').addEventListener('click', (e) => {

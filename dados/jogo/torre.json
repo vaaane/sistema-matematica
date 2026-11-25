@@ -43,7 +43,19 @@
    "placa": [190, 600]
   }
  },
- "chefes": { "7": "torre_chefe7", "8": "torre_chefe8", "9": "torre_chefe9", "10": "torre_campeao" },
+ "chefes": { "1": "torre_chefe1", "2": "torre_chefe2", "3": "torre_chefe3", "4": "torre_chefe4", "5": "torre_chefe5", "6": "torre_chefe6", "7": "torre_chefe7", "8": "torre_chefe8", "9": "torre_chefe9", "10": "torre_campeao" },
+ "_nota_duelo": "⚔️ PROMPT-273: toda batalha da torre (sozinho e em equipe) é o duelo dos treinadores dos mapas. tempo_torre_s = segundos por pergunta (nos mapas continua o tempo_s do batalhas.json). niveis_duelo = os níveis das contas (1 a 5 do batalha.js) por faixa de andares. contas_por_mapa = os tipos de conta (batalhas.json → tipos_contas) de cada mapa; o andar usa os dos seus mapas. forca_duelo = a chance de o treinador acertar e quando ele responde (s, entre o 1º e o 2º número). Perdeu o duelo: volta ao 1º treinador do andar.",
+ "tempo_torre_s": 25,
+ "niveis_duelo": { "1-6": [1, 2], "7-10": [2, 3] },
+ "forca_duelo": {
+   "1-6": { "treinador": { "acerto": 0.55, "tempo_s": [9, 17] }, "chefe": { "acerto": 0.68, "tempo_s": [8, 15] } },
+   "7-10": { "treinador": { "acerto": 0.7, "tempo_s": [7, 14] }, "chefe": { "acerto": 0.8, "tempo_s": [6, 12] }, "campeao": { "acerto": 0.85, "tempo_s": [5, 11] } }
+ },
+ "contas_por_mapa": {
+   "1": ["expressao_sem_parenteses", "expressao_com_parenteses"], "2": ["vezes_10_100_1000", "medidas"], "3": ["negativos_soma", "negativos_mult"],
+   "4": ["fracoes", "decimais"], "5": ["potencia", "raiz"], "6": ["multiplos_divisores"], "7": ["porcentagem"], "8": ["valor_numerico", "termos_semelhantes"],
+   "9": ["equacao"], "10": ["regra_de_tres"], "11": ["perimetro_area"], "12": ["coordenadas"], "13": ["media"]
+ },
  "moedas_treinador": 10,
  "moedas_chefe": 20,
  "bau_moedas": [50, 75, 100, 125, 150, 175, 200, 225, 250],
