@@ -2676,11 +2676,15 @@ function comprarCorPet(pet, cor) {
   $('lj-msg').textContent = `${NOME_COR_PET[cor]}: comprada! ${nomePet(pet)} já está usando. Troque quando quiser no "Meu Pet" → Visual.`;
 }
 // Meu Pet → Visual: Original + as cores do pet (as não compradas com 🔒 e o preço; tocar diz onde comprar)
+// 🖌️ PROMPT-275: pet com tinta (antiga, que não virou cor dele, ou especial): o chip "🖌️ Tinta X ✕" aparece marcado; tocar nele (ou no
+// Original) tira a tinta do pet (pets/conquistados/{pet}/tinta = null). A tinta continua na bolsa (pets/tintas) para aplicar de novo.
 function renderCoresPet(pet, cores) {
-  const base = formaBase(pet), atual = corAtiva(pet);
+  const base = formaBase(pet), atual = corAtiva(pet), tinta = tintaVisivel(pet);
   const mini = (forma) => `<img src="${quadrosDe(forma, 'sentado_girando')[0]}" alt="" draggable="false"${attrForma(pet, forma)}/>`;
+  const nomeTinta = tinta ? (tintas().find(t => t.id === tinta)?.nome || tinta) : '';
   $('mp-cores-rot').textContent = '🎨 Cores';
-  $('mp-visual-cores').innerHTML = `<button class="mp-chip${!atual ? ' sel' : ''}" data-cor="">${mini(base)}${NOME_ORIGINAL_PET[pet] || 'Original'}</button>` +
+  $('mp-visual-cores').innerHTML = (tinta ? `<button class="mp-chip sel" data-tirar-tinta="1" aria-label="Tirar a tinta ${esc(nomeTinta)}">${mini(base)}🖌️ Tinta ${esc(nomeTinta)} ✕</button>` : '') +
+    `<button class="mp-chip${!atual && !tinta ? ' sel' : ''}" data-cor="">${mini(base)}${NOME_ORIGINAL_PET[pet] || 'Original'}</button>` +
     cores.map(cor => {
       const tem = temCorPet(pet, cor);
       return `<button class="mp-chip${atual === cor ? ' sel' : ''}${tem ? '' : ' trancada'}" data-cor="${cor}">${mini(formaComCor(base, cor))}${esc(NOME_COR_PET[cor])}${tem ? '' : ` 🔒 ${moedaHtml()} ${precoCorPet(cor)}`}</button>`;
@@ -2694,8 +2698,22 @@ function escolherCorPet(cor) {
     return;
   }
   c.cor = cor || null;
-  gravar({ [`pets/conquistados/${pet}/cor`]: c.cor });
+  const patch = { [`pets/conquistados/${pet}/cor`]: c.cor };
+  if (!cor && c.tinta) { c.tinta = null; patch[`pets/conquistados/${pet}/tinta`] = null; }   // 🖌️ PROMPT-275: o Original é sem tinta
+  gravar(patch);
   aplicarForma(pet);
+  atualizarVisualPet();
+  renderVisual();
+}
+function tirarTintaPet() {   // 🖌️ PROMPT-275: o chip "Tinta X ✕" (a tinta fica na bolsa)
+  const pet = mp?.pet, c = pet && cuidadosDe(pet);
+  if (!c?.tinta) return;
+  c.tinta = null;
+  gravar({ [`pets/conquistados/${pet}/tinta`]: null });
+  atualizarVisualPet();
+  if (pet === estado.pets.ativo) enviarOnline(visualOnline(pet));
+  aplicarForma(pet);
+  tocar('clique');
   renderVisual();
 }
 
@@ -3388,6 +3406,7 @@ function bonusMoedasRetroativo() {
   if (n > 0) { avisoPet(`🎁 Você recebeu ${n} moedas: agora as moedas valem mais, e você ganhou a diferença pelo que já conquistou!`, true); }
 }
 function escolherVisual(e) {
+  if (e.target.closest('[data-tirar-tinta]')) { tirarTintaPet(); return; }   // 🖌️ PROMPT-275
   const bc = e.target.closest('[data-cor]');
   if (bc) { escolherCor(bc.dataset.cor); return; }
   if (e.target.closest('[data-efeito-loja]')) { tocar('clique'); irComprarEfeito(); return; }   // ✨ PROMPT-225
