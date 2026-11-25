@@ -7,7 +7,9 @@
 //   negativa   melhor_nivel ≥ 150 em tabuada_negativos_niveis_b/{bim}    3º e 4º     Σ (acertos + erros) do historico
 //   escalada   melhor_nivel ≥ ESCALADA_MAX (200) em escalada_niveis_b    3º e 4º     Σ tipos_acertos + erros (a Escalada não
 //                                                                                    tem historico: guarda os contadores somados)
-//   revisao_mestre  26 insígnias em jogo_revisao/{uid}/insignias         4º          Σ insignias/{chave}/total
+//   revisao_mestre  26 insígnias em jogo_revisao/{uid}/insignias         4º          Σ ginasios/{chave}/{treinador1..3, lider, revanche}/total
+//                                                                                    (PROMPT-278b: as revanches douradas também contam;
+//                                                                                    sem ginasios, Σ insignias/{chave}/total)
 //   revisao_lenda   26 insígnias, todas douradas (quem é Lenda não recebe o Mestre)
 //
 // Impressão: diplomas_impressos/{uid}/{tipo}_{bim} = { impresso: true, ts }. O tabuada_300 antigo marcado conta como tabuada_3.
@@ -61,8 +63,16 @@ const tsHist = (h, nivel) => {
   return l.length ? Math.min(...l) : null;
 };
 
+// 🏅 PROMPT-278b: perguntas dos ginásios = Σ total de todas as batalhas guardadas (3 treinadores, líder e revanche)
+export function perguntasGinasios(gin) {
+  let n = 0;
+  for (const g of Object.values(gin || {})) for (const b of Object.values(g || {}))
+    if (b && typeof b === 'object' && b.vencido) n += Number(b.total) || 0;
+  return n;
+}
+
 // Monta os certificados de UM aluno a partir dos dados já lidos (a mesma conta para todas as páginas).
-//   d = { tab: {3: no, 4: no}, neg: {3, 4}, esc: {3, 4}, ins: insignias }
+//   d = { tab: {3: no, 4: no}, neg: {3, 4}, esc: {3, 4}, ins: insignias, gin: ginasios }
 export function montarCertificados(aluno, d) {
   const out = [], base = { uid: aluno.uid, turma: aluno.turma, nome: aluno.nome };
   for (const bim of BIMS_JOGOS) {
@@ -81,7 +91,7 @@ export function montarCertificados(aluno, d) {
   const ins = Object.values(d.ins || {}).filter(Boolean);
   if (ins.length >= TOTAL_INSIGNIAS_CERT) {
     const lenda = ins.filter(i => i.dourada).length >= TOTAL_INSIGNIAS_CERT;
-    const qtd = ins.reduce((s, i) => s + (Number(i.total) || 0), 0);
+    const qtd = perguntasGinasios(d.gin) || ins.reduce((s, i) => s + (Number(i.total) || 0), 0);
     const ts = Math.max(0, ...ins.map(i => Number(i.data) || 0)) || null;   // a última insígnia (a dourada não guarda data própria)
     out.push({ ...base, tipo: lenda ? 'revisao_lenda' : 'revisao_mestre', bim: 4, qtd, ts });
   }
@@ -100,6 +110,7 @@ export async function certificadosDoAluno(turma, nome) {
   }
   jobs.push(lerVal(`jogo_revisao/${uid}/insignias`).then(v => { d.ins = v; }));
   await Promise.all(jobs);
+  if (Object.values(d.ins || {}).filter(Boolean).length >= TOTAL_INSIGNIAS_CERT) d.gin = await lerVal(`jogo_revisao/${uid}/ginasios`);
   return montarCertificados({ uid, turma, nome }, d);
 }
 
@@ -126,6 +137,8 @@ export async function todosCertificados() {
     }
     for (const [uid, v] of Object.entries(neg[i] || {})) if (porUid.has(uid)) dados.get(uid).neg[b] = v;
   });
+  for (const [uid, d] of dados) if (Object.values(d.ins || {}).filter(Boolean).length >= TOTAL_INSIGNIAS_CERT)
+    jobs.push(lerVal(`jogo_revisao/${uid}/ginasios`).then(g => { d.gin = g; }));
   await Promise.all(jobs);
   const out = [];
   for (const a of alunos) out.push(...montarCertificados(a, dados.get(a.uid)));

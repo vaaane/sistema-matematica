@@ -7,14 +7,16 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <title>Certificado — Imprimir</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
-<!-- 🎓 PROMPT-278: certificados por conquista e por bimestre (js/certificados.js). A4 deitado, um por folha.
+<!-- 🎓 PROMPT-278 / 278b: certificados por conquista e por bimestre (js/certificados.js). A4 deitado, um por folha.
+     Visual do protótipo aprovado (referencia/prototipo-certificado-revisao.html): moldura de duas linhas, faixa com o mapa geral,
+     faixa escura com o nome da escola, selo, título em degradê, nome em itálico, pílula com as perguntas, as 26 insígnias
+     (só na Revisão) e duas assinaturas. Tabuada, Negativa e Escalada: o mesmo modelo, com a cor e o ícone do jogo.
      ?itens=uid~tipo~bim,uid~tipo~bim…  (o aluno logado sem ?itens vê os dele) · ?modelo=tipo (exemplo) -->
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   @page{size:A4 landscape;margin:0}
   html,body{background:#0d0f1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  body{font-family:'Playfair Display',serif;color:#222}
+  body{font-family:'DejaVu Serif',Georgia,serif}
   .barra{position:sticky;top:0;z-index:9;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:#15102a;border-bottom:1px solid rgba(255,255,255,.1);font-family:Inter,system-ui,sans-serif}
   .barra button{border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer}
   .barra .b-fechar{background:#1a1a2e;color:#fff;border:1px solid rgba(255,255,255,.2)}
@@ -23,85 +25,56 @@
   #folhas{display:flex;flex-direction:column;align-items:center;gap:18px;padding:18px 0 40px}
   .vazio{color:#9ca3af;font-family:Inter,system-ui,sans-serif;padding:60px 20px;text-align:center}
 
-  /* ═══ A folha (cores pelas variáveis do tipo) ═══ */
-  .folha{
-    --esc:#0e3a5c; --cor:#1d7fb8; --clara:#7cc7ef; --fundo:#f5fbff; --texto:#123049;
-    width:297mm;height:210mm;background:#fff;position:relative;overflow:hidden;
-    display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.5);
-    page-break-after:always;break-after:page;
-  }
-  .folha:last-child{page-break-after:auto;break-after:auto}
-  .t-tabuada        {--esc:#0e3a5c;--cor:#1d7fb8;--clara:#7cc7ef;--fundo:#f3faff;--texto:#123049}
-  .t-negativa       {--esc:#1e1b4b;--cor:#6358d2;--clara:#a99ff0;--fundo:#f6f5ff;--texto:#1e1b4b}
-  .t-escalada       {--esc:#0b3d2e;--cor:#10916b;--clara:#6ee7b7;--fundo:#f2fbf7;--texto:#0b3d2e}
-  .t-revisao_mestre {--esc:#2e1f5e;--cor:#7c5cfc;--clara:#c9cbd6;--fundo:#f7f6fb;--texto:#2e1f5e}
-  .t-revisao_lenda  {--esc:#5a3d00;--cor:#b8860b;--clara:#f7e98e;--fundo:#fffbea;--texto:#3a2600}
+  /* ═══ A folha: 297 × 210 mm (= 1123 × 794 px do protótipo) ═══ */
+  .pg{width:297mm;height:210mm;position:relative;overflow:hidden;background:#fffdf7;box-shadow:0 8px 40px rgba(0,0,0,.5);
+    page-break-after:always;break-after:page}
+  .pg:last-child{page-break-after:auto;break-after:auto}
+  .mapa{position:absolute;inset:0;background:url(/img/jogo/mapa-geral/mapa-geral.webp) center/cover;opacity:.07;filter:saturate(.5)}
+  .faixa{position:absolute;left:18px;right:18px;top:18px;height:150px;border-radius:14px 14px 0 0;background:url(/img/jogo/mapa-geral/mapa-geral.webp) center 35%/cover}
+  .faixa::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,10,50,.25),rgba(255,253,247,1))}
+  .mold{position:absolute;inset:18px;border:5px solid var(--c1);border-radius:14px;box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px var(--c2)}
+  .ct{position:absolute;left:0;right:0;top:44px;text-align:center}
+  .escola{display:inline-block;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#fff;font-weight:700;background:var(--escola,rgba(30,18,70,.78));padding:6px 18px;border-radius:20px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+  .selo{width:130px;height:130px;margin:8px auto 0;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
+  .tit{font-size:50px;font-weight:900;letter-spacing:5px;text-transform:uppercase;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;margin-top:2px}
+  .sub{font-size:14px;letter-spacing:3px;text-transform:uppercase;color:#666;margin-top:2px}
+  .nome{font-size:44px;font-style:italic;color:#222;margin:20px auto 4px;border-bottom:2px solid var(--c2);display:inline-block;padding:0 40px 4px}
+  .turma{font-size:14px;color:#666}
+  .txt{font-size:19px;color:#333;line-height:1.5;margin-top:14px}
+  .imp{display:inline-block;margin-top:16px;padding:8px 26px;border-radius:40px;background:var(--grad);color:#fff;font-size:18px;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.18)}
+  .imp b{font-size:26px}
+  .ins{position:absolute;left:0;right:0;bottom:92px;margin:auto;width:880px;display:grid;grid-template-columns:repeat(13,58px);justify-content:center;gap:10px 6px;padding:16px 18px;border-radius:10px;background:linear-gradient(180deg,#f3eefe,#e6dcfb);border:3px solid #c9b6f2;box-shadow:0 2px 8px rgba(91,63,196,.12)}
+  .ins img{width:58px;height:58px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+  .data{position:absolute;left:0;right:0;bottom:262px;text-align:center;font-size:12px;color:#777;letter-spacing:1px}
+  .rod{position:absolute;left:0;right:0;bottom:40px;display:flex;justify-content:space-between;padding:0 150px;font-size:13px;color:#555}
+  .ass{border-top:1.5px solid #888;padding-top:5px;width:260px;text-align:center}
 
-  .fundo{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,var(--fundo) 0%,#fff 70%)}
-  .borda-ext{position:absolute;inset:7mm;border:2.5px solid var(--cor)}
-  .borda-int{position:absolute;inset:9.5mm;border:1px solid var(--clara)}
-  .canto{position:absolute;font-size:7mm;line-height:1;color:var(--cor);z-index:2}
-  .canto.tl{top:5.2mm;left:5.6mm}.canto.tr{top:5.2mm;right:5.6mm}.canto.bl{bottom:5.2mm;left:5.6mm}.canto.br{bottom:5.2mm;right:5.6mm}
+  /* Mestre: roxo e prateado · Lenda: dourado, fundo creme */
+  .t-revisao_mestre{--c1:#5b3fc4;--c2:#b9bccb;--grad:linear-gradient(135deg,#4c32b0,#7c5cfc 55%,#8f95ad)}
+  .t-revisao_lenda{--c1:#b8860b;--c2:#f0cf63;--grad:linear-gradient(135deg,#8a5a00,#d4a017 45%,#f7e27a 60%,#b8860b);--escola:rgba(90,60,0,.8);background:#fff8e1}
+  .t-revisao_lenda .mold{border-width:7px}
+  .t-revisao_lenda .ins{background:linear-gradient(180deg,#fff9e6,#fbefc8);border-color:#ecd38a}
+  .t-revisao_lenda .ins img{filter:drop-shadow(0 0 7px #ffd34d) saturate(1.3) brightness(1.1)}
+  .t-revisao_lenda .selo{filter:drop-shadow(0 0 14px #ffd34d) saturate(1.3) brightness(1.1)}
 
-  /* Mestre: prateado com roxo */
-  .t-revisao_mestre .borda-ext{border:3px solid transparent;border-image:linear-gradient(135deg,#8e90a3,#e6e7ef,#7c5cfc,#e6e7ef,#8e90a3) 1}
-  .t-revisao_mestre .borda-int{border-color:#c4b5fd}
-  /* Lenda: moldura dourada larga, diferente de todos */
-  .t-revisao_lenda .fundo{background:radial-gradient(ellipse at 50% 35%,#fff6cc 0%,#fffdf5 55%,#fff 80%)}
-  .t-revisao_lenda .borda-ext{inset:5mm;border:4.5mm solid transparent;border-image:linear-gradient(135deg,#7a5200,#f7e98e,#c9a84c,#fff3b0,#b8860b,#f7e98e,#7a5200) 1}
-  .t-revisao_lenda .borda-int{inset:11.5mm;border:1.5px solid #c9a84c;outline:1px solid rgba(201,168,76,.45);outline-offset:1.5mm}
-  .t-revisao_lenda .canto{color:#fff8d6;font-size:6mm;top:auto;left:auto;right:auto;bottom:auto;text-shadow:0 0 2px #7a5200}
-  .t-revisao_lenda .canto.tl{top:4.4mm;left:4.6mm}.t-revisao_lenda .canto.tr{top:4.4mm;right:4.6mm}
-  .t-revisao_lenda .canto.bl{bottom:4.4mm;left:4.6mm}.t-revisao_lenda .canto.br{bottom:4.4mm;right:4.6mm}
+  /* Tabuada, Negativa e Escalada: o mesmo modelo, com a cor do jogo; no lugar das insígnias, um painel com os números */
+  .t-tabuada {--c1:#1d7fb8;--c2:#9fd3f0;--grad:linear-gradient(135deg,#0e4f7a,#1d7fb8 55%,#38bdf8);--escola:rgba(10,45,75,.8);--painel:linear-gradient(180deg,#eef8fe,#dcf0fb);--painel-b:#a9d8f2}
+  .t-negativa{--c1:#5b4fd0;--c2:#c4bdf5;--grad:linear-gradient(135deg,#2e2690,#6358d2 55%,#a99ff0);--escola:rgba(30,27,75,.8);--painel:linear-gradient(180deg,#f3f1fe,#e4e0fb);--painel-b:#c9c2f2}
+  .t-escalada{--c1:#0f8a64;--c2:#a7e8cf;--grad:linear-gradient(135deg,#0b5e45,#10916b 55%,#34d399);--escola:rgba(8,55,40,.8);--painel:linear-gradient(180deg,#effbf6,#dcf5ea);--painel-b:#a6e3c9}
+  .selo-ic{width:130px;height:130px;margin:8px auto 0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:66px;
+    background:radial-gradient(circle at 35% 30%,#fff,var(--c2) 60%,var(--c1));border:6px solid #fff;box-shadow:0 0 0 4px var(--c1),0 6px 14px rgba(0,0,0,.3)}
+  .painel{position:absolute;left:0;right:0;bottom:110px;margin:auto;width:700px;display:grid;grid-template-columns:repeat(3,1fr);padding:16px 10px;border-radius:10px;
+    background:var(--painel);border:3px solid var(--painel-b);box-shadow:0 2px 8px rgba(0,0,0,.08);text-align:center}
+  .painel div+div{border-left:1.5px solid var(--painel-b)}
+  .painel b{display:block;font-size:30px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .painel small{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#666}
 
-  .miolo{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:15mm 26mm 14mm}
-  .centro{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%}
-  .t-revisao_lenda .miolo{padding:17mm 28mm 15mm}
-  .topo{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:5mm}
-  .escola{display:flex;align-items:center;gap:3mm;text-align:left}
-  .escola img{width:12mm;height:12mm;object-fit:contain}
-  .escola b{display:block;font-family:'Cinzel',serif;font-size:3.4mm;letter-spacing:.6mm;text-transform:uppercase;color:var(--esc)}
-  .escola small{font-size:2.6mm;letter-spacing:.3mm;text-transform:uppercase;color:var(--cor)}
-  .selo-topo{display:flex;align-items:center;gap:2mm;border:1px solid var(--clara);border-radius:3mm;padding:1.6mm 4mm;background:#fff;
-    font-family:'Cinzel',serif;font-size:3mm;font-weight:700;letter-spacing:.5mm;text-transform:uppercase;color:var(--esc)}
-  .selo-topo i{font-style:normal;font-size:5mm}
-  .t-revisao_lenda .selo-topo{background:linear-gradient(135deg,#fff3b0,#f7e98e);border-color:#c9a84c}
-
-  .titulo{font-family:'Cinzel',serif;font-size:11.5mm;font-weight:900;letter-spacing:1mm;text-transform:uppercase;color:var(--esc);line-height:1.1}
-  .t-revisao_lenda .titulo{background:linear-gradient(180deg,#b8860b,#7a5200);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .divisor{display:flex;align-items:center;gap:3mm;width:120mm;margin:2.5mm 0 3.5mm;color:var(--cor);font-size:4mm}
-  .divisor::before,.divisor::after{content:'';flex:1;height:.6mm}
-  .divisor::before{background:linear-gradient(90deg,transparent,var(--cor))}
-  .divisor::after{background:linear-gradient(90deg,var(--cor),transparent)}
-  .certifica{font-style:italic;font-size:4.6mm;color:var(--cor);margin-bottom:1.5mm}
-  .nome{font-family:'Cinzel',serif;font-size:12mm;font-weight:700;color:#111;line-height:1.15;margin-bottom:1.2mm}
-  .turma{font-style:italic;font-size:4.2mm;color:var(--cor);margin-bottom:6mm}
-  .texto{font-size:5mm;line-height:1.6;color:var(--texto);max-width:210mm;margin-bottom:6mm}
-  .texto strong{color:var(--esc)}
-
-  .baixo{display:flex;align-items:center;justify-content:center;gap:9mm;margin-bottom:3mm}
-  .medalha{width:21mm;height:21mm;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10mm;
-    background:radial-gradient(circle at 35% 30%,#fff,var(--clara) 70%);border:1.2mm solid var(--cor);box-shadow:0 0 0 .8mm #fff,0 0 0 1.4mm var(--clara)}
-  .t-revisao_mestre .medalha{background:radial-gradient(circle at 35% 30%,#fff,#d9dae4 55%,#a3a6b8);border-color:#7c5cfc}
-  .t-revisao_lenda .medalha{width:25mm;height:25mm;font-size:12mm;background:radial-gradient(circle at 35% 30%,#fffbe0,#f7e98e 45%,#c9a84c 85%);border-color:#b8860b;
-    box-shadow:0 0 0 1mm #fff8d6,0 0 0 1.8mm #c9a84c,0 0 6mm rgba(201,168,76,.6)}
-  .stats{display:flex}
-  .stat{display:flex;flex-direction:column;align-items:center;padding:1mm 6mm;position:relative}
-  .stat+.stat::before{content:'';position:absolute;left:0;top:20%;height:60%;width:1px;background:var(--clara)}
-  .stat b{font-family:'Cinzel',serif;font-size:5.4mm;color:var(--esc)}
-  .stat small{font-size:2.5mm;letter-spacing:.3mm;text-transform:uppercase;color:var(--cor);margin-top:.6mm}
-
-  .assin{display:flex;flex-direction:column;align-items:center}
-  .assin .linha{width:80mm;height:.4mm;background:linear-gradient(90deg,transparent,var(--esc),transparent);margin-top:14mm}
-  .assin b{font-size:4mm;color:var(--esc);margin-top:1.2mm}
-  .assin small{font-style:italic;font-size:3mm;color:var(--cor);margin-top:1.2mm}
-
-  @media screen{ .folha{zoom:var(--zoom,1)} }
+  @media screen{ .pg{zoom:var(--zoom,1)} }
   @media print{
     html,body{background:#fff!important}
     .barra{display:none!important}
     #folhas{display:block;padding:0}
-    .folha{box-shadow:none;margin:0}
+    .pg{box-shadow:none;margin:0}
   }
 </style>
 </head>
@@ -121,49 +94,47 @@ import { TIPOS_CERT, certificadosDoAluno, makeUidCert, fmtMil } from '/js/certif
 
 const P = new URLSearchParams(location.search);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const dataLonga = (ts) => ts ? new Date(ts).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+const dataCurta = (ts) => ts ? new Date(ts).toLocaleDateString('pt-BR') : '';
 const anoDe = (ts) => new Date(ts || Date.now()).getFullYear();
 const alunoDoUid = (uid) => {
   for (const [turma, nomes] of Object.entries(ALUNOS_POR_TURMA)) for (const nome of nomes) if (makeUidCert(turma, nome) === uid) return { turma, nome };
   return null;
 };
-const TITULO = { revisao_mestre: 'Certificado de Mestre', revisao_lenda: 'Certificado de Lenda' };
-const NIVEL = { tabuada: ['300', 'Nível'], negativa: ['150', 'Nível'], escalada: ['200', 'Níveis'], revisao_mestre: ['26', 'Insígnias'], revisao_lenda: ['26 ✦', 'Douradas'] };
-const UNID = { tabuada: 'Questões', negativa: 'Questões', escalada: 'Expressões', revisao_mestre: 'Perguntas', revisao_lenda: 'Perguntas' };
+const INSIGNIAS = Array.from({ length: 13 }, (_, i) => ['A', 'B'].map(l => `/img/jogo/insignias/insignia-mapa${i + 1}-${l}.webp`)).flat();
+const JOGO = { tabuada: 'Tabuada', negativa: 'Tabuada Negativa', escalada: 'Escalada Algébrica' };
+const TITULO = { tabuada: 'Tabuada 300', negativa: 'Negativa 150', escalada: 'Escalada completa', revisao_mestre: 'Mestre da Revisão', revisao_lenda: 'Lenda da Revisão' };
+const TEXTO = {
+  tabuada:  (c) => `chegou ao <b>nível 300 da Tabuada</b> no ${c.bim}º bimestre,<br>com muito cálculo mental e persistência.`,
+  negativa: (c) => `chegou ao <b>nível 150 da Tabuada Negativa</b> no ${c.bim}º bimestre,<br>dominando as operações com <b>números negativos</b>.`,
+  escalada: (c) => `completou os <b>200 níveis da Escalada Algébrica</b> no ${c.bim}º bimestre,<br>simplificando expressões até o topo.`,
+  revisao_mestre: () => `venceu os <b>26 ginásios</b> dos 13 mapas da Liga Matemática<br>e conquistou <b>todas as 26 insígnias</b>.`,
+  revisao_lenda:  () => `venceu os <b>26 ginásios</b> dos 13 mapas da Liga Matemática<br>e conquistou <b>as 26 insígnias douradas</b> ✨`,
+};
+const PILULA = { tabuada: 'questões respondidas', negativa: 'questões respondidas', escalada: 'expressões simplificadas', revisao_mestre: 'perguntas respondidas', revisao_lenda: 'perguntas respondidas' };
+const NIVEL = { tabuada: ['300', 'Nível'], negativa: ['150', 'Nível'], escalada: ['200', 'Níveis'] };
 
 function folha(c) {
-  const t = TIPOS_CERT[c.tipo], [nv, nvLbl] = NIVEL[c.tipo];
-  const canto = c.tipo === 'revisao_lenda' ? '✦' : '❧';
-  return `<section class="folha t-${c.tipo}">
-    <div class="fundo"></div><div class="borda-ext"></div><div class="borda-int"></div>
-    <span class="canto tl">${canto}</span><span class="canto tr">${canto}</span><span class="canto bl">${canto}</span><span class="canto br">${canto}</span>
-    <div class="miolo">
-      <div class="topo">
-        <div class="escola"><img src="/logo_fundotransparente.png" alt=""/><div><b>Centro Educacional São Bartolomeu</b><small>Matemática · São Sebastião, DF</small></div></div>
-        <div class="selo-topo"><i>${t.icon}</i>${esc(t.nome)} · ${c.bim}º bim</div>
-      </div>
-      <div class="centro">
-      <div class="titulo">${TITULO[c.tipo] || 'Certificado de Conquista'}</div>
-      <div class="divisor"><span>${c.tipo === 'revisao_lenda' ? '✦ ✦ ✦' : '✦'}</span></div>
-      <div class="certifica">Certificamos que o(a) aluno(a)</div>
+  const rev = c.tipo.startsWith('revisao');
+  const escola = `CED São Bartolomeu · Liga Matemática · ${rev ? 'Jogo de Revisão' : JOGO[c.tipo]}`;
+  const selo = rev ? `<img class="selo" src="/img/jogo/insignias/insignia-mapa13-B.webp" alt=""/>` : `<div class="selo-ic">${TIPOS_CERT[c.tipo].icon}</div>`;
+  const baixo = rev
+    ? `${c.ts ? `<div class="data">Conquistado em ${dataCurta(c.ts)}</div>` : ''}<div class="ins">${INSIGNIAS.map(s => `<img src="${s}" alt=""/>`).join('')}</div>`
+    : `<div class="painel"><div><b>${NIVEL[c.tipo][0]}</b><small>${NIVEL[c.tipo][1]}</small></div><div><b>${c.bim}º</b><small>Bimestre</small></div>
+         <div><b>${c.ts ? dataCurta(c.ts) : '—'}</b><small>Conquistado em</small></div></div>`;
+  return `<section class="pg t-${c.tipo}">
+    <div class="mapa"></div><div class="faixa"></div><div class="mold"></div>
+    <div class="ct">
+      <div class="escola">${escola}</div>
+      ${selo}
+      <div class="tit">${TITULO[c.tipo]}</div>
+      <div class="sub">${c.bim}º bimestre · ${anoDe(c.ts)}</div>
       <div class="nome">${esc(c.nomeCompleto)}</div>
-      <div class="turma">Turma ${esc(c.turma)} · ${c.bim}º bimestre de ${anoDe(c.ts)}</div>
-      <div class="texto">${t.conquista(c.bim)} e, nessa jornada, ${t.impacto(c.qtd)}.</div>
-      <div class="baixo">
-        <div class="medalha">${t.icon}</div>
-        <div class="stats">
-          <div class="stat"><b>${nv}</b><small>${nvLbl}</small></div>
-          <div class="stat"><b>${fmtMil(c.qtd)}</b><small>${UNID[c.tipo]}</small></div>
-          ${c.ts ? `<div class="stat"><b>${new Date(c.ts).toLocaleDateString('pt-BR')}</b><small>Conquista</small></div>` : ''}
-        </div>
-      </div>
-      </div>
-      <div class="assin">
-        <div class="linha"></div>
-        <b>Prof.ª Vanessa · CED São Bartolomeu</b>
-        ${c.ts ? `<small>Conquistado em ${dataLonga(c.ts)}</small>` : ''}
-      </div>
+      <div class="turma">Turma ${esc(c.turma)}</div>
+      <div class="txt">${TEXTO[c.tipo](c)}</div>
+      <div class="imp"><b>${fmtMil(c.qtd)}</b> ${PILULA[c.tipo]}</div>
     </div>
+    ${baixo}
+    <div class="rod"><div class="ass">Prof.ª Vanessa</div><div class="ass">Direção · CED São Bartolomeu</div></div>
   </section>`;
 }
 
@@ -172,7 +143,7 @@ async function montar() {
   const modelo = P.get('modelo');
   if (modelo && TIPOS_CERT[modelo]) {
     const bim = TIPOS_CERT[modelo].bims.at(-1);
-    el.innerHTML = folha({ tipo: modelo, bim, turma: 'Modelo', nomeCompleto: 'Aluno(a) Exemplo', qtd: 1248, ts: Date.now() });
+    el.innerHTML = folha({ tipo: modelo, bim, turma: '8G', nomeCompleto: 'Nome do Aluno', qtd: 1248, ts: Date.now() });
     return;
   }
   // pedidos: ?itens=uid~tipo~bim,… ou, sem nada, os do aluno logado
@@ -203,7 +174,7 @@ async function montar() {
 
 // cabe na tela (só na tela; na impressão, tamanho real)
 function ajustarZoom() {
-  const mm = 297 * 96 / 25.4, z = Math.min(1, (window.innerWidth - 24) / mm);
+  const px = 297 * 96 / 25.4, z = Math.min(1, (window.innerWidth - 24) / px);
   document.documentElement.style.setProperty('--zoom', z.toFixed(3));
 }
 window.addEventListener('resize', ajustarZoom);
