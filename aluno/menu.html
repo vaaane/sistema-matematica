@@ -222,6 +222,39 @@
     .pxd-treino{display:inline-flex;align-items:center;gap:7px;margin-top:12px;font-size:12px;font-weight:800;color:#f5c451;background:rgba(240,165,0,.10);border:1px solid rgba(240,165,0,.45);border-radius:8px;padding:6px 13px;text-decoration:none;transition:background .12s,border-color .12s}
     .pxd-treino:hover{background:rgba(240,165,0,.2);border-color:rgba(240,165,0,.7)}
     @media(max-width:560px){ .pxd-banner{padding:15px} .pxd-nome{font-size:19px} .pxd-date{width:52px} .pxd-date .d{font-size:22px} }
+    /* 📊 PROMPT-274: Minhas notas do ano */
+    .na-card{display:block;text-decoration:none;color:inherit;cursor:pointer;margin-bottom:14px;border:1px solid rgba(124,92,252,.35);transition:transform .15s}
+    .na-card:hover{transform:translateY(-1px)}
+    .na-card.verde{border-color:rgba(34,197,94,.55);box-shadow:0 0 0 1px rgba(34,197,94,.25)}
+    .na-card.amarelo{border-color:rgba(240,165,0,.55)}
+    .na-card.vermelho{border-color:rgba(239,68,68,.5)}
+    .na-tit{font-weight:800;font-size:16px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+    .na-tit small{font-weight:600;color:var(--text-muted);font-size:12px}
+    .na-bims{display:grid;grid-template-columns:repeat(4,1fr) 1.35fr;gap:8px}
+    .na-cx{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 6px;text-align:center;min-width:0}
+    .na-cx .r{font-size:11.5px;color:var(--text-muted);font-weight:700;white-space:nowrap}
+    .na-cx .r i{font-style:normal;color:var(--orange);font-weight:700}
+    .na-cx .v{font-family:'Orbitron',sans-serif;font-size:19px;font-weight:800;margin-top:3px}
+    .na-cx.soma{background:rgba(124,92,252,.14);border-color:rgba(124,92,252,.45)}
+    .na-cx.soma .v{font-size:23px;color:#fff}
+    .na-cx.soma .v small{font-size:12px;color:var(--text-muted);font-weight:700}
+    .na-barra{position:relative;height:10px;border-radius:6px;background:rgba(255,255,255,.08);margin:14px 0 8px;overflow:visible}
+    .na-barra>i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:linear-gradient(90deg,var(--purple,#7c5cfc),var(--cyan,#00d4ff))}
+    .na-barra>b{position:absolute;top:-4px;bottom:-4px;width:2px;background:#ffd700;border-radius:1px}
+    .na-barra>b::after{content:'20';position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:10px;color:#ffd700;font-weight:800}
+    .na-card.verde .na-barra>i{background:var(--green)}
+    .na-regra{font-size:12.5px;color:var(--text-muted)}
+    .na-msg{font-size:14px;margin-top:4px;font-weight:600}
+    .na-card.verde .na-msg{color:var(--green)} .na-card.amarelo .na-msg{color:var(--orange)} .na-card.vermelho .na-msg{color:var(--red)}
+    .na-obs{font-size:11.5px;color:var(--text-muted);margin-top:6px}
+    .na-calc{color:var(--text-muted);font-size:13px}
+    @media (max-width:520px){
+      .na-bims{grid-template-columns:repeat(4,1fr);gap:6px}
+      .na-cx.soma{grid-column:1 / -1}
+      .na-cx .v{font-size:16px} .na-cx.soma .v{font-size:21px}
+      .na-cx .r{font-size:10.5px;white-space:normal}
+      .na-cx .r i{display:block;font-size:10px}
+    }
   </style>
 </head>
 <body>
@@ -257,6 +290,8 @@ import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { initTopNotif } from "/js/topnotif.js";
 import { db } from "/js/firebase-config.js";
+import { ALUNOS_TESTE } from "/js/constants.js";
+import { calcularNotaFinalTurma, fmtCent } from "/js/nota-final.js";
 import { montarBoletim, fmtNota, setBimestre, totalAtividadesAluno, extrasJogosAluno, contarOcorrenciasAluno, MAX_POR_ATIVIDADE } from "/js/notas.js";
 setBimestre(String(bimestreAtual()));
 import { ref, get, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -964,10 +999,48 @@ async function preencherBannerJogo() {
   } catch (e) { el.innerHTML = ""; }
 }
 
+// ── 📊 Minhas notas do ano (PROMPT-274): 1º e 2º do diário, 3º e 4º = o Total da página de notas (js/nota-final.js,
+// a mesma conta da Nota final da professora). Calcula a turma inteira, então começa depois de a página aparecer.
+// Não aparece para contas de teste (ALUNOS_TESTE, modo teste) nem para quem está em _excluir.
+const alunosNotasAno = isModoTeste() ? [] : alunos.filter(a => !ALUNOS_TESTE.includes(`${turma}_${a}`));
+function htmlNotasAno(nome, l, parciais) {
+  const [b1, b2, b3, b4] = l.notas, rot = ["1º Bim", "2º Bim", "3º Bim", "4º Bim"];
+  const falta123 = [b1, b2, b3].some(c => c == null), parcial4 = !!parciais?.["4"];
+  let cls = "", msg = "";
+  if (falta123) msg = "Alguma nota ainda não foi lançada.";
+  else {
+    const precisa = 2000 - (b1 + b2 + b3);
+    if (l.soma >= 2000) { cls = "verde"; msg = "🎉 Você já tem os 20 pontos para passar!"; }
+    else if (precisa <= 1000) { cls = "amarelo"; msg = `⚠️ Você precisa de <b>${fmtCent(precisa)}</b> no 4º bimestre (até agora tem <b>${fmtCent(b4 ?? 0)}</b>).`; }
+    else { cls = "vermelho"; msg = `Faltam <b>${fmtCent(2000 - l.soma)}</b> pontos para chegar aos 20.`; }
+  }
+  const pct = Math.max(0, Math.min(100, (l.soma || 0) / 4000 * 100));
+  return `<a href="/aluno/a-notas.html" class="card na-card ${cls}" aria-label="Minhas notas do ano">
+    <div class="na-tit">📊 Minhas notas do ano${alunosNotasAno.length > 1 ? ` <small>· ${nome}</small>` : ""}</div>
+    <div class="na-bims">${l.notas.map((c, k) => `<div class="na-cx"><div class="r">${rot[k]}${k === 3 && parcial4 ? " <i>⏳ parcial</i>" : ""}</div><div class="v">${fmtCent(c)}</div></div>`).join("")}
+      <div class="na-cx soma"><div class="r">Soma</div><div class="v">${fmtCent(l.soma)} <small>/ 40</small></div></div></div>
+    <div class="na-barra" role="img" aria-label="Soma ${fmtCent(l.soma)} de 40; para passar, 20"><i style="width:${pct}%"></i><b style="left:50%"></b></div>
+    <div class="na-regra">Para passar: 20 pontos na soma dos 4 bimestres.</div>
+    <div class="na-msg">${msg}</div>
+    ${parcial4 ? '<div class="na-obs">O 4º bimestre ainda está em andamento: a nota pode subir.</div>' : ""}
+  </a>`;
+}
+async function carregarNotasAno() {
+  const box = document.getElementById("notas-ano");
+  if (!box) return;
+  try {
+    const { linhas, parciais } = await calcularNotaFinalTurma({ dados: {}, autoDados: {} }, turma);
+    const html = alunosNotasAno.map(n => { const l = linhas.find(x => x.nome === n); return l ? htmlNotasAno(n, l, parciais) : ""; }).join("");
+    if (html) box.innerHTML = html; else box.remove();
+  } catch (e) { console.error("Minhas notas do ano:", e); box.remove(); }
+}
+if (alunosNotasAno.length) setTimeout(carregarNotasAno, 300);   // depois do render abaixo (o menu aparece antes)
+
 // ── Render ────────────────────────────────────────────────────
 const liberadasAtivas = liberadas.filter(l => l.status !== 'encerrada');
 const conteudo = document.getElementById("content");
 conteudo.innerHTML = `
+${alunosNotasAno.length ? '<div id="notas-ano"><div class="card na-card"><div class="na-tit">📊 Minhas notas do ano</div><div class="na-calc">Calculando…</div></div></div>' : ''}
 ${bannerHtml}
 ${tempoPodioHtml}
 <a href="/aluno/jogo-revisao.html" class="jr-cta" id="jr-cta" aria-label="Jogar o Jogo de Revisão">
@@ -1238,7 +1311,8 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
     banner.className = 'banner-no1-wrap';
     banner.style.marginBottom = '14px';
     banner.innerHTML = `<span style="font-size:22px;flex-shrink:0">👑</span><div><div>${mainLine}</div><div style="font-size:12px;font-weight:400;opacity:.85;margin-top:2px">${subLine}</div></div>`;
-    document.getElementById('content').insertAdjacentElement('afterbegin', banner);
+    const _na = document.getElementById('notas-ano');   // 📊 PROMPT-274: as notas do ano ficam no topo
+    if (_na) _na.insertAdjacentElement('afterend', banner); else document.getElementById('content').insertAdjacentElement('afterbegin', banner);
   }
   if (isTabuada) {
     const tc = document.getElementById('tabuada-game-card');
