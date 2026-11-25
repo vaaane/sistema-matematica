@@ -98,7 +98,40 @@
     .total-pill.bom{background:var(--green-pale);color:#15803D}
     .total-pill.medio{background:var(--orange-pale);color:var(--orange-dark)}
     .total-pill.baixo{background:var(--red-pale);color:#B91C1C}
-  </style>
+    /* ✔ Para aprovar e 🎓 Diplomas (PROMPT-278) */
+  .apv-badge{background:var(--orange);color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;margin-left:6px}
+  .apv-card.apv-vazio{padding-top:10px;padding-bottom:10px}
+  .apv-card.apv-vazio .card-header{margin-bottom:4px}
+  .apv-nada{font-size:13px;color:var(--green,#00e676);font-weight:600}
+  .apv-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+  .apv-row:last-child{border-bottom:none}
+  .apv-ico{font-size:20px;width:26px;text-align:center;flex-shrink:0}
+  .apv-foto{width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0}
+  .apv-info{flex:1;min-width:0}
+  .apv-quem{font-size:13px;font-weight:700}
+  .apv-turma{font-size:11px;color:var(--text-muted);font-weight:400}
+  .apv-pedido{font-size:12px;overflow-wrap:anywhere}
+  .apv-pedido strong{color:var(--orange)}
+  .apv-tipo,.apv-extra{color:var(--text-muted)}
+  .apv-ok,.apv-nao{border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .apv-ok{background:var(--green);color:#fff;border:none}
+  .apv-nao{background:var(--card2);color:var(--red);border:1px solid var(--red)}
+  .apv-ok:disabled,.apv-nao:disabled{opacity:.5;cursor:default}
+  .dip-topo{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .dip-ok{font-size:13px;color:var(--green,#00e676);font-weight:600}
+  .dip-bt{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;white-space:nowrap}
+  .dip-bt-ouro{background:linear-gradient(135deg,#c9a84c,#f7e98e);color:#1a0f00;border:none;font-weight:800}
+  .dip-bt-verde{background:var(--green);color:#fff;border:none;font-weight:700}
+  .dip-grupo{border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+  .dip-grupo-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+  .dip-grupo-nome{font-size:13px;font-weight:800;flex:1;min-width:160px}
+  .dip-n{background:var(--card2);color:var(--text);padding:1px 8px;border-radius:10px;font-size:11px;margin-left:4px}
+  .dip-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--border)}
+  .dip-row.feito{opacity:.55}
+  .dip-info{flex:1;min-width:0;font-size:13px}
+  .dip-info small{display:block;font-size:10px;color:var(--text-muted)}
+  @media (max-width:768px){ .apv-row{flex-wrap:wrap} .apv-info{flex-basis:calc(100% - 40px)} }
+</style>
 </head>
 <body>
 <div class="layout">
@@ -112,6 +145,11 @@
       <div class="topbar-right"><div class="avatar avatar-blue">P</div></div>
     </div>
     <!-- ⚠️ Alunos abaixo de 20 na nota final (PROMPT-271) -->
+    <!-- ✔ PROMPT-278: tudo o que espera a professora, de todos os jogos (o topo do dashboard) -->
+    <div class="content p20-wrap"><div id="aprovar-card" class="card apv-card">
+      <div class="card-header"><div class="card-title">✔ Para aprovar <span id="aprovar-badge" class="apv-badge">0</span></div></div>
+      <div id="aprovar-lista"><p style="color:var(--text-muted);font-size:13px">Verificando…</p></div>
+    </div></div>
     <div class="content p20-wrap"><div id="painel20" class="card p20"></div></div>
     <div class="content" id="content">
       <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
@@ -142,7 +180,11 @@
 </div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES, pathTabuadaRanking, pathTabuadaNiveisRaiz } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, ALUNOS_TESTE, LISTA_ATIVIDADES, pathTabuadaRanking, pathTabuadaNiveisRaiz } from "/js/constants.js";
+import { TIPOS_CERT, ORDEM_TIPOS, todosCertificados, certImpresso, tsImpresso, urlCertificado, urlCertificados } from "/js/certificados.js";   // 🎓 PROMPT-278
+import { aprovarApelido, recusarApelido, decidirNomePet, aprovarNomeEquipe, recusarNomeEquipe, decidirNomeExpo, decidirRecado, decidirCasaFoto, lerFotoExpo, garantirLoja } from "/js/aprovacoes.js";   // ✔ PROMPT-278
+import { NOME_PET } from "/js/jogo-revisao/pets.js";
+import { membrosDe } from "/js/jogo-revisao/equipes.js";
 import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes, contarSessoesTabuadaHoje, somarPartidasTabuadaTotal } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
 import { ref, onValue, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -280,12 +322,6 @@ function renderPodiumDash() {
 
 // ── Renderizar página ─────────────────────────────────────────
 document.getElementById("content").innerHTML = `
-  <div id="ocorrencias-card" class="card" style="margin-bottom:22px;border-color:rgba(239,68,68,.3);display:none">
-    <div class="card-header">
-      <div class="card-title" style="color:#ef4444">🚩 Alerta de Ocorrências</div>
-    </div>
-    <div id="ocorrencias-lista"></div>
-  </div>
 
   <div class="dash-stats-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px">
     <div class="stat-card">
@@ -413,16 +449,6 @@ document.getElementById("content").innerHTML = `
     </div>
   </div>
 
-  <div id="apelidos-card" class="card" style="margin-top:20px">
-    <div style="font-size:14px;font-weight:700;margin-bottom:14px">
-      🎮 Apelidos aguardando aprovação
-      <span id="apelidos-badge" style="background:var(--orange);color:#fff;padding:1px 7px;border-radius:10px;font-size:10px;margin-left:6px">0</span>
-    </div>
-    <div id="apelidos-lista">
-      <p style="color:var(--text-muted);font-size:13px">Verificando…</p>
-    </div>
-  </div>
-
   <div id="diplomas-card" class="card" style="margin-top:20px;display:none">
     <div class="card-header">
       <div class="card-title">
@@ -460,18 +486,6 @@ document.getElementById("content").innerHTML = `
         </div>
         <span id="toggle-guia-label" style="font-size:12px;font-weight:600;color:var(--text-muted)">Desativado</span>
       </label>
-    </div>
-    <div class="list-divider" style="border-top:1px solid var(--border);margin:10px 0"></div>
-    <div style="margin-bottom:8px">
-      <div style="font-size:13px;font-weight:700;margin-bottom:2px">🏆 Desafio da Semana</div>
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Aparece no topo da página de Duelos</div>
-      <input id="ds-titulo-input"  type="text" placeholder="Título do desafio" style="width:100%;box-sizing:border-box;padding:7px 10px;background:var(--bg,#0d0f1a);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;margin-bottom:6px"/>
-      <input id="ds-desc-input"    type="text" placeholder="Descrição / prazo (ex: Até sexta, 13/06)" style="width:100%;box-sizing:border-box;padding:7px 10px;background:var(--bg,#0d0f1a);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;margin-bottom:6px"/>
-      <input id="ds-recomp-input"  type="text" placeholder="Recompensa (ex: +100 XP bônus)" style="width:100%;box-sizing:border-box;padding:7px 10px;background:var(--bg,#0d0f1a);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;margin-bottom:8px"/>
-      <div style="display:flex;gap:8px">
-        <button onclick="salvarDesafioSemana(true)"  style="flex:1;padding:8px;background:var(--purple,#7c5cfc);border:none;color:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">✅ Ativar</button>
-        <button onclick="salvarDesafioSemana(false)" style="flex:1;padding:8px;background:var(--card2);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">❌ Desativar</button>
-      </div>
     </div>
   </div>
 
@@ -521,36 +535,6 @@ window.toggleMostrarGuia = async function(ativo) {
 };
 carregarToggleGuia();
 
-// ── Desafio da Semana ─────────────────────────────────────────
-async function carregarDesafioSemana() {
-  try {
-    const snap = await get(ref(db, 'config/desafio_semana'));
-    const ds = snap.val();
-    if (ds?.titulo)    document.getElementById('ds-titulo-input').value  = ds.titulo;
-    if (ds?.descricao) document.getElementById('ds-desc-input').value    = ds.descricao;
-    if (ds?.recompensa) document.getElementById('ds-recomp-input').value = ds.recompensa;
-  } catch(_) {}
-}
-carregarDesafioSemana();
-
-window.salvarDesafioSemana = async function(ativo) {
-  try {
-    const titulo     = document.getElementById('ds-titulo-input')?.value?.trim()  || '';
-    const descricao  = document.getElementById('ds-desc-input')?.value?.trim()    || '';
-    const recompensa = document.getElementById('ds-recomp-input')?.value?.trim()  || '';
-    await set(ref(db, 'config/desafio_semana'), {
-      ativo,
-      titulo,
-      descricao,
-      recompensa,
-      atualizado_em: Date.now(),
-    });
-    toast(ativo ? '✅ Desafio da semana ativado!' : '❌ Desafio desativado.');
-  } catch(e) {
-    console.error('[Desafio semana]', e);
-    toast('Erro ao salvar.');
-  }
-};
 
 // ── Online Agora (listeners em tempo real) ────────────────────
 const ONLINE_WINDOW_MS  = 5 * 60 * 1000;
@@ -743,187 +727,180 @@ function toast(msg) {
   t._to = setTimeout(() => { t.style.opacity = '0'; }, 2500);
 }
 
-// ── Apelidos pendentes ────────────────────────────────────────
-onValue(ref(db, 'perfis'), async (snap) => {
-  if (!snap.exists()) return;
-  const pendentes = [];
-  snap.forEach(child => {
-    const v = child.val();
-    if (v?.apelido_status === 'pendente') pendentes.push({ uid: child.key, ...v });
-  });
-  const badge = document.getElementById('apelidos-badge');
-  if (badge) badge.textContent = pendentes.length || '0';
-  const lista = document.getElementById('apelidos-lista');
-  if (!lista) return;
-  if (!pendentes.length) {
-    lista.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Nenhum apelido pendente.</p>';
-    return;
-  }
-  function nomeDoUid(uid) {
-    const parts = uid.split('_');
-    if (parts.length < 2) return { nome: uid, turma: '' };
-    return { nome: parts.slice(1).join(' '), turma: parts[0] };
-  }
-  lista.innerHTML = pendentes.map(p => {
-    const fallback = nomeDoUid(p.uid);
-    const nome  = p.nome  || fallback.nome;
-    const turma = p.turma || fallback.turma;
-    return `
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600">${escH(nome)} <span style="color:var(--text-muted);font-weight:400;font-size:11px">(${escH(turma)})</span></div>
-        <span style="font-size:12px">Apelido: <strong style="color:var(--orange)">"${escH(p.apelido_pendente || '')}"</strong></span>
-        ${p.apelido_ativo ? `<span style="font-size:10px;color:var(--text-muted)"> (atual: ${escH(p.apelido_ativo)})</span>` : ''}
-      </div>
-      <button onclick="aprovarApelido('${p.uid}')"
-              style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">✅ Aprovar</button>
-      <button onclick="pedirMotivo('${p.uid}','${escH(p.apelido_pendente || '')}')"
-              style="background:var(--card2);color:var(--red);border:1px solid var(--red);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">❌ Recusar</button>
-    </div>`; }).join('');
-});
-
-window.aprovarApelido = async function(uid) {
-  try {
-    const snap = await get(ref(db, `perfis/${uid}`));
-    const p = snap.val();
-    if (!p) return;
-    await update(ref(db, `perfis/${uid}`), {
-      apelido_ativo:      p.apelido_pendente,
-      apelido_status:     'aprovado',
-      apelido_pendente:   null,
-      apelido_motivo:     null,
-      apelido_trocas_bim: (p.apelido_trocas_bim || 0) + 1,
-    });
-    toast(`✅ Apelido aprovado para ${escH(p.nome || '')}`);
-  } catch(e) { toast('Erro ao aprovar. Tente novamente.'); }
+// ── ✔ Para aprovar (PROMPT-278): tudo o que espera a professora, de todos os jogos, em tempo real (onValue) ──
+// As decisões usam as MESMAS funções das páginas de cada jogo (js/aprovacoes.js e js/jogo-revisao/equipes.js).
+// Itens das salas da Exposição (fotos e textos) precisam ser vistos inteiros: aparecem como um aviso com o link.
+const apv = { perfis: {}, pets: {}, equipes: {}, expoNomes: {}, expoStatus: {}, recados: {}, casas: {}, salas: {} };
+const ICONE_APV = { apelido: '🎮', pet: '🐾', equipe: '🛡️', expo_nome: '📝', recado: '📖', casa: '🏠' };
+const TIPO_APV  = { apelido: 'Apelido', pet: 'Nome de pet', equipe: 'Nome de equipe', expo_nome: 'Nome no desafio da Exposição', recado: 'Recado no livro da Exposição', casa: 'Quadro com foto da casinha' };
+const nomeDoUidApv = (uid) => {
+  const s = String(uid || ''), i = s.indexOf('_');
+  return i < 0 ? { nome: s, turma: '' } : { nome: s.slice(i + 1).replace(/_/g, ' '), turma: s.slice(0, i) };
 };
-
-window.pedirMotivo = function(uid, apelido) {
-  const motivo = prompt(`Motivo para recusar "${apelido}" (opcional):`);
-  if (motivo === null) return;
-  rejeitarApelido(uid, motivo);
-};
-
-async function rejeitarApelido(uid, motivo) {
-  try {
-    await update(ref(db, `perfis/${uid}`), {
-      apelido_status:   'rejeitado',
-      apelido_motivo:   motivo || '',
-      apelido_pendente: null,
-    });
-    toast('❌ Apelido recusado');
-  } catch(e) { toast('Erro ao recusar. Tente novamente.'); }
+const ehTesteApv = (uid) => ALUNOS_TESTE.includes(uid) || uid === 'PROFESSORA';
+function itensAprovar() {
+  const l = [];
+  for (const [uid, p] of Object.entries(apv.perfis)) if (p?.apelido_status === 'pendente') {
+    const f = nomeDoUidApv(uid);
+    l.push({ tipo: 'apelido', k: uid, nome: p.nome || f.nome, turma: p.turma || f.turma, pedido: `"${p.apelido_pendente || ''}"`, extra: p.apelido_ativo ? `atual: ${p.apelido_ativo}` : '', ts: 0 });
+  }
+  for (const [k, v] of Object.entries(apv.pets)) if (v?.uid && v.pet && v.nome) {
+    const f = nomeDoUidApv(v.uid);
+    l.push({ tipo: 'pet', k, nome: v.aluno || f.nome, turma: v.turma || f.turma, pedido: `"${v.nome}"`, extra: NOME_PET[v.pet] || v.pet, ts: Number(v.data) || 0 });
+  }
+  for (const [id, e] of Object.entries(apv.equipes)) if (e?.nome_pedido) {
+    const m = membrosDe(e).map(u => nomeDoUidApv(u));
+    l.push({ tipo: 'equipe', k: id, nome: m.map(x => x.nome).join(', ') || '—', turma: [...new Set(m.map(x => x.turma))].join(', '), pedido: `"${e.nome_pedido}"`, extra: `agora: ${e.nome || 'Equipe'}`, ts: 0 });
+  }
+  for (const [uid, n] of Object.entries(apv.expoNomes)) if (n?.nome && !apv.expoStatus[uid] && !ehTesteApv(uid)) {
+    l.push({ tipo: 'expo_nome', k: uid, nome: n.nome, turma: n.turma || '', pedido: `"${n.nome}${n.turma ? ' · ' + n.turma : ''}"`, extra: uid.startsWith('V_') ? 'visitante' : 'aluno', ts: Number(n.ts) || 0 });
+  }
+  for (const [uid, r] of Object.entries(apv.recados)) if (r && typeof r.texto === 'string' && r.ok !== true) {
+    l.push({ tipo: 'recado', k: uid, nome: r.nome || 'Visitante', turma: '', pedido: `“${r.texto}”`, extra: '', ts: Number(r.ts) || 0 });
+  }
+  for (const [id, v] of Object.entries(apv.casas)) if (v?.status === 'pendente') {
+    const f = nomeDoUidApv(v.uid);
+    l.push({ tipo: 'casa', k: id, nome: v.nome || f.nome, turma: v.turma || f.turma, pedido: '', extra: '', ts: Number(v.ts) || 0, foto: id });
+  }
+  return l.sort((a, b) => (a.ts || 0) - (b.ts || 0));
 }
+// itens das salas da Exposição esperando (molduras, varal, totem, púlpito): status 'pendente'
+const itensSalasPend = () => Object.values(apv.salas || {}).reduce((s, sala) =>
+  s + Object.values(sala?.itens || {}).filter(v => v && v.status === 'pendente').length, 0);
 
-// ── Diplomas pendentes ────────────────────────────────────────
+const fotosApv = new Map();
+function renderAprovar() {
+  const card = document.getElementById('aprovar-card'), lista = document.getElementById('aprovar-lista'), badge = document.getElementById('aprovar-badge');
+  if (!card || !lista) return;
+  const l = itensAprovar(), nSalas = itensSalasPend(), total = l.length + nSalas;
+  badge.textContent = String(total);
+  badge.style.background = total ? 'var(--orange)' : 'var(--card2)';
+  card.classList.toggle('apv-vazio', !total);
+  if (!total) { lista.innerHTML = '<div class="apv-nada">Nada para aprovar ✓</div>'; return; }
+  lista.innerHTML = l.map(it => `
+    <div class="apv-row" data-tipo="${it.tipo}" data-k="${escH(it.k)}">
+      <span class="apv-ico" title="${TIPO_APV[it.tipo]}">${ICONE_APV[it.tipo]}</span>
+      ${it.foto ? `<img class="apv-foto" data-foto="${escH(it.foto)}" alt=""/>` : ''}
+      <div class="apv-info">
+        <div class="apv-quem">${escH(it.nome)}${it.turma ? ` <span class="apv-turma">${escH(it.turma)}</span>` : ''}</div>
+        <div class="apv-pedido"><span class="apv-tipo">${TIPO_APV[it.tipo]}</span>${it.pedido ? ` <strong>${escH(it.pedido)}</strong>` : ''}${it.extra ? ` <span class="apv-extra">(${escH(it.extra)})</span>` : ''}</div>
+      </div>
+      <button class="apv-ok" data-apv="ok">✔ Aprovar</button>
+      <button class="apv-nao" data-apv="nao">✖ Recusar</button>
+    </div>`).join('')
+    + (nSalas ? `<div class="apv-row apv-link"><span class="apv-ico">🖼️</span><div class="apv-info"><div class="apv-quem">${nSalas} ite${nSalas === 1 ? 'm' : 'ns'} nas salas da Exposição</div>
+        <div class="apv-pedido">Fotos e textos: confira inteiros antes de aprovar.</div></div>
+        <a class="apv-ok" href="/professor/p-exposicao.html" style="text-decoration:none">Abrir na Exposição →</a></div>` : '');
+  for (const im of lista.querySelectorAll('img[data-foto]')) {
+    const id = im.dataset.foto;
+    if (!fotosApv.has(id)) fotosApv.set(id, lerFotoExpo(false, id));
+    fotosApv.get(id).then(d => { if (d && im.isConnected) im.src = d; else if (!d) im.remove(); });
+  }
+}
+document.getElementById('aprovar-lista')?.addEventListener('click', async (ev) => {
+  const b = ev.target.closest('button[data-apv]'), row = b?.closest('.apv-row');
+  if (!b || !row || b.disabled) return;
+  const tipo = row.dataset.tipo, k = row.dataset.k, aprova = b.dataset.apv === 'ok';
+  let motivo = '';
+  if (!aprova && tipo === 'apelido') { motivo = prompt('Motivo para recusar o apelido (opcional):'); if (motivo === null) return; }
+  row.querySelectorAll('button').forEach(x => { x.disabled = true; });
+  try {
+    if (tipo === 'apelido') { if (aprova) await aprovarApelido(k); else await recusarApelido(k, motivo); }
+    else if (tipo === 'pet') { await garantirLoja(); await decidirNomePet(false, k, apv.pets[k], aprova); }
+    else if (tipo === 'equipe') { await garantirLoja(); if (aprova) await aprovarNomeEquipe(false, k); else await recusarNomeEquipe(false, k); }
+    else if (tipo === 'expo_nome') await decidirNomeExpo(false, k, aprova);
+    else if (tipo === 'recado') await decidirRecado(false, k, aprova);
+    else if (tipo === 'casa') { const r = await decidirCasaFoto(false, k, aprova); if (r.mudou) toast('⚠️ Essa imagem mudou enquanto você olhava.'); }
+    toast(aprova ? `✔ ${TIPO_APV[tipo]} aprovado` : `✖ ${TIPO_APV[tipo]} recusado`);
+  } catch (e) {
+    console.error('[Para aprovar]', e);
+    toast(e?.message && !/permission/i.test(e.message) ? e.message : 'Não foi possível salvar. Tente de novo.');
+    row.querySelectorAll('button').forEach(x => { x.disabled = false; });
+  }
+});
+for (const [k, path] of [['perfis', 'perfis'], ['pets', 'jogo_revisao_nomes_pets'], ['equipes', 'jogo_revisao_equipes'],
+  ['expoNomes', 'exposicao_nomes'], ['expoStatus', 'exposicao_nomes_status'], ['recados', 'exposicao_livro/recados'],
+  ['casas', 'jogo_revisao_casinha_fotos'], ['salas', 'exposicao_salas']]) {
+  try {
+    onValue(ref(db, path), (s) => { const v = s.exists() ? s.val() : null; apv[k] = v && typeof v === 'object' ? v : {}; renderAprovar(); },
+      (e) => console.warn('[Para aprovar]', path, e?.code || e));
+  } catch (e) { console.warn('[Para aprovar]', path, e); }
+}
+renderAprovar();
+
+// ── 🎓 Diplomas para imprimir (PROMPT-278): todos os certificados de js/certificados.js ainda não impressos, por tipo e bimestre ──
+let certsDash = [], impressosDash = {}, mostrarImpressos = false;
+const grupoCert = (c) => `${c.tipo}_${c.bim}`;
 async function carregarDiplomasPendentes() {
   try {
-    const [perfisSnap, impressosSnap, conquSnap] = await Promise.all([
-      get(ref(db, 'perfis')),
-      get(ref(db, 'diplomas_impressos')),
-      get(ref(db, 'conquistas')),
-    ]);
-    if (!conquSnap.exists()) return;
-
-    const impressos = impressosSnap.exists() ? impressosSnap.val() : {};
-    const pendentes = [];
-
-    conquSnap.forEach(child => {
-      const uid      = child.key;
-      const conquistas = child.val();
-      if (!conquistas?.tabuada_300?.conquistado) return;
-      if (impressos[uid]?.tabuada_300?.impresso) return;
-      const perfil = perfisSnap.exists() ? perfisSnap.child(uid).val() : null;
-      if (!perfil?.nome) return;
-      if (perfil.nome?.includes('TESTE') || perfil.turma === 'TESTE') return;
-      pendentes.push({ uid, nome: perfil.nome, turma: perfil.turma || '', ts: conquistas.tabuada_300.ts });
-    });
-
-    const card  = document.getElementById('diplomas-card');
-    const badge = document.getElementById('diplomas-badge');
-    const lista = document.getElementById('diplomas-lista');
-    if (!card || !badge || !lista) return;
-
-    badge.textContent = pendentes.length || '0';
-    if (!pendentes.length) { card.style.display = 'none'; return; }
-    card.style.display = 'block';
-
-    lista.innerHTML = pendentes.map(p => {
-      const data = p.ts ? new Date(p.ts).toLocaleDateString('pt-BR') : '';
-      return `
-        <div style="display:flex;align-items:center;gap:12px;
-                    padding:10px 0;border-bottom:1px solid var(--border)">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700">${escH(p.nome)}
-              <span style="font-size:11px;color:var(--text-muted);font-weight:400"> · ${escH(p.turma)}</span>
-            </div>
-            ${data ? `<div style="font-size:10px;color:var(--text-muted)">Conquistado em ${data}</div>` : ''}
-          </div>
-          <a href="/aluno/diploma_tabuada.html?uid=${encodeURIComponent(p.uid)}"
-             target="_blank"
-             style="padding:6px 12px;background:var(--card2);color:var(--text);
-                    border:1px solid var(--border);border-radius:8px;
-                    font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap">
-            🖨️ Ver diploma
-          </a>
-          <button onclick="marcarImpresso('${p.uid}')"
-                  style="padding:6px 14px;background:var(--green);color:#fff;
-                         border:none;border-radius:8px;font-weight:700;
-                         font-size:12px;cursor:pointer;white-space:nowrap">
-            ✅ Entregue
-          </button>
-        </div>`;
-    }).join('');
-  } catch(e) { console.warn('[Diplomas]', e); }
+    const [certs, imp] = await Promise.all([todosCertificados(), get(ref(db, 'diplomas_impressos')).catch(() => null)]);
+    certsDash = certs.sort((a, b) => a.turma.localeCompare(b.turma) || a.nome.localeCompare(b.nome));
+    impressosDash = imp?.exists() ? imp.val() || {} : {};
+    renderDiplomas();
+  } catch (e) { console.warn('[Diplomas]', e); }
 }
-
-window.marcarImpresso = async function(uid) {
+function renderDiplomas() {
+  const card = document.getElementById('diplomas-card'), lista = document.getElementById('diplomas-lista'), badge = document.getElementById('diplomas-badge');
+  if (!card || !lista) return;
+  const pend = certsDash.filter(c => !certImpresso(impressosDash, c));
+  const visiveis = mostrarImpressos ? certsDash : pend;
+  badge.textContent = String(pend.length);
+  card.style.display = certsDash.length ? 'block' : 'none';
+  const grupos = [];
+  for (const t of ORDEM_TIPOS) for (const b of TIPOS_CERT[t].bims) {
+    const l = visiveis.filter(c => c.tipo === t && c.bim === b);
+    if (l.length) grupos.push({ t, b, l });
+  }
+  const topo = `<div class="dip-topo">
+      ${pend.length ? `<a class="dip-bt dip-bt-ouro" target="_blank" href="${urlCertificados(pend)}">🖨️ Imprimir todos (${pend.length})</a>` : '<span class="dip-ok">Tudo impresso ✓</span>'}
+      <button class="dip-bt" id="dip-mostrar">${mostrarImpressos ? '🙈 Esconder impressos' : '👁️ Mostrar impressos'}</button>
+    </div>`;
+  lista.innerHTML = topo + grupos.map(({ t, b, l }) => {
+    const cfg = TIPOS_CERT[t], pendG = l.filter(c => !certImpresso(impressosDash, c));
+    return `<div class="dip-grupo">
+      <div class="dip-grupo-top">
+        <span class="dip-grupo-nome" style="color:${cfg.cor}">${cfg.icon} ${escH(cfg.nome)} · ${b}º bim <span class="dip-n">${pendG.length}${mostrarImpressos && l.length !== pendG.length ? ` / ${l.length}` : ''}</span></span>
+        <a class="dip-bt" target="_blank" href="${urlCertificados(l)}">🖨️ Imprimir grupo</a>
+        ${pendG.length ? `<button class="dip-bt dip-bt-verde" data-dip-grupo="${t}_${b}">✔ Marcar grupo como impresso</button>` : ''}
+      </div>
+      ${l.map(c => {
+        const feito = certImpresso(impressosDash, c), ts = tsImpresso(impressosDash, c);
+        return `<div class="dip-row${feito ? ' feito' : ''}">
+          <div class="dip-info"><b>${escH(c.nome)}</b> <span class="apv-turma">${escH(c.turma)}</span>
+            <small>${c.ts ? `Conquistado em ${new Date(c.ts).toLocaleDateString('pt-BR')} · ` : ''}${c.qtd.toLocaleString('pt-BR')} ${c.tipo === 'escalada' ? 'expressões' : c.tipo.startsWith('revisao') ? 'perguntas' : 'questões'}${feito && ts ? ` · impresso em ${new Date(ts).toLocaleDateString('pt-BR')}` : ''}</small></div>
+          <a class="dip-bt" target="_blank" href="${urlCertificado(c)}">🖨️</a>
+          ${feito ? `<button class="dip-bt" data-dip-desfazer="${escH(c.uid)}|${c.chave}">↩</button>`
+                  : `<button class="dip-bt dip-bt-verde" data-dip-um="${escH(c.uid)}|${c.chave}">✔ Impresso</button>`}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+async function marcarDiplomas(lista, impresso) {
+  if (!lista.length) return;
+  const patch = {}, ts = Date.now();
+  for (const c of lista) patch[`${c.uid}/${c.chave}`] = impresso ? { impresso: true, ts } : { impresso: false };
   try {
-    await set(ref(db, `diplomas_impressos/${uid}/tabuada_300`), { impresso: true, ts: Date.now() });
-    toast('✅ Marcado como entregue!');
-    carregarDiplomasPendentes();
-  } catch(e) { toast('Erro ao salvar. Tente novamente.'); }
-};
-
+    await update(ref(db, 'diplomas_impressos'), patch);
+    for (const c of lista) { (impressosDash[c.uid] ||= {})[c.chave] = impresso ? { impresso: true, ts } : { impresso: false }; }
+    toast(impresso ? `✔ ${lista.length} marcado${lista.length > 1 ? 's' : ''} como impresso${lista.length > 1 ? 's' : ''}` : '↩ Marcação desfeita');
+    renderDiplomas();
+  } catch (e) { console.error('[Diplomas]', e); toast('Erro ao salvar. Tente novamente.'); }
+}
+document.getElementById('diplomas-lista')?.addEventListener('click', (ev) => {
+  const b = ev.target.closest('button');
+  if (!b) return;
+  if (b.id === 'dip-mostrar') { mostrarImpressos = !mostrarImpressos; renderDiplomas(); return; }
+  const achar = (v) => { const [uid, chave] = v.split('|'); return certsDash.filter(c => c.uid === uid && c.chave === chave); };
+  if (b.dataset.dipUm) marcarDiplomas(achar(b.dataset.dipUm), true);
+  else if (b.dataset.dipDesfazer) marcarDiplomas(achar(b.dataset.dipDesfazer), false);
+  else if (b.dataset.dipGrupo) {
+    const l = certsDash.filter(c => grupoCert(c) === b.dataset.dipGrupo && !certImpresso(impressosDash, c));
+    if (confirm(`Marcar ${l.length} certificado${l.length > 1 ? 's' : ''} como impresso${l.length > 1 ? 's' : ''}?`)) marcarDiplomas(l, true);
+  }
+});
 carregarDiplomasPendentes();
 
-// ── Alerta de ocorrências (≥ LIMITE_OCORRENCIAS) ───────────────
-// Mesmo caminho e mesma contagem "real" usados no badge de professor/mapeamento.html
-// (mapeamento_salas/{turma}/anotacoes → entry.registros.length, sem filtro de bimestre/tag).
-const LIMITE_OCORRENCIAS = 4;
-async function carregarAlertaOcorrencias() {
-  const card  = document.getElementById('ocorrencias-card');
-  const lista = document.getElementById('ocorrencias-lista');
-  if (!card || !lista) return;
-  try {
-    const turmas = Object.keys(ALUNOS_POR_TURMA);
-    const snaps = await Promise.all(
-      turmas.map(t => get(ref(db, `mapeamento_salas/${t}/anotacoes`)).catch(() => null))
-    );
-    const linhas = [];
-    snaps.forEach((snap, i) => {
-      if (!snap?.exists()) return;
-      const turma = turmas[i];
-      snap.forEach(child => {
-        const v = child.val();
-        const total = (v?.registros || []).length;
-        if (v?.nome && total >= LIMITE_OCORRENCIAS) linhas.push({ nome: v.nome, turma, total });
-      });
-    });
-    linhas.sort((a, b) => b.total - a.total);
-    if (!linhas.length) { card.style.display = 'none'; return; }
-    card.style.display = 'block';
-    lista.innerHTML = linhas.map(l => `
-      <div class="alert-row sev-high">
-        <div class="alert-info">
-          <div class="alert-nome">${escH(l.nome)}</div>
-          <div class="alert-sub">Turma ${escH(l.turma)}</div>
-        </div>
-        <span class="alert-falhas">${l.total} ocorrência${l.total > 1 ? 's' : ''}</span>
-      </div>`).join('');
-  } catch (e) { console.warn('[Alerta ocorrências]', e); }
-}
-carregarAlertaOcorrencias();
 
 // ── Encerrar todas as sessões ─────────────────────────────────
 window.encerrarTodasSessoes = async function() {

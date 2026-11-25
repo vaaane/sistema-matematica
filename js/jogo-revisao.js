@@ -61,7 +61,7 @@ import { definirPraca, pracaPronta, cfgPraca, cfgDesafio, frasesPraca, temaDoDes
   premioDesafio, ordenarRanking } from '/js/jogo-revisao/praca.js';
 import { codigoValido, premioDoPodio, pontosDaResposta, TEMPO_RODADA_MS } from '/js/jogo-revisao/aovivo.js';
 import { baseAoVivo, criarSala, entrarNaSala, sairDaSala, responder as responderNaSala, ouvirSala, ouvirConviteTurma, Anfitriao, placar } from '/js/jogo-revisao/aovivo-sala.js';
-import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_XP, XP_META, XP_DIA, notaXP } from '/js/jogo-revisao/nota.js';
+import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, TOTAL_INSIGNIAS, XP_DIA } from '/js/jogo-revisao/nota.js';
 import { configurarPrograme, ligarBotoesPrograme, abrirTela as abrirTelaPrograme, fecharTela as fecharTelaPrograme, mostrarCorrida, mensagemCorrida, mostrarCartao as cartaoPrograme,
   programaParaTexto, programaDeTexto, caixaDoQuadro } from '/js/jogo-revisao/programe.js';
 import { faseDoDia, faseDaCorrida, resultadoCorrida, rodadaOQueFaz } from '/js/jogo-revisao/programe-logica.js';
@@ -779,7 +779,7 @@ function gravarVitoria(chave, p) {
   gravar(patch);
 }
 
-// ⭐ XP do jogo (PROMPT-156): contador próprio, vale 2,0 da nota (js/jogo-revisao/nota.js). No máximo XP_DIA por dia (o que passar
+// ⭐ XP do jogo (PROMPT-156): contador próprio, não vale nota desde o PROMPT-278 (js/jogo-revisao/nota.js). No máximo XP_DIA por dia (o que passar
 // não conta). Separado do XP geral do site (darXP). Professora, modo teste e contas de teste: conta na tela, não grava.
 //   xp_jogo = { total, dia: { data, n }, comida: { data, n } }   (comida: quantas vezes o alimentar já deu XP hoje)
 const xpJogoGrava = () => carregouProgresso && !teste && !ehProfessora() && !contaEscondida(sessao?.uid, sessao?.nome);
@@ -21077,11 +21077,9 @@ function abrirEstojo() {
     $('btn-premios-torre').title = h.join(' · '); }
   $('estojo-resumo').textContent = `${conquistadas} de 26 · ${douradas} dourada${douradas === 1 ? '' : 's'}`;
   $('estojo-barra').style.width = (conquistadas / 26 * 100) + '%';
-  const xj = estado.xpJogo || { total: 0 }, hoje = xj.dia?.data === diaLocal() ? Number(xj.dia.n) || 0 : 0, fmt = (n) => n.toLocaleString('pt-BR');
-  $('estojo-nota').innerHTML = `<div class="ins-nota">⭐ Nota do jogo: <b>${formatarNota(notaJogoRevisao(conquistadas, xj.total))}</b> / ${NOTA_MAX}</div>` +
-    `<div class="ins-xp"><div class="ins-xp-top"><span>⭐ Experiência: <b>${fmt(Math.min(xj.total, XP_META))}</b> / ${fmt(XP_META)} → ${formatarNota(Math.round(notaXP(xj.total) * 10) / 10)} de ${PESO_XP},0</span>` +
-    `<small>hoje: ${hoje} / ${XP_DIA}</small></div><div class="ins-xp-barra"><span style="width:${Math.min(100, xj.total / XP_META * 100)}%"></span></div></div>` +
-    `<div class="ins-nota-legenda">Ginásios valem ${PESO_INSIGNIAS},0 · Experiência vale ${PESO_XP},0</div>`;
+  // 🏅 PROMPT-278: a nota é só pelas insígnias (o XP do jogo continua na loja/nível, mas não aparece aqui)
+  $('estojo-nota').innerHTML = `<div class="ins-nota">⭐ Nota do jogo: <b>${formatarNota(notaJogoRevisao(conquistadas))}</b> / ${NOTA_MAX}</div>` +
+    `<div class="ins-nota-legenda">Cada insígnia vale ${PESO_INSIGNIAS}/${TOTAL_INSIGNIAS} · as ${TOTAL_INSIGNIAS} valem ${formatarNota(NOTA_MAX)}</div>`;
   pintarEspecialAlbum();
   $('estojo').hidden = false;
   $('estojo').scrollTop = 0;
@@ -22387,9 +22385,9 @@ function telasTutorial(guia) {
       fala: `${guia ? 'Este jogo é a revisão do ano. ' : ''}São ${NUM_MAPAS} mapas, cada um com 2 ginásios (A e B): ${nIns} ao todo. Eles abrem em ordem (1A, 1B, 2A…): vencendo o líder de um, abre o próximo.` },
     { id: 'nota', tit: '🏅 A nota', emoji: '🏅',
       cena: cenaLisa(`<div class="tut-slot tut-slot-pedras">${estojoTut(pedraTut('mapa1-A', 'ganha') + pedraTut('mapa1-B', 'ganha') + pedraTut('mapa2-A', 'ganha'), { soPedras: true })}</div>
-        <div class="tut-nota"><span class="tut-nota-ins" style="flex:${PESO_INSIGNIAS}">${PESO_INSIGNIAS} insígnias</span><span class="tut-nota-xp" style="flex:${PESO_XP}">${PESO_XP} outras</span></div>
-        <div class="tut-nota-total">${PESO_INSIGNIAS} + ${PESO_XP} = <b>${NOTA_MAX}</b></div>`),
-      fala: `O jogo vale ${NOTA_MAX} pontos: ${PESO_INSIGNIAS} pelas insígnias dos ginásios e ${PESO_XP} por fazer as outras atividades do jogo, como pescar, batalhar, cuidar do pet e estudar.` },
+        <div class="tut-nota"><span class="tut-nota-ins" style="flex:1">${TOTAL_INSIGNIAS} insígnias</span></div>
+        <div class="tut-nota-total">${TOTAL_INSIGNIAS} insígnias = <b>${NOTA_MAX}</b></div>`),
+      fala: `O jogo vale ${NOTA_MAX} pontos, todos pelas ${TOTAL_INSIGNIAS} insígnias dos ginásios: cada insígnia vale um pedaço da nota.` },
     { id: 'onde_ver', tit: '📈 Onde ver', emoji: '📈',
       cena: cenaLisa(`<div class="tut-onde"><span class="jr-btn-estojo tut-bt-estojo"><img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/><span class="jr-estojo-cont">2/${nIns}</span>${alvoTut(50, 50, true)}</span>
         <span class="tut-seta-lado">➜</span>
@@ -22458,7 +22456,7 @@ function telasTutorial(guia) {
       fala: 'Nos mapas há montinhos para cavar (saem moedas e tesouros) e mato para arrancar (sai fruta e verdura). O mato cresce de novo em 6 horas!' },
     { id: 'extras', tit: '✨ Atividades extras', emoji: '✨',
       cena: cenaLisa(`<div class="tut-extras">${extras.map(([e, n, xp]) => `<span class="tut-extra"><i>${e}</i>${n}${xp ? ' <b>⭐</b>' : ''}</span>`).join('')}</div>`),
-      fala: 'E tem muito mais para fazer! As com ⭐ dão XP para a sua nota.' },
+      fala: 'E tem muito mais para fazer! As com ⭐ dão XP do jogo.' },
     { id: 'pronto', tit: '🏁 Pronto!', emoji: '🏁',
       cena: cenaTut(`${IMG}/mapas/mapa1.webp`, [520, 330, 460], ator(urlComemorando(), { l: 40, b: 8, h: 62, reserva: sprite('frente-parado') }) + petTut(forma, { l: 62, b: 6, h: 46 })),
       fala: guia ? `Agora é com você${ap ? ', ' + ap : ''}! Já vai escolher o seu pet. Se esquecer de algo, toque em ⚙️ e em ❓ Como jogar para ver a explicação de novo.`

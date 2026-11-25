@@ -225,6 +225,7 @@ import { ref, get, set, update, remove, onValue } from "https://www.gstatic.com/
 import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
 import { temAudioGrio, legendaGrio } from "/js/jogo-revisao/grio.js";   // 🎙️ PROMPT-234
 import { montarRanking, totalDe, chaveNome, rotuloNome, limparNome, NOME_MAX, TURMA_MAX } from "/js/jogo-revisao/expo-ranking.js";   // 📝 PROMPT-257
+import { decidirCasaFoto, decidirNomeExpo, decidirRecado } from "/js/aprovacoes.js";   // ✔ PROMPT-278: as mesmas do dashboard
 
 if (!requireProfessor()) throw new Error("sem sessão de professor");
 renderSidebarProfessor("sidebar", "exposicao");
@@ -323,13 +324,13 @@ function renderCasas() {
   for (const im of $("pend-casas").querySelectorAll("img[data-foto]")) fotoDados(im.dataset.foto).then(d => { if (d && im.isConnected) im.src = d; else if (!d) im.replaceWith(Object.assign(document.createElement("span"), { className: "sem", textContent: "(imagem não encontrada)" })); });
 }
 async function decidirCasa(id, aprovar, motivo = "") {
-  const r = ref(db, `${no("jogo_revisao_casinha_fotos")}/${id}`), v = await get(r).then(s => s.val()).catch(() => null);
-  if (!v || v.status !== "pendente") { aviso("⚠️ Essa imagem mudou enquanto você olhava."); return false; }
-  const nome = v.nome || nomePor(v.uid);
-  if (aprovar) return gravar(update(r, { status: "aprovado", rev_ts: Date.now(), motivo: null }), `Casinha de ${nome}: aprovada.`);
-  const ok = await gravar(update(r, { status: "recusado", rev_ts: Date.now(), motivo: motivo || null }), `Casinha de ${nome}: recusada.`);
-  if (ok) { fotosCache.delete(id); gravar(remove(ref(db, `${no("exposicao_imagens")}/${id}`))); }
-  return ok;
+  try {
+    const r = await decidirCasaFoto(teste, id, aprovar, motivo);
+    if (r.mudou) { aviso("⚠️ Essa imagem mudou enquanto você olhava."); return false; }
+    if (!aprovar) fotosCache.delete(id);
+    aviso(`Casinha de ${r.v.nome || nomePor(r.v.uid)}: ${aprovar ? "aprovada" : "recusada"}.`);
+    return true;
+  } catch (e) { console.error(e); aviso("⚠️ Não foi possível gravar (" + (e?.code || e?.message || e) + ")"); return false; }
 }
 $("pend-casas").addEventListener("click", async (e) => {
   const el = e.target.closest(".pend"), b = e.target.closest("button");
@@ -726,9 +727,8 @@ $("pub-revelar").addEventListener("click", async () => {
 $("aba-pub").addEventListener("click", async (e) => {
   const r = e.target.closest(".recado"), uid = r?.dataset.uid;
   if (!uid) return;
-  const base = `${no("exposicao_livro")}/recados/${uid}`;
-  if (e.target.closest("[data-rec-ok]")) { if (await gravar(set(ref(db, `${base}/ok`), true), "Recado aprovado: já aparece no livro.")) { pub.recados[uid].ok = true; renderPublico(); } }
-  else if (e.target.closest("[data-rec-apagar]")) { if (await gravar(remove(ref(db, base)), "Recado apagado.")) { delete pub.recados[uid]; renderPublico(); } }
+  if (e.target.closest("[data-rec-ok]")) { if (await gravar(decidirRecado(teste, uid, true), "Recado aprovado: já aparece no livro.")) { pub.recados[uid].ok = true; renderPublico(); } }
+  else if (e.target.closest("[data-rec-apagar]")) { if (await gravar(decidirRecado(teste, uid, false), "Recado apagado.")) { delete pub.recados[uid]; renderPublico(); } }
 });
 // 📱 QR Code (qrcode-generator, no próprio navegador) e o cartaz A4
 function svgQr(texto) { const q = qrcode(0, "M"); q.addData(texto); q.make(); return q.createSvgTag({ cellSize: 8, margin: 2, scalable: true }); }
@@ -816,7 +816,7 @@ $("aba-des").addEventListener("click", async (e) => {
     }
     return;
   }
-  const acao = b.dataset.des, card = b.closest("[data-uid]"), uid = card?.dataset.uid, st = (u, v) => set(ref(db, `${no("exposicao_nomes_status")}/${u}`), v);
+  const acao = b.dataset.des, card = b.closest("[data-uid]"), uid = card?.dataset.uid, st = (u, v) => decidirNomeExpo(teste, u, v === "aprovado");
   if (acao === "aprovar") await gravar(st(uid, "aprovado"), "✅ Aprovado: já aparece no ranking.");
   else if (acao === "recusar") await gravar(st(uid, "recusado"), "❌ Recusado: a pessoa pode trocar o nome.");
   else if (acao === "editar") { desEditando = uid; renderDesafio(); $("des-pend").querySelector(`[data-uid="${CSS.escape(uid)}"] .nm-in`)?.focus(); }

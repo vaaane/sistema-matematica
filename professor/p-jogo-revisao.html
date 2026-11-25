@@ -221,7 +221,7 @@
           <span class="muted" id="copiado" style="font-size:13px"></span>
         </div>
         <div class="tabela-wrap" id="tabela-alunos"><div class="empty">Carregando…</div></div>
-        <div class="legenda">Clique no aluno para ver os 26 ginásios. Nota do jogo: insígnias valem 8,0 e a experiência do jogo (⭐ XP, 2.000 = nota cheia, até 200 por dia) vale 2,0 (total 10).</div>
+        <div class="legenda">Clique no aluno para ver os 26 ginásios. Nota do jogo: só as insígnias — cada uma vale 10/26 e as 26 valem 10,0. O ⭐ XP do jogo aparece só para acompanhar (não vale nota).</div>
       </section>
 
       <!-- Aba — 📊 Antes e depois (PROMPT-134): % de acerto de primeira por ginásio, antes e depois de um marco -->
@@ -345,12 +345,13 @@ import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
-import { notaJogoRevisao, formatarNota, TOTAL_INSIGNIAS, XP_META } from "/js/jogo-revisao/nota.js";
+import { notaJogoRevisao, formatarNota, TOTAL_INSIGNIAS } from "/js/jogo-revisao/nota.js";
 import { gerarUma, assuntoDe } from "/js/jogo-revisao/geradores.js";
 import { NOME_PET } from "/js/jogo-revisao/pets.js";
 import { semanaPesca } from "/js/jogo-revisao/pesca.js";
-import { definirLoja, validarNomePet } from "/js/jogo-revisao/loja.js";
+import { definirLoja } from "/js/jogo-revisao/loja.js";
 import { htmlEmblema, membrosDe, lerTodas, aprovarNome, recusarNome, renomearEquipe, apagarEquipe, MAX_MEMBROS } from "/js/jogo-revisao/equipes.js";   // 🛡️ PROMPT-235
+import { decidirNomePet, basePedidosPets } from "/js/aprovacoes.js";   // ✔ PROMPT-278: a mesma função do dashboard
 
 if (!requireProfessor()) throw new Error("sem sessão de professor");
 renderSidebarProfessor("sidebar", "jogo_revisao");
@@ -442,7 +443,7 @@ function calcularAluno(turma, nome) {
   const jogou = !!(n && (ultimo || n.ginasios || n.respostas));
   return {
     uid, nome, n, jogou, insignias, douradas, xp,
-    nota: notaJogoRevisao(insignias, xp),
+    nota: notaJogoRevisao(insignias),   // PROMPT-278: só as insígnias
     mapaAtual, acertos, total, pctPrimeira: pct(acertos, total),
     seq: n?.sequencia?.atual ?? null,
     ultimo,
@@ -797,7 +798,7 @@ function renderAlunos() {
       <td class="aluno">${esc(l.nome)}</td>
       <td class="num ${l.insignias ? "ouro" : ""}">${l.insignias}<span class="muted"> / ${TOTAL_INSIGNIAS}</span></td>
       <td class="num">${l.douradas || (l.jogou ? 0 : "—")}</td>
-      <td class="num ${l.xp >= XP_META ? "ouro" : ""}">${l.jogou ? l.xp.toLocaleString("pt-BR") : "—"}<span class="muted"> / ${XP_META.toLocaleString("pt-BR")}</span></td>
+      <td class="num">${l.jogou ? l.xp.toLocaleString("pt-BR") : "—"}</td>
       <td>${l.jogou ? `<span class="nota-chip">${formatarNota(l.nota)}</span>` : "—"}</td>
       <td>${l.mapaAtual ? `Mapa ${l.mapaAtual}` : "—"}</td>
       <td class="num">${l.pctPrimeira == null ? "—" : l.pctPrimeira + "%"}</td>
@@ -1304,8 +1305,7 @@ $("nomes-teste").checked = eqTeste;
 // jogo_revisao/{uid}/pets/conquistados/{pet} (modo teste: modo_teste_historico/{uid}/jogo_revisao/…).
 // ✔ o pedido vira o nome (nome_aviso = 'aprovado') · ✖ nome_recusado = true (nome_aviso = 'recusado': "Seu nome não foi aprovado, tente outro")
 let pedidosPets = null;
-const basePets = () => (eqTeste ? "jogo_revisao_nomes_pets_teste" : "jogo_revisao_nomes_pets");
-const caminhoPet = (uid, pet) => `${eqTeste ? `modo_teste_historico/${uid}/jogo_revisao` : `jogo_revisao/${uid}`}/pets/conquistados/${pet}`;
+const basePets = () => basePedidosPets(eqTeste);
 async function carregarNomes() {
   $("nomes-aprovar").innerHTML = '<div class="empty">Carregando…</div>';
   try {
@@ -1335,19 +1335,6 @@ function renderNomes() {
       </tbody></table></div>` : '<div class="sub">Nenhum nome de pet esperando.</div>'}
       <div class="legenda">Até aprovar, os colegas veem o nome de antes (ou o da espécie). Recusado, o aluno vê "Seu nome não foi aprovado, tente outro" e pode pedir outro.</div></div>`;
 }
-async function decidirNomePet(k, aprova) {
-  const v = pedidosPets?.[k];
-  if (!v) return;
-  const caminho = caminhoPet(v.uid, v.pet), s = await get(ref(db, caminho)), p = { [`${basePets()}/${k}`]: null };
-  if (s.exists() && s.val()?.nome_pedido === v.nome) {   // o pet ainda existe e o pedido é o mesmo (o aluno não trocou depois)
-    if (aprova) {
-      const r = validarNomePet(v.nome);
-      if (r.erro) throw new Error(r.erro);
-      Object.assign(p, { [`${caminho}/nome`]: r.nome, [`${caminho}/nome_pedido`]: null, [`${caminho}/nome_recusado`]: null, [`${caminho}/nome_aviso`]: "aprovado" });
-    } else Object.assign(p, { [`${caminho}/nome_pedido`]: null, [`${caminho}/nome_recusado`]: true, [`${caminho}/nome_aviso`]: "recusado" });
-  }
-  await update(ref(db), p);
-}
 $("nomes-aprovar").addEventListener("click", async (ev) => {
   const b = ev.target.closest("button[data-aprovar], button[data-recusar]");
   if (!b) return;
@@ -1355,7 +1342,7 @@ $("nomes-aprovar").addEventListener("click", async (ev) => {
   b.disabled = true;
   try {
     if (tipo === "equipe") { if (aprova) await aprovarNome(eqTeste, k); else await recusarNome(eqTeste, k); }
-    else await decidirNomePet(k, aprova);
+    else await decidirNomePet(eqTeste, k, pedidosPets?.[k], aprova);
   } catch (err) { console.error(err); alert(err?.message && !/permission/i.test(err.message) ? err.message : "Não foi possível salvar (confira as regras do banco)."); }
   carregarNomes();
 });

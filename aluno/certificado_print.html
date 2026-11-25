@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#15102a">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Certificado — Imprimir</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<!-- 🎓 PROMPT-278: certificados por conquista e por bimestre (js/certificados.js). A4 deitado, um por folha.
+     ?itens=uid~tipo~bim,uid~tipo~bim…  (o aluno logado sem ?itens vê os dele) · ?modelo=tipo (exemplo) -->
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  @page{size:A4 landscape;margin:0}
+  html,body{background:#0d0f1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-family:'Playfair Display',serif;color:#222}
+  .barra{position:sticky;top:0;z-index:9;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:#15102a;border-bottom:1px solid rgba(255,255,255,.1);font-family:Inter,system-ui,sans-serif}
+  .barra button{border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer}
+  .barra .b-fechar{background:#1a1a2e;color:#fff;border:1px solid rgba(255,255,255,.2)}
+  .barra .b-imp{background:linear-gradient(135deg,#c9a84c,#f7e98e);color:#1a0f00}
+  .barra .dica{font-size:12px;color:#9ca3af}
+  #folhas{display:flex;flex-direction:column;align-items:center;gap:18px;padding:18px 0 40px}
+  .vazio{color:#9ca3af;font-family:Inter,system-ui,sans-serif;padding:60px 20px;text-align:center}
+
+  /* ═══ A folha (cores pelas variáveis do tipo) ═══ */
+  .folha{
+    --esc:#0e3a5c; --cor:#1d7fb8; --clara:#7cc7ef; --fundo:#f5fbff; --texto:#123049;
+    width:297mm;height:210mm;background:#fff;position:relative;overflow:hidden;
+    display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.5);
+    page-break-after:always;break-after:page;
+  }
+  .folha:last-child{page-break-after:auto;break-after:auto}
+  .t-tabuada        {--esc:#0e3a5c;--cor:#1d7fb8;--clara:#7cc7ef;--fundo:#f3faff;--texto:#123049}
+  .t-negativa       {--esc:#1e1b4b;--cor:#6358d2;--clara:#a99ff0;--fundo:#f6f5ff;--texto:#1e1b4b}
+  .t-escalada       {--esc:#0b3d2e;--cor:#10916b;--clara:#6ee7b7;--fundo:#f2fbf7;--texto:#0b3d2e}
+  .t-revisao_mestre {--esc:#2e1f5e;--cor:#7c5cfc;--clara:#c9cbd6;--fundo:#f7f6fb;--texto:#2e1f5e}
+  .t-revisao_lenda  {--esc:#5a3d00;--cor:#b8860b;--clara:#f7e98e;--fundo:#fffbea;--texto:#3a2600}
+
+  .fundo{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,var(--fundo) 0%,#fff 70%)}
+  .borda-ext{position:absolute;inset:7mm;border:2.5px solid var(--cor)}
+  .borda-int{position:absolute;inset:9.5mm;border:1px solid var(--clara)}
+  .canto{position:absolute;font-size:7mm;line-height:1;color:var(--cor);z-index:2}
+  .canto.tl{top:5.2mm;left:5.6mm}.canto.tr{top:5.2mm;right:5.6mm}.canto.bl{bottom:5.2mm;left:5.6mm}.canto.br{bottom:5.2mm;right:5.6mm}
+
+  /* Mestre: prateado com roxo */
+  .t-revisao_mestre .borda-ext{border:3px solid transparent;border-image:linear-gradient(135deg,#8e90a3,#e6e7ef,#7c5cfc,#e6e7ef,#8e90a3) 1}
+  .t-revisao_mestre .borda-int{border-color:#c4b5fd}
+  /* Lenda: moldura dourada larga, diferente de todos */
+  .t-revisao_lenda .fundo{background:radial-gradient(ellipse at 50% 35%,#fff6cc 0%,#fffdf5 55%,#fff 80%)}
+  .t-revisao_lenda .borda-ext{inset:5mm;border:4.5mm solid transparent;border-image:linear-gradient(135deg,#7a5200,#f7e98e,#c9a84c,#fff3b0,#b8860b,#f7e98e,#7a5200) 1}
+  .t-revisao_lenda .borda-int{inset:11.5mm;border:1.5px solid #c9a84c;outline:1px solid rgba(201,168,76,.45);outline-offset:1.5mm}
+  .t-revisao_lenda .canto{color:#fff8d6;font-size:6mm;top:auto;left:auto;right:auto;bottom:auto;text-shadow:0 0 2px #7a5200}
+  .t-revisao_lenda .canto.tl{top:4.4mm;left:4.6mm}.t-revisao_lenda .canto.tr{top:4.4mm;right:4.6mm}
+  .t-revisao_lenda .canto.bl{bottom:4.4mm;left:4.6mm}.t-revisao_lenda .canto.br{bottom:4.4mm;right:4.6mm}
+
+  .miolo{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:15mm 26mm 14mm}
+  .centro{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%}
+  .t-revisao_lenda .miolo{padding:17mm 28mm 15mm}
+  .topo{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:5mm}
+  .escola{display:flex;align-items:center;gap:3mm;text-align:left}
+  .escola img{width:12mm;height:12mm;object-fit:contain}
+  .escola b{display:block;font-family:'Cinzel',serif;font-size:3.4mm;letter-spacing:.6mm;text-transform:uppercase;color:var(--esc)}
+  .escola small{font-size:2.6mm;letter-spacing:.3mm;text-transform:uppercase;color:var(--cor)}
+  .selo-topo{display:flex;align-items:center;gap:2mm;border:1px solid var(--clara);border-radius:3mm;padding:1.6mm 4mm;background:#fff;
+    font-family:'Cinzel',serif;font-size:3mm;font-weight:700;letter-spacing:.5mm;text-transform:uppercase;color:var(--esc)}
+  .selo-topo i{font-style:normal;font-size:5mm}
+  .t-revisao_lenda .selo-topo{background:linear-gradient(135deg,#fff3b0,#f7e98e);border-color:#c9a84c}
+
+  .titulo{font-family:'Cinzel',serif;font-size:11.5mm;font-weight:900;letter-spacing:1mm;text-transform:uppercase;color:var(--esc);line-height:1.1}
+  .t-revisao_lenda .titulo{background:linear-gradient(180deg,#b8860b,#7a5200);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .divisor{display:flex;align-items:center;gap:3mm;width:120mm;margin:2.5mm 0 3.5mm;color:var(--cor);font-size:4mm}
+  .divisor::before,.divisor::after{content:'';flex:1;height:.6mm}
+  .divisor::before{background:linear-gradient(90deg,transparent,var(--cor))}
+  .divisor::after{background:linear-gradient(90deg,var(--cor),transparent)}
+  .certifica{font-style:italic;font-size:4.6mm;color:var(--cor);margin-bottom:1.5mm}
+  .nome{font-family:'Cinzel',serif;font-size:12mm;font-weight:700;color:#111;line-height:1.15;margin-bottom:1.2mm}
+  .turma{font-style:italic;font-size:4.2mm;color:var(--cor);margin-bottom:6mm}
+  .texto{font-size:5mm;line-height:1.6;color:var(--texto);max-width:210mm;margin-bottom:6mm}
+  .texto strong{color:var(--esc)}
+
+  .baixo{display:flex;align-items:center;justify-content:center;gap:9mm;margin-bottom:3mm}
+  .medalha{width:21mm;height:21mm;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10mm;
+    background:radial-gradient(circle at 35% 30%,#fff,var(--clara) 70%);border:1.2mm solid var(--cor);box-shadow:0 0 0 .8mm #fff,0 0 0 1.4mm var(--clara)}
+  .t-revisao_mestre .medalha{background:radial-gradient(circle at 35% 30%,#fff,#d9dae4 55%,#a3a6b8);border-color:#7c5cfc}
+  .t-revisao_lenda .medalha{width:25mm;height:25mm;font-size:12mm;background:radial-gradient(circle at 35% 30%,#fffbe0,#f7e98e 45%,#c9a84c 85%);border-color:#b8860b;
+    box-shadow:0 0 0 1mm #fff8d6,0 0 0 1.8mm #c9a84c,0 0 6mm rgba(201,168,76,.6)}
+  .stats{display:flex}
+  .stat{display:flex;flex-direction:column;align-items:center;padding:1mm 6mm;position:relative}
+  .stat+.stat::before{content:'';position:absolute;left:0;top:20%;height:60%;width:1px;background:var(--clara)}
+  .stat b{font-family:'Cinzel',serif;font-size:5.4mm;color:var(--esc)}
+  .stat small{font-size:2.5mm;letter-spacing:.3mm;text-transform:uppercase;color:var(--cor);margin-top:.6mm}
+
+  .assin{display:flex;flex-direction:column;align-items:center}
+  .assin .linha{width:80mm;height:.4mm;background:linear-gradient(90deg,transparent,var(--esc),transparent);margin-top:14mm}
+  .assin b{font-size:4mm;color:var(--esc);margin-top:1.2mm}
+  .assin small{font-style:italic;font-size:3mm;color:var(--cor);margin-top:1.2mm}
+
+  @media screen{ .folha{zoom:var(--zoom,1)} }
+  @media print{
+    html,body{background:#fff!important}
+    .barra{display:none!important}
+    #folhas{display:block;padding:0}
+    .folha{box-shadow:none;margin:0}
+  }
+</style>
+</head>
+<body>
+<div class="barra">
+  <button class="b-fechar" onclick="history.length > 1 ? history.back() : window.close()">← Voltar</button>
+  <button class="b-imp" onclick="window.print()">🖨️ Imprimir</button>
+  <span class="dica" id="dica">💡 Paisagem · sem margens · ative "Gráficos de fundo"</span>
+</div>
+<div id="folhas"><div class="vazio">Carregando…</div></div>
+
+<script type="module">
+import { getSession } from '/js/auth.js';
+import { ALUNOS_POR_TURMA } from '/js/constants.js';
+import { getNomeCompleto } from '/js/nomes_completos.js';
+import { TIPOS_CERT, certificadosDoAluno, makeUidCert, fmtMil } from '/js/certificados.js';
+
+const P = new URLSearchParams(location.search);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const dataLonga = (ts) => ts ? new Date(ts).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+const anoDe = (ts) => new Date(ts || Date.now()).getFullYear();
+const alunoDoUid = (uid) => {
+  for (const [turma, nomes] of Object.entries(ALUNOS_POR_TURMA)) for (const nome of nomes) if (makeUidCert(turma, nome) === uid) return { turma, nome };
+  return null;
+};
+const TITULO = { revisao_mestre: 'Certificado de Mestre', revisao_lenda: 'Certificado de Lenda' };
+const NIVEL = { tabuada: ['300', 'Nível'], negativa: ['150', 'Nível'], escalada: ['200', 'Níveis'], revisao_mestre: ['26', 'Insígnias'], revisao_lenda: ['26 ✦', 'Douradas'] };
+const UNID = { tabuada: 'Questões', negativa: 'Questões', escalada: 'Expressões', revisao_mestre: 'Perguntas', revisao_lenda: 'Perguntas' };
+
+function folha(c) {
+  const t = TIPOS_CERT[c.tipo], [nv, nvLbl] = NIVEL[c.tipo];
+  const canto = c.tipo === 'revisao_lenda' ? '✦' : '❧';
+  return `<section class="folha t-${c.tipo}">
+    <div class="fundo"></div><div class="borda-ext"></div><div class="borda-int"></div>
+    <span class="canto tl">${canto}</span><span class="canto tr">${canto}</span><span class="canto bl">${canto}</span><span class="canto br">${canto}</span>
+    <div class="miolo">
+      <div class="topo">
+        <div class="escola"><img src="/logo_fundotransparente.png" alt=""/><div><b>Centro Educacional São Bartolomeu</b><small>Matemática · São Sebastião, DF</small></div></div>
+        <div class="selo-topo"><i>${t.icon}</i>${esc(t.nome)} · ${c.bim}º bim</div>
+      </div>
+      <div class="centro">
+      <div class="titulo">${TITULO[c.tipo] || 'Certificado de Conquista'}</div>
+      <div class="divisor"><span>${c.tipo === 'revisao_lenda' ? '✦ ✦ ✦' : '✦'}</span></div>
+      <div class="certifica">Certificamos que o(a) aluno(a)</div>
+      <div class="nome">${esc(c.nomeCompleto)}</div>
+      <div class="turma">Turma ${esc(c.turma)} · ${c.bim}º bimestre de ${anoDe(c.ts)}</div>
+      <div class="texto">${t.conquista(c.bim)} e, nessa jornada, ${t.impacto(c.qtd)}.</div>
+      <div class="baixo">
+        <div class="medalha">${t.icon}</div>
+        <div class="stats">
+          <div class="stat"><b>${nv}</b><small>${nvLbl}</small></div>
+          <div class="stat"><b>${fmtMil(c.qtd)}</b><small>${UNID[c.tipo]}</small></div>
+          ${c.ts ? `<div class="stat"><b>${new Date(c.ts).toLocaleDateString('pt-BR')}</b><small>Conquista</small></div>` : ''}
+        </div>
+      </div>
+      </div>
+      <div class="assin">
+        <div class="linha"></div>
+        <b>Prof.ª Vanessa · CED São Bartolomeu</b>
+        ${c.ts ? `<small>Conquistado em ${dataLonga(c.ts)}</small>` : ''}
+      </div>
+    </div>
+  </section>`;
+}
+
+async function montar() {
+  const el = document.getElementById('folhas');
+  const modelo = P.get('modelo');
+  if (modelo && TIPOS_CERT[modelo]) {
+    const bim = TIPOS_CERT[modelo].bims.at(-1);
+    el.innerHTML = folha({ tipo: modelo, bim, turma: 'Modelo', nomeCompleto: 'Aluno(a) Exemplo', qtd: 1248, ts: Date.now() });
+    return;
+  }
+  // pedidos: ?itens=uid~tipo~bim,… ou, sem nada, os do aluno logado
+  let pedidos = String(P.get('itens') || '').split(',').map(s => s.split('~')).filter(p => p.length === 3).map(([uid, tipo, bim]) => ({ uid, tipo, bim: +bim }));
+  if (!pedidos.length) {
+    const s = getSession();
+    if (!s?.turma || !s.alunos?.[0]) { location.href = '/index.html'; return; }
+    const uid = makeUidCert(s.turma, s.alunos[0]);
+    pedidos = (await certificadosDoAluno(s.turma, s.alunos[0])).map(c => ({ uid, tipo: c.tipo, bim: c.bim }));
+  }
+  const porUid = new Map();
+  for (const p of pedidos) { if (!porUid.has(p.uid)) porUid.set(p.uid, []); porUid.get(p.uid).push(p); }
+  const prontos = await Promise.all([...porUid.entries()].map(async ([uid, ps]) => {
+    const a = alunoDoUid(uid);
+    if (!a) return [];
+    const certs = await certificadosDoAluno(a.turma, a.nome).catch(() => []);
+    return ps.map(p => certs.find(c => c.tipo === p.tipo && c.bim === p.bim)).filter(Boolean)
+      .map(c => ({ ...c, nomeCompleto: getNomeCompleto(a.turma, a.nome) }));
+  }));
+  // a ordem do pedido (o dashboard já manda por turma e nome)
+  const lista = [];
+  for (const p of pedidos) { const c = prontos.flat().find(x => x.uid === p.uid && x.tipo === p.tipo && x.bim === p.bim); if (c && !lista.includes(c)) lista.push(c); }
+  if (!lista.length) { el.innerHTML = '<div class="vazio">Nenhum certificado encontrado.</div>'; return; }
+  el.innerHTML = lista.map(folha).join('');
+  document.title = lista.length === 1 ? `Certificado — ${lista[0].nome} (${TIPOS_CERT[lista[0].tipo].nome})` : `Certificados — ${lista.length} folhas`;
+  document.getElementById('dica').textContent = `💡 ${lista.length} folha${lista.length > 1 ? 's' : ''} · Paisagem · sem margens · ative "Gráficos de fundo"`;
+}
+
+// cabe na tela (só na tela; na impressão, tamanho real)
+function ajustarZoom() {
+  const mm = 297 * 96 / 25.4, z = Math.min(1, (window.innerWidth - 24) / mm);
+  document.documentElement.style.setProperty('--zoom', z.toFixed(3));
+}
+window.addEventListener('resize', ajustarZoom);
+ajustarZoom();
+montar().catch(e => { console.error(e); document.getElementById('folhas').innerHTML = '<div class="vazio">Não foi possível carregar.</div>'; });
+</script>
+</body>
+</html>

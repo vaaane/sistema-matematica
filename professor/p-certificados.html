@@ -37,6 +37,14 @@
   .tipo-tab[data-tipo="destaque"].active { background: rgba(155,48,255,.15); color: #c084fc; border-color: rgba(155,48,255,.4); }
   .tipo-tab[data-tipo="melhoria"].active { background: rgba(16,185,129,.15); color: #34d399; border-color: rgba(16,185,129,.4); }
   .tipo-tab[data-tipo="todos"].active { background: rgba(127,119,221,.15); color: var(--purple); }
+  .tipo-tab[data-tipo="negativa"].active { background: rgba(99,88,210,.15); color: #a99ff0; border-color: rgba(99,88,210,.4); }
+  .tipo-tab[data-tipo="escalada"].active { background: rgba(52,211,153,.15); color: #34d399; border-color: rgba(52,211,153,.4); }
+  .tipo-tab[data-tipo="revisao"].active { background: rgba(255,215,0,.12); color: #ffd700; border-color: rgba(255,215,0,.4); }
+  .badge-tabuada_b { background: rgba(56,189,248,.15); color: #38bdf8; border: 1px solid rgba(56,189,248,.3); }
+  .badge-negativa { background: rgba(127,119,221,.18); color: #a99ff0; border: 1px solid rgba(127,119,221,.3); }
+  .badge-escalada { background: rgba(52,211,153,.15); color: #34d399; border: 1px solid rgba(52,211,153,.3); }
+  .badge-revisao_mestre { background: rgba(196,181,253,.15); color: #c4b5fd; border: 1px solid rgba(196,181,253,.35); }
+  .badge-revisao_lenda { background: rgba(255,215,0,.15); color: #ffd700; border: 1px solid rgba(255,215,0,.45); }
 
   .aluno-row {
     display: flex; align-items: center; gap: 12px;
@@ -166,6 +174,11 @@
         <a href="/aluno/diploma_negativos_print.html?modelo=1" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">⚡ Modelo Negativos</a>
         <a href="/aluno/diploma_destaque_print.html?modelo=1" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">⭐ Modelo Destaque</a>
         <a href="/aluno/diploma_melhoria_print.html?modelo=1" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">📈 Modelo Melhoria</a>
+        <a href="/aluno/certificado_print.html?modelo=tabuada" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">🧮 Modelo Tabuada 300</a>
+        <a href="/aluno/certificado_print.html?modelo=negativa" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">➖ Modelo Negativa 150</a>
+        <a href="/aluno/certificado_print.html?modelo=escalada" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">🧗 Modelo Escalada</a>
+        <a href="/aluno/certificado_print.html?modelo=revisao_mestre" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">🏆 Modelo Mestre</a>
+        <a href="/aluno/certificado_print.html?modelo=revisao_lenda" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">🌟 Modelo Lenda</a>
       </div>
     </div>
 
@@ -186,7 +199,8 @@ import { ref, get, set, remove as fbRemove, update } from 'https://www.gstatic.c
 import { BIMESTRE, CAMPOS_NOTA, EXTRAS_AUTO, CADERNO_EXTRA, EXTRA_NIVEL_PERFIL, EXTRA_RANK_ATIV4,
          slugNome, makeUid, calcularSubtotal, calcularBonus, extrasAutoAtivos, cadernoExtraAtivo,
          buscarProgressoTabuada, buscarAtiv4, buscarNivelPerfil, buscarAtiv5Aluno, fmtNota } from '/js/notas.js';
-import { ALUNOS_POR_TURMA } from '/js/constants.js';
+import { ALUNOS_POR_TURMA, bimestreDeData } from '/js/constants.js';
+import { TIPOS_CERT, ORDEM_TIPOS, todosCertificados, certImpresso, tsImpresso, chaveCert, urlCertificado, urlCertificados, ehContaTeste } from '/js/certificados.js';   // 🎓 PROMPT-278
 
 const sess = requireProfessor();
 if (!sess) throw new Error('não autenticado');
@@ -215,6 +229,8 @@ let todosAlunos = [];
 let abaAtiva    = 'pendentes';
 let turmaFiltro = 'todas';
 let tipoFiltro  = 'todos';
+let bimFiltro   = 'todos';
+const bimDeTs = (ts) => (ts ? bimestreDeData(new Date(ts).toISOString().slice(0, 10)) : null);
 
 // ── Destaque: busca alunos com média > 8 no 2º bimestre ──
 async function buscarDestaques() {
@@ -267,7 +283,7 @@ async function buscarDestaques() {
           const entregue  = impressos[uid]?.destaque_b2?.impresso === true;
           const tsEntrega = impressos[uid]?.destaque_b2?.ts || null;
           destaques.push({
-            uid, nome, turma, tipo: 'destaque',
+            uid, nome, turma, tipo: 'destaque', bim: +BIMESTRE,
             media: total,
             entregue, tsEntrega,
             tsConquista: Date.now(),
@@ -294,7 +310,7 @@ async function buscarMelhorias() {
       const entregue  = impressos[uid]?.melhoria_b2?.impresso === true;
       const tsEntrega = impressos[uid]?.melhoria_b2?.ts || null;
       melhorias.push({
-        uid, nome: val.nome, turma: val.turma, tipo: 'melhoria',
+        uid, nome: val.nome, turma: val.turma, tipo: 'melhoria', bim: +BIMESTRE,
         entregue, tsEntrega,
         tsConquista: val.ts || Date.now(),
         fbKey: key,
@@ -325,10 +341,10 @@ async function carregar() {
       if (!conqus?.tabuada_300?.conquistado) return;
       const perfil = perfis[uid];
       if (!perfil?.nome) return;
-      if (perfil.nome?.includes('TESTE') || perfil.turma === 'TESTE') return;
+      if (ehContaTeste(perfil.turma || '', perfil.nome)) return;
       const entregue   = impressos[uid]?.tabuada_300?.impresso === true;
       const tsEntrega  = impressos[uid]?.tabuada_300?.ts || null;
-      todosAlunos.push({ uid, nome: perfil.nome, turma: perfil.turma || '', tsConquista: conqus.tabuada_300.ts, entregue, tsEntrega, tipo: 'tabuada' });
+      todosAlunos.push({ uid, nome: perfil.nome, turma: perfil.turma || '', tsConquista: conqus.tabuada_300.ts, entregue, tsEntrega, tipo: 'tabuada', bim: bimDeTs(conqus.tabuada_300.ts) });
     });
   }
 
@@ -339,11 +355,18 @@ async function carregar() {
     if ((dados.melhor_nivel || 0) < 50 && !dados.concluiu_50_em) return;
     const perfil = perfis[nuid];
     if (!perfil?.nome) return;
-    if (perfil.nome?.includes('TESTE') || perfil.turma === 'TESTE') return;
+    if (ehContaTeste(perfil.turma || '', perfil.nome)) return;
     const entregue  = impressos[nuid]?.negativos_50?.impresso === true;
     const tsEntrega = impressos[nuid]?.negativos_50?.ts || null;
-    todosAlunos.push({ uid: nuid, nome: perfil.nome, turma: perfil.turma || '', tsConquista: dados.concluiu_50_em || 0, entregue, tsEntrega, tipo: 'negativos' });
+    todosAlunos.push({ uid: nuid, nome: perfil.nome, turma: perfil.turma || '', tsConquista: dados.concluiu_50_em || 0, entregue, tsEntrega, tipo: 'negativos', bim: bimDeTs(dados.concluiu_50_em) || 2 });
   });
+
+  // 🎓 PROMPT-278: Tabuada 300, Negativa 150, Escalada (3º e 4º bim), Mestre e Lenda da Revisão (4º) — js/certificados.js
+  try {
+    const novos = await todosCertificados();
+    for (const c of novos) todosAlunos.push({ uid: c.uid, nome: c.nome, turma: c.turma, tipo: c.tipo, bim: c.bim, qtd: c.qtd, cert: c,
+      tsConquista: c.ts, entregue: certImpresso(impressos, c), tsEntrega: tsImpresso(impressos, c) });
+  } catch(e) { console.error('Erro ao carregar certificados novos:', e); }
 
   // Destaque (média > 8)
   try {
@@ -367,8 +390,13 @@ const TIPO_CFG = {
   destaque:  { icon: '⭐', label: 'Destaque',       badgeCls: 'badge-destaque' },
   melhoria:  { icon: '📈', label: 'Melhoria',       badgeCls: 'badge-melhoria' },
 };
+// 🎓 PROMPT-278 (um por conquista e por bimestre; a Tabuada nova tem o mesmo nome de tipo da antiga: separa pelo a.cert)
+const TIPO_CFG_NOVO = Object.fromEntries(ORDEM_TIPOS.map(t => [t, { icon: TIPOS_CERT[t].icon, label: TIPOS_CERT[t].nome, badgeCls: t === 'tabuada' ? 'badge-tabuada_b' : 'badge-' + t }]));
+// as abas de tipo juntam o antigo e o novo de cada jogo
+const grupoTipo = (a) => (a.cert ? TIPOS_CERT[a.tipo].filtro : a.tipo === 'negativos' ? 'negativa' : a.tipo);
 
 function diplomaUrl(a) {
+  if (a.cert) return urlCertificado(a.cert);
   const p = new URLSearchParams({ nome: a.nome, turma: a.turma });
   if (a.tipo === 'tabuada')   return `/aluno/diploma_tabuada.html?uid=${encodeURIComponent(a.uid)}&${p}`;
   if (a.tipo === 'negativos') return `/aluno/diploma_negativos.html?uid=${encodeURIComponent(a.uid)}&${p}`;
@@ -377,7 +405,8 @@ function diplomaUrl(a) {
   return '#';
 }
 
-function chaveImpressao(tipo) {
+function chaveImpressao(tipo, bim, novo) {
+  if (novo) return chaveCert(tipo, bim);
   if (tipo === 'tabuada')   return 'tabuada_300';
   if (tipo === 'negativos') return 'negativos_50';
   if (tipo === 'destaque')  return 'destaque_b2';
@@ -391,11 +420,14 @@ function render() {
   const turmas    = [...new Set(todosAlunos.map(a => a.turma))].sort();
 
   const lista         = abaAtiva === 'pendentes' ? pendentes : entregues;
-  const listaTipo     = tipoFiltro === 'todos' ? lista : lista.filter(a => a.tipo === tipoFiltro);
-  const listaFiltrada = turmaFiltro === 'todas' ? listaTipo : listaTipo.filter(a => a.turma === turmaFiltro);
+  const listaTipo     = tipoFiltro === 'todos' ? lista : lista.filter(a => grupoTipo(a) === tipoFiltro);
+  const listaBim      = bimFiltro === 'todos' ? listaTipo : listaTipo.filter(a => String(a.bim) === bimFiltro);
+  const listaFiltrada = turmaFiltro === 'todas' ? listaBim : listaBim.filter(a => a.turma === turmaFiltro);
+  const novosFiltrados = listaFiltrada.filter(a => a.cert);
 
   const cntPorTipo = {};
-  todosAlunos.forEach(a => { cntPorTipo[a.tipo] = (cntPorTipo[a.tipo]||0) + 1; });
+  lista.forEach(a => { const g = grupoTipo(a); cntPorTipo[g] = (cntPorTipo[g]||0) + 1; });
+  const bims = [...new Set(todosAlunos.map(a => a.bim).filter(Boolean))].sort();
 
   document.getElementById('certs-content').innerHTML = `
     <div class="summary-bar">
@@ -427,10 +459,19 @@ function render() {
 
     <div class="tipo-tabs">
       <div class="tipo-tab ${tipoFiltro==='todos'?'active':''}" data-tipo="todos" onclick="filtrarTipo('todos')">Todos (${lista.length})</div>
-      <div class="tipo-tab ${tipoFiltro==='tabuada'?'active':''}" data-tipo="tabuada" onclick="filtrarTipo('tabuada')">🏆 Tabuada ${cntPorTipo.tabuada||0}</div>
-      <div class="tipo-tab ${tipoFiltro==='negativos'?'active':''}" data-tipo="negativos" onclick="filtrarTipo('negativos')">⚡ Negativos ${cntPorTipo.negativos||0}</div>
+      <div class="tipo-tab ${tipoFiltro==='tabuada'?'active':''}" data-tipo="tabuada" onclick="filtrarTipo('tabuada')">🧮 Tabuada ${cntPorTipo.tabuada||0}</div>
+      <div class="tipo-tab ${tipoFiltro==='negativa'?'active':''}" data-tipo="negativa" onclick="filtrarTipo('negativa')">➖ Negativa ${cntPorTipo.negativa||0}</div>
+      <div class="tipo-tab ${tipoFiltro==='escalada'?'active':''}" data-tipo="escalada" onclick="filtrarTipo('escalada')">🧗 Escalada ${cntPorTipo.escalada||0}</div>
+      <div class="tipo-tab ${tipoFiltro==='revisao'?'active':''}" data-tipo="revisao" onclick="filtrarTipo('revisao')">🏆 Revisão ${cntPorTipo.revisao||0}</div>
       <div class="tipo-tab ${tipoFiltro==='destaque'?'active':''}" data-tipo="destaque" onclick="filtrarTipo('destaque')">⭐ Destaque ${cntPorTipo.destaque||0}</div>
       <div class="tipo-tab ${tipoFiltro==='melhoria'?'active':''}" data-tipo="melhoria" onclick="filtrarTipo('melhoria')">📈 Melhoria ${cntPorTipo.melhoria||0}</div>
+    </div>
+
+    <div class="turma-filter">
+      <span style="font-size:11px;color:var(--muted);font-weight:600;margin-right:4px">Bimestre:</span>
+      <div class="turma-chip ${bimFiltro==='todos'?'active':''}" onclick="filtrarBim('todos')">Todos</div>
+      ${bims.map(b => `<div class="turma-chip ${bimFiltro===String(b)?'active':''}" onclick="filtrarBim('${b}')">${b}º bim</div>`).join('')}
+      ${novosFiltrados.length ? `<a class="btn-action btn-print" style="margin-left:auto" target="_blank" href="${urlCertificados(novosFiltrados)}">🖨️ Imprimir ${novosFiltrados.length} (um por folha)</a>` : ''}
     </div>
 
     ${turmas.length > 1 ? `
@@ -454,10 +495,12 @@ function render() {
              </div>
            </div>`
         : listaFiltrada.map(a => {
-            const tc = TIPO_CFG[a.tipo] || TIPO_CFG.tabuada;
+            const tc = (a.cert ? TIPO_CFG_NOVO[a.tipo] : TIPO_CFG[a.tipo]) || TIPO_CFG.tabuada;
             const dataConquista = a.tsConquista ? new Date(a.tsConquista).toLocaleDateString('pt-BR') : '';
             const dataEntrega   = a.tsEntrega   ? new Date(a.tsEntrega).toLocaleDateString('pt-BR')   : '';
-            const extraMeta = a.tipo === 'destaque' ? ` · Média: ${fmtNota(a.media)}` : '';
+            const extraMeta = (a.tipo === 'destaque' ? ` · Média: ${fmtNota(a.media)}` : '')
+              + (a.bim ? ` · ${a.bim}º bim` : '') + (a.cert ? ` · ${a.qtd.toLocaleString('pt-BR')} ${a.tipo === 'escalada' ? 'expressões' : a.tipo.startsWith('revisao') ? 'perguntas' : 'questões'}` : '')
+              + (dataConquista ? ` · Conquistado em ${dataConquista}` : '');
             return `
               <div class="aluno-row ${a.entregue?'entregue':''}">
                 <div style="font-size:24px">${tc.icon}</div>
@@ -471,8 +514,8 @@ function render() {
                 <span class="badge-tipo ${tc.badgeCls}">${tc.icon} ${tc.label}</span>
                 <a href="${diplomaUrl(a)}" target="_blank" class="btn-action btn-print">🖨️ Ver diploma</a>
                 ${!a.entregue
-                  ? `<button class="btn-action btn-entregar" onclick="marcarEntregue('${a.uid}','${a.tipo}')">✅ Entregue</button>`
-                  : `<button class="btn-action btn-desfazer" onclick="desfazerEntrega('${a.uid}','${a.tipo}')">↩ Desfazer</button>`
+                  ? `<button class="btn-action btn-entregar" onclick="marcarEntregue('${a.uid}','${a.tipo}',${a.bim||0},${a.cert?1:0})">✅ Entregue</button>`
+                  : `<button class="btn-action btn-desfazer" onclick="desfazerEntrega('${a.uid}','${a.tipo}',${a.bim||0},${a.cert?1:0})">↩ Desfazer</button>`
                 }
                 ${a.tipo === 'melhoria' ? `<button class="btn-action btn-remover" onclick="removerMelhoria('${a.fbKey||''}','${a.uid}')">✕</button>` : ''}
               </div>`;
@@ -493,24 +536,26 @@ function renderVazio() {
 window.trocarAba    = function(aba)   { abaAtiva    = aba;   render(); };
 window.filtrarTurma = function(turma) { turmaFiltro = turma; render(); };
 window.filtrarTipo  = function(tipo)  { tipoFiltro  = tipo;  render(); };
+window.filtrarBim   = function(b)     { bimFiltro   = b;     render(); };
+const acharEntrada = (uid, tipo, bim, novo) => todosAlunos.find(a => a.uid === uid && a.tipo === tipo && !!a.cert === !!novo && (!novo || a.bim === bim));
 
-window.marcarEntregue = async function(uid, tipo) {
+window.marcarEntregue = async function(uid, tipo, bim, novo) {
   try {
-    const chave = chaveImpressao(tipo);
+    const chave = chaveImpressao(tipo, bim, novo);
     await set(ref(db, `diplomas_impressos/${uid}/${chave}`), { impresso: true, ts: Date.now() });
-    const aluno = todosAlunos.find(a => a.uid === uid && a.tipo === tipo);
+    const aluno = acharEntrada(uid, tipo, bim, novo);
     if (aluno) { aluno.entregue = true; aluno.tsEntrega = Date.now(); }
     toast('✅ Marcado como entregue!');
     render();
   } catch(e) { toast('Erro ao salvar.'); }
 };
 
-window.desfazerEntrega = async function(uid, tipo) {
+window.desfazerEntrega = async function(uid, tipo, bim, novo) {
   if (!confirm('Desfazer marcação de entregue?')) return;
   try {
-    const chave = chaveImpressao(tipo);
+    const chave = chaveImpressao(tipo, bim, novo);
     await set(ref(db, `diplomas_impressos/${uid}/${chave}`), { impresso: false, ts: null });
-    const aluno = todosAlunos.find(a => a.uid === uid && a.tipo === tipo);
+    const aluno = acharEntrada(uid, tipo, bim, novo);
     if (aluno) { aluno.entregue = false; aluno.tsEntrega = null; }
     toast('↩ Marcação desfeita.');
     render();
