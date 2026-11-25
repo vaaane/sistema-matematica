@@ -1633,6 +1633,11 @@ html.jr-deitado .bt-rev-caixa .jr-btn { min-height: 34px; padding: 3px 14px; }
 .bt-busto.L { border-color: #7c5cfc; }
 .bt-busto.R { border-color: #ff7b2e; }
 html.jr-deitado .bt-busto { width: 56px; height: 64px; }
+/* 🦇 PROMPT-276: o Campeão da torre (morcego de asas abertas, 499 × 421) inteiro, numa caixa mais larga */
+.bt-busto.inteiro { width: 84px; }
+html.jr-deitado .bt-busto.inteiro { width: 76px; }
+#jr-app .bt-busto.inteiro img { left: 0; top: 0; width: 100%; height: 100%; object-fit: contain; transform: none; }
+#jr-app .bt-busto.inteiro img.espelho { transform: scaleX(-1); }
 
 /* escolha de personagem: só a imagem */
 .jr-pers-cartao { padding: 4px; }

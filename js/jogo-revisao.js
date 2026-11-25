@@ -15033,7 +15033,7 @@ function ligarVila() {
 // ============================================================
 let TORRE = null;
 let torreOrigem = null;          // de onde entrou (para sair): { tipo: 'mapa', n } | null (mapa geral)
-const spritesTorreOk = {};       // nome → true quando img/jogo/personagens/{nome}.webp existe (os chefes 7 a 10)
+const spritesTorreOk = {};       // nome → true quando img/jogo/personagens/{nome}.webp existe (torre.json → chefes: os 10, torre_chefe1…9 e torre_campeao)
 const N_ANDARES = 10;
 const ehTorre = () => cena?.n === 'torre';
 const baseTorre = () => (teste ? 'jogo_revisao_torre_teste' : 'jogo_revisao_torre');
@@ -15069,6 +15069,43 @@ async function carregarTorre() {
   }
   acrescentarPremiosTorreNaCasa();
   injetarFiltrosEstilo();
+}
+
+// 🦇 PROMPT-276: chefe animado (torre.json → quadros_chefe: { andar: [nomes] }, opcional). Os quadros carregam quando o aluno entra na
+//    torre; se algum não carregar, o chefe fica parado com a imagem de chefes[andar]. Ordem: 1 → 2 → 3 → 2 → 1…, QUADRO_CHEFE_MS cada.
+const QUADRO_CHEFE_MS = 350;
+const quadrosChefeTorre = {};   // andar → Promise<[urls] | null>
+const ehCampeaoTorre = (sprite) => !!sprite && sprite === TORRE?.chefes?.[N_ANDARES];   // o morcego: mais largo (asas abertas)
+function preCarregarQuadrosTorre() {
+  for (const [a, lista] of Object.entries(TORRE?.quadros_chefe || {})) {
+    if (quadrosChefeTorre[a] || !Array.isArray(lista) || !lista.length) continue;
+    const urls = lista.map(nome => `${IMG}/personagens/${nome}.webp`);
+    quadrosChefeTorre[a] = Promise.all(urls.map(u => new Promise(ok => { const im = new Image(); im.onload = () => ok(true); im.onerror = () => ok(false); im.src = u; })))
+      .then(r => (r.every(Boolean) ? urls : null));
+  }
+}
+// anima o <img> do chefe do andar (só quando ele está com a imagem própria de chefes[andar]); para sozinho quando o <img> sai da tela
+function animarChefeTorre(img, andar, sprite) {
+  if (!img || img._animChefe || sprite !== TORRE?.chefes?.[andar]) return;
+  const pr = quadrosChefeTorre[andar];
+  if (!pr) return;
+  img._animChefe = { parar: () => {} };
+  pr.then(q => {
+    if (!q || !img.isConnected || !img._animChefe) { if (img._animChefe && !img._animChefe.id) delete img._animChefe; return; }
+    const seq = q.length > 2 ? [...q, ...q.slice(1, -1).reverse()] : q;   // 1 2 3 2
+    let k = 0;
+    img.src = seq[0];
+    const id = setInterval(() => {
+      if (!img.isConnected) { clearInterval(id); delete img._animChefe; return; }
+      k = (k + 1) % seq.length; img.src = seq[k];
+    }, QUADRO_CHEFE_MS);
+    img._animChefe = { id, parar: () => { clearInterval(id); img.src = seq[0]; } };   // parado no quadro 1
+  });
+}
+function pararChefeTorre(img) {
+  if (!img?._animChefe) return;
+  img._animChefe.parar();
+  delete img._animChefe;
 }
 
 // ── sorteio fixo por aluno e andar (os treinadores, os pets e os estilos não mudam a cada entrada) ──
@@ -15229,6 +15266,7 @@ const andarLimpo = () => proximoTorre() < 0;
 async function abrirTorre(andar = torreEst().andar) {
   if (!TORRE) return;
   andar = Math.min(N_ANDARES, Math.max(1, Math.round(andar) || 1));
+  preCarregarQuadrosTorre();   // 🦇 PROMPT-276: os quadros do Campeão já no cache
   const A = andarCfg(andar), S = salaoDe(andar);
   sairPesca(false);
   cena = null;
@@ -15294,6 +15332,9 @@ function atualizarTreinadoresTorre() {
     el.classList.toggle('vencido', treinadorVencido(i));
     el.classList.toggle('proximo', i === prox);
     el.classList.toggle('bloqueado', !livre && prox >= 0 && i > prox);
+    if (cena.torre.trein[i]?.chefe) {   // 🦇 o chefe animado: vencido, fica parado no quadro 1
+      if (treinadorVencido(i)) pararChefeTorre(el); else animarChefeTorre(el, cena.torre.andar, cena.torre.trein[i].pers?.sprite);
+    }
   }
   let seta = $('cena-atores').querySelector('.jr-seta');
   if (prox < 0) { seta?.remove(); return; }
@@ -16700,7 +16741,12 @@ function iniciarBatalha(id, origem = 'lista', tTorre = null) {
   $('bt-corpoR').classList.toggle('brilho-arco', brilhoArco(formaR));   // pet do adversário: só se o treinador tiver tinta no batalhas.json
   $('bt-nomeR').innerHTML = `<small>${NOME_PET[t.pet]} ·</small>${esc(t.nome)}`;
   $('bt-bustoL').outerHTML = bustoHtml(urlQuadro('direita', -1), `bt-busto L${temBrilho() ? ' jr-brilho' : ''}`, BUSTO_PERS, false, 'bt-bustoL');
-  $('bt-bustoR').outerHTML = bustoHtml(t.torre ? `${IMG}/personagens/${esc(t.sprite)}.webp` : `${IMG}/npcs/${t.id}.webp`, `bt-busto R${t.aura ? ` jr-aura jr-aura-${esc(t.aura)}` : ''}`, BUSTO_NPC, true, 'bt-bustoR');
+  // 🏆 torre: o treinador recortado da imagem de corpo inteiro; os chefes com imagem própria usam o busto deles (bustos/); o Campeão
+  //    aparece inteiro, numa caixa mais larga, e animado (PROMPT-276)
+  const chefeProprio = t.torre && t.torre.chefe && t.sprite && t.sprite === TORRE?.chefes?.[t.torre.andar], campeao = chefeProprio && ehCampeaoTorre(t.sprite);
+  $('bt-bustoR').outerHTML = bustoHtml(!t.torre ? `${IMG}/npcs/${t.id}.webp` : `${IMG}/${chefeProprio && !campeao ? 'bustos' : 'personagens'}/${esc(t.sprite)}.webp`,
+    `bt-busto R${campeao ? ' inteiro' : ''}${t.aura ? ` jr-aura jr-aura-${esc(t.aura)}` : ''}`, chefeProprio ? { frac: 1, topo: 0 } : BUSTO_NPC, true, 'bt-bustoR');
+  if (campeao) animarChefeTorre($('bt-bustoR').querySelector('img'), t.torre.andar, t.sprite);
   $('bt-imgR').classList.remove('jr-est', ...[...$('bt-imgR').classList].filter(k => k.startsWith('jr-est-')));
   if (t.estilo) $('bt-imgR').classList.add('jr-est', `jr-est-${t.estilo}`);   // 🏆 andares 7 a 10: o pet do treinador com brilho
   $('bt-arena').style.backgroundImage = t.torre ? `url("${IMG}/torre/${salaoDe(t.torre.andar).batalha}")` : '';   // 🏆 o salão da torre no fundo
@@ -16742,6 +16788,7 @@ function limparBatalha() {
 function fecharBatalha(voltarLista = true) {
   $('bt-calc').hidden = true; fecharCalc();
   limparBatalha();
+  pararChefeTorre($('bt-bustoR')?.querySelector('img'));
   if (bt?.origem !== 'lista') voltarLista = false;
   const depois = bt?.t?.torre?.depois;   // 🏆 torre: o que vem depois (o baú, a volta ao 1º treinador)
   bt = null;
@@ -17290,6 +17337,7 @@ function btFim() {
   } else btTocar(q, 'triste_fome', { ms: 420 });
   btConfete(v);
   btFala(venceu ? bt.t.fala_perdeu : bt.t.fala_venceu, 0);
+  if (venceu) pararChefeTorre($('bt-bustoR')?.querySelector('img'));   // 🦇 o Campeão perdeu: parado no quadro 1
   tocar(venceu ? 'vitoria' : 'erro');
   const pr = bt.t.torre ? fimDueloTorre(venceu) : registrarBatalha(venceu ? 'venceu' : 'perdeu');   // 🏆 torre: moedas e o andar (PROMPT-273)
   $('bt-ops').hidden = $('bt-conta').hidden = true;

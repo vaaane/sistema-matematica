@@ -44,6 +44,8 @@
   }
  },
  "chefes": { "1": "torre_chefe1", "2": "torre_chefe2", "3": "torre_chefe3", "4": "torre_chefe4", "5": "torre_chefe5", "6": "torre_chefe6", "7": "torre_chefe7", "8": "torre_chefe8", "9": "torre_chefe9", "10": "torre_campeao" },
+ "_nota_quadros_chefe": "🦇 PROMPT-276: opcional. Quadros do chefe animado por andar (img/jogo/personagens/{nome}.webp), na ordem 1 → 2 → 3 → 2 → 1…, 350 ms cada. Se algum não carregar, o chefe fica parado com a imagem de chefes[andar].",
+ "quadros_chefe": { "10": ["torre_campeao_1", "torre_campeao_2", "torre_campeao_3"] },
  "_nota_duelo": "⚔️ PROMPT-273: toda batalha da torre (sozinho e em equipe) é o duelo dos treinadores dos mapas. tempo_torre_s = segundos por pergunta (nos mapas continua o tempo_s do batalhas.json). niveis_duelo = os níveis das contas (1 a 5 do batalha.js) por faixa de andares. contas_por_mapa = os tipos de conta (batalhas.json → tipos_contas) de cada mapa; o andar usa os dos seus mapas. forca_duelo = a chance de o treinador acertar e quando ele responde (s, entre o 1º e o 2º número). Perdeu o duelo: volta ao 1º treinador do andar.",
  "tempo_torre_s": 25,
  "niveis_duelo": { "1-6": [1, 2], "7-10": [2, 3] },
