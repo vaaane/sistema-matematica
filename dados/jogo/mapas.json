@@ -7,6 +7,7 @@
  "mapas": {
   "mapa1": {
    "trilha": "trilha-mapa1.png",
+   "fonte": { "x": 688, "y": 349, "largura": 70 },
    "entrada": [
     1340,
     368

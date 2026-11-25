@@ -98,7 +98,7 @@
       <button class="jr-btn-hud" id="btn-relembre" hidden aria-label="Relembre o conteúdo do ginásio">📖<span>Relembre</span></button>
       <button class="jr-btn-hud" id="btn-praca" hidden aria-label="Ir para a Praça do Encontro">🏛️<span>Praça</span></button>
       <button class="jr-btn-hud" id="btn-casa" hidden aria-label="Ir para a minha casinha">🏠<span>Casa</span></button>
-      <button class="jr-btn-hud" id="btn-online" hidden aria-label="Quem está online">👥<span>Online (<b id="online-n">0</b>)</span></button>
+      <button class="jr-btn-hud" id="btn-online" hidden aria-label="Amigos">👥<span>Amigos</span><b class="jr-hud-num" id="online-n" hidden>0</b></button>
       <button class="jr-btn-hud" id="btn-reacao" hidden aria-label="Mandar uma reação" data-nome="Emoji">😊</button>
       <button class="jr-btn-hud ex-pend-selo" id="btn-expo-pend" hidden aria-label="Abrir a página de aprovação" data-nome="Aprovar">⏳</button>
       <button class="jr-btn-hud ex-curtir" id="btn-expo-curtir" hidden aria-label="Curtir a sala" aria-pressed="false" data-nome="Curtir">❤️ 0</button>
@@ -111,6 +111,13 @@
       <button class="jr-btn-hud jr-btn-batalhar jr-btn-deq" id="btn-duelo-equipe" hidden aria-label="Duelar com a equipe">🤝<span>Duelar com a equipe</span></button>
       <button class="jr-btn-som jr-btn-ajuda" id="btn-ajuda" data-ajuda aria-label="Como jogar" title="Como jogar" data-nome="Ajuda">❓</button>
       <button class="jr-btn-som jr-btn-config" id="btn-config" data-config aria-label="Configuração" title="Configuração" data-nome="Ajustes">⚙️</button>
+      <!-- 📱 PROMPT-277: no celular, 💬 ❓ ⚙️ ficam no "⋯" -->
+      <button class="jr-btn-som jr-btn-mais" id="btn-mais" aria-label="Mais opções" aria-expanded="false" title="Mais">⋯</button>
+      <div class="jr-menu-mais" id="menu-mais" hidden role="menu">
+        <button role="menuitem" data-mais="reacao"><span id="menu-mais-reacao">💬</span> Reações</button>
+        <button role="menuitem" data-mais="ajuda">❓ Como jogar</button>
+        <button role="menuitem" data-mais="config">⚙️ Ajustes</button>
+      </div>
       <span class="jr-moedas jr-moedas-topo" data-moedas-topo aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span data-moedas-n>0</span></span>
       <button class="jr-btn-estojo" id="btn-insignias-2" aria-label="Minhas insígnias">
         <img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>
@@ -885,6 +892,7 @@
     </div>
     <div class="bt-arena" id="bt-arena">
       <div class="bt-status" id="bt-stL"></div><div class="bt-status" id="bt-stR"></div>
+      <img class="bt-campeao" id="bt-campeao" hidden alt="" draggable="false"/>
       <div class="bt-lutador" id="bt-L"><div class="bt-sombra"></div><div class="bt-corpo" id="bt-corpoL"><img id="bt-imgL" alt="" draggable="false"/></div></div>
       <div class="bt-lutador" id="bt-R"><div class="bt-sombra"></div><div class="bt-corpo" id="bt-corpoR"><img id="bt-imgR" alt="" draggable="false"/></div></div>
       <div class="bt-fx" id="bt-fx" aria-hidden="true"></div>
@@ -1037,6 +1045,7 @@
         <div class="dl-meio"><small id="dl-rodada">Rodada 1 / 5</small><div class="dl-tempo"><i id="dl-tempo"></i></div></div>
         <div class="dl-lado dir"><span class="dl-pts" id="dl-ptsR">0</span><b id="dl-nomeR"></b><span class="dl-busto" id="dl-bustoR"></span></div>
       </div>
+      <div class="dl-arena" id="dl-arena" hidden aria-hidden="true"><img class="dl-pet L" id="dl-petL" alt="" draggable="false"/><img class="dl-pet R" id="dl-petR" alt="" draggable="false"/></div>
       <div class="dl-conta" id="dl-conta">Prepare-se…</div>
       <div class="dl-ops" id="dl-ops"></div>
       <div class="dl-msg" id="dl-msg" aria-live="polite"></div>
@@ -1128,6 +1137,26 @@
         <button class="jr-btn" id="online-ir">Ir até lá</button>
         <button class="jr-btn jr-btn-sec" id="online-fechar">Fechar</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 👥 PROMPT-277: Amigos (Amigos · Pedidos · Buscar alunos), aberta pelo 👥 do topo -->
+  <div id="amigos-jan" class="jr-pet-escolha" hidden role="dialog" aria-label="Amigos">
+    <div class="jr-pet-escolha-caixa jr-online-caixa am-caixa">
+      <div class="jr-pet-escolha-titulo">👥 Amigos</div>
+      <div class="jr-online-abas am-abas" id="amigos-abas"><button data-am-aba="amigos">🤝 Amigos</button><button data-am-aba="pedidos">📨 Pedidos <b id="amigos-ped-n" hidden></b></button><button data-am-aba="busca">🔎 Buscar alunos</button></div>
+      <input type="search" class="jr-online-busca" id="amigos-jan-busca" hidden placeholder="Nome do aluno (pelo menos 3 letras)" autocomplete="off" aria-label="Buscar aluno pelo nome">
+      <ul class="jr-online-itens am-itens" id="amigos-itens"></ul>
+      <div class="jr-mp-botoes"><button class="jr-btn jr-btn-sec" id="amigos-fechar">Fechar</button></div>
+    </div>
+  </div>
+  <!-- ⚔️ PROMPT-277: desafiar um colega de longe (aviso de "sem prêmio" e a aposta) -->
+  <div id="desafio-longe" class="jr-pet-escolha" hidden role="dialog" aria-label="Desafiar colega">
+    <div class="jr-pet-escolha-caixa dlg-caixa">
+      <div class="jr-pet-escolha-titulo" id="dlg-tit">⚔️ Desafiar</div>
+      <p class="dlg-txt" id="dlg-txt"></p>
+      <div class="jr-presente-lista dlg-ops" id="dlg-ops"></div>
+      <div class="jr-mp-botoes"><button class="jr-btn jr-btn-sec" id="dlg-fechar">Cancelar</button></div>
     </div>
   </div>
 

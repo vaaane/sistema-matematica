@@ -29,6 +29,14 @@
     566
    ],
    "sentado_altura": 538
+  },
+  "morcego_adulto": {
+   "tamanho_quadro": [
+    1219,
+    566
+   ],
+   "sentado_altura": 439,
+   "escala": 1.75
   }
  },
  "pets": {
@@ -487,6 +495,100 @@
     "pets/elefante_adulto/direita/comendo_2.webp",
     "pets/elefante_adulto/comendo_3.webp",
     "pets/elefante_adulto/direita/comendo_4.webp"
+   ]
+  },
+  "morcego_adulto": {
+   "andar_direita": [
+    "pets/morcego_adulto/andar_direita_1.webp",
+    "pets/morcego_adulto/andar_direita_2.webp",
+    "pets/morcego_adulto/andar_direita_3.webp",
+    "pets/morcego_adulto/andar_direita_4.webp",
+    "pets/morcego_adulto/andar_direita_5.webp"
+   ],
+   "andar_esquerda": [
+    "pets/morcego_adulto/andar_esquerda_1.webp",
+    "pets/morcego_adulto/andar_esquerda_2.webp",
+    "pets/morcego_adulto/andar_esquerda_3.webp",
+    "pets/morcego_adulto/andar_esquerda_4.webp",
+    "pets/morcego_adulto/andar_esquerda_5.webp"
+   ],
+   "andar_costas": [
+    "pets/morcego_adulto/andar_costas_1.webp",
+    "pets/morcego_adulto/andar_costas_2.webp"
+   ],
+   "andar_frente": [
+    "pets/morcego_adulto/andar_frente_1.webp"
+   ],
+   "costas_parado": [
+    "pets/morcego_adulto/costas_parado_1.webp"
+   ],
+   "parado_lado": [
+    "pets/morcego_adulto/parado_lado_1.webp"
+   ],
+   "sentado_girando": [
+    "pets/morcego_adulto/sentado_girando_1.webp"
+   ],
+   "feliz": [
+    "pets/morcego_adulto/feliz_1.webp"
+   ],
+   "bravo": [
+    "pets/morcego_adulto/bravo_1.webp",
+    "pets/morcego_adulto/bravo_2.webp",
+    "pets/morcego_adulto/bravo_3.webp",
+    "pets/morcego_adulto/bravo_4.webp"
+   ],
+   "comendo": [
+    "pets/morcego_adulto/comendo_1.webp",
+    "pets/morcego_adulto/comendo_2.webp",
+    "pets/morcego_adulto/comendo_3.webp",
+    "pets/morcego_adulto/comendo_4.webp"
+   ],
+   "comendo_lado": [
+    "pets/morcego_adulto/comendo_lado_1.webp",
+    "pets/morcego_adulto/comendo_lado_2.webp",
+    "pets/morcego_adulto/comendo_lado_3.webp",
+    "pets/morcego_adulto/comendo_lado_4.webp"
+   ],
+   "dormindo": [
+    "pets/morcego_adulto/dormindo_1.webp",
+    "pets/morcego_adulto/dormindo_2.webp",
+    "pets/morcego_adulto/dormindo_3.webp",
+    "pets/morcego_adulto/dormindo_4.webp"
+   ],
+   "carinho": [
+    "pets/morcego_adulto/carinho_1.webp",
+    "pets/morcego_adulto/carinho_2.webp",
+    "pets/morcego_adulto/carinho_3.webp",
+    "pets/morcego_adulto/carinho_4.webp"
+   ],
+   "flor": [
+    "pets/morcego_adulto/flor_1.webp",
+    "pets/morcego_adulto/flor_2.webp",
+    "pets/morcego_adulto/flor_3.webp",
+    "pets/morcego_adulto/flor_4.webp"
+   ],
+   "lamber_beicos": [
+    "pets/morcego_adulto/lamber_beicos_1.webp",
+    "pets/morcego_adulto/lamber_beicos_2.webp"
+   ],
+   "lamber_pata": [
+    "pets/morcego_adulto/lamber_pata_1.webp",
+    "pets/morcego_adulto/lamber_pata_2.webp"
+   ],
+   "orgulhoso": [
+    "pets/morcego_adulto/orgulhoso_1.webp"
+   ],
+   "animado": [
+    "pets/morcego_adulto/animado_1.webp"
+   ],
+   "calmo": [
+    "pets/morcego_adulto/calmo_1.webp"
+   ],
+   "tres_quartos": [
+    "pets/morcego_adulto/tres_quartos_1.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/morcego_adulto/busto_sorrindo_1.webp"
    ]
   }
  },
@@ -2417,6 +2519,455 @@
      1500
     ]
    ]
+  },
+  "morcego_adulto": {
+   "carinho": [
+    [
+     "sentado_girando",
+     1,
+     500
+    ],
+    [
+     "carinho",
+     1,
+     450
+    ],
+    [
+     "carinho",
+     2,
+     450
+    ],
+    [
+     "carinho",
+     3,
+     450
+    ],
+    [
+     "carinho",
+     4,
+     450
+    ],
+    [
+     "carinho",
+     3,
+     450
+    ],
+    [
+     "carinho",
+     4,
+     450
+    ],
+    [
+     "feliz",
+     1,
+     800
+    ],
+    [
+     "sentado_girando",
+     1,
+     500
+    ]
+   ],
+   "comer": [
+    [
+     "sentado_girando",
+     1,
+     400
+    ],
+    [
+     "comendo",
+     1,
+     450
+    ],
+    [
+     "comendo",
+     2,
+     450
+    ],
+    [
+     "comendo",
+     3,
+     450
+    ],
+    [
+     "comendo",
+     4,
+     450
+    ],
+    [
+     "comendo",
+     1,
+     450
+    ],
+    [
+     "comendo",
+     2,
+     450
+    ],
+    [
+     "comendo",
+     3,
+     450
+    ],
+    [
+     "comendo",
+     4,
+     450
+    ],
+    [
+     "lamber_beicos",
+     1,
+     500
+    ],
+    [
+     "lamber_beicos",
+     2,
+     500
+    ],
+    [
+     "sentado_girando",
+     1,
+     500
+    ]
+   ],
+   "comer_lado": [
+    [
+     "parado_lado",
+     1,
+     400
+    ],
+    [
+     "comendo_lado",
+     1,
+     450
+    ],
+    [
+     "comendo_lado",
+     2,
+     450
+    ],
+    [
+     "comendo_lado",
+     3,
+     450
+    ],
+    [
+     "comendo_lado",
+     4,
+     450
+    ],
+    [
+     "comendo_lado",
+     1,
+     450
+    ],
+    [
+     "comendo_lado",
+     2,
+     450
+    ],
+    [
+     "comendo_lado",
+     3,
+     450
+    ],
+    [
+     "comendo_lado",
+     4,
+     450
+    ],
+    [
+     "lamber_beicos",
+     1,
+     500
+    ],
+    [
+     "lamber_beicos",
+     2,
+     500
+    ],
+    [
+     "parado_lado",
+     1,
+     500
+    ]
+   ],
+   "lamber_pata": [
+    [
+     "sentado_girando",
+     1,
+     600
+    ],
+    [
+     "lamber_pata",
+     1,
+     450
+    ],
+    [
+     "lamber_pata",
+     2,
+     450
+    ],
+    [
+     "lamber_pata",
+     1,
+     450
+    ],
+    [
+     "lamber_pata",
+     2,
+     450
+    ],
+    [
+     "lamber_pata",
+     1,
+     450
+    ],
+    [
+     "lamber_pata",
+     2,
+     450
+    ],
+    [
+     "sentado_girando",
+     1,
+     600
+    ]
+   ],
+   "banho": [
+    [
+     "sentado_girando",
+     1,
+     700
+    ],
+    [
+     "lamber_pata",
+     1,
+     450
+    ],
+    [
+     "lamber_pata",
+     2,
+     450
+    ],
+    [
+     "lamber_pata",
+     1,
+     450
+    ],
+    [
+     "lamber_pata",
+     2,
+     450
+    ],
+    [
+     "lamber_pata",
+     1,
+     450
+    ],
+    [
+     "lamber_pata",
+     2,
+     450
+    ],
+    [
+     "lamber_pata",
+     1,
+     450
+    ],
+    [
+     "lamber_pata",
+     2,
+     450
+    ],
+    [
+     "calmo",
+     1,
+     900
+    ],
+    [
+     "sentado_girando",
+     1,
+     600
+    ]
+   ],
+   "descansar": [
+    [
+     "sentado_girando",
+     1,
+     600
+    ],
+    [
+     "dormindo",
+     1,
+     900
+    ],
+    [
+     "dormindo",
+     2,
+     900
+    ],
+    [
+     "dormindo",
+     3,
+     3000
+    ],
+    [
+     "dormindo",
+     4,
+     900
+    ],
+    [
+     "sentado_girando",
+     1,
+     600
+    ]
+   ],
+   "soneca": [
+    [
+     "dormindo",
+     1,
+     1000
+    ],
+    [
+     "dormindo",
+     2,
+     1000
+    ],
+    [
+     "dormindo",
+     3,
+     4500
+    ],
+    [
+     "dormindo",
+     4,
+     900
+    ],
+    [
+     "calmo",
+     1,
+     900
+    ]
+   ],
+   "flor": [
+    [
+     "sentado_girando",
+     1,
+     500
+    ],
+    [
+     "flor",
+     1,
+     600
+    ],
+    [
+     "flor",
+     2,
+     600
+    ],
+    [
+     "flor",
+     3,
+     600
+    ],
+    [
+     "flor",
+     4,
+     600
+    ],
+    [
+     "feliz",
+     1,
+     800
+    ],
+    [
+     "sentado_girando",
+     1,
+     500
+    ]
+   ],
+   "vitoria": [
+    [
+     "sentado_girando",
+     1,
+     500
+    ],
+    [
+     "animado",
+     1,
+     900
+    ],
+    [
+     "sentado_girando",
+     1,
+     400
+    ],
+    [
+     "orgulhoso",
+     1,
+     1500
+    ]
+   ],
+   "recusa": [
+    [
+     "bravo",
+     1,
+     300
+    ],
+    [
+     "bravo",
+     2,
+     300
+    ],
+    [
+     "bravo",
+     3,
+     300
+    ],
+    [
+     "bravo",
+     4,
+     600
+    ],
+    [
+     "bravo",
+     1,
+     400
+    ]
+   ],
+   "ataque_batalha": [
+    [
+     "tres_quartos",
+     1,
+     250
+    ],
+    [
+     "bravo",
+     1,
+     200
+    ],
+    [
+     "bravo",
+     2,
+     200
+    ],
+    [
+     "bravo",
+     3,
+     220
+    ],
+    [
+     "bravo",
+     4,
+     350
+    ],
+    [
+     "feliz",
+     1,
+     400
+    ]
+   ]
   }
  },
  "_formato_sequencias": "cada passo = [animação, número do quadro (1 = primeiro), milissegundos]",
@@ -2439,6 +2990,12 @@
    "sentar",
    "olhar_lado",
    "tromba",
+   "descansar"
+  ],
+  "morcego_adulto": [
+   "flor",
+   "lamber_pata",
+   "banho",
    "descansar"
   ]
  }

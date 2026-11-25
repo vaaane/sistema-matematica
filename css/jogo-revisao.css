@@ -6899,3 +6899,103 @@ html.jr-girado .expo-bv-caixa { width: min(800px, calc(100dvh - 24px)); max-heig
 .jr-torre-aberta .expo-confete { z-index: 3; }
 @media (max-height: 430px) { .ta-palco { height: 46%; min-height: 110px; } .jr-torre-aberta { gap: 6px; } .jr-torre-aberta .jr-btn { min-height: 46px; } }
 @media (prefers-reduced-motion: reduce) { .jr-torre-aberta.aberta .ta-brilho { animation: none; } }
+
+/* ============================================================
+   PROMPT-277: topo do mapa, Amigos, desafio de longe, pets no ginásio e nos duelos, fonte do mapa 1, Campeão grande
+   ============================================================ */
+/* 📱 topo na ordem: ← | nome do mapa | 🏛️ | 🐾 | ⚔️ | 👥 | 🏠 | 📜 | 💬 | 🪙 | 🧰 | ❓ | ⚙️ (a Exposição tem a ordem dela, html.expo-hud) */
+html:not(.expo-hud) #tela-cena .jr-hud-topo > * { order: 13; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-cena-voltar { order: 0; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #cena-titulo { order: 1; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-relembre { order: 2; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-praca { order: 3; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-pet { order: 4; margin-left: 6px; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-batalhar { order: 5; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-duelo-equipe { order: 6; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-online { order: 7; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-casa { order: 8; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-missoes { order: 9; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-reacao { order: 10; margin-left: 6px; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > .jr-moedas-topo { order: 14; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-insignias-2 { order: 15; margin-left: 6px; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-ajuda { order: 16; margin-left: 6px; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-config { order: 17; }
+html:not(.expo-hud) #tela-cena .jr-hud-topo > #btn-mais { order: 18; margin-left: 6px; }
+/* 👥 Amigos: o número de amigos online (selinho) e o pontinho de pedido de amizade */
+#btn-online .jr-hud-num { position: absolute; right: -4px; top: -5px; min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box; border-radius: 9px;
+  background: #00c853; color: #fff; border: 2px solid #0d0f1a; font: 800 10px/13px 'Inter', sans-serif; text-align: center; pointer-events: none; }
+#btn-online .jr-hud-num[hidden] { display: none; }
+#btn-online.tem-pedido::after { content: ''; position: absolute; left: -2px; top: -3px; width: 10px; height: 10px; border-radius: 50%; background: #ff5252; border: 2px solid #0d0f1a; }
+/* "⋯": só no celular (deitado ou tela estreita); 💬 ❓ ⚙️ vão para o menu */
+.jr-btn-mais { display: none; font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+.jr-menu-mais { position: absolute; top: calc(100% - 4px); right: max(10px, var(--sa-r, 0px)); z-index: 40; display: flex; flex-direction: column; gap: 4px; padding: 6px;
+  border-radius: 14px; background: rgba(13,15,26,.95); border: 1px solid rgba(255,255,255,.2); box-shadow: 0 6px 18px rgba(0,0,0,.5); }
+.jr-menu-mais[hidden], .jr-menu-mais button[hidden] { display: none; }
+.jr-menu-mais button { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 14px; border-radius: 10px; border: 0; background: transparent; color: #fff;
+  font: 700 15px 'Rajdhani', sans-serif; text-align: left; cursor: pointer; white-space: nowrap; }
+.jr-menu-mais button:active, .jr-menu-mais button:hover { background: rgba(124,92,252,.3); }
+html.jr-deitado:not(.expo-hud) #tela-cena #btn-mais { display: flex; }
+html.jr-deitado:not(.expo-hud) #tela-cena .jr-hud-topo > :is(#btn-reacao, #btn-ajuda, #btn-config) { display: none; }
+@media (max-width: 760px) {
+  html:not(.expo-hud) #tela-cena #btn-mais { display: flex; }
+  html:not(.expo-hud) #tela-cena .jr-hud-topo > :is(#btn-reacao, #btn-ajuda, #btn-config) { display: none; }
+}
+
+/* 👥 a janela de Amigos */
+.am-caixa { max-width: 560px; }
+.am-abas button { font-size: 13.5px; }
+.am-itens { max-height: calc(var(--jr-alt, 100dvh) * .58); }
+.jr-online-itens li.am-cartao { grid-template-columns: 44px 1fr; grid-template-rows: auto auto; row-gap: 6px; padding: 7px 8px; }
+.jr-online-itens li.am-cartao.on { background: rgba(0,200,83,.1); box-shadow: inset 3px 0 0 #00c853; }
+.am-foto { grid-row: 1; grid-column: 1; width: 44px; height: 44px; border-radius: 50%; border: 2px solid rgba(124,92,252,.7); }
+.am-foto-off { display: flex; align-items: center; justify-content: center; background: #24204a; font-size: 22px; opacity: .7; }
+.am-quem { grid-row: 1; grid-column: 2; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.am-pet { display: flex; align-items: center; gap: 4px; }
+#jr-app .am-pet .jr-icone-pet img { height: 20px; width: auto; }
+.jr-online-itens li.am-cartao .am-acoes { grid-row: 2; grid-column: 1 / -1; justify-content: flex-start; }
+.am-acoes .jr-online-acao { min-height: 32px; padding: 3px 9px; font-size: 12.5px; }
+.jr-online-itens li.am-total { display: block; text-align: center; font-size: 12px; }
+
+/* ⚔️ desafiar de longe: o aviso de "sem prêmio" e a aposta */
+.dlg-caixa { max-width: 380px; }
+.dlg-txt { margin: 0 0 10px; font: 500 14px/1.35 'Inter', sans-serif; color: #e0deff; text-align: center; }
+.dlg-txt:empty { display: none; }
+.dlg-ops { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 8px; }
+
+/* 🪙 ginásio: o contador de moedas legível em qualquer fundo */
+#perg-moedas { background: rgba(13,15,26,.78); border: 1px solid rgba(255,215,0,.65); border-radius: 999px; padding: 3px 10px 3px 7px; color: #ffd700;
+  text-shadow: 0 1px 2px rgba(0,0,0,.85); box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+#perg-moedas span { color: #fff2b3; }
+
+/* 🐾 ginásio: o pet na proporção do mapa com o personagem (JS: --pet-h = altura da imagem em % da arena, --pet-larg = largura/altura
+   do quadro). Mais alto que o personagem: atrás dele, um pouco para a direita. */
+#perg-arena.pet-prop { container-type: size; }
+#perg-arena.pet-prop .jr-arena-pet { height: calc(var(--pet-h) * 1%); }
+#perg-arena.pet-atras { --pet-left: min(40cqw, calc(17cqw + var(--pet-h) * 1cqh * var(--pet-larg) * 0.16)); }   /* o adulto fica no meio do quadro: o personagem cobre a parte esquerda dele */
+#perg-arena.pet-atras .jr-arena-jog { z-index: 2; }
+#perg-arena.pet-atras .jr-arena-pet { left: var(--pet-left); z-index: 1; }
+#perg-arena.pet-atras .jr-arena-sombra.pet { left: var(--pet-left); width: calc(var(--pet-h) * .5cqh); }
+#perg-arena.pet-atras .jr-perg-ajuda { left: 2%; top: 4px; bottom: auto; transform: none; z-index: 3; }
+#perg-arena.pet-prop :is(#perg-fala, #perg-pet-fala, #perg-plano-box) { z-index: 3; }   /* o balão da fala sempre na frente do pet grande */
+
+/* 🐾 duelo entre colegas: os dois pets (a arena tem a altura de 1,6 personagem; a imagem passa do alto só com a parte transparente) */
+.dl-arena { position: relative; flex: none; height: clamp(90px, 24dvh, 170px); clip-path: inset(-400px 0 0 0); border-radius: 0 0 14px 14px;
+  background: radial-gradient(ellipse 60% 40% at 50% 100%, rgba(124,92,252,.22), transparent 75%); }
+.dl-arena[hidden] { display: none; }
+.dl-pet { position: absolute; bottom: 4px; width: auto; max-width: none; transform: translateX(-50%); pointer-events: none; filter: drop-shadow(0 3px 3px rgba(0,0,0,.45)); }
+.dl-pet[hidden] { display: none; }
+#jr-app img.dl-pet { image-rendering: auto; }
+.dl-pet.L { left: 27%; }
+.dl-pet.R { left: 73%; }
+html.jr-deitado .dl-arena { height: clamp(70px, 21dvh, 120px); }
+
+/* 🦇 o Morcego Campeão de corpo inteiro na arena do duelo da torre (atrás do pet dele, no canto direito) */
+.bt-campeao { position: absolute; right: 1%; bottom: 3%; height: 86%; width: auto; max-width: 46%; object-fit: contain; object-position: right bottom; z-index: 0;
+  pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+.bt-campeao[hidden] { display: none; }
+#jr-app img.bt-campeao { image-rendering: auto; }
+
+/* ⛲ a fonte desenhada no mapa 1 (só a água animada por cima do desenho; as posições são as do desenho) */
+.jr-fonte-mapa .brilho { left: 10%; top: 36%; width: 82%; height: 34%; }
+.jr-fonte-mapa .gota { width: 6%; margin: -3% 0 0 -3%; }
+.jr-fonte-mapa .onda { width: 18%; height: 6%; margin: -3% 0 0 -9%; }

@@ -15,10 +15,11 @@ let SPR = null;
 export async function carregarSprites() {
   if (!SPR) {
     const [j, cores] = await Promise.all([
-      fetch(BASE + 'pets/sprites.json?v=233').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228, 232, 233)
-      fetch(BASE + 'pets/sprites-pets-cores.json?v=232').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
+      fetch(BASE + 'pets/sprites.json?v=277').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228, 232, 233, 277)
+      fetch(BASE + 'pets/sprites-pets-cores.json?v=277').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
     ]);
     for (const [f, a] of Object.entries(cores?.pets || {})) if ((petDaCor(f) || adultoDaCor(f)) && !j.pets[f]) j.pets[f] = a;
+    await conferirFormasNovas(j);   // 🦇 PROMPT-277: o morcego rosa e o adulto só valem quando as imagens chegarem
     // a forma colorida usa as sequências do pet (o sprites-pets-cores.json só tem as animações); o adulto colorido, também o quadro do adulto
     for (const f of Object.keys(j.pets)) {
       const p = petDaCor(f) || adultoDaCor(f);
@@ -53,7 +54,7 @@ export const CORES_PET = {
   unicornio: [],   // 🦄 PROMPT-212: sem cores (PROMPT-194 tinha tirado marrom, dourado e preto; as compradas voltaram em moedas)
   gaviao: [],   // 🦅 PROMPT-190: o gavião só no desenho original (as cores compradas voltaram em moedas)
   axolote: CORES_TODAS.filter(c => c !== 'rosa'),
-  morcego: ['marrom', 'cinza', 'branco', 'roxo', 'azul', 'vermelho', 'dourado'],
+  morcego: ['marrom', 'cinza', 'branco', 'roxo', 'azul', 'vermelho', 'dourado', 'rosa'],   // 🦇 PROMPT-277: + rosa (vale quando a pasta chegar)
 };
 export const NOME_COR_PET = { marrom: 'Marrom', cinza: 'Cinza', branco: 'Branco', roxo: 'Roxo', azul: 'Azul', rosa: 'Rosa', verde: 'Verde', dourado: 'Dourado', preto: 'Preto', vermelho: 'Vermelho' };
 export const NOME_ORIGINAL_PET = { morcego: 'Preto' };   // o chip sem cor (o resto: Original)
@@ -72,6 +73,25 @@ export const petDaCor = (forma) => { const m = /^([a-z]+)_([a-z]+)$/.exec(forma 
 // 🐯 adulto com cor (PROMPT-181): tigre_adulto_azul → 'tigre_adulto'; o resto → null
 // 🐱 PROMPT-209: pets cujo adulto é o filhote 50% maior (sem desenho próprio de adulto)
 export const ADULTO_E_FILHOTE = ['gato', 'axolote'];
+// 🦇 PROMPT-277: formas que já estão nos JSONs, mas cujas imagens vêm num pacote depois (o morcego rosa e o morcego adulto, com as
+// cores dele). Cada uma só vale se a 1ª imagem (sentado_girando) carregar; senão sai do SPR com tudo o que começa com o nome dela
+// (morcego_adulto → morcego_adulto_rosa…) e a evolução para ela: a cor rosa não aparece e o morcego evoluído continua filhote.
+const FORMAS_A_CONFERIR = ['morcego_rosa', 'morcego_adulto'];
+const imagemExiste = (src) => new Promise((ok) => {
+  const im = new Image(), t = setTimeout(() => ok(false), 6000);
+  im.onload = () => { clearTimeout(t); ok(im.naturalWidth > 0); };
+  im.onerror = () => { clearTimeout(t); ok(false); };
+  im.src = src;
+});
+async function conferirFormasNovas(j) {
+  await Promise.all(FORMAS_A_CONFERIR.map(async (f) => {
+    const q = j.pets[f]?.sentado_girando?.[0];
+    if (!q || await imagemExiste(BASE + q)) return;
+    for (const k of Object.keys(j.pets)) if (k === f || k.startsWith(f + '_')) { delete j.pets[k]; delete j.sequencias?.[k]; delete j.quadro_por_pet?.[k]; delete j.acoes_parado?.[k]; }
+    for (const [p, a] of Object.entries(j.evolucao || {})) if (a === f) delete j.evolucao[p];
+  }));
+}
+
 export const CRESCE_ADULTO_FILHOTE = 1.5;
 // gato_adulto, gato_adulto_preto, axolote_adulto_azul → o filhote com a cor (gato, gato_preto, axolote_azul); o resto → null
 export const filhoteDoAdulto = (forma) => {

@@ -18,7 +18,7 @@ import { srcAudioGrio, temAudioGrio, legendaGrio, tempoDasLinhas, fraseNoTempo }
 import { EMBLEMAS, CORES_EQUIPE, MAX_MEMBROS as MAX_MEMBROS_EQ, NOME_MAX as NOME_MAX_EQ, emblemaDe, corValida as corEquipeValida, htmlEmblema, htmlRotuloEquipe, bases as basesEquipe,
   membrosDe as membrosDeEq, naEquipe as naEquipeEq, equipeVale as equipeValeEq, lerAlunos as lerAlunosEq, criarEquipe as criarEquipeEq, editarEquipe as editarEquipeEq, pedirNome as pedirNomeEq,
   convidar as convidarEq, cancelarConvite as cancelarConviteEq, aceitarConvite as aceitarConviteEq, recusarConvite as recusarConviteEq, sairDaEquipe as sairDaEquipeEq,
-  expulsar as expulsarEq } from '/js/jogo-revisao/equipes.js';   // 🛡️ PROMPT-235
+  expulsar as expulsarEq, lerEquipe as lerEquipeEq } from '/js/jogo-revisao/equipes.js';   // 🛡️ PROMPT-235
 import { criarSala as criarSalaDeq, marcarPresenca as marcarPresencaDeq, sairPresenca as sairPresencaDeq, responderConvite as responderConviteDeqFb, responder as responderDeqFb,
   quemConduz as quemConduzDeq, assumir as assumirDeq, ouvirSala as ouvirSalaDeq, ouvirConvites as ouvirConvitesDeqFb, apagarConvite as apagarConviteDeq, atualizarSala as atualizarSalaDeq,
   lerSala as lerSalaDeq, Condutor as CondutorDeq, lutadores as lutadoresDeq, podeResponder as podeResponderDeq, inicioTorre as inicioTorreDeq, progressoTorre as progressoTorreDeq,
@@ -117,6 +117,8 @@ const ADULTO_ANTES = CRESCE_EVOLUCAO * 622 / 604;
 // medidos no quadro de 566.
 const ALT_BASE_PERSONAGEM = ALT_JOGADOR_MAPA / ESCALA_ATORES;   // 55
 ALT_PET.dragao_azul_adulto = ALT_PET.dragao_vermelho_adulto = ALT_BASE_PERSONAGEM;
+// 🦇 PROMPT-277: o morcego adulto do tamanho do dragão adulto (o mesmo ALT_PET e a escala 1,75 do vermelho no sprites.json)
+ALT_PET.morcego_adulto = ALT_BASE_PERSONAGEM;
 // 🐯 PROMPT-181: o tigre adulto sentado na altura do personagem (sentado_altura 433 no quadro de 566); PROMPT-194: 20% maior (55 → 66)
 const CRESCE_TIGRE_ADULTO = 1.2;
 ALT_PET.tigre_adulto = ALT_BASE_PERSONAGEM * CRESCE_TIGRE_ADULTO;
@@ -397,6 +399,7 @@ const DIST_PET = {
 };
 // cresce junto com o tamanho (mesma proporção distância/altura do filhote vermelho; distPet ainda × a escala do vermelho)
 DIST_PET.dragao_azul_adulto = DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * ALT_PET.dragao_azul_adulto / ALT_PET.dragao_vermelho;
+DIST_PET.morcego_adulto = DIST_PET.dragao_vermelho_adulto;   // 🦇 PROMPT-277: como o dragão adulto
 DIST_PET.tigre_adulto = DIST_PET.tigre * ALT_PET.tigre_adulto / ALT_PET.tigre;   // a distância cresce junto (PROMPT-194: 79,2)
 DIST_PET.unicornio_adulto = DIST_PET.tigre_adulto;   // 🦄 PROMPT-213: 79,2, como o tigre adulto (dispara a partir de 2,5 × isso, pets.js)
 DIST_PET.elefante_adulto = DIST_PET.elefante * ALT_PET.elefante_adulto / ALT_PET.elefante;   // 🐘 PROMPT-213: 36 × 79,2 / 36 = 79,2
@@ -703,7 +706,7 @@ function juntarNaFila(caminho, valor) {
 
 function gravar(patch, errouId) {
   if (!carregouProgresso || sessao?.visitante) return;   // 🚪 o visitante não tem progresso
-  for (const [k, v] of Object.entries(patch)) juntarNaFila(k, v);
+  for (const [k, v] of Object.entries(patch)) if (!petSoLocal(k)) juntarNaFila(k, v);
   if (errouId) { fila.erros[errouId] = (fila.erros[errouId] || 0) + 1; const em = lembrarErroMapa(errouId); if (em) juntarNaFila(em[0], em[1]); }   // ❤️ o NPC do mapa lembra
   enviarFila();
 }
@@ -1313,12 +1316,13 @@ function iniciarPet() {
   devolverCoresUnicornio(ps);   // 🦄 PROMPT-212 (depois do 194: o que ele já devolveu não volta duas vezes)
   limparExpedicao(ps);   // 🧭 PROMPT-177
   for (const p of Object.keys(ps.conquistados)) if (!petValido(p)) delete ps.conquistados[p];
-  liberarPetsProfessora(ps);
   if (!temPet(ps.ativo)) ps.ativo = Object.keys(ps.conquistados)[0] || null;
   if (ps.migrou && ps.ativo) gravar({ 'pets/ativo': ps.ativo, 'pets/conquistados': ps.conquistados });   // por campo: não apaga as moedas
   delete ps.migrou;
   normalizarCuidados();
   datarPetsAntigos();   // 🎂 (PROMPT-102) pet sem `data`: começa a contar hoje
+  liberarPetsProfessora(ps);   // 🐾 PROMPT-277: depois das gravações acima (só na memória)
+  if (!temPet(ps.ativo)) ps.ativo = Object.keys(ps.conquistados)[0] || null;
   if (ps.ativo) { preCarregarPet(formaDe(ps.ativo)); seguidor.definir(ps.ativo, formaDe(ps.ativo)); atualizarVisualPet(); }
   if (falasProntas()) verificarMarcosLealdade(ps.ativo);
   verificarEvolucao(ps.ativo);   // quem já tinha lealdade 100 (e ainda não evoluiu) evolui ao entrar
@@ -1334,20 +1338,26 @@ function limparExpedicao(ps) {
   if (Object.keys(patch).length) gravar(patch);
 }
 
-// Login da professora (menu do professor): todos os pets na coleção e as formas adultas liberadas, sem precisar
-// vencer líderes nem chegar à lealdade 100 (amizade ❤️ 1). O interruptor "Mostrar como filhote" (Meu Pet → Visual) troca entre as formas.
+// Login da professora (menu do professor) e contas de teste (ALUNOS_TESTE): todos os pets na coleção e as formas adultas liberadas,
+// sem precisar vencer líderes nem chegar à lealdade 100 (amizade ❤️ 1). O interruptor "Mostrar como filhote" (Meu Pet → Visual) troca
+// entre as formas; as cores vêm de todasAsCoresPet. 🐾 PROMPT-277: só na memória deste aparelho, nada vai para o banco (nem o
+// "evoluido"). O pet que ainda não estava conquistado no banco fica em petsSoLocais e nada dele vai para o banco (nem os cuidados:
+// senão sobrava um pets/conquistados/{pet} pela metade); o "evoluido" de um pet que já era dela também não (petSoLocal, em gravar).
+const petsSoLocais = new Set();
+function petSoLocal(k) {
+  const m = /^pets\/conquistados\/([^/]+)(\/.*)?$/.exec(k);
+  return !!m && (petsSoLocais.has(m[1]) || (m[2] === '/evoluido' && liberaTodosPets()));
+}
+const liberaTodosPets = () => ehProfessora() || ALUNOS_TESTE.includes(sessao?.uid);
 function liberarPetsProfessora(ps) {
-  if (!ehProfessora()) return;
-  const patch = {};
+  if (!liberaTodosPets()) return;
   // ginásio zerado (🧪 PROMPT-173) e líder ainda não vencido: o pet dele fica de fora, para aparecer de novo ao vencer
   const zerado = (p) => Object.entries(PETS_GINASIO).some(([k, x]) => x === p && estado.ginasios[k]?.zerado && !estado.ginasios[k].lider.vencido);
   for (const p of PETS.filter(petValido)) {
     if (!ps.conquistados[p] && zerado(p)) continue;
-    const evoluido = formaAdulta(p) ? { evoluido: true } : {};
-    if (!ps.conquistados[p]) { ps.conquistados[p] = { data: Date.now(), origem: 'professora', ...cuidadosNovos(), ...evoluido }; patch[`pets/conquistados/${p}`] = ps.conquistados[p]; }
-    else if (evoluido.evoluido && !ps.conquistados[p].evoluido) { ps.conquistados[p].evoluido = true; patch[`pets/conquistados/${p}/evoluido`] = true; }
+    if (!ps.conquistados[p]) { ps.conquistados[p] = { data: Date.now(), origem: 'professora', ...cuidadosNovos() }; petsSoLocais.add(p); }
+    if (formaAdulta(p)) ps.conquistados[p].evoluido = true;
   }
-  if (Object.keys(patch).length) gravar(patch);
 }
 
 // A capivara virou elefante (PROMPT-20): quem tinha capivara fica com o elefante, com tudo o que era dela
@@ -3060,7 +3070,9 @@ function darComida(id) {
   mp.estado = 'comendo'; mp.ocupado = true; mp.comendo = true;   // até voltarAoNormal (inclui o lamber os beiços)
   mp.acordadoAte = Date.now() + ACORDADO_MS;
   // adulto: carne → `comer_carne` (assa, morde, come no chão, ossos, lambe os beiços); as outras → `comer` (curta)
-  const seqComer = item.id === 'carne' && temSequencia(mp.forma, 'comer_carne') ? 'comer_carne' : 'comer';
+  // 🦇 PROMPT-277: quem tem os dois jeitos (o morcego adulto: de frente e de lado com a maçã) sorteia um deles
+  const seqComer = item.id === 'carne' && temSequencia(mp.forma, 'comer_carne') ? 'comer_carne'
+    : temSequencia(mp.forma, 'comer_lado') && Math.random() < 0.5 ? 'comer_lado' : 'comer';
   if (mp.anim.sequencia(seqComer, voltarAoNormal)) movimentoCorpo(null);
   else {
     if (temAnim(mp.forma, 'assar_comida')) mp.anim.tocar('assar_comida', () => { if (mp?.estado === 'comendo') mp.anim.tocar('comendo'); });   // o dragão assa a comida antes
@@ -4190,6 +4202,8 @@ function atualizarAmizadeNaTela() {
   const n = Object.keys(pedidosAmizade).length, sel = $('online-ped-n');
   if (sel) { sel.textContent = n ? String(n) : ''; sel.hidden = !n; }
   if (!$('online-lista').hidden && $('online-lista').dataset.modo === 'amigos') renderListaAmigos();
+  renderAmigos();   // 👥 PROMPT-277
+  atualizarBotaoOnline();
 }
 
 // ── 👥 a aba Amigos da lista: os pedidos recebidos, os amigos online (🟢) e os offline (⚪ visto há…) ──
@@ -4224,9 +4238,7 @@ function mostrarAbaOnline(aba) {
 }
 function renderListaAmigos() {
   const regs = regsOnline(), on = (u) => colegaVisivel(u, regs[u]);
-  const ped = Object.entries(pedidosAmizade).map(([uid, p]) => `<li class="jr-amigo-ped"><span class="jr-rosto">🤝</span>
-      <span class="jr-online-nome">${esc(nomeVisivel(p.nome) || nomeDoUid(uid))}</span><span class="jr-online-det">${esc(nomeVisivel(p.turma || ''))} · quer ser seu amigo</span>
-      <span class="jr-amigo-acoes"><button class="jr-online-acao" data-amz-sim="${esc(uid)}">✔ Aceitar</button><button class="jr-online-acao sec" data-amz-nao="${esc(uid)}">Agora não</button></span></li>`).join('');
+  const ped = htmlPedidosAmizade();
   const lista = [...amigos].map(uid => ({ uid, r: regs[uid] || null, on: on(uid) }))
     .sort((a, b) => Number(b.on) - Number(a.on) || rotuloColega(a.uid, a.r).localeCompare(rotuloColega(b.uid, b.r)));
   const linha = ({ uid, r, on: online }) => `<li><span class="jr-rosto">${online && r ? rostoPet(petAtual(r.pet), r.pet_tinta, r.pet_forma) : '👤'}</span>
@@ -4262,8 +4274,10 @@ function buscarAlunos(texto, { max = BUSCA_MAX } = {}) {
   lista.sort((a, b) => Number(b.turma === sessao.turma) - Number(a.turma === sessao.turma) || a.nome.localeCompare(b.nome, 'pt'));
   return { total: lista.length, lista: lista.slice(0, max) };
 }
-function buscaAmigosHtml() {
-  const txt = $('amigos-busca').value.trim();
+const htmlPedidosAmizade = () => Object.entries(pedidosAmizade).map(([uid, p]) => `<li class="jr-amigo-ped"><span class="jr-rosto">🤝</span>
+      <span class="jr-online-nome">${esc(nomeVisivel(p.nome) || nomeDoUid(uid))}</span><span class="jr-online-det">${esc(nomeVisivel(p.turma || ''))} · quer ser seu amigo</span>
+      <span class="jr-amigo-acoes"><button class="jr-online-acao" data-amz-sim="${esc(uid)}">✔ Aceitar</button><button class="jr-online-acao sec" data-amz-nao="${esc(uid)}">Agora não</button></span></li>`).join('');
+function buscaAmigosHtml(txt = $('amigos-busca').value.trim()) {
   if (!txt) return '';
   const r = buscarAlunos(txt);
   if (!r) return `<li class="jr-online-vazio">Digite pelo menos ${BUSCA_MIN} letras do nome.</li>`;
@@ -4274,6 +4288,117 @@ function buscaAmigosHtml() {
   return `<li class="jr-online-grupo">🔎 Alunos · ${r.total > r.lista.length ? `${r.lista.length} de ${r.total}` : r.total}</li>` + (r.lista.map(a => `<li><span class="jr-rosto">👤</span>
       <span class="jr-online-nome">${esc(a.rotulo)}</span><span class="jr-online-det">${esc(a.nome)}</span>
       <span class="jr-amigo-acoes">${botao(a)}</span></li>`).join('') || '<li class="jr-online-vazio">Ninguém com esse nome.</li>');
+}
+
+// ============================================================
+//  👥 AMIGOS (PROMPT-277) — janela própria, aberta pelo 👥 do topo (no lugar da aba "🤝 Amigos" do Online).
+//  Abas: Amigos (online primeiro, depois offline com o "visto há…"), Pedidos e 🔎 Buscar alunos. No cartão de cada amigo:
+//  ⚔️ Desafiar (de longe, em qualquer mapa), 🏛️ Chamar pra Praça, 🏠 Visitar (a casa decide: "Só amigos" / "Todos"),
+//  🛡️ Chamar pro grupo (sem grupo: cria na hora, com quem chamou de dono) e 🎁 Presente. O botão que não serve agora fica apagado
+//  com o motivo. Professora e contas de teste não usam amigos (usaAmigos) e não aparecem na busca (buscarAlunos).
+// ============================================================
+let abaAmigos = 'amigos';
+const amigosAberta = () => !$('amigos-jan').hidden;
+function abrirAmigos(aba = 'amigos') {
+  if (!usaAmigos()) { abrirListaTodos(); return; }
+  if (mp) fecharMeuPet();
+  $('online-lista').hidden = true;
+  $('amigos-jan').hidden = false;
+  if ($('tela-geral').hidden) atualizarOnlineTodos();
+  mostrarAbaAmigos(typeof aba === 'string' ? aba : 'amigos');
+  lerVistoAmigos().then(m => { if (m) renderAmigos(); });
+  lerAlunosEquipe();   // quem já está em um grupo
+  tocar('clique');
+}
+function mostrarAbaAmigos(aba) {
+  abaAmigos = aba;
+  for (const b of $('amigos-abas').querySelectorAll('[data-am-aba]')) b.classList.toggle('ativa', b.dataset.amAba === aba);
+  $('amigos-jan-busca').hidden = aba !== 'busca';
+  renderAmigos();
+  if (aba === 'busca') $('amigos-jan-busca').focus();
+}
+function renderAmigos() {
+  if (!amigosAberta()) return;
+  const n = Object.keys(pedidosAmizade).length, sel = $('amigos-ped-n');
+  sel.textContent = n ? String(n) : ''; sel.hidden = !n;
+  const el = $('amigos-itens'), txt = $('amigos-jan-busca').value.trim();
+  if (abaAmigos === 'pedidos') el.innerHTML = htmlPedidosAmizade() || '<li class="jr-online-vazio">Nenhum pedido de amizade agora.</li>';
+  else if (abaAmigos === 'busca') el.innerHTML = txt ? buscaAmigosHtml(txt) : `<li class="jr-online-vazio">Digite o nome de um colega (pelo menos ${BUSCA_MIN} letras). Aparecem os alunos de todas as turmas.</li>`;
+  else el.innerHTML = htmlListaAmigos();
+  pintarRostos(el);
+}
+function htmlListaAmigos() {
+  const regs = regsOnline();
+  const lista = [...amigos].map(uid => ({ uid, r: regs[uid] ? { uid, ...regs[uid] } : null, on: colegaVisivel(uid, regs[uid]) }))
+    .sort((a, b) => Number(b.on) - Number(a.on) || rotuloColega(a.uid, a.r).localeCompare(rotuloColega(b.uid, b.r)));
+  if (!lista.length) return '<li class="jr-online-vazio">Você ainda não tem amigos. Procure um colega em 🔎 Buscar alunos!</li>';
+  const on = lista.filter(x => x.on), off = lista.filter(x => !x.on);
+  return `<li class="jr-online-grupo">🟢 Online · ${on.length}</li>` + (on.map(cartaoAmigo).join('') || '<li class="jr-online-vazio">Nenhum amigo online agora.</li>') +
+    (off.length ? `<li class="jr-online-grupo">⚪ Offline · ${off.length}</li>` + off.map(cartaoAmigo).join('') : '') +
+    `<li class="jr-online-vazio am-total">${lista.length}/${MAX_AMIGOS} amigos</li>`;
+}
+const botaoApagado = (txt, motivo = '') => `<button class="jr-online-acao" disabled${motivo ? ` title="${esc(motivo)}"` : ''}>${txt}</button>`;
+function cartaoAmigo({ uid, r, on }) {
+  const pet = on && r ? petAtual(r.pet) : null;
+  const foto = on && r ? bustoHtml(urlQuadro('frente', -1, persValido(r.personagem) ? r.personagem : PERS.padrao, r.cores), `am-foto${temBrilho(uid, r) ? ' jr-brilho' : ''}`, BUSTO_PERS)
+    : '<span class="am-foto am-foto-off" aria-hidden="true">👤</span>';
+  const onde = on ? lugarDe(r) : vistoHa(vistoAmigos[uid]?.t) || 'offline';
+  const acoes = [
+    on ? botaoDesafiar(uid, r) : botaoApagado('⚔️ Desafiar · offline'),
+    on ? botaoChamar(r) || botaoApagado('🏛️ Chamar pra Praça', 'Os convites estão pausados agora') : botaoApagado('🏛️ Chamar · offline'),
+    `<button class="jr-online-acao" data-visitar-amigo="${esc(uid)}">🏠 Visitar</button>`,
+    botaoGrupo(uid),
+    `<button class="jr-online-acao" data-presente-amigo="${esc(uid)}">🎁 Presente</button>`,
+  ].join('');
+  return `<li class="am-cartao${on ? ' on' : ''}">${foto}<span class="am-quem">
+      <span class="jr-online-nome">${on ? '🟢' : '⚪'} ${esc(rotuloColega(uid, r))}</span>
+      <span class="jr-online-det">${esc(nomeVisivel(r?.turma || turmaDoUid(uid)))} · ${esc(onde)}</span>
+      ${pet && petValido(pet) ? `<span class="jr-online-det am-pet"><span class="jr-icone-pet">${rostoPet(pet, r.pet_tinta, r.pet_forma)}</span>${esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[pet])}</span>` : ''}
+    </span><span class="jr-amigo-acoes am-acoes">${acoes}</span></li>`;
+}
+// 🛡️ o convite da Equipe (PROMPT-235): sem grupo, o grupo nasce na hora (quem chamou é o dono) e o convite vai junto
+function botaoGrupo(uid) {
+  const eq = minhaEquipe;
+  if (eq && naEquipeEq(eq, uid)) return botaoApagado('🛡️ No seu grupo');
+  if (eq?.convidados?.[uid]) return botaoApagado('🛡️ Convite enviado');
+  if (eq && !souDono()) return botaoApagado('🛡️ Chamar pro grupo', 'Só quem criou o grupo convida');
+  if (equipeDosAlunos[uid]?.equipe) return botaoApagado('🛡️ Já está em um grupo');
+  return `<button class="jr-online-acao" data-grupo-amigo="${esc(uid)}">🛡️ Chamar pro grupo</button>`;
+}
+async function chamarProGrupo(uid) {
+  const nome = nomeAlunoEq(uid), criou = !minhaEquipe;
+  if (equipeDosAlunos[uid]?.equipe) { avisoPet(`${nome} já está em um grupo`); return; }
+  try {
+    let id = equipeId, eq = minhaEquipe;
+    if (!eq) {
+      id = await criarEquipeEq(teste, sessao.uid, { emblema: eqTela.emblema, cor: eqTela.cor });
+      eq = await lerEquipeEq(teste, id);
+      if (!eq) throw new Error('Não deu para criar o grupo agora. Tente de novo.');
+    }
+    await convidarEq(teste, id, eq, uid, nomeRanking());
+    avisoPet(criou ? `🛡️ Grupo criado! Convite enviado para ${nome}.` : `🛡️ Convite enviado para ${nome}!`);
+    tocar('clique');
+  } catch (e) {
+    if (e?.code) console.warn('[jogo-revisao] chamar pro grupo', e.code);
+    avisoPet(e?.message === 'Esse colega já tem equipe.' ? `${nome} já está em um grupo` : e?.message && !/permission/i.test(e.message) ? e.message : 'Não deu agora. Tente de novo.');
+  }
+  lerAlunosEquipe();
+}
+function cliqueAmigos(e) {
+  if (e.target === $('amigos-jan') || e.target.closest('#amigos-fechar')) { $('amigos-jan').hidden = true; return; }
+  const ab = e.target.closest('[data-am-aba]');
+  if (ab) { mostrarAbaAmigos(ab.dataset.amAba); return; }
+  const b = e.target.closest('button');
+  if (!b || b.disabled) return;
+  const d = b.dataset;
+  if (d.desafiarLonge) { $('amigos-jan').hidden = true; abrirDesafioLonge(d.desafiarLonge); }
+  else if (d.grupoAmigo) { b.disabled = true; chamarProGrupo(d.grupoAmigo).then(renderAmigos); }
+  else if (d.chamar) { b.disabled = true; chamarPraPraca(d.chamar); }
+  else if (d.visitarAmigo) visitarCasinha(d.visitarAmigo);
+  else if (d.presenteAmigo) abrirPresenteAmigo(d.presenteAmigo);
+  else if (d.amzSim) aceitarAmizade(d.amzSim);
+  else if (d.amzNao) recusarAmizade(d.amzNao);
+  else if (d.pedirAmigo) { b.disabled = true; pedirAmizade(d.pedirAmigo, d.nome); }
 }
 
 // ============================================================
@@ -4354,6 +4479,7 @@ function abrirEquipe() {
 async function lerAlunosEquipe() {
   try { equipeDosAlunos = await lerAlunosEq(teste); } catch (e) { console.warn('[jogo-revisao] equipes dos alunos', e?.code || e); }
   if (!$('equipe').hidden) renderEquipe();
+  renderAmigos();   // 👥 PROMPT-277: o 🛡️ Chamar pro grupo
 }
 const nomeAlunoEq = (uid) => nomeAbreviado(nomeVisivel(String(uid || '').split('_').slice(1).join(' '))) || 'Colega';   // "Alice T." e "Alice P." (as duas não ficam iguais)
 function htmlEscolhaEmblema() {
@@ -5135,26 +5261,36 @@ async function atualizarOnlineTodos() {
   atualizarBotaoOnline();
   if (!$('online-lista').hidden && $('online-lista').dataset.modo === 'todos') renderListaTodos();
   if (!$('online-lista').hidden && $('online-lista').dataset.modo === 'amigos') renderListaAmigos();
+  renderAmigos();   // 👥 PROMPT-277
+  if (!$('bt-lista').hidden && String(btSel).startsWith('on:')) renderListaBatalha();   // ⚔️ o 🔒 Ocupado de quem entrou numa batalha
   const m = $('online-lista').dataset.modo;
   if (!$('online-lista').hidden && (m === 'site' || m === 'busca') && await lerPresencaSite()) { if (m === 'site') renderListaSite(); else renderBuscaAluno(); }
 }
+// 👥 PROMPT-277: o botão "👥 Amigos" (o número = amigos online; com pedido de amizade esperando, um pontinho). A professora
+// e as contas de teste não têm amigos: para elas continua "👥 Online" (o número = todos online) e abre a lista do Online.
 function atualizarBotaoOnline() {
-  $('online-n').textContent = Object.entries(regsOnline()).filter(([u, r]) => colegaVisivel(u, r)).length;
+  const regs = regsOnline(), am = usaAmigos(), b = $('btn-online'), el = $('online-n');
+  const n = am ? [...amigos].filter(u => colegaVisivel(u, regs[u])).length : Object.entries(regs).filter(([u, r]) => colegaVisivel(u, r)).length;
+  if (el.textContent !== String(n)) el.textContent = n;
+  if (el.hidden !== !n) el.hidden = !n;
+  b.classList.toggle('tem-pedido', am && Object.keys(pedidosAmizade).length > 0);
+  const rot = am ? 'Amigos' : 'Online', sp = b.querySelector('span');
+  if (sp.textContent !== rot) { sp.textContent = rot; b.setAttribute('aria-label', rot); }
 }
 function abrirListaTodos(aba = 'todos') {
   tLista = 0;
   if ($('tela-geral').hidden) atualizarOnlineTodos();
   const prof = ehProfessora();   // 🎓 só a conta da professora: 🎮 Outros jogos e 🔎 Alunos
-  $('online-abas').hidden = !usaAmigos() && !prof;   // 🤝 a aba Amigos (PROMPT-183)
+  $('online-abas').hidden = !prof;   // 👥 PROMPT-277: os Amigos têm janela própria (abrirAmigos); aqui ficam as abas da professora
   for (const b of $('online-abas').querySelectorAll('[data-online-aba]')) {
     const a = b.dataset.onlineAba;
-    b.hidden = a === 'amigos' ? !usaAmigos() : (a === 'site' || a === 'busca') ? !prof : false;
+    b.hidden = a === 'amigos' ? true : (a === 'site' || a === 'busca') ? !prof : false;
   }
   $('online-ir').hidden = true;
   $('online-bloqueado').hidden = true;
   atualizarAmizadeNaTela();
   if (typeof aba !== 'string') aba = 'todos';   // veio do clique (o evento)
-  mostrarAbaOnline(usaAmigos() || (prof && aba !== 'amigos') ? aba : 'todos');
+  mostrarAbaOnline(prof && aba !== 'amigos' ? aba : 'todos');
   $('online-lista').hidden = false;
 }
 function renderListaTodos() {
@@ -5188,6 +5324,72 @@ function botaoChamar(r) {
   if (r.sem_convites) return '<button class="jr-online-acao" disabled>não recebe convites</button>';
   return `<button class="jr-online-acao" data-chamar="${esc(r.uid)}">📨 Chamar pra Praça</button>`;
 }
+// ============================================================
+//  ⚔️ DESAFIO DE LONGE (PROMPT-277) — qualquer colega online, em qualquer mapa (só Contas; a aposta como na Praça).
+//  O convite é o mesmo da Praça (jogo_revisao_praca/convites/{uid}, 20 s): chega em qualquer mapa e, aceito, o duelo abre na
+//  hora para os dois, cada um onde está (mesma tela, regras, prêmio e "prêmios de hoje"). Não dá para desafiar quem está em
+//  batalha, duelo, Damas, ginásio ou torre (🔒 Ocupado) nem a mesma pessoa de novo antes de 20 s. Caiu ou fechou o jogo no
+//  meio: o outro vence por W.O. depois de 15 s (vigiarWO, desafio.wo_s).
+// ============================================================
+const DESAFIO_DE_NOVO_MS = 20000;
+const desafiadoEm = new Map();   // uid → quando eu desafiei
+const ocupadoReg = (r) => !!r && (r.local === 'ginasio' || r.mapa === 'torre' || ['batalha', 'duelo', 'damas'].includes(r.onde));
+// eu: respondendo, em batalha, duelo, Damas, Programe o pet, pescando, evoluindo, no ginásio ou na torre
+const ocupadoParaDesafio = () => !carregouProgresso || perguntaAberta || !!bt || !!duelo || !!dm || !!deq || !$('programe').hidden || !!pesca || !!evo
+  || ehTorre() || cena?.tipo === 'interior';
+const podeDesafiarLonge = () => desafiosLigados() && onlineAtivo() && !ocupadoParaDesafio();
+function motivoSemDesafio(uid, r) {
+  if (!onlineAtivo() || !colegaVisivel(uid, r)) return 'offline';
+  if (!desafiosLigados() || desafiosOff?.[r.turma]) return 'pausado';
+  if (r.sem_convites) return 'sem convites';
+  if (ocupadoReg(r)) return 'ocupado';
+  if (Date.now() - (desafiadoEm.get(uid) || 0) < DESAFIO_DE_NOVO_MS) return 'espera';
+  return '';
+}
+const TXT_SEM_DESAFIO = { offline: '⚔️ Desafiar · offline', pausado: '⚔️ Desafios pausados', 'sem convites': '⚔️ Não recebe convites', ocupado: '🔒 Ocupado', espera: '⏳ Convite enviado' };
+function botaoDesafiar(uid, r) {
+  const m = motivoSemDesafio(uid, r);
+  return m ? botaoApagado(TXT_SEM_DESAFIO[m], m === 'ocupado' ? 'Está numa batalha, num duelo, no ginásio ou na torre' : '')
+    : `<button class="jr-online-acao jr-online-desafiar" data-desafiar-longe="${esc(uid)}">⚔️ Desafiar</button>`;
+}
+// ⚔️ Desafiar: sem prêmio hoje → o aviso; apostas ligadas → "Valendo quanto?"; senão o convite vai direto
+let dlg = null;   // { uid, r }
+function abrirDesafioLonge(uid) {
+  const r = regsOnline()[uid], m = motivoSemDesafio(uid, r);
+  if (m) { avisoPet(m === 'ocupado' ? `${nomeCurto(uid, r?.apelido)} está ocupado agora. 🔒` : m === 'espera' ? 'Espere um pouco para desafiar de novo.' : 'Não dá para desafiar agora.'); return; }
+  if (!podeDesafiarLonge()) { avisoPet('Termine o que está fazendo para desafiar. ⚔️'); return; }
+  dlg = { uid, r };
+  if (!valeDesafio(diaLocal(), uid)) {
+    passoDesafioLonge('⚔️ Sem prêmio hoje', `Você já fez os desafios que valem prêmio hoje (ou já desafiou ${esc(nomeCurto(uid, r.apelido))} 2 vezes). Dá para jogar só por diversão.`,
+      '<button data-dlg-mesmo>⚔️ Desafiar mesmo assim</button>');
+    return;
+  }
+  escolherApostaLonge();
+}
+function escolherApostaLonge() {
+  if (!dlg) return;
+  if (!apostasLigadas()) { enviarDesafioLonge(0); return; }
+  passoDesafioLonge(`💰 Desafiar ${esc(nomeCurto(dlg.uid, dlg.r.apelido))} valendo quanto?`, `Quem vencer leva as duas apostas. Você tem ${saldoMoedas()} 🪙.`, botoesAposta('data-dlg-aposta'));
+}
+function passoDesafioLonge(tit, txt, ops) {
+  $('dlg-tit').innerHTML = tit;
+  $('dlg-txt').innerHTML = txt;
+  $('dlg-ops').innerHTML = ops;
+  $('desafio-longe').hidden = false;
+}
+function enviarDesafioLonge(aposta) {
+  const d = dlg;
+  dlg = null;
+  $('desafio-longe').hidden = true;
+  if (d) desafiarColega({ uid: d.uid, reg: d.r }, 'contas', aposta);
+}
+function cliqueDesafioLonge(e) {
+  if (e.target === $('desafio-longe') || e.target.closest('#dlg-fechar')) { dlg = null; $('desafio-longe').hidden = true; return; }
+  if (e.target.closest('[data-dlg-mesmo]')) { escolherApostaLonge(); return; }
+  const a = e.target.closest('[data-dlg-aposta]');
+  if (a && !a.disabled) enviarDesafioLonge(Number(a.dataset.dlgAposta) || 0);
+}
+
 function cliqueListaOnline(e) {
   const ab = e.target.closest('[data-online-aba]');   // 🤝 (PROMPT-183)
   if (ab) { mostrarAbaOnline(ab.dataset.onlineAba); return; }
@@ -5675,6 +5877,29 @@ function avisoTopo(texto) {
   b.hidden = false;
   clearTimeout(b._t);
   b._t = setTimeout(() => { b.hidden = true; }, 4000);
+}
+
+// 📱 PROMPT-277: no celular (deitado ou tela estreita, CSS) o 💬, o ❓ e o ⚙️ do topo ficam no "⋯", num menu pequeno
+function ligarMenuMais() {
+  const b = $('btn-mais'), m = $('menu-mais');
+  const fechar = () => { m.hidden = true; b.setAttribute('aria-expanded', 'false'); };
+  b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!m.hidden) { fechar(); return; }
+    const r = $('btn-reacao');
+    m.querySelector('[data-mais="reacao"]').hidden = r.hidden;
+    $('menu-mais-reacao').textContent = r.textContent;
+    m.hidden = false;
+    b.setAttribute('aria-expanded', 'true');
+  });
+  m.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const it = e.target.closest('[data-mais]');
+    if (!it) return;
+    fechar();
+    $({ reacao: 'btn-reacao', ajuda: 'btn-ajuda', config: 'btn-config' }[it.dataset.mais])?.click();
+  });
+  document.addEventListener('click', (e) => { if (!m.hidden && !e.target.closest('#menu-mais, #btn-mais')) fechar(); });
 }
 
 function tocarBotaoRevisao() {
@@ -6915,6 +7140,7 @@ async function abrirMapa(n, onde) {
   montarQuadroEstudos(n);
   montarPortaLoja(n);
   montarTorreNoMapa(n);   // 🏆 só com torre.json → local neste mapa
+  montarFonteMapa();   // ⛲ PROMPT-277: mapas.json → fonte (a do mapa 1)
   montarCavar(n);
   fecharBalaoPorta();
 
@@ -7688,6 +7914,19 @@ function montarFonte() {
   $('cena-atores').insertAdjacentHTML('beforeend', `<div class="jr-fonte" aria-hidden="true" style="left:${f.x}px;top:${y}px;width:${larg}px;z-index:${Math.round(y)}">
     <img src="${IMG}/praca/fonte_1.webp" alt="" draggable="false"/><i class="brilho"></i>${ondas}${gotas}</div>`);
 }
+// ⛲ PROMPT-277: a fonte desenhada no fundo de um mapa (mapas.json → mapaN.fonte = { x, y (a base), largura }) ganha água animada só
+// por código, com o mesmo CSS da fonte da Praça: o jato com gotas subindo e caindo, os respingos onde os arcos caem na bacia e um
+// brilho passando na água. As posições em % são as do desenho do mapa 1 (bacia larga embaixo, jato no alto).
+function montarFonteMapa() {
+  const f = cena?.cfg?.fonte;
+  if (!f || !Number.isFinite(Number(f.x)) || !Number.isFinite(Number(f.y))) return;
+  const larg = Number(f.largura) || 70, alt = larg * 83 / 70;
+  const gotas = [[51, 6, 0, -4], [51, 6, .65, 4], [51, 6, 1.3, -6], [51, 6, 1.95, 6], [24, 50, .4, -3], [76, 50, 1.1, 3]]
+    .map(([x, y, d, dx]) => `<i class="gota" style="left:${x}%;top:${y}%;animation-delay:${d}s;--dx:${dx}px"></i>`).join('');
+  const ondas = [[24, 54, 0], [76, 54, 1.1], [50, 62, 2.2]].map(([x, y, d]) => `<i class="onda" style="left:${x}%;top:${y}%;animation-delay:${d}s"></i>`).join('');
+  $('cena-atores').insertAdjacentHTML('beforeend', `<div class="jr-fonte jr-fonte-mapa" aria-hidden="true" style="left:${f.x}px;top:${f.y}px;width:${larg}px;height:${alt.toFixed(1)}px;z-index:${Math.round(f.y)}">
+    <i class="brilho"></i>${ondas}${gotas}</div>`);
+}
 function alvoPracaEm(p) {
   const { mural: m, fliperama: f, loja: l, laboratorio: lb, casinha: ca } = cena;
   if (m && Math.abs(p.x - m.x) < (m.largura || 240) / 2 && p.y > m.y - 130 && p.y < m.y + 120) return 'mural';
@@ -8389,13 +8628,16 @@ function escolherAposta(c, modo) {
     <span class="jr-presente-lista">${botoesAposta('data-aposta')}</span></span>`;
   posicionarCartaoColega();
 }
+// 🐾 PROMPT-277: o pet de cada um aparece na tela do duelo entre colegas (a forma, com a cor, e a tinta)
+const petDoDuelo = () => { const p = estado?.pets?.ativo; return petValido(p) ? { pet_forma: formaDe(p), pet_tinta: tintaVisivel(p) || null } : {}; };
 async function desafiarColega(c, modo = 'contas', aposta = 0) {
-  if (!podeDesafiar()) return;
+  if (modo === 'contas' ? !podeDesafiarLonge() : !podeDesafiar()) return;   // ⚔️ PROMPT-277: Contas de qualquer mapa; Corrida e Damas só na Praça
   fecharCartaoColega();
+  desafiadoEm.set(c.uid, Date.now());
   aposta = apostasLigadas() && VALORES_APOSTA.includes(Number(aposta)) && Number(aposta) <= saldoMoedas() ? Number(aposta) : 0;
   const C = cfgDesafio(), base = basePraca();
   const id = push(ref(db, `${base}/duelos`)).key;
-  const eu = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), vencidos: vencidosMeus(), premio: valeDesafio(diaLocal(), c.uid), ...dadosCorrida() };
+  const eu = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), vencidos: vencidosMeus(), premio: valeDesafio(diaLocal(), c.uid), ...dadosCorrida(), ...petDoDuelo() };
   const nomeOutro = nomeCurto(c.uid, c.reg?.apelido);
   try {
     const m = modo === 'corrida' || modo === 'damas' ? modo : 'contas';
@@ -8403,7 +8645,8 @@ async function desafiarColega(c, modo = 'contas', aposta = 0) {
       aposta: aposta ? { valor: aposta, de: sessao.uid, etapa: 'convite', ts: agoraServ() } : null });
     await set(ref(db, `${base}/convites/${c.uid}`), { id, de: sessao.uid, de_nome: eu.nome, modo: m, aposta: aposta || null, ts: serverTimestamp() });
   } catch (e) { console.warn('[jogo-revisao] desafio indisponível', e?.code || e); avisoPet('Não deu para desafiar agora.'); return; }
-  avisarEm(`⚔️ Convite enviado para ${nomeOutro}${aposta ? ` valendo ${aposta} 🪙` : ''}…`, jog.x, jog.y - ALT_JOGADOR_MAPA - 10);
+  const txtEnviado = `⚔️ Convite enviado para ${nomeOutro}${aposta ? ` valendo ${aposta} 🪙` : ''}…`;
+  if (cena && !$('tela-cena').hidden) avisarEm(txtEnviado, jog.x, jog.y - ALT_JOGADOR_MAPA - 10); else avisoTopo(txtEnviado);
   ouvirDuelo(id, true);
   duelo.timers.push(setTimeout(async () => {   // ninguém respondeu: expira
     if (duelo?.id !== id || duelo.d?.estado !== 'convite') return;
@@ -8411,13 +8654,15 @@ async function desafiarColega(c, modo = 'contas', aposta = 0) {
   }, (C.convite_expira_s ?? 20) * 1000 + 800));
 }
 
-// Quem recebe: balão "Fulano te desafiou!" (some em 20 s). Fora da praça ou já num desafio: ocupado.
+// Quem recebe: balão "Fulano te desafiou para um duelo!" (some em 20 s). ⚔️ PROMPT-277: as Contas chegam em qualquer mapa;
+// Corrida e Damas, só na Praça. Ocupado (batalha, duelo, Damas, ginásio, torre…) ou já com outro convite aberto: 'ocupado'.
+const ocupadoParaConvite = (cv) => (cv.modo === 'corrida' || cv.modo === 'damas' ? !ehPraca() || duelo || dm : ocupadoParaDesafio()) || (!!convite && convite.id !== cv.id);
 async function receberConvite(cv) {
   if (!cv?.id || convite?.id === cv.id) return;
   const exp = (cfgDesafio().convite_expira_s ?? 20) * 1000;
   const idade = agoraServ() - (Number(cv.ts) || 0);
   if (idade > exp || idade < -5000) { remove(ref(db, `${basePraca()}/convites/${sessao.uid}`)).catch(() => {}); return; }
-  if (!ehPraca() || duelo || dm || estado.semConvites || !desafiosLigados()) {   // dm: treinando damas contra o computador
+  if (ocupadoParaConvite(cv) || estado.semConvites || !desafiosLigados()) {   // dm: treinando damas contra o computador
     try { await runTransaction(ref(db, `${basePraca()}/duelos/${cv.id}/estado`), deConvitePara('ocupado')); } catch (_) {}
     remove(ref(db, `${basePraca()}/convites/${sessao.uid}`)).catch(() => {});
     return;
@@ -8428,7 +8673,7 @@ async function receberConvite(cv) {
   const quem = `<b>${nomeT(cv.de, nomeCurto(cv.de, cv.de_nome))}</b>`, valendo = aposta ? ` valendo <b>${aposta} 🪙</b>` : '';
   $('convite-txt').innerHTML = cv.modo === 'corrida' ? `${quem} te chamou para uma Corrida de programação${valendo}! 🤖`
     : cv.modo === 'damas' ? `${quem} te chamou para uma partida de Damas${valendo}! ♟️`
-    : `${quem} te desafiou${valendo}! ⚔️`;
+    : `${quem} te desafiou para um duelo${valendo}! ⚔️`;
   $('convite-aviso').hidden = premio || cv.modo === 'damas';
   mostrarBotoesConvite(aposta, !!aposta);
   $('convite').hidden = false;
@@ -8472,8 +8717,8 @@ async function enviarContraproposta(valor) {
   $('convite').hidden = true;
   const base = basePraca();
   remove(ref(db, `${base}/convites/${sessao.uid}`)).catch(() => {});
-  if (duelo || !ehPraca()) return;
-  const b = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), vencidos: vencidosMeus(), premio: cv.premio, ...dadosCorrida() };
+  if (duelo || ((cv.modo === 'corrida' || cv.modo === 'damas') && !ehPraca())) return;
+  const b = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), vencidos: vencidosMeus(), premio: cv.premio, ...dadosCorrida(), ...petDoDuelo() };
   try {
     const t = await runTransaction(ref(db, `${base}/duelos/${cv.id}`), (cur) => {
       if (cur === null) return null;   // ainda não está no aparelho: o Firebase busca e repete
@@ -8536,10 +8781,10 @@ async function responderConvite(aceitar, expirou = false) {
     if (expirou) avisoPet('Fica para a próxima! ⚔️');
     return;
   }
-  if (duelo || !ehPraca()) return;
+  if (duelo || ((cv.modo === 'corrida' || cv.modo === 'damas') && !ehPraca())) return;
   if (cv.aposta > saldoMoedas()) { avisoPet('Você não tem moedas para essa aposta.'); try { await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), deConvitePara('recusado')); } catch (_) {} return; }
   try {
-    await update(ref(db, `${base}/duelos/${cv.id}/b`), { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), vencidos: vencidosMeus(), premio: cv.premio, ...dadosCorrida() });
+    await update(ref(db, `${base}/duelos/${cv.id}/b`), { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), cores: minhasCores(), vencidos: vencidosMeus(), premio: cv.premio, ...dadosCorrida(), ...petDoDuelo() });
     const t = await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), deConvitePara('aceito'));
     if (t.snapshot.val() !== 'aceito') { avisoPet('O convite expirou. Fica para a próxima! ⚔️'); return; }
   } catch (e) { console.warn('[jogo-revisao] aceitar desafio', e?.code || e); avisoPet('Não deu para aceitar agora.'); return; }
@@ -8571,7 +8816,8 @@ function atualizarDuelo(d) {
   const outroLado = du.souA ? 'b' : 'a';
   if (!du.comecou && ['recusado', 'expirou', 'ocupado'].includes(d.estado)) {
     if (convite?.id === du.id) { convite = null; $('convite').hidden = true; }   // a contraproposta aberta expirou
-    avisoPet(d.estado === 'ocupado' ? `${nomeCurto(d.b?.uid, d.b?.nome)} está ocupado agora. Fica para a próxima! ⚔️` : 'Fica para a próxima! ⚔️');
+    const o = du.souA ? d.b : d.a, nomeO = nomeCurto(o?.uid, o?.nome);   // ⚔️ PROMPT-277: o aviso com o nome de quem não veio
+    avisoPet(d.estado === 'ocupado' ? `${nomeO} está ocupado agora. Fica para a próxima! ⚔️` : d.estado === 'recusado' ? `${nomeO} recusou o duelo` : `${nomeO} não respondeu`);
     encerrarDueloLocal();
     return;
   }
@@ -8604,6 +8850,7 @@ function comecarDuelo(d) {
   $('dl-nomeR').innerHTML = nomeT(du.outro.uid, nomeCurto(du.outro.uid, du.outro.nome));
   $('dl-bustoL').innerHTML = bustoHtml(urlQuadro('direita', -1, persValido(du.eu.pers) ? du.eu.pers : PERS.padrao, du.eu.cores), `dl-busto-img${temBrilho() ? ' jr-brilho' : ''}`, BUSTO_PERS);
   $('dl-bustoR').innerHTML = bustoHtml(urlQuadro('esquerda', -1, persValido(du.outro.pers) ? du.outro.pers : PERS.padrao, du.outro.cores), `dl-busto-img${temBrilho(du.outro.uid, du.outro) ? ' jr-brilho' : ''}`, BUSTO_PERS);
+  montarPetsDuelo(d.modo === 'corrida' || d.modo === 'damas' ? null : du);   // 🐾 PROMPT-277
   $('dl-conta').textContent = 'Prepare-se…';
   $('dl-ops').innerHTML = '';
   $('dl-msg').textContent = du.eu.premio ? '' : 'Este desafio não vale prêmio para você hoje (limite do dia).';
@@ -8615,6 +8862,25 @@ function comecarDuelo(d) {
     du.tema = temaDoDesafio(d.a.vencidos, d.b.vencidos);
     du.timers.push(setTimeout(() => { if (duelo === du && !du.d?.fim) novaRodada(0); }, 3500));
   }
+}
+
+// 🐾 PROMPT-277: os dois pets na tela do duelo entre colegas, na proporção do mapa (ALT_PET, a cor e a tinta de cada um). A arena
+// tem a altura de 1,6 personagem: o pet desenhado vai até essa altura (o dragão adulto, maior que isso, fica no limite).
+const PET_MAX_DUELO = 1.6 * ALT_BASE_PERSONAGEM;
+const altPetDuelo = (forma) => Math.min(altPet(forma), PET_MAX_DUELO);
+function montarPetsDuelo(du) {
+  let algum = false;
+  for (const [img, x] of [[$('dl-petL'), du?.eu], [$('dl-petR'), du?.outro]]) {
+    const f = x?.pet_forma && temAnim(x.pet_forma, 'sentado_girando') ? x.pet_forma : null;
+    img.hidden = !f;
+    aplicarTinta(img, null);
+    if (!f) { img.removeAttribute('src'); continue; }
+    algum = true;
+    img.src = quadrosDe(f, 'sentado_girando')[0];
+    img.style.height = (100 * altPetDuelo(f) / PET_MAX_DUELO / sentadoNoQuadro(f)).toFixed(1) + '%';
+    if (x.pet_tinta) aplicarTinta(img, x.pet_tinta);
+  }
+  $('dl-arena').hidden = !algum;
 }
 
 // Quem desafiou (lado A) gera as rodadas e fecha cada uma (o primeiro acerto, pelo relógio do servidor, ganha)
@@ -14397,7 +14663,7 @@ async function visitarCasinha(uid, volta = null) {   // volta: { n: 'vila', lado
     try { d = await casaDoAmigo(uid); } catch (e) { console.warn('[jogo-revisao] casinha do amigo indisponível', e?.code || e); }
     if (!d) { avisoPet(ehProfessora() ? 'Esse aluno ainda não arrumou a casinha.' : 'Seu amigo ainda não arrumou a casinha.'); return; }
   } else if (!d?.moveis || !visivelNoRanking(uid, d)) { avisoPet('Essa casinha não está aberta para visitas agora.'); return; }
-  $('cs-menu').hidden = $('online-lista').hidden = true;
+  $('cs-menu').hidden = $('online-lista').hidden = $('amigos-jan').hidden = true;
   fecharCartaoColega();
   transicao(() => abrirCasinha({ uid, dados: d }, volta));
 }
@@ -15107,6 +15373,18 @@ function pararChefeTorre(img) {
   img._animChefe.parar();
   delete img._animChefe;
 }
+// 🦇 PROMPT-277: o Morcego Campeão bem grande (~1,8 × os outros chefes) no salão do andar 10; no duelo, de corpo inteiro na arena
+const CAMPEAO_MAIOR = 1.8;
+const fatorChefeTorre = (t) => (t?.chefe && ehCampeaoTorre(t.pers?.sprite) ? CAMPEAO_MAIOR : 1);
+function mostrarCampeaoNaArena(t) {
+  const img = $('bt-campeao'), sprite = t?.torre?.chefe && ehCampeaoTorre(t.sprite) ? t.sprite : null;
+  pararChefeTorre(img);
+  img.hidden = !sprite;
+  if (!sprite) { img.removeAttribute('src'); return; }
+  img.src = `${IMG}/personagens/${esc(sprite)}.webp`;
+  img.className = `bt-campeao${t.aura ? ` jr-aura jr-aura-${esc(t.aura)}` : ''}`;
+  animarChefeTorre(img, t.torre.andar, sprite);
+}
 
 // ── sorteio fixo por aluno e andar (os treinadores, os pets e os estilos não mudam a cada entrada) ──
 function rngTorre(semente) {
@@ -15308,9 +15586,10 @@ const classeEstilo = (id) => (id ? ` jr-est jr-est-${id}` : '');
 function montarTorre() {
   const T = cena.torre, alt = alturaSalao();
   let html = T.trein.map((t, i) => {
-    const [x, y] = T.S.treinadores[i], h = alt * (t.chefe ? ALT_LIDER : ALT_TREINADOR) / ALT_JOGADOR, lado = x < T.S.estrela[0] ? -1 : 1;
+    const [x, y] = T.S.treinadores[i], h0 = alt * (t.chefe ? ALT_LIDER : ALT_TREINADOR) / ALT_JOGADOR, lado = x < T.S.estrela[0] ? -1 : 1;
+    const h = h0 * fatorChefeTorre(t), dx = h === h0 ? h0 * 0.42 : h * 0.62;   // 🦇 o Campeão bem maior; o pet dele fica fora das asas
     return `<img class="jr-ator jr-npc jr-torre-t${t.aura ? ` jr-aura jr-aura-${t.aura}` : ''}" data-ti="${i}" src="${IMG}/personagens/${esc(t.pers.sprite || '')}.webp" style="left:${x}px;top:${y}px;height:${h.toFixed(1)}px;z-index:${Math.round(y)}" alt="" draggable="false"/>` +
-      (t.pet ? `<img class="jr-ator jr-torre-pet${classeEstilo(t.estilo)}" data-pi="${i}" src="${urlPetTorre(t.pet)}" style="left:${x + lado * h * 0.42}px;top:${y + 2}px;height:${(h * 0.4).toFixed(1)}px;z-index:${Math.round(y) + 1}" alt="" draggable="false"/>` : '');
+      (t.pet ? `<img class="jr-ator jr-torre-pet${classeEstilo(t.estilo)}" data-pi="${i}" src="${urlPetTorre(t.pet)}" style="left:${x + lado * dx}px;top:${y + 2}px;height:${(h0 * 0.4).toFixed(1)}px;z-index:${Math.round(y) + 1}" alt="" draggable="false"/>` : '');
   }).join('');
   const [ex, ey] = T.S.estrela;
   html += `<div class="jr-torre-num" style="left:${ex}px;top:${ey}px" aria-hidden="true">${T.andar}</div>`;
@@ -15339,7 +15618,7 @@ function atualizarTreinadoresTorre() {
   let seta = $('cena-atores').querySelector('.jr-seta');
   if (prox < 0) { seta?.remove(); return; }
   if (!seta) { seta = document.createElement('div'); seta.className = 'jr-seta'; seta.textContent = '▼'; seta.setAttribute('aria-hidden', 'true'); $('cena-atores').appendChild(seta); }
-  const [x, y] = cena.torre.S.treinadores[prox], h = alturaSalao() * (prox === 3 ? ALT_LIDER : ALT_TREINADOR) / ALT_JOGADOR;
+  const [x, y] = cena.torre.S.treinadores[prox], h = alturaSalao() * (prox === 3 ? ALT_LIDER : ALT_TREINADOR) / ALT_JOGADOR * fatorChefeTorre(cena.torre.trein[prox]);
   seta.style.left = x + 'px'; seta.style.top = (y - h - 10) + 'px'; seta.style.zIndex = 900;
 }
 // a cada quadro no salão: a etiqueta da escada e a fumaça dos pets dos treinadores
@@ -16550,7 +16829,7 @@ function renderListaBatalha() {
     return `<button class="bt-linha${id === btSel ? ' sel' : ''}" data-sel="${esc(id)}" aria-pressed="${id === btSel}">
       <span class="bt-rosto bt-rosto-pet">${rostoPet(petAtual(r.pet), r.pet_tinta, r.pet_forma)}</span>
       <span class="bt-linha-nome">${nomeT(r.uid, rotuloColega(r.uid, r), r)}</span>
-      <span class="bt-linha-ic">${naPracaReg(r) ? '🏛️' : ''}</span>
+      <span class="bt-linha-ic">${ocupadoReg(r) ? '🔒' : naPracaReg(r) ? '🏛️' : ''}</span>
     </button>`;
   }).join('') : '');
   pintarRostos($('bt-cards'));
@@ -16563,12 +16842,12 @@ function colegasDuelo() {
   return Object.entries(regsOnline()).filter(([u, r]) => colegaVisivel(u, r)).map(([uid, r]) => ({ uid, ...r }))
     .sort((a, b) => minha(a) - minha(b) || String(a.turma || '').localeCompare(String(b.turma || '')) || rotuloColega(a.uid, a).localeCompare(rotuloColega(b.uid, b)));
 }
-// o colega escolhido: na Praça (eu também lá) ⚔️ Desafiar; senão 📨 Chamar pra Praça (o duelo entre colegas é na Praça)
+// o colega escolhido: ⚔️ Desafiar, de qualquer mapa (PROMPT-277; o 🏛️ Chamar pra Praça e o 🏠 Visitar ficam nos 👥 Amigos)
 function renderDetalheColega() {
   const uid = String(btSel).slice(3), r = colegasDuelo().find(x => x.uid === uid), el = $('bt-det');
   if (!r) { el.innerHTML = '<div class="bt-det-linhas">Esse colega saiu do jogo.</div>'; return; }
-  const pet = petAtual(r.pet), praca = naPracaReg(r) && ehPraca();
-  const acoes = botaoOnline(r) + (casaPub(r.uid) || (ehProfessora() && r.uid !== sessao.uid) ? `<button class="jr-online-acao" data-visitar-online="${esc(r.uid)}">🏠 Visitar</button>` : '');
+  const pet = petAtual(r.pet), m = motivoSemDesafio(uid, r);
+  const acoes = botaoDesafiar(uid, r).replace('jr-online-acao', 'jr-btn jr-btn-ouro bt-det-ir');
   el.innerHTML = `
     <div class="bt-det-topo">
       ${bustoHtml(urlQuadro('frente', -1, persValido(r.personagem) ? r.personagem : PERS.padrao, r.cores), `bt-det-busto${temBrilho(r.uid, r) ? ' jr-brilho' : ''}`, BUSTO_PERS)}
@@ -16579,10 +16858,10 @@ function renderDetalheColega() {
       </div>
     </div>
     <div class="bt-det-linhas">
-      <div>${praca ? '⚔️ Vocês dois estão na Praça: dá para desafiar agora.' : '🏛️ O duelo entre colegas é na Praça. Chame para lá!'}</div>
+      <div>${m === 'ocupado' ? '🔒 Está numa batalha, num duelo, no ginásio ou na torre. Tente daqui a pouco.' : '⚔️ Duelo de contas: o convite chega onde o colega estiver.'}</div>
       ${r.sem_convites ? '<div class="bt-det-estado descansando">Não está recebendo convites agora.</div>' : ''}
     </div>
-    <div class="bt-det-acoes">${acoes || '<span class="bt-det-estado descansando">Os desafios estão pausados agora.</span>'}</div>`;
+    <div class="bt-det-acoes">${acoes}</div>`;
   pintarRostos(el);
 }
 
@@ -16672,7 +16951,8 @@ function ajustarLutadores() {
       if (ca) c = { ...c, y0: Math.min(c.y0, 1 - (1 - ca.y0) * alto.alt / qh) };
     }
     if (l === 'R') c = { ...c, x0: 1 - c.x1, x1: 1 - c.x0 };   // o lado R é desenhado espelhado
-    return { l, forma, prop: qw / qh, c, h1: BT_ALT_GATO * H * altImagemPet(forma) / ref, chao: (adulto ? 0.03 : 0.09) * H };
+    // 🐾 PROMPT-277: a proporção real entre os dois pets, com o maior no máximo 1,6 × a altura do personagem (PET_MAX_DUELO)
+    return { l, forma, prop: qw / qh, c, h1: BT_ALT_GATO * H * (altPetDuelo(forma) / sentadoNoQuadro(forma)) / ref, chao: (adulto ? 0.03 : 0.09) * H };
   };
   const m = 0.03 * W, gap = 0.04 * W;
   // quanto um lutador cabe sozinho: o corpo na metade dele (com margem e o espaço do meio) e o topo do desenho dentro da arena
@@ -16747,6 +17027,7 @@ function iniciarBatalha(id, origem = 'lista', tTorre = null) {
   $('bt-bustoR').outerHTML = bustoHtml(!t.torre ? `${IMG}/npcs/${t.id}.webp` : `${IMG}/${chefeProprio && !campeao ? 'bustos' : 'personagens'}/${esc(t.sprite)}.webp`,
     `bt-busto R${campeao ? ' inteiro' : ''}${t.aura ? ` jr-aura jr-aura-${esc(t.aura)}` : ''}`, chefeProprio ? { frac: 1, topo: 0 } : BUSTO_NPC, true, 'bt-bustoR');
   if (campeao) animarChefeTorre($('bt-bustoR').querySelector('img'), t.torre.andar, t.sprite);
+  mostrarCampeaoNaArena(t);   // 🦇 PROMPT-277: o Campeão de corpo inteiro, atrás do pet dele
   $('bt-imgR').classList.remove('jr-est', ...[...$('bt-imgR').classList].filter(k => k.startsWith('jr-est-')));
   if (t.estilo) $('bt-imgR').classList.add('jr-est', `jr-est-${t.estilo}`);   // 🏆 andares 7 a 10: o pet do treinador com brilho
   $('bt-arena').style.backgroundImage = t.torre ? `url("${IMG}/torre/${salaoDe(t.torre.andar).batalha}")` : '';   // 🏆 o salão da torre no fundo
@@ -16789,6 +17070,7 @@ function fecharBatalha(voltarLista = true) {
   $('bt-calc').hidden = true; fecharCalc();
   limparBatalha();
   pararChefeTorre($('bt-bustoR')?.querySelector('img'));
+  mostrarCampeaoNaArena(null);
   if (bt?.origem !== 'lista') voltarLista = false;
   const depois = bt?.t?.torre?.depois;   // 🏆 torre: o que vem depois (o baú, a volta ao 1º treinador)
   bt = null;
@@ -17337,7 +17619,7 @@ function btFim() {
   } else btTocar(q, 'triste_fome', { ms: 420 });
   btConfete(v);
   btFala(venceu ? bt.t.fala_perdeu : bt.t.fala_venceu, 0);
-  if (venceu) pararChefeTorre($('bt-bustoR')?.querySelector('img'));   // 🦇 o Campeão perdeu: parado no quadro 1
+  if (venceu) { pararChefeTorre($('bt-bustoR')?.querySelector('img')); pararChefeTorre($('bt-campeao')); }   // 🦇 o Campeão perdeu: parado no quadro 1
   tocar(venceu ? 'vitoria' : 'erro');
   const pr = bt.t.torre ? fimDueloTorre(venceu) : registrarBatalha(venceu ? 'venceu' : 'perdeu');   // 🏆 torre: moedas e o andar (PROMPT-273)
   $('bt-ops').hidden = $('bt-conta').hidden = true;
@@ -19681,6 +19963,7 @@ function registrarAjuda(q, tipo) {
   if (!pg.dificil) gravar({ [`respostas/${q.id}/ajuda`]: tipo });   // ⭐ o Difícil não entra no painel
 }
 
+const ARENA_PERS = 60, ARENA_TOPO_PET = 90;   // % da altura da arena do ginásio: o corpo do personagem; o alto do pet (pés a 7%)
 function montarArena() {
   const rev = semAdversario();
   pg.status = {};   // posição da pergunta → 'certa' (de primeira) | 'errada'
@@ -19692,10 +19975,19 @@ function montarArena() {
   pgPet = null;
   const forma = pet && formaDe(pet);
   $('perg-pet').style.setProperty('--forma', fatorDuelo(pet, forma));   // adulto na revisão: imagem maior (quadro com asas), +30% (PROMPT-80)
-  // duelo do ginásio com adulto (PROMPT-81): o CSS deixa o dragão o maior que couber entre o personagem e o adversário
-  const arena = $('perg-arena'), adultoDuelo = !rev && ehFormaAdulta(forma);
-  arena.classList.toggle('pet-adulto', adultoDuelo);
-  arena.style.setProperty('--rel', adultoDuelo ? relDuelo(forma) : 1);
+  // 🐾 PROMPT-277: no ginásio o pet fica na proporção do mapa com o personagem (ALT_PET: o adulto × o filhote; o corpo do personagem
+  // ocupa 60% da altura da arena = 55 da tabela), até 1,6 × o personagem e sem passar do alto da arena. Mais alto que o personagem:
+  // fica atrás dele (z-index menor), um pouco para o lado, sem cobrir o rosto. (No lugar do "o maior que couber" do PROMPT-81.)
+  const arena = $('perg-arena'), prop = !rev && !!pet;
+  arena.classList.remove('pet-adulto');
+  arena.style.setProperty('--rel', 1);
+  arena.classList.toggle('pet-prop', prop);
+  if (prop) {
+    const alt = Math.min(altPet(forma), PET_MAX_DUELO, ALT_BASE_PERSONAGEM * ARENA_TOPO_PET / ARENA_PERS), [qw, qh] = tamanhoQuadro(forma);
+    arena.classList.toggle('pet-atras', alt > ALT_BASE_PERSONAGEM * 1.02);
+    arena.style.setProperty('--pet-h', (ARENA_PERS * alt / ALT_BASE_PERSONAGEM / sentadoNoQuadro(forma)).toFixed(2));
+    arena.style.setProperty('--pet-larg', (qw / qh).toFixed(3));
+  } else arena.classList.remove('pet-atras');
   if (pet) {
     pgPet = new PetParado($('perg-pet'));
     if (temAnim(forma, 'voando')) pgPet.repouso = { anim: 'voando', ms: 130 };   // 🦇 espera voando (PROMPT-162)
@@ -22628,7 +22920,11 @@ function ligarEventos() {
   $('online-abas').addEventListener('click', cliqueListaOnline);   // as abas ficam fora da lista
   $('online-busca').addEventListener('input', () => { if ($('online-lista').dataset.modo === 'busca') renderBuscaAluno(); });
   $('amigos-busca').addEventListener('input', () => { if ($('online-lista').dataset.modo === 'amigos') renderListaAmigos(); });
-  $('btn-online').addEventListener('click', abrirListaTodos);
+  $('btn-online').addEventListener('click', () => (usaAmigos() ? abrirAmigos() : abrirListaTodos()));   // 👥 PROMPT-277
+  $('amigos-jan').addEventListener('click', cliqueAmigos);
+  $('amigos-jan-busca').addEventListener('input', renderAmigos);
+  $('desafio-longe').addEventListener('click', cliqueDesafioLonge);
+  ligarMenuMais();   // 📱 o "⋯" do topo
   $('selo-online').addEventListener('click', abrirListaTodos);
   $('chamado-ir').addEventListener('click', (e) => { e.stopPropagation(); responderChamado(true); });
   $('rl-ir').addEventListener('click', (e) => { e.stopPropagation(); irAoRelampago(); });
@@ -22823,6 +23119,8 @@ function ligarEventos() {
   $('bt-det').addEventListener('click', (e) => {
     const b = e.target.closest('[data-ir]'); if (b && !b.disabled) { irAteTreinador(b.dataset.ir); return; }
     const q = e.target.closest('[data-deq-mapa]'); if (q) { $('bt-lista').hidden = true; iniciarDueloEquipe('mapa', q.dataset.deqMapa); return; }   // 🤝 PROMPT-236
+    const dl = e.target.closest('[data-desafiar-longe]');   // ⚔️ PROMPT-277: de qualquer mapa
+    if (dl && !dl.disabled) { $('bt-lista').hidden = true; abrirDesafioLonge(dl.dataset.desafiarLonge); return; }
     const c = e.target.closest('[data-chamar],[data-desafiar-online],[data-presentear-online],[data-visitar-online]');   // ⚔️ Duelos: um colega online
     if (c && !c.disabled) { $('bt-lista').hidden = true; cliqueListaOnline(e); }
   });
