@@ -12,13 +12,14 @@
 // bimestre juntas e só depois passa para o outro.
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
-import { ref, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, get, set, remove, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { carregarBibliotecaMapa } from "/js/biblioteca.js";
 import {
   BIMESTRE, setBimestre, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS, BONUS_FIXO,
-  CADERNO_COMPLETO, cadernoCompletoAtivo, buscarNotaRevisao, buscarFaltasTurma, bonusFixoAtivo,
+  CADERNO_COMPLETO, cadernoCompletoAtivo, buscarNotaRevisao, bonusFixoAtivo,
   EXTRA_NIVEL_PERFIL, NOME_ATIV5, NOME_ATIV1_EQ, NOME_ATIV2_RP, slugNome as slug,
-  buscarProgressoTabuada, buscarAtiv4, buscarNivelPerfil,
-  buscarCadernoVistos, buscarConselheiro, buscarPDGeometria, buscarPctCaderno, bonusCadernoVistosAtivo,
+  buscarProgressoTabuada, buscarNivelPerfil, bonusCadernoVistosAtivo,
+  lerAtiv4Query, ativ4DeSnap, cadernoVistosDeSnap, pctCadernoDeSnap, pdGeometriaDeSnap, conselheiroDeSnap, faltasDeSnaps,
   extrasAutoAtivos as extrasAtivosDoProgresso, cadernoExtraAtivo,
   notasLiberadas, buscarCongelamento, camposAtivos, bonusConfig, razaoPropEhAuto,
 } from "/js/notas.js";
@@ -71,11 +72,27 @@ export function classeTotal(total) {
   return "baixo";
 }
 
-// ── Busca no banco: progresso de tabuada (150/300) e tabuada negativa (50) ──
-async function carregarAutoTabuada(ctx, turma) {
-  const alunos = ALUNOS_POR_TURMA[turma] || [];
+// ── PROMPT-283: leituras compartilhadas ──
+// Os nós da turma (resultados, vistos, anotações, chamada, atestados) e a query da Atividade 4 são lidos UMA vez
+// por carga e guardados no ctx por alguns segundos (o 3º e o 4º bim e a aba Nota final reaproveitam).
+// Falha na leitura → null (cada conta abaixo devolve o mesmo padrão de antes: null, base ou {}).
+const CACHE_MS = 15000;
+function lerCache(ctx, chave, ler) {
+  const c = ctx._cache || (ctx._cache = {});
+  const e = c[chave];
+  if (e && Date.now() - e.t < CACHE_MS) return e.p;
+  const p = ler().catch(err => { console.error(`Falha ao ler ${chave}:`, err); if (c[chave]?.p === p) delete c[chave]; return null; });
+  c[chave] = { t: Date.now(), p };
+  return p;
+}
+const lerNo = (ctx, caminho) => lerCache(ctx, caminho, () => get(ref(db, caminho)));
+const lerResultadosTurma = (ctx, turma) => lerCache(ctx, `resultados?turma=${turma}`, () => get(query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma))));
+const lerAtiv4 = (ctx) => lerCache(ctx, "resultados?ativ4", () => get(lerAtiv4Query()));
+
+// ── Progresso de tabuada (150/300), tabuada negativa (50), escalada e nível de perfil — por aluno (só os nomes pedidos) ──
+async function carregarAutoTabuada(ctx, turma, nomes) {
   ctx.autoDados[turma] = ctx.autoDados[turma] || {};
-  await Promise.all(alunos.map(async nome => {
+  await Promise.all(nomes.map(async nome => {
     const [prog, nivelPerfil] = await Promise.all([
       buscarProgressoTabuada(turma, nome),
       buscarNivelPerfil(turma, nome)
@@ -84,91 +101,76 @@ async function carregarAutoTabuada(ctx, turma) {
   }));
 }
 
-// ── Busca no banco: nota da fase 1 da Atividade 5 → preenche "Ativ. Área" ──
-// Confirmado em 30/06: a nota da fase 1 vem em escala 0–10, então convertemos
-// dividindo por 10 antes de aplicar ao máx de 1 ponto da coluna Área.
-async function carregarAutoArea(turma) {
-  const porAluno = {};
+// ── Uma query resultados por turma, repartida entre as três colunas automáticas ──
+// Área (Atividade 5): nota da fase 1 em escala 0–10 (confirmado em 30/06), aplicada ao máx de 1 ponto da coluna.
+// Equações (Atividade 1) e Regra de três (Atividade 2): melhor pontuação concluída (pontuacao_bruta 0–10 → máx 1,5), sem testes.
+function resultadosPorColuna(snap) {
+  const area = {}, eq = {}, rp = {};
+  const melhor = (porAluno, v, bruto) => {
+    if (bruto == null) return;
+    if (!(v.aluno in porAluno) || bruto > porAluno[v.aluno]) porAluno[v.aluno] = bruto;
+  };
   try {
-    const q = query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma));
-    const snap = await get(q);
-    if (snap.exists()) {
+    if (snap && snap.exists()) {
       snap.forEach(child => {
         const v = child.val();
-        if (v.atividade !== NOME_ATIV5 || !v.aluno) return;
-        const bruto = v.pontos_fase1 ?? v.pontuacao ?? null;
-        if (bruto == null) return;
-        if (!(v.aluno in porAluno) || bruto > porAluno[v.aluno]) porAluno[v.aluno] = bruto;
-      });
-    }
-  } catch(e) { console.error("Falha ao buscar nota da Atividade 5:", e); }
-  return porAluno;
-}
-
-// ── Busca no banco: melhor pontuação da Atividade 1 - Equações → coluna "Equações" ──
-// Resultado vem em escala 0–10 (pontuacao_bruta); convertemos para o máx de 1,5 na hora de aplicar.
-async function carregarAutoEquacoes(turma) {
-  const porAluno = {};
-  try {
-    const q = query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma));
-    const snap = await get(q);
-    if (snap.exists()) {
-      snap.forEach(child => {
-        const v = child.val();
-        if (v.atividade !== NOME_ATIV1_EQ || !v.aluno) return;
+        if (!v.aluno) return;
+        if (v.atividade === NOME_ATIV5) melhor(area, v, v.pontos_fase1 ?? v.pontuacao ?? null);
         if (v.concluido !== true || v.modo_teste) return;
-        const bruto = v.pontuacao_bruta ?? v.pontuacao ?? null;
-        if (bruto == null) return;
-        if (!(v.aluno in porAluno) || bruto > porAluno[v.aluno]) porAluno[v.aluno] = bruto;
+        if (v.atividade === NOME_ATIV1_EQ) melhor(eq, v, v.pontuacao_bruta ?? v.pontuacao ?? null);
+        if (v.atividade === NOME_ATIV2_RP) melhor(rp, v, v.pontuacao_bruta ?? v.pontuacao ?? null);
       });
     }
-  } catch(e) { console.error("Falha ao buscar Atividade 1 - Equações:", e); }
-  return porAluno;
+  } catch (e) { console.error("Falha ao repartir os resultados da turma:", e); }
+  return { area, eq, rp };
 }
 
-// ── Busca no banco: melhor pontuação da Atividade 2 - Regra de três → coluna "Atividade 2" ──
-// Mesmo padrão de carregarAutoEquacoes acima (escala 0–10 → máx 1,5).
-async function carregarAutoRazaoProp(turma) {
-  const porAluno = {};
-  try {
-    const q = query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma));
-    const snap = await get(q);
-    if (snap.exists()) {
-      snap.forEach(child => {
-        const v = child.val();
-        if (v.atividade !== NOME_ATIV2_RP || !v.aluno) return;
-        if (v.concluido !== true || v.modo_teste) return;
-        const bruto = v.pontuacao_bruta ?? v.pontuacao ?? null;
-        if (bruto == null) return;
-        if (!(v.aluno in porAluno) || bruto > porAluno[v.aluno]) porAluno[v.aluno] = bruto;
-      });
-    }
-  } catch(e) { console.error("Falha ao buscar Atividade 2 - Regra de três:", e); }
-  return porAluno;
-}
-
-// ── 3º bim: Caderno automático (proporção de vistos), Professor Conselheiro (ocorrências) e PD - Geometria (vistos Canudos Parte 1+2) ──
-// ── 4º bim: Caderno (vistos × 5), Comportamento (base 2,0) e nota do Jogo de Revisão ──
-async function carregarAutoCadernoConselheiro(turma) {
-  const alunos = ALUNOS_POR_TURMA[turma] || [];
+// ── 3º bim: Caderno (proporção de vistos × 2), Professor Conselheiro (ocorrências) e PD - Geometria (Canudos Parte 1+2) ──
+// ── 4º bim: Caderno (vistos × 5), Comportamento (base 2,0), nota do Jogo de Revisão e faltas (ponto extra) ──
+// Só busca o que o bimestre usa (camposAtivos / bonusConfig) e, com o bimestre fechado, só o que a foto não cobre.
+// nomes: os alunos calculados (a turma toda ou só um, na tela do aluno). cong: o congelamento já lido.
+async function carregarAutoCadernoConselheiro(ctx, turma, nomes, cong) {
   const ativos = new Set(camposAtivos().map(c => c.key));
   const cfg = bonusConfig() || {};
+  const foto = nome => (cong.congelado ? cong.alunos[slug(nome)] : null);
+  // o campo precisa ser calculado ao vivo para este aluno? (a foto sobrescreve quando tem o campo; pctCaderno vem sempre da foto)
+  const vivo = (nome, campo) => { const f = foto(nome); return !f || (campo !== "pctCaderno" && f[campo] === undefined); };
+  const algum = campo => nomes.some(n => vivo(n, campo));
+  const quer = {
+    caderno:       ativos.has("cadernoVistos") && algum("cadernoVistos"),
+    pd:            ativos.has("pd") && algum("pd"),
+    pctCaderno:    !!(cfg.bonusCadernoVistos || cfg.cadernoCompleto) && algum("pctCaderno"),
+    cadernoB4:     ativos.has("cadernoB4") && algum("cadernoB4"),
+    conselheiro:   ativos.has("conselheiro") && algum("conselheiro"),
+    comportamento: ativos.has("comportamento") && algum("comportamento"),
+    faltas:        !!(cfg.bonusFixo && cfg.bonusFixoMaxFaltasPct != null) && algum("baseAulas"),
+  };
+  const querVistos = quer.caderno || quer.pd || quer.pctCaderno || quer.cadernoB4;
+  const querAnot   = quer.conselheiro || quer.comportamento;
+  const nada = Promise.resolve(null);
+  const [sVistos, idx, sAnot, sCham, sAtest, revisao] = await Promise.all([
+    querVistos ? lerNo(ctx, `vistos/${turma}/${BIMESTRE}`) : nada,
+    (quer.caderno || quer.pctCaderno || quer.cadernoB4) ? carregarBibliotecaMapa() : nada,
+    querAnot ? lerNo(ctx, `mapeamento_salas/${turma}/anotacoes`) : nada,
+    quer.faltas ? lerNo(ctx, `chamada/${turma}/${BIMESTRE}`) : nada,
+    quer.faltas ? lerNo(ctx, `atestados/${turma}`) : nada,
+    // Jogo de Revisão: nó de cada aluno — só dos nomes pedidos e só de quem a foto não cobre
+    cfg.revisao ? Promise.all(nomes.map(n => (vivo(n, "notaRevisao") ? buscarNotaRevisao(turma, n) : null))) : nada,
+  ]);
+  const faltas = quer.faltas ? faltasDeSnaps(sCham, sAtest, turma, nomes) : null;
   const out = {};
-  // 4º bim: as faltas da turma (chamada + atestados), lidas uma vez só, para o ponto extra
-  const faltas = cfg.bonusFixo && cfg.bonusFixoMaxFaltasPct != null ? await buscarFaltasTurma(turma, alunos) : null;
-  await Promise.all(alunos.map(async nome => {
-    const [caderno, conselheiro, pd, pctCaderno, cadernoB4, comportamento, notaRevisao] = await Promise.all([
-      buscarCadernoVistos(turma, nome),
-      buscarConselheiro(turma, nome),
-      buscarPDGeometria(turma, nome),
-      (cfg.bonusCadernoVistos || cfg.cadernoCompleto) ? buscarPctCaderno(turma, nome) : Promise.resolve(null),
-      ativos.has("cadernoB4")     ? buscarCadernoVistos(turma, nome, 5) : Promise.resolve(null),
-      ativos.has("comportamento") ? buscarConselheiro(turma, nome, 2)   : Promise.resolve(null),
-      cfg.revisao                 ? buscarNotaRevisao(turma, nome)      : Promise.resolve(null),
-    ]);
-    out[nome] = { caderno, conselheiro, pd, pctCaderno, cadernoB4, comportamento, notaRevisao };
+  nomes.forEach((nome, k) => {
+    out[nome] = {
+      caderno:       quer.caderno       ? cadernoVistosDeSnap(sVistos, idx, nome) : null,
+      conselheiro:   quer.conselheiro   ? conselheiroDeSnap(sAnot, nome)          : null,
+      pd:            quer.pd            ? pdGeometriaDeSnap(sVistos, nome)        : null,
+      pctCaderno:    quer.pctCaderno    ? pctCadernoDeSnap(sVistos, idx, nome)    : null,
+      cadernoB4:     quer.cadernoB4     ? cadernoVistosDeSnap(sVistos, idx, nome, 5) : null,
+      comportamento: quer.comportamento ? conselheiroDeSnap(sAnot, nome, 2)       : null,
+      notaRevisao:   revisao ? revisao[k] : null,
+    };
     if (faltas) { const f = faltas[nome] || { faltas: 0, base: 0, pct: null }; Object.assign(out[nome], { faltasAulas: f.faltas, baseAulas: f.base, pctFaltas: f.pct }); }
-  }));
+  });
   return out;
 }
 
@@ -201,17 +203,30 @@ async function carregarNotasSalvas(ctx, turma, chave) {
 
 // Carrega o bimestre BIMESTRE da turma em ctx.dados/ctx.autoDados, sem desenhar nada
 // (primeiraVez: também lê as notas já lançadas). Devolve { liberada, congelado }.
-export async function carregarDadosBimestre(ctx, turma, primeiraVez) {
+// soNomes (PROMPT-283, tela do aluno): os dados de cada aluno (tabuada, perfil, revisão) só desses nomes;
+// os nós da turma são lidos uma vez do mesmo jeito.
+export async function carregarDadosBimestre(ctx, turma, primeiraVez, { soNomes = null, cong: congLido = null } = {}) {
   const chave = chaveTurma(turma);   // fixa o bimestre do começo ao fim da carga
   if (!ctx.dados[chave]) ctx.dados[chave] = turmaVazia(turma);
   if (!ctx.autoDados[turma]) ctx.autoDados[turma] = {};
   const autoDados = ctx.autoDados, dados = ctx.dados;
   const alunos = ALUNOS_POR_TURMA[turma] || [];
+  const nomes = soNomes ? alunos.filter(n => soNomes.includes(n)) : alunos;
   const temAutoNovos = camposAtivos().some(c => ["cadernoVistos", "conselheiro", "pd", "cadernoB4", "comportamento"].includes(c.key));
-  const tasks = [carregarAutoTabuada(ctx, turma), carregarAutoArea(turma), carregarAutoEquacoes(turma), carregarAutoRazaoProp(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos), buscarCongelamento(turma),
-                 temAutoNovos ? carregarAutoCadernoConselheiro(turma) : Promise.resolve({})];
-  if (primeiraVez) tasks.push(carregarNotasSalvas(ctx, turma, chave));
-  const [_, areaPorAluno, eqPorAluno, rpPorAluno, liberada, ativ4Map, cong, ccPorAluno] = await Promise.all(tasks);
+  // o que sempre entra começa já; o resto depende da foto do bimestre fechado
+  const pResultados = lerResultadosTurma(ctx, turma), pAtiv4 = lerAtiv4(ctx), pLiberada = notasLiberadas(turma);
+  const pSalvas = primeiraVez ? carregarNotasSalvas(ctx, turma, chave) : null;
+  const cong = congLido || await buscarCongelamento(turma);
+  // tabuada/perfil: a foto cobre os quatro valores de quem está nela → só busca quem não tem foto
+  const semFoto = cong.congelado ? nomes.filter(n => !cong.alunos[slug(n)]) : nomes;
+  nomes.forEach(n => { if (!semFoto.includes(n)) autoDados[turma][n] = {}; });
+  const [, snapRes, snapAtiv4, liberada, ccPorAluno] = await Promise.all([
+    carregarAutoTabuada(ctx, turma, semFoto), pResultados, pAtiv4, pLiberada,
+    temAutoNovos ? carregarAutoCadernoConselheiro(ctx, turma, nomes, cong) : Promise.resolve({}),
+    pSalvas,
+  ]);
+  const { area: areaPorAluno, eq: eqPorAluno, rp: rpPorAluno } = resultadosPorColuna(snapRes);
+  const ativ4Map = ativ4DeSnap(snapAtiv4, turma, alunos);
 
   alunos.forEach(nome => {
     const a4 = ativ4Map[nome] || { fez:false, posicao:0, bonusRank:0 };
@@ -309,12 +324,53 @@ export const alunosDaNotaFinal = (ant, turma) => {
   return (ALUNOS_POR_TURMA[turma] || []).filter(n => !fora.has(n));
 };
 
+// ── PROMPT-283: total do bimestre fechado guardado em notas_total/{bim}/{turma} = { [slug]: centésimos, _em } ──
+// Quem grava: p-notas.html (ao congelar, ao abrir a turma congelada e depois de salvar nota manual, só se algum total
+// mudou) e a carga inicial aqui em totaisDoBimestre. Ao descongelar, apagarTotaisGuardados. Falha → segue calculando.
+export async function lerTotaisGuardados(turma, b = BIMESTRE) {
+  try {
+    const snap = await get(ref(db, `notas_total/${b}/${turma}`));
+    return snap.exists() ? (snap.val() || null) : null;
+  } catch (e) { console.warn(`notas_total/${b}/${turma}:`, e?.message || e); return null; }
+}
+// os totais (centésimos, por slug) do bimestre BIMESTRE já carregado no ctx — síncrono: calcularTotal usa o BIMESTRE global
+export function totaisEmCentesimos(ctx, turma) {
+  const reg = ctx.dados[chaveTurma(turma)] || {}, out = {};
+  (ALUNOS_POR_TURMA[turma] || []).forEach(nome => { if (reg[nome]) out[slug(nome)] = centesimos(calcularTotal(ctx, turma, nome, reg[nome])); });
+  return out;
+}
+// grava só se algum total mudou (guardado: o que já está no banco; undefined = lê agora). Devolve true se gravou.
+export async function gravarTotaisSeMudou(turma, b, novo, guardado) {
+  try {
+    if (guardado === undefined) guardado = await lerTotaisGuardados(turma, b);
+    const antigos = Object.keys(guardado || {}).filter(k => k !== "_em");
+    const igual = guardado && antigos.length === Object.keys(novo).length && Object.entries(novo).every(([k, v]) => guardado[k] === v);
+    if (igual) return false;
+    await set(ref(db, `notas_total/${b}/${turma}`), { ...novo, _em: Date.now() });
+    return true;
+  } catch (e) { console.warn(`Não gravou notas_total/${b}/${turma}:`, e?.message || e); return false; }
+}
+export async function apagarTotaisGuardados(turma, b = BIMESTRE) {
+  try { await remove(ref(db, `notas_total/${b}/${turma}`)); }
+  catch (e) { console.warn(`Não apagou notas_total/${b}/${turma}:`, e?.message || e); }
+}
+
 // Total de cada aluno da turma no bimestre b (troca o BIMESTRE para b: quem chama devolve depois)
-export async function totaisDoBimestre(ctx, turma, b) {
+// Bimestre fechado com o total guardado de todos → usa direto; senão calcula e, se fechado, grava (carga inicial).
+// soNomes (tela do aluno): só esses alunos, sem gravar nada.
+export async function totaisDoBimestre(ctx, turma, b, { soNomes = null } = {}) {
   setBimestre(b);
-  const { congelado } = await carregarDadosBimestre(ctx, turma, !ctx.dados[chaveTurma(turma, b)]);
+  const nomes = soNomes || ALUNOS_POR_TURMA[turma] || [];
+  const [cong, guardado] = await Promise.all([buscarCongelamento(turma), lerTotaisGuardados(turma, b)]);
+  if (cong.congelado && guardado && nomes.every(n => typeof guardado[slug(n)] === "number")) {
+    return { totais: Object.fromEntries(nomes.map(n => [n, guardado[slug(n)] / 100])), congelado: true, guardado: true };
+  }
+  setBimestre(b);   // outra carga pode ter trocado durante a leitura
+  const { congelado } = await carregarDadosBimestre(ctx, turma, !ctx.dados[chaveTurma(turma, b)], { soNomes, cong });
+  setBimestre(b);
   const totais = {};
-  (ALUNOS_POR_TURMA[turma] || []).forEach(nome => { totais[nome] = calcularTotal(ctx, turma, nome, ctx.dados[chaveTurma(turma, b)][nome]); });
+  nomes.forEach(nome => { totais[nome] = calcularTotal(ctx, turma, nome, ctx.dados[chaveTurma(turma, b)][nome]); });
+  if (congelado && !soNomes) await gravarTotaisSeMudou(turma, b, totaisEmCentesimos(ctx, turma), guardado);
   return { totais, congelado };
 }
 
@@ -341,6 +397,18 @@ export async function calcularNotaFinalTurma(ctx, turma, opts = {}) {
     for (const b of BIMESTRES_CALCULADOS) porBim[b] = await totaisDoBimestre(ctx, turma, b);
   } finally { setBimestre(antes); }
   return montarNotaFinal(ant, turma, porBim, opts);
+}
+
+// PROMPT-283 — a linha de UM aluno (tela do aluno), igual à dele no cálculo da turma, sem o extraFinal:
+// 1º e 2º do diário; 3º/4º: o total guardado se o bimestre está fechado, senão só a conta deste aluno
+// (os nós da turma são lidos uma vez; tabuada, perfil e revisão só dele). Devolve { linha, parciais }.
+export async function calcularNotaFinalAluno(turma, nome) {
+  const antes = BIMESTRE, ant = await carregarNotasAnteriores(), porBim = {}, ctx = criarContexto();
+  try {
+    for (const b of BIMESTRES_CALCULADOS) porBim[b] = await totaisDoBimestre(ctx, turma, b, { soNomes: [nome] });
+  } finally { setBimestre(antes); }
+  const { linhas, parciais } = montarNotaFinal(ant, turma, porBim);
+  return { linha: linhas.find(l => l.nome === nome) || null, parciais };
 }
 
 // Várias turmas: todas as turmas de um bimestre em paralelo, depois o outro (o BIMESTRE é global).

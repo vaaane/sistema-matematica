@@ -292,6 +292,7 @@ import {
 import {
   criarContexto, chaveTurma as chaveTurmaNF, turmaVazia, calcularBonus as calcularBonusNF, calcularTotal as calcularTotalNF, classeTotal,
   carregarDadosBimestre as carregarDadosBimestreNF, calcularNotaFinalTurma, fmtCent,
+  BIMESTRES_CALCULADOS, totaisEmCentesimos, gravarTotaisSeMudou, apagarTotaisGuardados,
 } from "/js/nota-final.js";
 
 requireProfessor();
@@ -621,8 +622,14 @@ bimSel.addEventListener("change", async () => {
   carregarTurma(turmaAtual);   // recarrega a turma atual no bimestre escolhido
 });
 
+// PROMPT-283: o total do bimestre fechado fica guardado em notas_total (a Nota final lê direto); só grava se algum mudou
+function guardarTotaisSeCongelado(turma, bim) {
+  if (!congeladoAtual || bim !== BIMESTRE || !BIMESTRES_CALCULADOS.includes(String(bim)) || !dados[chaveTurma(turma)]) return;
+  gravarTotaisSeMudou(turma, bim, totaisEmCentesimos(CTX, turma));
+}
 async function carregarTurma(turma) {
   turmaAtual = turma;
+  const bimCarga = BIMESTRE;
   const chave = chaveTurma(turma);
   const primeiraVez = !dados[chave];
   if (primeiraVez) dados[chave] = turmaVazia(turma);
@@ -645,6 +652,7 @@ async function carregarTurma(turma) {
 
   status.textContent = "";
   renderTabela();
+  if (turmaAtual === turma) guardarTotaisSeCongelado(turma, bimCarga);
 }
 
 // Carrega o bimestre BIMESTRE da turma (js/nota-final.js), sem desenhar e sem mexer em liberadaAtual/congeladoAtual
@@ -708,6 +716,7 @@ document.getElementById("btnCongelar").addEventListener("click", async () => {
     try {
       await congelarBimestre(turmaAtual, snapAlunos);
       congeladoAtual = true; atualizarBotaoCongelar();
+      guardarTotaisSeCongelado(turmaAtual, BIMESTRE);
       status.textContent = `🔒 ${BIMESTRE}º bim da turma ${turmaAtual} fechado — bônus congelado.`;
       status.classList.add("saved");
     } catch (e) { console.error(e); status.textContent = "❌ Erro ao congelar."; status.classList.remove("saved"); }
@@ -716,6 +725,7 @@ document.getElementById("btnCongelar").addEventListener("click", async () => {
     status.textContent = "Reabrindo…"; status.classList.remove("saved");
     try {
       await descongelarBimestre(turmaAtual);
+      await apagarTotaisGuardados(turmaAtual);
       congeladoAtual = false; atualizarBotaoCongelar();
       await carregarTurma(turmaAtual);
       status.textContent = `🔓 ${BIMESTRE}º bim da turma ${turmaAtual} reaberto.`;
@@ -783,6 +793,7 @@ async function salvarNotas() {
   try {
     await update(ref(db, `notas_bimestre/${BIMESTRE}/${turmaAtual}`), updates);
     status.textContent = `✓ Salvo — ${alunos.length} alunos da turma ${turmaAtual}`;
+    guardarTotaisSeCongelado(turmaAtual, BIMESTRE);   // as manuais continuam editáveis no bimestre fechado
     status.classList.add("saved");
   } catch (e) {
     console.error("Falha ao salvar notas:", e);

@@ -220,12 +220,18 @@ export async function buscarNivelPerfil(turma, nome) {
 }
 // A posição reflete onde o aluno está entre TODOS que fizeram a atividade.
 export async function buscarAtiv4(turma, alunos) {
+  let snap = null;
+  try { snap = await get(lerAtiv4Query()); }
+  catch (e) { console.error("Falha ao buscar Atividade 4:", e); }
+  return ativ4DeSnap(snap, turma, alunos);
+}
+// PROMPT-283: a query da Atividade 4 (a mesma para todas as turmas) e a conta a partir do resultado já baixado
+export const lerAtiv4Query = () => query(ref(db, "resultados"), orderByChild("atividade"), equalTo(NOME_ATIV4));
+export function ativ4DeSnap(snap, turma, alunos) {
   // melhorPts usa "nome|turma" como chave pra evitar conflito de nomes entre turmas
   const melhorPts = {};
   try {
-    const q = query(ref(db, "resultados"), orderByChild("atividade"), equalTo(NOME_ATIV4));
-    const snap = await get(q);
-    if (snap.exists()) {
+    if (snap && snap.exists()) {
       snap.forEach(child => {
         const v = child.val();
         if (!v.aluno || !v.turma) return;
@@ -398,7 +404,13 @@ export async function buscarCadernoVistos(turma, nome, max = 2) {
       get(ref(db, `vistos/${turma}/${BIMESTRE}`)),
       carregarBibliotecaMapa(),
     ]);
-    if (!snap.exists()) return null;
+    return cadernoVistosDeSnap(snap, idx, nome, max);
+  } catch (e) { console.error("Falha ao calcular Caderno (vistos):", e); return null; }
+}
+// PROMPT-283: a mesma conta a partir do nó vistos/{turma}/{bim} já baixado (uma leitura por turma)
+export function cadernoVistosDeSnap(snap, idx, nome, max = 2) {
+  try {
+    if (!snap || !snap.exists()) return null;
     const dados   = snap.val() || {};
     const ativs   = Object.entries(dados.atividades || {}).map(([id, a]) => ({ id, ...(a || {}) }));
     const marcas  = dados.marcas || {};
@@ -425,7 +437,12 @@ export async function buscarPctCaderno(turma, nome) {
       get(ref(db, `vistos/${turma}/${BIMESTRE}`)),
       carregarBibliotecaMapa(),
     ]);
-    if (!snap.exists()) return null;
+    return pctCadernoDeSnap(snap, idx, nome);
+  } catch (e) { console.error("Falha ao calcular % Caderno:", e); return null; }
+}
+export function pctCadernoDeSnap(snap, idx, nome) {
+  try {
+    if (!snap || !snap.exists()) return null;
     const dados   = snap.val() || {};
     const ativs   = Object.entries(dados.atividades || {}).map(([id, a]) => ({ id, ...(a || {}) }));
     const marcas  = dados.marcas || {};
@@ -454,6 +471,12 @@ export async function buscarFaltasTurma(turma, nomes = [], bim = BIMESTRE) {
       get(ref(db, `chamada/${turma}/${bim}`)),
       get(ref(db, `atestados/${turma}`)),
     ]);
+    return faltasDeSnaps(sC, sA, turma, nomes);
+  } catch (e) { console.error("Falha ao calcular faltas:", e); return {}; }
+}
+// PROMPT-283: a mesma conta a partir da chamada e dos atestados já baixados
+export function faltasDeSnaps(sC, sA, turma, nomes = []) {
+  try {
     const chamada   = sC.exists() ? (sC.val() || {}) : {};
     const atestados = normalizarAtestados(sA.exists() ? sA.val() : {});
     const datas = Object.keys(chamada);
@@ -518,7 +541,12 @@ const ARQUIVOS_PD_GEOMETRIA = ["geometria-canudos-parte1.html", "geometria-canud
 export async function buscarPDGeometria(turma, nome) {
   try {
     const snap = await get(ref(db, `vistos/${turma}/${BIMESTRE}`));
-    if (!snap.exists()) return null;
+    return pdGeometriaDeSnap(snap, nome);
+  } catch (e) { console.error("Falha ao calcular PD - Geometria:", e); return null; }
+}
+export function pdGeometriaDeSnap(snap, nome) {
+  try {
+    if (!snap || !snap.exists()) return null;
     const dados  = snap.val() || {};
     const ativs  = Object.entries(dados.atividades || {}).map(([id, a]) => ({ id, ...(a || {}) }));
     const marcas = dados.marcas || {};
@@ -540,10 +568,16 @@ export async function buscarPDGeometria(turma, nome) {
 // +0,3 por ocorrência positiva, −0,3 por ocorrência negativa; sempre travado no
 // intervalo [0, base]. ──
 export async function buscarConselheiro(turma, nome, base = 1) {
-  const BASE = base, PASSO = 0.3;
   try {
     const snap = await get(ref(db, `mapeamento_salas/${turma}/anotacoes`));
-    if (!snap.exists()) return BASE;
+    return conselheiroDeSnap(snap, nome, base);
+  } catch (e) { console.error("Falha ao calcular Professor Conselheiro:", e); return base; }
+}
+// PROMPT-283: a mesma conta a partir de mapeamento_salas/{turma}/anotacoes já baixado
+export function conselheiroDeSnap(snap, nome, base = 1) {
+  const BASE = base, PASSO = 0.3;
+  try {
+    if (!snap || !snap.exists()) return BASE;
     const bim = BIMESTRES.find(b => String(b.n) === String(BIMESTRE));
     const ini = bim ? new Date(bim.inicio + "T00:00:00").getTime() : -Infinity;
     const fim = bim ? new Date(bim.fim    + "T23:59:59").getTime() :  Infinity;

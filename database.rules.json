@@ -245,6 +245,7 @@
     "notas_bimestre":  { ".read": true, ".write": true },
     "notas_liberadas": { ".read": true, ".write": true },
     "notas_congelado": { ".read": true, ".write": true },
+    "notas_total":     { ".read": true, ".write": true },
 
     "vistos":          { ".read": true, ".write": true },
     "aulas":           { ".read": true, ".write": true },

@@ -291,7 +291,7 @@ import { initAvBanner } from "/js/avaliacao_banner.js";
 import { initTopNotif } from "/js/topnotif.js";
 import { db } from "/js/firebase-config.js";
 import { ALUNOS_TESTE } from "/js/constants.js";
-import { calcularNotaFinalTurma, fmtCent } from "/js/nota-final.js";
+import { calcularNotaFinalAluno, fmtCent } from "/js/nota-final.js";
 import { montarBoletim, fmtNota, setBimestre, totalAtividadesAluno, extrasJogosAluno, contarOcorrenciasAluno, MAX_POR_ATIVIDADE } from "/js/notas.js";
 setBimestre(String(bimestreAtual()));
 import { ref, get, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -1029,8 +1029,13 @@ async function carregarNotasAno() {
   const box = document.getElementById("notas-ano");
   if (!box) return;
   try {
-    const { linhas, parciais } = await calcularNotaFinalTurma({ dados: {}, autoDados: {} }, turma);
-    const html = alunosNotasAno.map(n => { const l = linhas.find(x => x.nome === n); return l ? htmlNotasAno(n, l, parciais) : ""; }).join("");
+    // PROMPT-283: só a linha de cada aluno da sessão (um de cada vez: o bimestre do cálculo é global)
+    const partes = [];
+    for (const n of alunosNotasAno) {
+      const { linha, parciais } = await calcularNotaFinalAluno(turma, n);
+      partes.push(linha ? htmlNotasAno(n, linha, parciais) : "");
+    }
+    const html = partes.join("");
     if (html) box.innerHTML = html; else box.remove();
   } catch (e) { console.error("Minhas notas do ano:", e); box.remove(); }
 }
