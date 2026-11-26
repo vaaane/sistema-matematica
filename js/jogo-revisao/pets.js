@@ -15,8 +15,8 @@ let SPR = null;
 export async function carregarSprites() {
   if (!SPR) {
     const [j, cores] = await Promise.all([
-      fetch(BASE + 'pets/sprites.json?v=285').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228, 232, 233, 277, 279, 284, 285)
-      fetch(BASE + 'pets/sprites-pets-cores.json?v=285').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
+      fetch(BASE + 'pets/sprites.json?v=287').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228, 232, 233, 277, 279, 284, 285, 286, 287)
+      fetch(BASE + 'pets/sprites-pets-cores.json?v=287').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
     ]);
     for (const [f, a] of Object.entries(cores?.pets || {})) if ((petDaCor(f) || adultoDaCor(f)) && !j.pets[f]) j.pets[f] = a;
     await conferirFormasNovas(j);   // 🦇 PROMPT-277: o morcego rosa e o adulto só valem quando as imagens chegarem
@@ -99,7 +99,7 @@ async function conferirFormasNovas(j) {
   await Promise.all(FORMAS_A_CONFERIR.map(async (f) => {
     const q = j.pets[f]?.sentado_girando?.[0];
     if (!q || await imagemExiste(BASE + q)) return;
-    for (const k of Object.keys(j.pets)) if (k === f || k.startsWith(f + '_')) { delete j.pets[k]; delete j.sequencias?.[k]; delete j.quadro_por_pet?.[k]; delete j.acoes_parado?.[k]; }
+    for (const k of Object.keys(j.pets)) if (k === f || k.startsWith(f + '_')) { delete j.pets[k]; delete j.sequencias?.[k]; delete j.quadro_por_pet?.[k]; delete j.acoes_parado?.[k]; delete j.acoes_mapa?.[k]; }
     for (const [p, a] of Object.entries(j.evolucao || {})) if (a === f) delete j.evolucao[p];
   }));
 }
@@ -158,7 +158,9 @@ export function quadrosDe(pet, anim) {
 }
 // ?v= das imagens que mudaram com o mesmo nome (o navegador guardava as antigas): 🐉 PROMPT-233, dragões adultos redesenhados;
 // PROMPT-237: fogo laranja e comida com a cor certa no azul, branco, negro e arco-íris (a 1ª regra que casa vale)
+// 🦇 PROMPT-287: andar de lado novo do morcego adulto e das 8 cores (asa e pé inteiros)
 const VERSAO_IMG = [
+  [/^pets\/morcego_adulto(_[a-z]+)?\/andar_(direita|esquerda)_[1-5]\.webp$/, 287],
   [/^pets\/dragao_(azul|branco|sombra|arcoiris)_adulto\/(ataque_fogo_[123]|andando_fogo_[12]|assar_comida_1|comendo_[12])\.webp$/, 237],
   [/^pets\/dragao_[a-z]+_adulto\//, 233],
 ];
@@ -277,6 +279,12 @@ function acoesParado(forma) {
   const l = Array.isArray(j) ? j : j?.[forma] ?? j?.[String(forma || '').replace(/_[a-z]+$/, '')] ?? j?._padrao;
   return (Array.isArray(l) ? l : ACOES_PARADO).filter(a => !NUNCA_SOZINHO.has(a));
 }
+// 🗺️ PROMPT-286: nos mapas, a lista acoes_mapa da forma (ou da forma sem cor); sem ela, a mesma do parado (com o _padrao de lá)
+function acoesMapa(forma) {
+  const j = SPR?.acoes_mapa;
+  const l = j?.[forma] ?? j?.[String(forma || '').replace(/_[a-z]+$/, '')];
+  return Array.isArray(l) ? l.filter(a => !NUNCA_SOZINHO.has(a)) : acoesParado(forma);
+}
 let ultimaAcao = null;
 export function sortearAcaoParado(forma) {
   const l = comPesoNoturno(acoesParado(forma).filter(a => a !== ultimaAcao && temSequencia(forma, a)));
@@ -290,13 +298,13 @@ export function definirNoite(sim) { noite = !!sim; }
 const DORMIR = new Set(['dormir', 'descansar']);
 const comPesoNoturno = (l) => (noite ? [...l, ...l.filter(a => DORMIR.has(a))] : l);
 
-// Ações do pet seguindo o personagem nos mapas (personagem parado 4 s): a mesma lista do parado (acoes_parado)
+// Ações do pet seguindo o personagem nos mapas (personagem parado 4 s): acoes_mapa da forma, senão a mesma lista do parado (PROMPT-286)
 const MS_ANTES_ACAO = 4000;
 const MS_FOME = 5500;   // com fome: a sequência `fome` (~4,7 s: cheira o ar e lambe os beiços) começa a cada ~10 s
 // 🐾 PROMPT-255: triste_fome, sentado_2 e o que cai neles pela reserva (farejar, lamber…, quando o pet não tem a própria)
 const POSES_TRISTES = ['triste_fome', 'sentado_2'];
 const poseTriste = (forma, anim) => POSES_TRISTES.includes(anim) || (!temAnim(forma, anim) && POSES_TRISTES.includes(SPR?.reserva?.[anim]));
-const temAcoesMapa = (forma) => acoesParado(forma).some(a => temSequencia(forma, a));
+const temAcoesMapa = (forma) => acoesMapa(forma).some(a => temSequencia(forma, a));
 // aba em segundo plano: os seguidores param a ação (a sequência roda por setTimeout, que continua com a aba escondida)
 const SEGUIDORES = new Set();
 document.addEventListener('visibilitychange', () => { if (document.hidden) for (const s of SEGUIDORES) s.pararAcao(); });
@@ -414,7 +422,7 @@ export class PetSeguidor {
   comecarAcao(nome = null) {
     if (this.deitado) return;
     if (!nome) {
-      const l = comPesoNoturno(acoesParado(this.forma).filter(a => a !== this.ultimaAcao && temSequencia(this.forma, a)
+      const l = comPesoNoturno(acoesMapa(this.forma).filter(a => a !== this.ultimaAcao && temSequencia(this.forma, a)
         && (a !== 'pastar' || this.pastaAqui())));   // 🦄 pastar só em cima da grama
       if (!l.length) return;
       nome = this.ultimaAcao = l[Math.floor(Math.random() * l.length)];

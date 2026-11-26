@@ -5130,6 +5130,10 @@
   "elefante_adulto": ["sentar", "olhar_lado", "tromba", "descansar"],
   "morcego_adulto": ["flor", "entregar_flor", "entregar_rosa", "lamber_pata", "banho", "descansar", "festa", "pose", "vitoria"]
  },
+ "acoes_mapa": {
+  "morcego_adulto": ["flor", "entregar_flor", "entregar_rosa", "lamber_pata", "banho", "festa", "pose", "vitoria"]
+ },
+ "_nota_acoes_mapa": "PROMPT-286: ações do pet seguindo o personagem nos mapas; sem a forma aqui, usa acoes_parado. O morcego adulto não dorme/descansa no mapa (fica pendurado no galho).",
  "cores": {
   "sombra": {
    "nome": "Sombra",
