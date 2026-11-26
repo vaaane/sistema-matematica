@@ -17,7 +17,8 @@
   { "id": "voo_campeao", "nome": "Voo de campeão", "curto": "Campeão", "emoji": "🏆", "lealdade": 95, "anims": ["voando"] }
  ],
  "morcego_adulto": [
-  { "id": "entregar_flor", "nome": "Entregar a flor", "curto": "Flor", "emoji": "🌹", "lealdade": 0,  "anims": ["flor"], "sequencia": "entregar_flor" },
+  { "id": "entregar_rosa", "nome": "Entregar a rosa", "curto": "Rosa", "emoji": "🌹", "lealdade": 0,  "anims": ["dar_rosa"], "sequencia": "entregar_rosa" },
+  { "id": "entregar_flor", "nome": "Cheirar a flor",  "curto": "Flor", "emoji": "🌼", "lealdade": 10, "anims": ["flor"], "sequencia": "entregar_flor" },
   { "id": "dormir",        "nome": "Soneca",          "curto": "Soneca", "emoji": "💤", "lealdade": 20, "anims": ["dormindo"], "sequencia": "soneca" },
   { "id": "se_limpar",     "nome": "Tomar banho",     "curto": "Banho", "emoji": "🛁", "lealdade": 35, "anims": ["lamber_pata"], "sequencia": "banho" },
   { "id": "festa",         "nome": "Festa",           "curto": "Festa", "emoji": "🎉", "lealdade": 50, "anims": ["animado", "feliz"], "sequencia": "festa" },

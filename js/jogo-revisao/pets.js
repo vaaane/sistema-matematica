@@ -15,8 +15,8 @@ let SPR = null;
 export async function carregarSprites() {
   if (!SPR) {
     const [j, cores] = await Promise.all([
-      fetch(BASE + 'pets/sprites.json?v=284').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228, 232, 233, 277, 279, 284)
-      fetch(BASE + 'pets/sprites-pets-cores.json?v=284').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
+      fetch(BASE + 'pets/sprites.json?v=285').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228, 232, 233, 277, 279, 284, 285)
+      fetch(BASE + 'pets/sprites-pets-cores.json?v=285').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
     ]);
     for (const [f, a] of Object.entries(cores?.pets || {})) if ((petDaCor(f) || adultoDaCor(f)) && !j.pets[f]) j.pets[f] = a;
     await conferirFormasNovas(j);   // 🦇 PROMPT-277: o morcego rosa e o adulto só valem quando as imagens chegarem

@@ -1029,7 +1029,7 @@ export async function iniciarJogo(sess) {
   [ALBUM, CURIO] = await Promise.all(['album.json', 'curiosidades.json'].map(f => fetch(`${DADOS}/${f}`).then(r => (r.ok ? r.json() : null)).catch(() => null)));   // 📒💡 (PROMPT-98)
   LUZES = await fetch(`${DADOS}/luzes.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);   // 🌙 luzes da noite (sem ele: só a cor)
   iniciarDiaNoite();
-  try { TRUQUES = await fetch(`${DADOS}/truques.json`).then(r => { if (!r.ok) throw new Error('truques.json'); return r.json(); }); }
+  try { TRUQUES = await fetch(`${DADOS}/truques.json?v=285`).then(r => { if (!r.ok) throw new Error('truques.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] truques indisponíveis', e); }
   try { MISSOES = await fetch(`${DADOS}/missoes.json`).then(r => { if (!r.ok) throw new Error('missoes.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] missões do dia indisponíveis', e); }

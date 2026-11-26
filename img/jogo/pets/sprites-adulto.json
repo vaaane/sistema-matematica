@@ -517,7 +517,8 @@
     "pets/morcego_adulto/andar_costas_2.webp"
    ],
    "andar_frente": [
-    "pets/morcego_adulto/andar_frente_1.webp"
+    "pets/morcego_adulto/andar_frente_1.webp",
+    "pets/morcego_adulto/andar_frente_2.webp"
    ],
    "costas_parado": [
     "pets/morcego_adulto/costas_parado_1.webp"
@@ -588,6 +589,12 @@
    ],
    "busto_sorrindo": [
     "pets/morcego_adulto/busto_sorrindo_1.webp"
+   ],
+   "dar_rosa": [
+    "pets/morcego_adulto/dar_rosa_1.webp",
+    "pets/morcego_adulto/dar_rosa_2.webp",
+    "pets/morcego_adulto/dar_rosa_3.webp",
+    "pets/morcego_adulto/dar_rosa_4.webp"
    ]
   }
  },
@@ -2856,6 +2863,38 @@
      500
     ]
    ],
+   "entregar_rosa": [
+    [
+     "sentado_girando",
+     1,
+     500
+    ],
+    [
+     "dar_rosa",
+     1,
+     700
+    ],
+    [
+     "dar_rosa",
+     2,
+     1800
+    ],
+    [
+     "dar_rosa",
+     3,
+     900
+    ],
+    [
+     "dar_rosa",
+     4,
+     1800
+    ],
+    [
+     "sentado_girando",
+     1,
+     500
+    ]
+   ],
    "vitoria": [
     [
      "sentado_girando",
@@ -3018,6 +3057,7 @@
   "morcego_adulto": [
    "flor",
    "entregar_flor",
+   "entregar_rosa",
    "lamber_pata",
    "banho",
    "descansar",

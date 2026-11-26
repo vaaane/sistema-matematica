@@ -4621,7 +4621,8 @@
     "pets/morcego_adulto_branco/andar_costas_2.webp"
    ],
    "andar_frente": [
-    "pets/morcego_adulto_branco/andar_frente_1.webp"
+    "pets/morcego_adulto_branco/andar_frente_1.webp",
+    "pets/morcego_adulto_branco/andar_frente_2.webp"
    ],
    "costas_parado": [
     "pets/morcego_adulto_branco/costas_parado_1.webp"
@@ -4680,6 +4681,18 @@
    ],
    "busto_sorrindo": [
     "pets/morcego_adulto_branco/busto_sorrindo_1.webp"
+   ],
+   "flor": [
+    "pets/morcego_adulto_branco/flor_1.webp",
+    "pets/morcego_adulto_branco/flor_2.webp",
+    "pets/morcego_adulto_branco/flor_3.webp",
+    "pets/morcego_adulto_branco/flor_4.webp"
+   ],
+   "dar_rosa": [
+    "pets/morcego_adulto_branco/dar_rosa_1.webp",
+    "pets/morcego_adulto_branco/dar_rosa_2.webp",
+    "pets/morcego_adulto_branco/dar_rosa_3.webp",
+    "pets/morcego_adulto_branco/dar_rosa_4.webp"
    ]
   },
   "morcego_adulto_cinza": {
@@ -4702,7 +4715,8 @@
     "pets/morcego_adulto_cinza/andar_costas_2.webp"
    ],
    "andar_frente": [
-    "pets/morcego_adulto_cinza/andar_frente_1.webp"
+    "pets/morcego_adulto_cinza/andar_frente_1.webp",
+    "pets/morcego_adulto_cinza/andar_frente_2.webp"
    ],
    "costas_parado": [
     "pets/morcego_adulto_cinza/costas_parado_1.webp"
@@ -4761,6 +4775,18 @@
    ],
    "busto_sorrindo": [
     "pets/morcego_adulto_cinza/busto_sorrindo_1.webp"
+   ],
+   "flor": [
+    "pets/morcego_adulto_cinza/flor_1.webp",
+    "pets/morcego_adulto_cinza/flor_2.webp",
+    "pets/morcego_adulto_cinza/flor_3.webp",
+    "pets/morcego_adulto_cinza/flor_4.webp"
+   ],
+   "dar_rosa": [
+    "pets/morcego_adulto_cinza/dar_rosa_1.webp",
+    "pets/morcego_adulto_cinza/dar_rosa_2.webp",
+    "pets/morcego_adulto_cinza/dar_rosa_3.webp",
+    "pets/morcego_adulto_cinza/dar_rosa_4.webp"
    ]
   },
   "morcego_adulto_marrom": {
@@ -4783,7 +4809,8 @@
     "pets/morcego_adulto_marrom/andar_costas_2.webp"
    ],
    "andar_frente": [
-    "pets/morcego_adulto_marrom/andar_frente_1.webp"
+    "pets/morcego_adulto_marrom/andar_frente_1.webp",
+    "pets/morcego_adulto_marrom/andar_frente_2.webp"
    ],
    "costas_parado": [
     "pets/morcego_adulto_marrom/costas_parado_1.webp"
@@ -4842,6 +4869,18 @@
    ],
    "busto_sorrindo": [
     "pets/morcego_adulto_marrom/busto_sorrindo_1.webp"
+   ],
+   "flor": [
+    "pets/morcego_adulto_marrom/flor_1.webp",
+    "pets/morcego_adulto_marrom/flor_2.webp",
+    "pets/morcego_adulto_marrom/flor_3.webp",
+    "pets/morcego_adulto_marrom/flor_4.webp"
+   ],
+   "dar_rosa": [
+    "pets/morcego_adulto_marrom/dar_rosa_1.webp",
+    "pets/morcego_adulto_marrom/dar_rosa_2.webp",
+    "pets/morcego_adulto_marrom/dar_rosa_3.webp",
+    "pets/morcego_adulto_marrom/dar_rosa_4.webp"
    ]
   },
   "morcego_adulto_azul": {
@@ -4864,7 +4903,8 @@
     "pets/morcego_adulto_azul/andar_costas_2.webp"
    ],
    "andar_frente": [
-    "pets/morcego_adulto_azul/andar_frente_1.webp"
+    "pets/morcego_adulto_azul/andar_frente_1.webp",
+    "pets/morcego_adulto_azul/andar_frente_2.webp"
    ],
    "costas_parado": [
     "pets/morcego_adulto_azul/costas_parado_1.webp"
@@ -4923,6 +4963,18 @@
    ],
    "busto_sorrindo": [
     "pets/morcego_adulto_azul/busto_sorrindo_1.webp"
+   ],
+   "flor": [
+    "pets/morcego_adulto_azul/flor_1.webp",
+    "pets/morcego_adulto_azul/flor_2.webp",
+    "pets/morcego_adulto_azul/flor_3.webp",
+    "pets/morcego_adulto_azul/flor_4.webp"
+   ],
+   "dar_rosa": [
+    "pets/morcego_adulto_azul/dar_rosa_1.webp",
+    "pets/morcego_adulto_azul/dar_rosa_2.webp",
+    "pets/morcego_adulto_azul/dar_rosa_3.webp",
+    "pets/morcego_adulto_azul/dar_rosa_4.webp"
    ]
   },
   "morcego_adulto_roxo": {
@@ -4945,7 +4997,8 @@
     "pets/morcego_adulto_roxo/andar_costas_2.webp"
    ],
    "andar_frente": [
-    "pets/morcego_adulto_roxo/andar_frente_1.webp"
+    "pets/morcego_adulto_roxo/andar_frente_1.webp",
+    "pets/morcego_adulto_roxo/andar_frente_2.webp"
    ],
    "costas_parado": [
     "pets/morcego_adulto_roxo/costas_parado_1.webp"
@@ -5004,6 +5057,18 @@
    ],
    "busto_sorrindo": [
     "pets/morcego_adulto_roxo/busto_sorrindo_1.webp"
+   ],
+   "flor": [
+    "pets/morcego_adulto_roxo/flor_1.webp",
+    "pets/morcego_adulto_roxo/flor_2.webp",
+    "pets/morcego_adulto_roxo/flor_3.webp",
+    "pets/morcego_adulto_roxo/flor_4.webp"
+   ],
+   "dar_rosa": [
+    "pets/morcego_adulto_roxo/dar_rosa_1.webp",
+    "pets/morcego_adulto_roxo/dar_rosa_2.webp",
+    "pets/morcego_adulto_roxo/dar_rosa_3.webp",
+    "pets/morcego_adulto_roxo/dar_rosa_4.webp"
    ]
   },
   "morcego_adulto_vermelho": {
@@ -5026,7 +5091,8 @@
     "pets/morcego_adulto_vermelho/andar_costas_2.webp"
    ],
    "andar_frente": [
-    "pets/morcego_adulto_vermelho/andar_frente_1.webp"
+    "pets/morcego_adulto_vermelho/andar_frente_1.webp",
+    "pets/morcego_adulto_vermelho/andar_frente_2.webp"
    ],
    "costas_parado": [
     "pets/morcego_adulto_vermelho/costas_parado_1.webp"
@@ -5085,6 +5151,18 @@
    ],
    "busto_sorrindo": [
     "pets/morcego_adulto_vermelho/busto_sorrindo_1.webp"
+   ],
+   "flor": [
+    "pets/morcego_adulto_vermelho/flor_1.webp",
+    "pets/morcego_adulto_vermelho/flor_2.webp",
+    "pets/morcego_adulto_vermelho/flor_3.webp",
+    "pets/morcego_adulto_vermelho/flor_4.webp"
+   ],
+   "dar_rosa": [
+    "pets/morcego_adulto_vermelho/dar_rosa_1.webp",
+    "pets/morcego_adulto_vermelho/dar_rosa_2.webp",
+    "pets/morcego_adulto_vermelho/dar_rosa_3.webp",
+    "pets/morcego_adulto_vermelho/dar_rosa_4.webp"
    ]
   },
   "morcego_adulto_dourado": {
@@ -5107,7 +5185,8 @@
     "pets/morcego_adulto_dourado/andar_costas_2.webp"
    ],
    "andar_frente": [
-    "pets/morcego_adulto_dourado/andar_frente_1.webp"
+    "pets/morcego_adulto_dourado/andar_frente_1.webp",
+    "pets/morcego_adulto_dourado/andar_frente_2.webp"
    ],
    "costas_parado": [
     "pets/morcego_adulto_dourado/costas_parado_1.webp"
@@ -5166,6 +5245,18 @@
    ],
    "busto_sorrindo": [
     "pets/morcego_adulto_dourado/busto_sorrindo_1.webp"
+   ],
+   "flor": [
+    "pets/morcego_adulto_dourado/flor_1.webp",
+    "pets/morcego_adulto_dourado/flor_2.webp",
+    "pets/morcego_adulto_dourado/flor_3.webp",
+    "pets/morcego_adulto_dourado/flor_4.webp"
+   ],
+   "dar_rosa": [
+    "pets/morcego_adulto_dourado/dar_rosa_1.webp",
+    "pets/morcego_adulto_dourado/dar_rosa_2.webp",
+    "pets/morcego_adulto_dourado/dar_rosa_3.webp",
+    "pets/morcego_adulto_dourado/dar_rosa_4.webp"
    ]
   },
   "morcego_adulto_rosa": {
@@ -5188,7 +5279,8 @@
     "pets/morcego_adulto_rosa/andar_costas_2.webp"
    ],
    "andar_frente": [
-    "pets/morcego_adulto_rosa/andar_frente_1.webp"
+    "pets/morcego_adulto_rosa/andar_frente_1.webp",
+    "pets/morcego_adulto_rosa/andar_frente_2.webp"
    ],
    "costas_parado": [
     "pets/morcego_adulto_rosa/costas_parado_1.webp"
@@ -5247,6 +5339,18 @@
    ],
    "busto_sorrindo": [
     "pets/morcego_adulto_rosa/busto_sorrindo_1.webp"
+   ],
+   "flor": [
+    "pets/morcego_adulto_rosa/flor_1.webp",
+    "pets/morcego_adulto_rosa/flor_2.webp",
+    "pets/morcego_adulto_rosa/flor_3.webp",
+    "pets/morcego_adulto_rosa/flor_4.webp"
+   ],
+   "dar_rosa": [
+    "pets/morcego_adulto_rosa/dar_rosa_1.webp",
+    "pets/morcego_adulto_rosa/dar_rosa_2.webp",
+    "pets/morcego_adulto_rosa/dar_rosa_3.webp",
+    "pets/morcego_adulto_rosa/dar_rosa_4.webp"
    ]
   }
  }
