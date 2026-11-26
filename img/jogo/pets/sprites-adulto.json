@@ -552,8 +552,7 @@
    "dormindo": [
     "pets/morcego_adulto/dormindo_1.webp",
     "pets/morcego_adulto/dormindo_2.webp",
-    "pets/morcego_adulto/dormindo_3.webp",
-    "pets/morcego_adulto/dormindo_4.webp"
+    "pets/morcego_adulto/dormindo_3.webp"
    ],
    "carinho": [
     "pets/morcego_adulto/carinho_1.webp",
@@ -2813,11 +2812,6 @@
      3000
     ],
     [
-     "dormindo",
-     4,
-     900
-    ],
-    [
      "sentado_girando",
      1,
      600
@@ -2838,11 +2832,6 @@
      "dormindo",
      3,
      4500
-    ],
-    [
-     "dormindo",
-     4,
-     900
     ],
     [
      "calmo",
