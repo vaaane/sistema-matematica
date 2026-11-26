@@ -7,10 +7,13 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <title>Certificado — Imprimir</title>
-<!-- 🎓 PROMPT-278 / 278b: certificados por conquista e por bimestre (js/certificados.js). A4 deitado, um por folha.
-     Visual do protótipo aprovado (referencia/prototipo-certificado-revisao.html): moldura de duas linhas, faixa com o mapa geral,
-     faixa escura com o nome da escola, selo, título em degradê, nome em itálico, pílula com as perguntas, as 26 insígnias
-     (só na Revisão) e duas assinaturas. Tabuada, Negativa e Escalada: o mesmo modelo, com a cor e o ícone do jogo.
+<!-- 🎓 PROMPT-278 / 281: certificados por conquista e por bimestre (js/certificados.js). A4 deitado, um por folha.
+     Os modelos finais seguem os protótipos aprovados (referencia/, fora do repositório):
+       prototipo-certificado-revisao.html          → Mestre (roxo/prateado) e Lenda (dourado, fundo creme) da Revisão
+       prototipo-certificado-tabuada-negativa.html → Tabuada (azul e dourado) e Negativa (roxo e verde-água)
+       prototipo-certificado-escalada.html         → Escalada (verde e laranja, com montanhas)
+     PROMPT-281b: a Revisão sem a logo pequena e sem marca d'água; Tabuada, Negativa e Escalada com o selo do jogo (SVG)
+     e o escudo do site como marca d'água, reto e clarinho.
      ?itens=uid~tipo~bim,uid~tipo~bim…  (o aluno logado sem ?itens vê os dele) · ?modelo=tipo (exemplo) -->
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -25,56 +28,89 @@
   #folhas{display:flex;flex-direction:column;align-items:center;gap:18px;padding:18px 0 40px}
   .vazio{color:#9ca3af;font-family:Inter,system-ui,sans-serif;padding:60px 20px;text-align:center}
 
-  /* ═══ A folha: 297 × 210 mm (= 1123 × 794 px do protótipo) ═══ */
-  .pg{width:297mm;height:210mm;position:relative;overflow:hidden;background:#fffdf7;box-shadow:0 8px 40px rgba(0,0,0,.5);
-    page-break-after:always;break-after:page}
+  /* ═══ A folha: 297 × 210 mm (= os 1123 × 794 px dos protótipos) ═══ */
+  .pg{width:297mm;height:210mm;position:relative;overflow:hidden;background:var(--bg,#fffdf7);box-shadow:0 8px 40px rgba(0,0,0,.5);
+    page-break-after:always;break-after:page;page-break-inside:avoid;break-inside:avoid}
   .pg:last-child{page-break-after:auto;break-after:auto}
-  .mapa{position:absolute;inset:0;background:url(/img/jogo/mapa-geral/mapa-geral.webp) center/cover;opacity:.07;filter:saturate(.5)}
-  .faixa{position:absolute;left:18px;right:18px;top:18px;height:150px;border-radius:14px 14px 0 0;background:url(/img/jogo/mapa-geral/mapa-geral.webp) center 35%/cover}
-  .faixa::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,10,50,.25),rgba(255,253,247,1))}
   .mold{position:absolute;inset:18px;border:5px solid var(--c1);border-radius:14px;box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px var(--c2)}
-  .ct{position:absolute;left:0;right:0;top:44px;text-align:center}
-  .escola{display:inline-block;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#fff;font-weight:700;background:var(--escola,rgba(30,18,70,.78));padding:6px 18px;border-radius:20px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
-  .selo{width:130px;height:130px;margin:8px auto 0;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
-  .tit{font-size:50px;font-weight:900;letter-spacing:5px;text-transform:uppercase;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;margin-top:2px}
-  .sub{font-size:14px;letter-spacing:3px;text-transform:uppercase;color:#666;margin-top:2px}
-  .nome{font-size:44px;font-style:italic;color:#222;margin:20px auto 4px;border-bottom:2px solid var(--c2);display:inline-block;padding:0 40px 4px}
+  .ct{position:absolute;left:0;right:0;text-align:center}
+  .tit{font-weight:900;letter-spacing:5px;text-transform:uppercase;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:14px;letter-spacing:3px;text-transform:uppercase;color:#666}
+  .nome{font-size:44px;font-style:italic;color:#222;border-bottom:2px solid var(--c2);display:inline-block;padding:0 40px 4px}
   .turma{font-size:14px;color:#666}
-  .txt{font-size:19px;color:#333;line-height:1.5;margin-top:14px}
-  .imp{display:inline-block;margin-top:16px;padding:8px 26px;border-radius:40px;background:var(--grad);color:#fff;font-size:18px;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.18)}
+  .txt{font-size:19px;color:#333}
+  .imp{display:inline-block;padding:8px 26px;border-radius:40px;background:var(--grad);color:#fff;font-size:18px;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.18)}
   .imp b{font-size:26px}
-  .ins{position:absolute;left:0;right:0;bottom:92px;margin:auto;width:880px;display:grid;grid-template-columns:repeat(13,58px);justify-content:center;gap:10px 6px;padding:16px 18px;border-radius:10px;background:linear-gradient(180deg,#f3eefe,#e6dcfb);border:3px solid #c9b6f2;box-shadow:0 2px 8px rgba(91,63,196,.12)}
-  .ins img{width:58px;height:58px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
-  .data{position:absolute;left:0;right:0;bottom:262px;text-align:center;font-size:12px;color:#777;letter-spacing:1px}
-  .rod{position:absolute;left:0;right:0;bottom:40px;display:flex;justify-content:space-between;padding:0 150px;font-size:13px;color:#555}
-  .ass{border-top:1.5px solid #888;padding-top:5px;width:260px;text-align:center}
+  .data{font-size:12px;color:#777;letter-spacing:1px}
+  /* "quizdematematica.com" interrompendo a linha de baixo da moldura */
+  .site{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;z-index:4}
+  .site span{background:var(--bg,#fff);padding:2px 14px;font-family:"DejaVu Sans",sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;color:var(--c1)}
+  .rod{position:absolute;left:0;right:0;display:flex;justify-content:space-between;padding:0 150px;font-size:13px;color:#555;z-index:3}
+  .ass{border-top:1.5px solid #888;text-align:center}
 
-  /* Mestre: roxo e prateado · Lenda: dourado, fundo creme */
+  /* ─── Revisão: Mestre e Lenda (prototipo-certificado-revisao.html) ─── */
+  .rv .mapa{position:absolute;inset:0;background:url(/img/jogo/mapa-geral/mapa-geral.webp) center/cover;opacity:.07;filter:saturate(.5)}
+  .rv .faixa{position:absolute;left:18px;right:18px;top:18px;height:150px;border-radius:14px 14px 0 0;background:url(/img/jogo/mapa-geral/mapa-geral.webp) center 35%/cover}
+  .rv .faixa::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,10,50,.25),rgba(255,253,247,1))}
+  .rv .ct{top:44px}
+  .rv .topo-esc{display:inline-flex;align-items:center;gap:8px;height:28px}
+  .rv .escola{display:inline-block;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#fff;font-weight:700;background:rgba(30,18,70,.78);padding:6px 18px;border-radius:20px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+  .rv .selo{width:118px;height:118px;margin:8px auto 0;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
+  .rv .tit{font-size:50px;margin-top:2px}
+  .rv .sub{margin-top:2px}
+  .rv .nome{margin:20px auto 4px}
+  .rv .txt{line-height:1.5;margin-top:14px}
+  .rv .imp{margin-top:16px}
+  .rv .data{position:absolute;left:0;right:0;bottom:262px;text-align:center}
+  .rv .ins{position:absolute;left:0;right:0;bottom:92px;margin:auto;width:880px;display:grid;grid-template-columns:repeat(13,58px);justify-content:center;gap:10px 6px;padding:16px 18px;border-radius:10px;background:linear-gradient(180deg,#f3eefe,#e6dcfb);border:3px solid #c9b6f2;box-shadow:0 2px 8px rgba(91,63,196,.12)}
+  .rv .ins img{width:58px;height:58px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+  .rv .rod{bottom:40px}
+  .rv .ass{padding-top:5px;width:260px}
   .t-revisao_mestre{--c1:#5b3fc4;--c2:#b9bccb;--grad:linear-gradient(135deg,#4c32b0,#7c5cfc 55%,#8f95ad)}
-  .t-revisao_lenda{--c1:#b8860b;--c2:#f0cf63;--grad:linear-gradient(135deg,#8a5a00,#d4a017 45%,#f7e27a 60%,#b8860b);--escola:rgba(90,60,0,.8);background:#fff8e1}
+  .t-revisao_mestre .site span{background:#fff}
+  .t-revisao_lenda{--c1:#b8860b;--c2:#f0cf63;--grad:linear-gradient(135deg,#8a5a00,#d4a017 45%,#f7e27a 60%,#b8860b);--bg:#fff8e1}
+  .t-revisao_lenda .escola{background:rgba(90,60,0,.8)}
   .t-revisao_lenda .mold{border-width:7px}
   .t-revisao_lenda .ins{background:linear-gradient(180deg,#fff9e6,#fbefc8);border-color:#ecd38a}
   .t-revisao_lenda .ins img{filter:drop-shadow(0 0 7px #ffd34d) saturate(1.3) brightness(1.1)}
   .t-revisao_lenda .selo{filter:drop-shadow(0 0 14px #ffd34d) saturate(1.3) brightness(1.1)}
 
-  /* Tabuada, Negativa e Escalada: o mesmo modelo, com a cor do jogo; no lugar das insígnias, um painel com os números */
-  .t-tabuada {--c1:#1d7fb8;--c2:#9fd3f0;--grad:linear-gradient(135deg,#0e4f7a,#1d7fb8 55%,#38bdf8);--escola:rgba(10,45,75,.8);--painel:linear-gradient(180deg,#eef8fe,#dcf0fb);--painel-b:#a9d8f2}
-  .t-negativa{--c1:#5b4fd0;--c2:#c4bdf5;--grad:linear-gradient(135deg,#2e2690,#6358d2 55%,#a99ff0);--escola:rgba(30,27,75,.8);--painel:linear-gradient(180deg,#f3f1fe,#e4e0fb);--painel-b:#c9c2f2}
-  .t-escalada{--c1:#0f8a64;--c2:#a7e8cf;--grad:linear-gradient(135deg,#0b5e45,#10916b 55%,#34d399);--escola:rgba(8,55,40,.8);--painel:linear-gradient(180deg,#effbf6,#dcf5ea);--painel-b:#a6e3c9}
-  .selo-ic{width:130px;height:130px;margin:8px auto 0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:66px;
-    background:radial-gradient(circle at 35% 30%,#fff,var(--c2) 60%,var(--c1));border:6px solid #fff;box-shadow:0 0 0 4px var(--c1),0 6px 14px rgba(0,0,0,.3)}
-  .painel{position:absolute;left:0;right:0;bottom:110px;margin:auto;width:700px;display:grid;grid-template-columns:repeat(3,1fr);padding:16px 10px;border-radius:10px;
-    background:var(--painel);border:3px solid var(--painel-b);box-shadow:0 2px 8px rgba(0,0,0,.08);text-align:center}
-  .painel div+div{border-left:1.5px solid var(--painel-b)}
-  .painel b{display:block;font-size:30px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .painel small{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#666}
+  /* ─── Tabuada, Negativa e Escalada (prototipo-certificado-tabuada-negativa.html e -escalada.html) ─── */
+  .jg .contas{position:absolute;inset:0}
+  .jg .contas span{position:absolute;white-space:nowrap;font-family:'DejaVu Sans Mono',monospace;font-weight:700;color:var(--c1);opacity:.04}
+  .jg .montes{position:absolute;left:0;right:0;bottom:0;width:100%;height:300px;z-index:0}
+  .jg .ct{top:40px;z-index:3}
+  .jg .escola{display:inline-block;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#fff;font-weight:700;background:var(--c1);padding:6px 18px;border-radius:20px}
+  .jg .selo-ic{width:104px;height:104px;margin:14px auto 10px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 5px #fff,0 0 0 8px var(--c2),0 6px 14px rgba(0,0,0,.25)}
+  .jg .selo-ic svg{width:76px;height:76px}
+  /* marca d'água: o escudo do site, reto; na Escalada menor e mais alto, sem cobrir as montanhas */
+  /* (o logo_fundotransparente.png tem margem transparente: o escudo ocupa 379 dos 540 px de altura, com o centro a 48,24%;
+     a altura da imagem é aumentada na mesma proporção para o ESCUDO ficar com os 560 px / 380 px do protótipo) */
+  .jg .marca-logo{position:absolute;z-index:1;left:50%;top:50%;height:calc(560px * 540 / 379);transform:translate(-50%,-48.24%);opacity:.055}
+  .t-escalada .marca-logo{top:40%;height:calc(380px * 540 / 379);opacity:.06}
+  .jg .tit{font-size:48px}
+  .jg .sub{margin-top:6px}
+  .jg .nome{margin:22px auto 6px}
+  .jg .txt{line-height:1.7;margin-top:16px}
+  .jg .imp{margin-top:18px}
+  .jg .data{margin-top:10px}
+  .jg .trilha{position:absolute;left:0;right:0;bottom:132px;display:flex;justify-content:center;align-items:center;gap:0;z-index:3}
+  .jg .marco{width:52px;height:52px;border-radius:50%;background:var(--grad);color:#fff;font-weight:900;font-family:'DejaVu Sans',sans-serif;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px #fff,0 0 0 5px var(--c2)}
+  .jg .linha{width:44px;height:5px;background:var(--c2)}
+  .jg .marco.fim{width:64px;height:64px;font-size:19px}
+  .jg .rod{bottom:46px}
+  .jg .ass{padding-top:6px;width:300px}
+  .t-tabuada {--c1:#1d4ed8;--c2:#f2c94c;--bg:#fbfcff;--grad:linear-gradient(135deg,#1e3a8a,#2563eb 50%,#d4a017)}
+  .t-negativa{--c1:#7c3aed;--c2:#22c1c3;--bg:#fcfbff;--grad:linear-gradient(135deg,#5b21b6,#7c3aed 50%,#14b8a6)}
+  .t-escalada{--c1:#047857;--c2:#f59e0b;--bg:#fbfffd;--grad:linear-gradient(135deg,#065f46,#10b981 50%,#f59e0b)}
+  .t-escalada .marco.fim{font-size:26px}
 
   @media screen{ .pg{zoom:var(--zoom,1)} }
   @media print{
-    html,body{background:#fff!important}
+    html,body{background:#fff!important;margin:0}
     .barra{display:none!important}
     #folhas{display:block;padding:0}
-    .pg{box-shadow:none;margin:0}
+    .pg{box-shadow:none;margin:0;zoom:1}
   }
 </style>
 </head>
@@ -90,61 +126,97 @@
 import { getSession } from '/js/auth.js';
 import { ALUNOS_POR_TURMA } from '/js/constants.js';
 import { getNomeCompleto } from '/js/nomes_completos.js';
-import { TIPOS_CERT, certificadosDoAluno, makeUidCert, fmtMil } from '/js/certificados.js';
+import { TIPOS_CERT, certificadosDoAluno, makeUidCert, fmtMil, ehContaTeste } from '/js/certificados.js';
 
 const P = new URLSearchParams(location.search);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const dataCurta = (ts) => ts ? new Date(ts).toLocaleDateString('pt-BR') : '';
+const dataCurta = (ts) => ts ? new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
 const anoDe = (ts) => new Date(ts || Date.now()).getFullYear();
 const alunoDoUid = (uid) => {
   for (const [turma, nomes] of Object.entries(ALUNOS_POR_TURMA)) for (const nome of nomes) if (makeUidCert(turma, nome) === uid) return { turma, nome };
   return null;
 };
 const INSIGNIAS = Array.from({ length: 13 }, (_, i) => ['A', 'B'].map(l => `/img/jogo/insignias/insignia-mapa${i + 1}-${l}.webp`)).flat();
-const JOGO = { tabuada: 'Tabuada', negativa: 'Tabuada Negativa', escalada: 'Escalada Algébrica' };
-const TITULO = { tabuada: 'Tabuada 300', negativa: 'Negativa 150', escalada: 'Escalada completa', revisao_mestre: 'Mestre da Revisão', revisao_lenda: 'Lenda da Revisão' };
-const TEXTO = {
-  tabuada:  (c) => `chegou ao <b>nível 300 da Tabuada</b> no ${c.bim}º bimestre,<br>com muito cálculo mental e persistência.`,
-  negativa: (c) => `chegou ao <b>nível 150 da Tabuada Negativa</b> no ${c.bim}º bimestre,<br>dominando as operações com <b>números negativos</b>.`,
-  escalada: (c) => `completou os <b>200 níveis da Escalada Algébrica</b> no ${c.bim}º bimestre,<br>simplificando expressões até o topo.`,
-  revisao_mestre: () => `venceu os <b>26 ginásios</b> dos 13 mapas da Liga Matemática<br>e conquistou <b>todas as 26 insígnias</b>.`,
-  revisao_lenda:  () => `venceu os <b>26 ginásios</b> dos 13 mapas da Liga Matemática<br>e conquistou <b>as 26 insígnias douradas</b> ✨`,
+
+// O fundo de contas clarinhas: a mesma lista dos protótipos (gerada uma vez, com semente fixa), então todo certificado sai igual.
+// [left px, top px, font-size px, rotação °, texto]
+const FUNDOS = {"tab":[[969,364,15,-17,"49 + 12 = 61"],[532,483,17,-2,"18 − 6 = 12"],[665,457,19,4,"27 − 14 = 13"],[124,225,17,-12,"2 × 5 = 10"],[922,201,17,3,"21 + 24 = 45"],[948,639,22,-18,"3 × 5 = 15"],[664,658,15,-13,"72 − 4 = 68"],[755,728,22,-6,"27 − 10 = 17"],[325,444,15,3,"2 × 8 = 16"],[770,474,15,7,"45 − 4 = 41"],[285,174,15,-10,"28 + 18 = 46"],[269,604,17,11,"36 − 6 = 30"],[931,673,17,4,"6 × 4 = 24"],[228,21,15,-18,"5 × 7 = 35"],[1038,142,17,9,"27 − 4 = 23"],[392,28,17,-2,"45 − 18 = 27"],[559,513,26,-3,"56 + 21 = 77"],[627,265,22,16,"63 ÷ 9 = 7"],[228,62,22,4,"5 × 4 = 20"],[1018,430,17,14,"27 − 12 = 15"],[1049,155,26,15,"63 + 21 = 84"],[-2,450,26,-7,"6 × 3 = 18"],[-32,153,17,-7,"32 ÷ 8 = 4"],[929,633,26,-11,"28 + 27 = 55"],[86,333,26,15,"18 − 6 = 12"],[948,108,15,17,"49 ÷ 7 = 7"],[468,195,15,-1,"9 × 9 = 81"],[160,519,26,10,"21 + 18 = 39"],[17,64,19,10,"6 ÷ 3 = 2"],[995,620,17,14,"63 + 18 = 81"],[527,463,26,14,"49 + 6 = 55"],[939,519,26,-3,"63 − 8 = 55"],[491,572,22,-6,"3 × 9 = 27"],[240,426,22,-11,"5 × 6 = 30"],[865,323,17,-14,"35 + 24 = 59"],[837,74,19,-5,"9 × 3 = 27"],[210,158,17,5,"81 − 16 = 65"],[478,140,17,11,"42 + 12 = 54"],[152,407,17,13,"48 ÷ 6 = 8"],[418,165,26,9,"8 × 5 = 40"],[787,347,17,8,"3 × 4 = 12"],[690,326,19,-13,"5 × 5 = 25"],[-1,346,22,17,"36 ÷ 9 = 4"],[862,720,22,-17,"6 × 2 = 12"],[638,529,26,0,"72 − 14 = 58"],[91,115,15,-4,"63 − 8 = 55"],[132,271,15,-1,"18 − 18 = 0"],[331,276,22,-10,"56 + 24 = 80"],[489,415,26,-9,"56 + 9 = 65"],[1014,584,19,13,"8 × 2 = 16"],[143,285,17,-15,"21 + 15 = 36"],[831,74,15,-1,"12 ÷ 4 = 3"],[141,266,26,-13,"2 × 3 = 6"],[415,68,15,-2,"12 ÷ 4 = 3"],[889,11,26,3,"2 × 3 = 6"],[815,274,15,-10,"32 ÷ 8 = 4"],[1039,726,15,-3,"49 + 21 = 70"],[290,268,17,-15,"21 + 9 = 30"],[373,319,26,1,"63 + 27 = 90"],[381,296,26,10,"6 × 3 = 18"],[324,277,15,4,"21 ÷ 3 = 7"],[472,37,15,-18,"81 − 8 = 73"],[995,564,26,-6,"18 − 10 = 8"],[932,251,15,10,"63 − 8 = 55"],[845,672,26,13,"2 × 6 = 12"],[765,518,17,1,"6 × 7 = 42"],[430,350,17,-6,"63 − 10 = 53"],[788,355,17,-15,"63 − 10 = 53"],[-11,72,22,-2,"35 + 15 = 50"],[294,56,22,-13,"45 − 10 = 35"]],"neg":[[663,288,19,1,"(+7) + (−4) = 3"],[492,415,19,-3,"(−24) ÷ (−8) = 3"],[949,570,15,7,"(−4) − (−4) = 0"],[302,658,15,-8,"(+5) − (−9) = 14"],[385,512,26,13,"(+2) − (+1) = 1"],[410,463,22,3,"(−2) − (−8) = 6"],[835,142,17,17,"(−3) + (+2) = −1"],[459,92,19,-7,"(−9) ÷ (+1) = −9"],[146,326,19,-3,"(−7) − (+6) = −13"],[489,583,15,-6,"(+7) + (−3) = 4"],[805,392,26,8,"(+7) × (−9) = −63"],[390,385,19,-1,"(−1) + (−7) = −8"],[87,510,26,-1,"(+3) × (+9) = 27"],[697,128,26,14,"(+3) − (−9) = 12"],[402,94,17,-1,"(+3) × (−2) = −6"],[747,409,22,10,"(+9) + (+7) = 16"],[599,22,15,-10,"(+3) ÷ (+1) = 3"],[830,726,26,12,"(−5) + (−4) = −9"],[963,0,22,-14,"(−56) ÷ (+7) = −8"],[1041,479,17,10,"(+7) × (−5) = −35"],[183,229,17,-9,"(+9) × (−2) = −18"],[1029,698,22,-12,"(−9) + (−8) = −17"],[134,564,15,-16,"(−12) ÷ (−6) = 2"],[217,238,15,18,"(+5) × (+8) = 40"],[582,131,26,-2,"(−9) + (+8) = −1"],[855,715,15,-11,"(+6) × (−1) = −6"],[104,307,26,15,"(+5) × (−7) = −35"],[352,397,17,-2,"(−49) ÷ (−7) = 7"],[-38,10,19,16,"(−1) − (−7) = 6"],[903,285,17,2,"(−2) + (−3) = −5"],[933,538,26,-3,"(+30) ÷ (+6) = 5"],[465,29,19,8,"(−7) − (+6) = −13"],[73,22,22,-6,"(−8) × (−3) = 24"],[820,83,17,-2,"(−5) − (+1) = −6"],[829,379,22,-4,"(+3) + (+9) = 12"],[29,712,22,3,"(−9) × (+6) = −54"],[702,698,17,7,"(+6) × (−1) = −6"],[-27,299,15,14,"(−3) − (+6) = −9"],[380,507,19,-6,"(−28) ÷ (−4) = 7"],[357,236,17,11,"(+5) × (+5) = 25"],[502,302,26,-12,"(+8) − (−3) = 11"],[975,624,17,-7,"(−7) × (+6) = −42"],[953,427,26,-15,"(+3) × (+5) = 15"],[259,402,17,-15,"(+7) − (+5) = 2"],[8,610,22,-9,"(+3) + (−3) = 0"],[66,726,17,-15,"(−7) × (+9) = −63"],[765,460,15,2,"(−5) − (+7) = −12"],[122,169,17,3,"(+2) − (−5) = 7"],[339,668,22,15,"(−6) + (+2) = −4"],[25,319,19,6,"(+36) ÷ (+6) = 6"],[639,453,15,-8,"(−9) × (−4) = 36"],[-35,80,15,-1,"(+30) ÷ (+5) = 6"],[679,430,26,-11,"(−15) ÷ (−5) = 3"],[384,389,19,4,"(+2) − (+3) = −1"],[845,89,22,-15,"(−6) × (+1) = −6"],[360,381,22,16,"(+1) ÷ (+1) = 1"],[355,331,22,5,"(−6) × (−3) = 18"],[22,646,17,8,"(+3) − (−1) = 4"],[788,41,15,6,"(−21) ÷ (+3) = −7"],[910,64,19,-15,"(+9) − (−7) = 16"],[359,64,19,3,"(+4) × (−1) = −4"],[517,343,19,-16,"(−1) × (−6) = 6"],[608,282,15,1,"(+3) + (−5) = −2"],[93,24,15,-4,"(−1) − (+4) = −5"],[933,732,22,11,"(−6) ÷ (+2) = −3"],[474,440,17,13,"(−9) + (+3) = −6"],[976,187,19,-18,"(+56) ÷ (−8) = −7"],[269,621,19,-3,"(+5) − (−5) = 10"],[614,471,26,5,"(+6) + (−8) = −2"],[121,524,22,-6,"(−24) ÷ (+6) = −4"]],"esc":[[886,573,22,0,"x² · x³ = x⁵"],[581,145,15,3,"9x − 2x = 7x"],[89,60,15,-8,"9b − 5b = 4b"],[360,531,17,6,"(6b)² = 36b²"],[529,416,26,12,"3a + 6a = 9a"],[103,576,15,-2,"(3x)² = 9x²"],[-39,218,17,-13,"9x + 8 − 8x = 1x + 8"],[366,691,19,-4,"3b + 6b = 9b"],[235,252,15,-14,"y² · y³ = y⁵"],[1002,195,17,-1,"8y + 3y = 11y"],[512,606,19,14,"2x + 5x = 7x"],[259,218,22,-6,"2x + 7x = 9x"],[144,213,26,6,"5(b + 2) = 5b + 10"],[950,588,17,13,"8y + 4 − 4y = 4y + 4"],[470,742,17,-9,"5b + 8b = 13b"],[172,111,15,2,"8b − 6b = 2b"],[965,300,26,-9,"15x − 5x = 10x"],[394,208,15,-12,"6x + 8x = 14x"],[320,288,19,2,"28b − 7b = 21b"],[1028,598,17,4,"2a + 2a = 4a"],[3,612,15,1,"3x + 6x = 9x"],[887,559,19,9,"(2x)² = 4x²"],[929,79,22,11,"2b − 2b = 0b"],[-15,623,15,-12,"a² · a³ = a⁵"],[897,451,22,12,"3b + 2b = 5b"],[431,715,15,1,"9(a + 6) = 9a + 54"],[374,530,17,10,"a² · a³ = a⁵"],[473,203,22,11,"5(a + 5) = 5a + 25"],[238,137,22,-3,"x² · x³ = x⁵"],[925,281,17,12,"72b − 9b = 63b"],[112,32,19,13,"(2x)² = 4x²"],[238,414,22,-8,"(2x)² = 4x²"],[196,457,15,6,"35b − 5b = 30b"],[325,731,15,10,"36a − 4a = 32a"],[1065,714,26,2,"(4b)² = 16b²"],[754,133,22,0,"40b − 8b = 32b"],[379,101,15,-8,"15a − 3a = 12a"],[-8,356,26,-12,"a² · a³ = a⁵"],[18,223,15,-1,"2(b + 4) = 2b + 8"],[1017,740,26,12,"9b + 9 − 3b = 6b + 9"],[554,746,26,6,"24y − 6y = 18y"],[249,557,26,-6,"9x + 5 − 8x = 1x + 5"],[732,28,26,-13,"8y + 3y = 11y"],[1063,469,22,11,"8(b + 6) = 8b + 48"],[655,444,22,2,"35x − 5x = 30x"],[225,718,15,-13,"25a − 5a = 20a"],[687,250,26,1,"(3y)² = 9y²"],[1046,447,15,-2,"8y + 4 − 5y = 3y + 4"],[239,238,19,14,"4(y + 7) = 4y + 28"],[158,137,17,-10,"b² · b³ = b⁵"],[1072,721,17,-8,"24a − 3a = 21a"],[196,721,26,6,"7x + 5x = 12x"],[36,564,26,2,"9(x + 4) = 9x + 36"],[313,161,19,7,"3x + 2x = 5x"],[629,400,22,-1,"(7x)² = 49x²"],[43,205,17,-1,"9y + 7 − 7y = 2y + 7"],[298,97,26,11,"3y − 2y = 1y"],[658,264,19,-11,"a² · a³ = a⁵"],[331,415,17,9,"4b + 3b = 7b"],[-19,364,26,-13,"(5y)² = 25y²"]]};
+const fundo = (k) => `<div class="contas">${FUNDOS[k].map(([x, y, f, r, t]) =>
+  `<span style="left:${x}px;top:${y}px;font-size:${f}px;transform:rotate(${r}deg)">${t}</span>`).join('')}</div>`;
+const MONTES = `<svg class="montes" viewBox="0 0 1123 300" preserveAspectRatio="none">
+  <path d="M0 300 L0 210 L120 120 L210 190 L330 60 L450 175 L560 20 L680 170 L790 80 L900 185 L1010 110 L1123 200 L1123 300 Z" fill="var(--c1)" opacity=".07"/>
+  <path d="M0 300 L0 250 L160 180 L300 240 L420 160 L560 230 L700 150 L860 235 L1000 170 L1123 230 L1123 300 Z" fill="var(--c2)" opacity=".10"/>
+  <path d="M560 20 L560 -30 L600 -15 L560 0" fill="var(--c2)" opacity=".35"/></svg>`;
+
+const T = (x, y, t, cor, tam = 13, meio = true) => `<text x="${x}" y="${y}"${meio ? ' text-anchor="middle"' : ''} font-size="${tam}" font-weight="900" font-family="DejaVu Sans" fill="${cor}">${t}</text>`;
+const SELOS = {
+  // um pedaço da tábua de multiplicar: a 1ª linha e a 1ª coluna brancas, os produtos transparentes
+  tabuada: `<svg viewBox="0 0 100 100">${[['×', '2', '3'], ['2', '4', '6'], ['3', '6', '9']].map((l, i) => l.map((t, j) => {
+    const x = 14 + 24 * j, y = 14 + 24 * i, cab = i === 0 || j === 0;
+    return `<rect x="${x}" y="${y}" width="24" height="24" rx="3" fill="${cab ? '#fff' : 'rgba(255,255,255,.18)'}" stroke="#fff" stroke-width="1.5"/>${T(x + 12, y + 17, t, cab ? 'var(--c1)' : '#fff')}`;
+  }).join('')).join('')}</svg>`,
+  // um termômetro com +, 0 e −
+  negativa: `<svg viewBox="0 0 100 100"><rect x="42" y="12" width="16" height="56" rx="8" fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="3"/><circle cx="50" cy="76" r="13" fill="#fff"/><rect x="47" y="40" width="6" height="36" fill="#fff"/>
+    <g stroke="#fff" stroke-width="3"><line x1="62" y1="22" x2="72" y2="22"/><line x1="62" y1="34" x2="70" y2="34"/><line x1="62" y1="46" x2="76" y2="46"/><line x1="62" y1="58" x2="70" y2="58"/></g>
+    ${T(80, 27, '+', '#fff', 12, false)}${T(80, 51, '0', '#fff', 12, false)}${T(80, 63, '−', '#fff', 13, false)}</svg>`,
+  // uma montanha com a bandeira no pico e "x²" na encosta
+  escalada: `<svg viewBox="0 0 100 100"><path d="M10 82 L38 40 L50 56 L64 30 L90 82 Z" fill="#fff"/><path d="M64 30 L64 10" stroke="#fff" stroke-width="3"/><path d="M64 10 L80 15 L64 21 Z" fill="#f59e0b" stroke="#fff" stroke-width="1.5"/>${T(34, 76, 'x²', 'var(--c1)', 15, false)}</svg>`,
 };
-const PILULA = { tabuada: 'questões respondidas', negativa: 'questões respondidas', escalada: 'expressões simplificadas', revisao_mestre: 'perguntas respondidas', revisao_lenda: 'perguntas respondidas' };
-const NIVEL = { tabuada: ['300', 'Nível'], negativa: ['150', 'Nível'], escalada: ['200', 'Níveis'] };
+const JOGOS = {
+  tabuada: { fundo: 'tab', tit: 'Mestre da Tabuada', jogo: 'Tabuada', pilula: 'operações resolvidas', trilha: ['50', '100', '150', '200', '250', '300'],
+    txt: 'chegou ao <b>nível 300</b> da Tabuada, o último nível do jogo,<br>vencendo todos os chefões pelo caminho.' },
+  negativa: { fundo: 'neg', tit: 'Mestre dos Negativos', jogo: 'Tabuada Negativa', pilula: 'operações resolvidas', trilha: ['25', '50', '75', '100', '125', '150'],
+    txt: 'chegou ao <b>nível 150</b> da Tabuada Negativa, o último nível do jogo,<br>dominando as contas com números positivos e negativos.' },
+  escalada: { fundo: 'esc', tit: 'Mestre da Escalada', jogo: 'Escalada Algébrica', pilula: 'expressões simplificadas', trilha: ['25', '50', '100', '150', '🚩'], montes: true,
+    txt: 'chegou ao <b>topo da Escalada Algébrica</b>, o nível 200,<br>simplificando expressões a cada passo da subida.' },
+};
+const REVISAO = {
+  revisao_mestre: { tit: 'Mestre da Revisão', txt: 'venceu os <b>26 ginásios</b> dos 13 mapas da Liga Matemática<br>e conquistou <b>todas as 26 insígnias</b>.' },
+  revisao_lenda:  { tit: 'Lenda da Revisão',  txt: 'venceu os <b>26 ginásios</b> dos 13 mapas da Liga Matemática<br>e conquistou <b>as 26 insígnias douradas</b> ✨' },
+};
+const RODAPE = `<div class="site"><span>quizdematematica.com</span></div>
+  <div class="rod"><div class="ass">Prof.ª Vanessa</div><div class="ass">Direção · CED São Bartolomeu</div></div>`;
+const conquistado = (c) => c.ts ? `<div class="data">Conquistado em ${dataCurta(c.ts)}</div>` : '';
+const alunoHtml = (c) => `<div class="nome">${esc(c.nomeCompleto)}</div><div class="turma">Turma ${esc(c.turma)}</div>`;
 
 function folha(c) {
-  const rev = c.tipo.startsWith('revisao');
-  const escola = `CED São Bartolomeu · Liga Matemática · ${rev ? 'Jogo de Revisão' : JOGO[c.tipo]}`;
-  const selo = rev ? `<img class="selo" src="/img/jogo/insignias/insignia-mapa13-B.webp" alt=""/>` : `<div class="selo-ic">${TIPOS_CERT[c.tipo].icon}</div>`;
-  const baixo = rev
-    ? `${c.ts ? `<div class="data">Conquistado em ${dataCurta(c.ts)}</div>` : ''}<div class="ins">${INSIGNIAS.map(s => `<img src="${s}" alt=""/>`).join('')}</div>`
-    : `<div class="painel"><div><b>${NIVEL[c.tipo][0]}</b><small>${NIVEL[c.tipo][1]}</small></div><div><b>${c.bim}º</b><small>Bimestre</small></div>
-         <div><b>${c.ts ? dataCurta(c.ts) : '—'}</b><small>Conquistado em</small></div></div>`;
-  return `<section class="pg t-${c.tipo}">
+  const r = REVISAO[c.tipo];
+  if (r) return `<section class="pg rv t-${c.tipo}">
     <div class="mapa"></div><div class="faixa"></div><div class="mold"></div>
     <div class="ct">
-      <div class="escola">${escola}</div>
-      ${selo}
-      <div class="tit">${TITULO[c.tipo]}</div>
-      <div class="sub">${c.bim}º bimestre · ${anoDe(c.ts)}</div>
-      <div class="nome">${esc(c.nomeCompleto)}</div>
-      <div class="turma">Turma ${esc(c.turma)}</div>
-      <div class="txt">${TEXTO[c.tipo](c)}</div>
-      <div class="imp"><b>${fmtMil(c.qtd)}</b> ${PILULA[c.tipo]}</div>
+      <div class="topo-esc"><div class="escola">CED São Bartolomeu · Liga Matemática · Jogo de Revisão</div></div>
+      <img class="selo" src="/img/jogo/insignias/insignia-mapa13-B.webp" alt=""/>
+      <div class="tit">${r.tit}</div><div class="sub">${c.bim}º bimestre · ${anoDe(c.ts)}</div>
+      ${alunoHtml(c)}
+      <div class="txt">${r.txt}</div><div class="imp"><b>${fmtMil(c.qtd)}</b> perguntas respondidas</div>
     </div>
-    ${baixo}
-    <div class="rod"><div class="ass">Prof.ª Vanessa</div><div class="ass">Direção · CED São Bartolomeu</div></div>
+    ${conquistado(c)}<div class="ins">${INSIGNIAS.map(s => `<img src="${s}" alt=""/>`).join('')}</div>
+    ${RODAPE}
+  </section>`;
+  const j = JOGOS[c.tipo];
+  return `<section class="pg jg t-${c.tipo}">
+    ${fundo(j.fundo)}${j.montes ? MONTES : ''}<img class="marca-logo" src="/logo_fundotransparente.png" alt=""/><div class="mold"></div>
+    <div class="ct">
+      <div class="escola">CED São Bartolomeu · Matemática · 8º ano</div>
+      <div class="selo-ic">${SELOS[c.tipo]}</div>
+      <div class="tit">${j.tit}</div><div class="sub">${j.jogo} · ${c.bim}º bimestre · ${anoDe(c.ts)}</div>
+      ${alunoHtml(c)}
+      <div class="txt">${j.txt}</div><div class="imp"><b>${fmtMil(c.qtd)}</b> ${j.pilula}</div>${conquistado(c)}
+    </div>
+    <div class="trilha">${j.trilha.map((m, i) => `<div class="marco${i === j.trilha.length - 1 ? ' fim' : ''}">${m}</div>`).join('<div class="linha"></div>')}</div>
+    ${RODAPE}
   </section>`;
 }
 
 async function montar() {
   const el = document.getElementById('folhas');
   const modelo = P.get('modelo');
-  if (modelo && TIPOS_CERT[modelo]) {
-    const bim = TIPOS_CERT[modelo].bims.at(-1);
-    el.innerHTML = folha({ tipo: modelo, bim, turma: '8G', nomeCompleto: 'Nome do Aluno', qtd: 1248, ts: Date.now() });
-    return;
+  if (modelo) {
+    const tipos = modelo === 'todos' ? Object.keys(TIPOS_CERT) : [modelo].filter(t => TIPOS_CERT[t]);
+    if (tipos.length) {
+      el.innerHTML = tipos.map(t => folha({ tipo: t, bim: TIPOS_CERT[t].bims.at(-1), turma: '8G', nomeCompleto: 'Nome do Aluno', qtd: 1248, ts: Date.now() })).join('');
+      return;
+    }
   }
   // pedidos: ?itens=uid~tipo~bim,… ou, sem nada, os do aluno logado
   let pedidos = String(P.get('itens') || '').split(',').map(s => s.split('~')).filter(p => p.length === 3).map(([uid, tipo, bim]) => ({ uid, tipo, bim: +bim }));
@@ -158,7 +230,7 @@ async function montar() {
   for (const p of pedidos) { if (!porUid.has(p.uid)) porUid.set(p.uid, []); porUid.get(p.uid).push(p); }
   const prontos = await Promise.all([...porUid.entries()].map(async ([uid, ps]) => {
     const a = alunoDoUid(uid);
-    if (!a) return [];
+    if (!a || ehContaTeste(a.turma, a.nome)) return [];   // contas de teste, PROFESSOR e TESTE: nunca
     const certs = await certificadosDoAluno(a.turma, a.nome).catch(() => []);
     return ps.map(p => certs.find(c => c.tipo === p.tipo && c.bim === p.bim)).filter(Boolean)
       .map(c => ({ ...c, nomeCompleto: getNomeCompleto(a.turma, a.nome) }));
