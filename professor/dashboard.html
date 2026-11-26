@@ -94,6 +94,12 @@
     .p20-nome{flex:1;min-width:0;font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .p20-nome small{display:block;font-size:10px;font-weight:500;color:var(--orange)}
     .p20-turma{font-size:10.5px;font-weight:700;color:var(--text-muted)}
+    /* PROMPT-282: faltosos/infrequentes (dados/faltosos.json) — linha vermelha, faltas sempre visíveis ao lado do nome */
+    .p20-aluno.faltoso{border-left:4px solid var(--red)}
+    .p20-nome-linha{display:flex;gap:4px;min-width:0}
+    .p20-nome-txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .p20-faltas{flex:none;font-weight:700;color:var(--red)}
+    .p20-sep{width:1px;align-self:stretch;background:var(--border);margin:0 2px}
     .total-pill{display:inline-flex;min-width:46px;justify-content:center;padding:4px 6px;border-radius:9px;font-weight:800;font-size:12.5px}
     .total-pill.bom{background:var(--green-pale);color:#15803D}
     .total-pill.medio{background:var(--orange-pale);color:var(--orange-dark)}
@@ -975,6 +981,7 @@ window.encerrarTodasSessoes = async function() {
 <script type="module">
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
 import { calcularNotaFinalTurmas, fmtCent, classeTotal } from "/js/nota-final.js";
+import { buscarFaltasTurma } from "/js/notas.js";
 
 const LIMITE = 2000;   // 20 pontos, em centésimos
 const TURMAS = Object.keys(ALUNOS_POR_TURMA);
@@ -983,15 +990,32 @@ const el = document.getElementById("painel20");
 const res = {};          // turma → { linhas, parciais } | { erro }
 let filtro = "todas";
 let recolhido = localStorage.getItem(K_RECOLHIDO) === "1";
+// PROMPT-282: "Todos" | "Só regulares" (só quem tem todas as notas e não está na lista de faltosos)
+const K_MODO = "painel20_modo";
+let modo = "todos";
+try { if (localStorage.getItem(K_MODO) === "regulares") modo = "regulares"; } catch {}
+// faltosos/infrequentes da secretaria: turma → nome → { faltas, justificadas, tipo }; faltas4: turma → nome → aulas faltadas no 4º bim
+let faltosos = {};
+const faltas4 = {};
+const faltoso = (t, nome) => faltosos[t]?.[nome] || null;
+const totalFaltas = (t, nome) => {
+  const f = faltoso(t, nome); if (!f) return null;
+  return (Number(f.faltas) || 0) - (Number(f.justificadas) || 0) + (faltas4[t]?.[nome] ?? 0);
+};
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const abaixo = (t) => (res[t]?.linhas || []).filter(l => (l.soma ?? 0) < LIMITE).map(l => ({ ...l, turma: t }));
+// grupo 1 = regulares (todas as notas, fora da lista) · 2 = falta nota em algum bimestre · 3 = faltosos/infrequentes (sempre por último)
+const grupo = (a) => (a.falt ? 3 : a.faltam > 0 ? 2 : 1);
+// quem aparece: Soma < 20 e, além disso, todos os faltosos (mesmo com Soma ≥ 20). "Só regulares": só o grupo 1 abaixo de 20.
+const abaixo = (t) => (res[t]?.linhas || [])
+  .map(l => ({ ...l, turma: t, falt: faltoso(t, l.nome) }))
+  .filter(a => modo === "regulares" ? (grupo(a) === 1 && (a.soma ?? 0) < LIMITE) : ((a.soma ?? 0) < LIMITE || a.falt));
 
 function render() {
   const prontas = TURMAS.filter(t => res[t]), calculando = prontas.length < TURMAS.length;
   const todos = TURMAS.flatMap(abaixo);
   const lista = (filtro === "todas" ? todos : todos.filter(a => a.turma === filtro))
-    .sort((a, b) => (a.soma ?? -1) - (b.soma ?? -1) || a.nome.localeCompare(b.nome, "pt-BR"));
+    .sort((a, b) => grupo(a) - grupo(b) || (a.soma ?? -1) - (b.soma ?? -1) || a.nome.localeCompare(b.nome, "pt-BR"));
   const qtd = n => `${n} aluno${n === 1 ? "" : "s"}`;
 
   // ⚠️ bimestres ainda abertos (em alguma turma)
@@ -1001,14 +1025,22 @@ function render() {
   const erros = TURMAS.filter(t => res[t]?.erro).map(t => `<div class="p20-erro">❌ Não foi possível calcular a turma ${t}</div>`).join("");
 
   let corpo;
+  const faltamTxt = (a) => a.faltam ? `faltam notas de ${a.faltam} bimestre${a.faltam > 1 ? "s" : ""}` : "";
+  const blocoNome = (a) => {
+    if (!a.falt) return `<span class="p20-nome">${esc(a.nome)}${a.faltam ? `<small>${faltamTxt(a)}</small>` : ""}</span>`;
+    const tot = totalFaltas(a.turma, a.nome), sub = [a.falt.tipo, faltamTxt(a)].filter(Boolean).join(" · ");
+    return `<span class="p20-nome"><span class="p20-nome-linha"><span class="p20-nome-txt">${esc(a.nome)}</span><span class="p20-faltas">· ${tot} faltas</span></span><small>${esc(sub)}</small></span>`;
+  };
+  const tituloDe = (a) => !a.falt ? `Abrir a Nota final do ${esc(a.turma)}`
+    : `${a.falt.faltas} faltas na lista − ${a.falt.justificadas || 0} justificadas + ${faltas4[a.turma]?.[a.nome] ?? 0} no 4º bim (minhas)`;
   if (lista.length) corpo = `<div class="p20-lista">${lista.map(a => `
-      <a class="p20-aluno" href="/professor/p-notas.html?bim=final&turma=${encodeURIComponent(a.turma)}" title="Abrir a Nota final do ${esc(a.turma)}">
-        <span class="p20-nome">${esc(a.nome)}${a.faltam ? `<small>faltam notas de ${a.faltam} bimestre${a.faltam > 1 ? "s" : ""}</small>` : ""}</span>
+      <a class="p20-aluno${a.falt ? " faltoso" : ""}" href="/professor/p-notas.html?bim=final&turma=${encodeURIComponent(a.turma)}" title="${tituloDe(a)}">
+        ${blocoNome(a)}
         <span class="p20-turma">${esc(a.turma)}</span>
         <span class="total-pill ${classeTotal((a.soma ?? 0) / 100 / 4)}">${fmtCent(a.soma)}</span>
       </a>`).join("")}</div>`;
   else if (calculando) corpo = "";
-  else corpo = `<div class="p20-msg">✅ Nenhum aluno abaixo de 20.</div>`;
+  else corpo = `<div class="p20-msg">${modo === "regulares" ? "✅ Nenhum aluno regular abaixo de 20." : "✅ Nenhum aluno abaixo de 20."}</div>`;
 
   el.classList.toggle("recolhido", recolhido);
   el.innerHTML = `
@@ -1022,7 +1054,8 @@ function render() {
       <div class="p20-chips">${["todas", ...TURMAS].map(t => {
         const n = t === "todas" ? todos.length : abaixo(t).length;
         return `<button class="p20-chip${filtro === t ? " on" : ""}" data-t="${esc(t)}">${t === "todas" ? "Todas" : esc(t)}${res[t] || t === "todas" ? `<small>${n}</small>` : ""}</button>`;
-      }).join("")}</div>
+      }).join("")}<span class="p20-sep"></span>${[["todos", "Todos"], ["regulares", "Só regulares"]].map(([m, rot]) =>
+        `<button class="p20-chip${modo === m ? " on" : ""}" data-modo="${m}">${rot}</button>`).join("")}</div>
       ${aviso || erros ? `<div class="p20-avisos">${aviso ? `<div class="p20-aviso">${aviso}</div>` : ""}${erros}</div>` : ""}
       ${calculando && !lista.length ? `<div class="p20-msg">Calculando…</div>` : corpo}
     </div>`;
@@ -1030,6 +1063,11 @@ function render() {
 
 el.addEventListener("click", (e) => {
   const chip = e.target.closest(".p20-chip");
+  if (chip?.dataset.modo) {
+    modo = chip.dataset.modo;
+    try { localStorage.setItem(K_MODO, modo); } catch {}
+    render(); return;
+  }
   if (chip) { filtro = chip.dataset.t; render(); return; }
   if (e.target.closest("#p20-recolher")) {
     recolhido = !recolhido;
@@ -1039,7 +1077,20 @@ el.addEventListener("click", (e) => {
 });
 
 render();
-calcularNotaFinalTurmas(TURMAS, (t, r, erro) => { res[t] = erro ? { erro: true } : r; render(); }), { incluirExtraFinal: true }
+// PROMPT-282: a lista da secretaria e as minhas faltas do 4º bim (chamada + atestados, uma leitura por turma, só das turmas com faltosos)
+fetch("/dados/faltosos.json", { cache: "no-cache" }).then(r => (r.ok ? r.json() : {})).catch(() => ({}))
+  .then(async (j) => {
+    faltosos = Object.fromEntries(Object.entries(j || {}).filter(([k, v]) => !k.startsWith("_") && v && typeof v === "object"));
+    render();
+    await Promise.all(Object.keys(faltosos).map(async t => {
+      const f = await buscarFaltasTurma(t, Object.keys(faltosos[t]), "4");
+      faltas4[t] = Object.fromEntries(Object.keys(faltosos[t]).map(n => [n, f[n]?.faltas ?? 0]));
+    }));
+    render();
+    console.table(Object.entries(faltosos).flatMap(([t, ns]) => Object.entries(ns).map(([n, f]) => ({
+      turma: t, aluno: n, "faltas (lista)": f.faltas, justificadas: f.justificadas || 0, "4º bim (aulas)": faltas4[t]?.[n] ?? 0, "total exibido": totalFaltas(t, n) }))));
+  });
+calcularNotaFinalTurmas(TURMAS, (t, r, erro) => { res[t] = erro ? { erro: true } : r; render(); }, { incluirExtraFinal: true })
   .catch(e => { console.error("Painel abaixo de 20:", e); TURMAS.forEach(t => { res[t] ||= { erro: true }; }); render(); });
 </script>
 </body>

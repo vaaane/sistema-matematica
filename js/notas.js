@@ -447,10 +447,11 @@ export async function buscarPctCaderno(turma, nome) {
 //   base (100%) = Σ aulasNoDia(turma, d) || 1 em cada data registrada na chamada da turma.
 // Lê a chamada e os atestados da turma uma vez só. Devolve { [nome]: { faltas, base, pct } } (pct 0–100, sem arredondar;
 // base 0 = sem chamada → pct null). Falha na leitura → {} (ninguém perde o ponto por erro de rede).
-export async function buscarFaltasTurma(turma, nomes = []) {
+// bim: o bimestre da chamada (padrão: o BIMESTRE da página; o painel do dashboard pede sempre o 4º — PROMPT-282).
+export async function buscarFaltasTurma(turma, nomes = [], bim = BIMESTRE) {
   try {
     const [sC, sA] = await Promise.all([
-      get(ref(db, `chamada/${turma}/${BIMESTRE}`)),
+      get(ref(db, `chamada/${turma}/${bim}`)),
       get(ref(db, `atestados/${turma}`)),
     ]);
     const chamada   = sC.exists() ? (sC.val() || {}) : {};

@@ -1,0 +1,17 @@
+{
+  "_nota": "PROMPT-282: lista da secretaria (faltosos/infrequentes acima de 300 faltas). faltas = total da lista; justificadas = faltas justificadas (descontadas). Jessier está no 8H (na lista veio 8º C). Thayna (8º D) fica de fora: não está no sistema.",
+  "8D": { "Karolinny":        { "faltas": 417, "justificadas": 4,  "tipo": "faltosa" } },
+  "8E": { "Rafael":           { "faltas": 615, "justificadas": 0,  "tipo": "infrequente" },
+          "William":          { "faltas": 355, "justificadas": 0,  "tipo": "faltoso" },
+          "Maria Luisa":      { "faltas": 337, "justificadas": 3,  "tipo": "faltosa" } },
+  "8F": { "Miguel":           { "faltas": 718, "justificadas": 0,  "tipo": "infrequente" } },
+  "8G": { "Sophia":           { "faltas": 393, "justificadas": 0,  "tipo": "faltosa" },
+          "Lorran":           { "faltas": 328, "justificadas": 0,  "tipo": "faltoso" } },
+  "8H": { "Jessier":          { "faltas": 347, "justificadas": 1,  "tipo": "faltoso" },
+          "Nicolly":          { "faltas": 441, "justificadas": 0,  "tipo": "faltosa" },
+          "Yoxiris":          { "faltas": 362, "justificadas": 0,  "tipo": "faltosa" },
+          "Victória":         { "faltas": 353, "justificadas": 3,  "tipo": "faltosa" },
+          "Sophia":           { "faltas": 340, "justificadas": 0,  "tipo": "faltosa" },
+          "Nicolle":          { "faltas": 325, "justificadas": 15, "tipo": "faltosa" },
+          "Matheus Henrique": { "faltas": 301, "justificadas": 0,  "tipo": "faltoso" } }
+}
