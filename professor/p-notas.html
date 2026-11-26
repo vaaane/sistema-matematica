@@ -857,7 +857,7 @@ async function mostrarNotaFinal(turma) {
   let res = { linhas: [], parciais: {} };
   try {
     // o mesmo caminho da tabela de cada bimestre (carregarDadosBimestre + calcularTotal), só sem desenhar
-    res = await calcularNotaFinalTurma(CTX, turma);
+    res = await calcularNotaFinalTurma(CTX, turma, { incluirExtraFinal: true });   // tela do professor: com o extraFinal
   } catch (e) {
     console.error("Falha ao calcular a nota final:", e);
     status.textContent = "❌ Erro ao buscar o 3º/4º bimestre — tente de novo.";

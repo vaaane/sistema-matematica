@@ -319,29 +319,33 @@ export async function totaisDoBimestre(ctx, turma, b) {
 }
 
 // As linhas da Nota final: [{ i, nome, notas:[b1,b2,b3,b4] (centésimos ou null), soma, faltam }] + parciais { "3": bool, "4": bool }
-export function montarNotaFinal(ant, turma, porBim) {
+// incluirExtraFinal (só nas telas do professor): soma o extraFinal do aluno em dados/notas-anteriores.json na Soma
+// (as notas dos bimestres não mudam; sem nenhuma nota, a Soma continua null). Padrão false: a tela do aluno nunca vê.
+export function montarNotaFinal(ant, turma, porBim, { incluirExtraFinal = false } = {}) {
   const parciais = Object.fromEntries(BIMESTRES_CALCULADOS.map(b => [b, !porBim[b]?.congelado]));
   const linhas = alunosDaNotaFinal(ant, turma).map((nome, i) => {
     const a = ant?.[turma]?.[nome] || {};
     const notas = [centesimos(a.b1), centesimos(a.b2), ...BIMESTRES_CALCULADOS.map(b => centesimos(porBim[b]?.totais?.[nome]))];
     const tem = notas.filter(c => c != null);
-    return { i, nome, notas, soma: tem.length ? tem.reduce((s, c) => s + c, 0) : null, faltam: notas.length - tem.length };
+    let soma = tem.length ? tem.reduce((s, c) => s + c, 0) : null;
+    if (incluirExtraFinal && soma != null) soma += centesimos(a.extraFinal) ?? 0;
+    return { i, nome, notas, soma, faltam: notas.length - tem.length };
   });
   return { linhas, parciais };
 }
 
 // A Nota final de uma turma (o BIMESTRE volta ao que era no fim)
-export async function calcularNotaFinalTurma(ctx, turma) {
+export async function calcularNotaFinalTurma(ctx, turma, opts = {}) {
   const antes = BIMESTRE, ant = await carregarNotasAnteriores(), porBim = {};
   try {
     for (const b of BIMESTRES_CALCULADOS) porBim[b] = await totaisDoBimestre(ctx, turma, b);
   } finally { setBimestre(antes); }
-  return montarNotaFinal(ant, turma, porBim);
+  return montarNotaFinal(ant, turma, porBim, opts);
 }
 
 // Várias turmas: todas as turmas de um bimestre em paralelo, depois o outro (o BIMESTRE é global).
 // aoTerminar(turma, resultado | null, erro | null) é chamado quando cada turma fica pronta.
-export async function calcularNotaFinalTurmas(turmas, aoTerminar) {
+export async function calcularNotaFinalTurmas(turmas, aoTerminar, opts = {}) {
   const antes = BIMESTRE, ant = await carregarNotasAnteriores(), ctx = criarContexto();
   const porTurma = Object.fromEntries(turmas.map(t => [t, {}])), erro = {};
   try {
@@ -351,7 +355,7 @@ export async function calcularNotaFinalTurmas(turmas, aoTerminar) {
       await Promise.all(turmas.filter(t => !erro[t]).map(async t => {
         try { porTurma[t][b] = await totaisDoBimestre(ctx, t, b); }
         catch (e) { erro[t] = e; console.error(`Nota final: falha na turma ${t} (${b}º bim):`, e); aoTerminar(t, null, e); return; }
-        if (ultimo) aoTerminar(t, montarNotaFinal(ant, t, porTurma[t]), null);
+        if (ultimo) aoTerminar(t, montarNotaFinal(ant, t, porTurma[t], opts), null);
       }));
     }
   } finally { setBimestre(antes); }

@@ -1039,7 +1039,7 @@ el.addEventListener("click", (e) => {
 });
 
 render();
-calcularNotaFinalTurmas(TURMAS, (t, r, erro) => { res[t] = erro ? { erro: true } : r; render(); })
+calcularNotaFinalTurmas(TURMAS, (t, r, erro) => { res[t] = erro ? { erro: true } : r; render(); }), { incluirExtraFinal: true }
   .catch(e => { console.error("Painel abaixo de 20:", e); TURMAS.forEach(t => { res[t] ||= { erro: true }; }); render(); });
 </script>
 </body>
