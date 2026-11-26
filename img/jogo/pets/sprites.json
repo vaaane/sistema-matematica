@@ -3079,20 +3079,6 @@
     ["lamber_beicos", 2, 500],
     ["sentado_girando", 1, 500]
    ],
-   "comer_lado": [
-    ["parado_lado", 1, 400],
-    ["comendo_lado", 1, 450],
-    ["comendo_lado", 2, 450],
-    ["comendo_lado", 3, 450],
-    ["comendo_lado", 4, 450],
-    ["comendo_lado", 1, 450],
-    ["comendo_lado", 2, 450],
-    ["comendo_lado", 3, 450],
-    ["comendo_lado", 4, 450],
-    ["lamber_beicos", 1, 500],
-    ["lamber_beicos", 2, 500],
-    ["parado_lado", 1, 500]
-   ],
    "lamber_pata": [
     ["sentado_girando", 1, 600],
     ["lamber_pata", 1, 450],
@@ -3127,6 +3113,7 @@
     ["dormindo", 1, 1000],
     ["dormindo", 2, 1000],
     ["dormindo", 3, 4500],
+    ["dormindo", 2, 1500],
     ["calmo", 1, 900]
    ],
    "flor": [
@@ -3138,11 +3125,34 @@
     ["feliz", 1, 800],
     ["sentado_girando", 1, 500]
    ],
+   "entregar_flor": [
+    ["sentado_girando", 1, 500],
+    ["flor", 1, 700],
+    ["flor", 2, 700],
+    ["flor", 3, 1200],
+    ["flor", 4, 2200],
+    ["feliz", 1, 900],
+    ["sentado_girando", 1, 500]
+   ],
    "vitoria": [
     ["sentado_girando", 1, 500],
     ["animado", 1, 900],
     ["sentado_girando", 1, 400],
     ["orgulhoso", 1, 1500]
+   ],
+   "festa": [
+    ["sentado_girando", 1, 500],
+    ["animado", 1, 700],
+    ["feliz", 1, 600],
+    ["animado", 1, 700],
+    ["feliz", 1, 800],
+    ["sentado_girando", 1, 500]
+   ],
+   "pose": [
+    ["parado_lado", 1, 600],
+    ["tres_quartos", 1, 600],
+    ["orgulhoso", 1, 1500],
+    ["sentado_girando", 1, 600]
    ],
    "recusa": [
     ["bravo", 1, 300],
@@ -5103,7 +5113,7 @@
   "capivara": ["acenar", "flor", "borboleta", "cambalhota"],
   "unicornio_adulto": ["pastar", "descansar", "brilhar", "empinar"],
   "elefante_adulto": ["sentar", "olhar_lado", "tromba", "descansar"],
-  "morcego_adulto": ["flor", "lamber_pata", "banho", "descansar"]
+  "morcego_adulto": ["flor", "entregar_flor", "lamber_pata", "banho", "descansar", "festa", "pose", "vitoria"]
  },
  "cores": {
   "sombra": {
