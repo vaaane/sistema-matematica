@@ -152,16 +152,8 @@ const TAM_VISUAL = { capivara: 1.2, gaviao: 606 / 556 };   // gavião: o desenho
 const tamVisual = (forma) => (filhoteDoAdulto(forma) ? CRESCE_ADULTO_FILHOTE * tamVisual(filhoteDoAdulto(forma))   // 🐱 adulto = filhote × 1,5 (PROMPT-209)
   : TAM_VISUAL[forma] || TAM_VISUAL[petDaCor(forma)] || 1);
 const fatorForma = (pet, forma) => (ehFormaAdulta(forma) ? ADULTO_ANTES * escalaPet(forma) * sentadoNoQuadro(pet) / sentadoNoQuadro(forma) : tamVisual(forma));
-// Revisão da semana (PROMPT-80): o dragão adulto ~30% maior (o vermelho continua 1,75 / 0,75 × o azul), até 58% da arena no CSS.
-const DUELO_ADULTO = 1.3;
-const fatorDuelo = (pet, forma) => fatorForma(pet, forma) * (ehFormaAdulta(forma) ? DUELO_ADULTO : 1);
-// Duelo do ginásio e batalha (PROMPT-81): o dragão adulto fica o maior que couber na arena (o CSS calcula com cqw/cqh).
-// O de maior escala (vermelho) ocupa o máximo; os outros ficam com escala / escalaMax disso (azul = 0,75 / 1,75).
-// 🐯 PROMPT-194: tigre adulto +20%; PROMPT-213: unicórnio e elefante pela tabela TAM_ADULTO_TIGRE (o desenho, não o quadro)
-const relDuelo = (forma) => {
-  const f = formaDeTamanho(forma), k = TAM_ADULTO_TIGRE[f];
-  return escalaPet(forma) / escalaMax() * (k ? CRESCE_TIGRE_ADULTO * k * sentadoNoQuadro('tigre_adulto') / sentadoNoQuadro(f) : 1);
-};
+// ⚔️ Nos duelos (batalha, torre, ginásio, revisão da semana, duelo entre colegas) o tamanho é a regra única do PROMPT-280
+// (altDueloFrac, perto do ajustarLutadores): sem o +30% do adulto (PROMPT-80) nem o "o maior que couber" (PROMPT-81).
 // Meu Pet e foto na parede: fração da altura do palco que o desenho do adulto ocupa (dragões 0,86; o tigre, alto de pé, 0,76)
 const fracaoPalco = (forma, k = TAM_ADULTO_TIGRE[formaDeTamanho(forma)]) => (k ? Math.min(0.76 * k, 0.86) : 0.86);
 // 🐾 PROMPT-224: tamanho só no Meu Pet (por forma ou por pet): o unicórnio adulto 25% maior
@@ -957,7 +949,8 @@ export async function iniciarJogo(sess) {
     festa: (t) => mostrarFestaMestre(t || 'mestre'), hall: () => abrirHallMestres(), estado: () => estado, geral: () => abrirMapaGeral(),
     batalhar: (id) => iniciarBatalha(id), bt: () => bt, pg: () => pg, meuPet: () => (abrirMeuPet(), mp), mp: () => mp, carinho: () => carinhoPet(),
     truque: (id) => fazerTruque(id), comer: (id) => darComida(id),
-    tamanho: (f) => ({ alt: +altPet(f).toFixed(2), dist: +distPet(f).toFixed(2), rel: +relDuelo(f).toFixed(3) }),   // 🐘 PROMPT-213: conferir a tabela
+    tamanho: (f) => ({ alt: +altPet(f).toFixed(2), dist: +distPet(f).toFixed(2), arena: +altDueloFrac(f).toFixed(3) }),
+    petsDuelo: (a, b) => { montarPetsDuelo({ eu: { pet_forma: a }, outro: { pet_forma: b } }); ajustarPetsDuelo(); }, attrPetDeq,   // ⚔️ PROMPT-280 (testes)   // 🐘 PROMPT-213: conferir a tabela
     torre: (a) => abrirTorre(a), portaTorre: () => mostrarPortaTorre(null, { gravarVista: false }), entrarTorre: () => entrarNaTorre(), bau: (a) => abrirBau(a), premiosTorre: () => abrirPremiosTorre(), quadroTorre: () => abrirQuadroTorre(), torreTrein: (i) => abrirPerguntaTorre(i), casinha: () => abrirCasinha(), temas: () => abrirTemasCasa(),
     aula: (chave, i = 0) => { abrirAula(chave, 'menu'); irPaginaAula(i); }, aulaPags: (chave) => aulaDe(chave)?.paginas?.length || 0,
     perguntaPet: (enun, opcoes) => desenharPerguntaPet(enun, opcoes), falaPet: (txt) => mostrarFalaPet([{ texto: txt, espera: 0, fixo: 8000 }]), irPara: (x, y) => posicionarJogador(x, y, 'frente'), loja: (aba) => abrirLoja(aba), saguao: () => abrirSaguao(), salaExpo: (n) => abrirSalaExpo(n), porta: (k) => entrarSalaExpo(cena.expoPortas[k - 1].n), portasExpo: () => cena?.expoPortas?.map(p => [p.k, p.n]), cena: () => cena, jog: () => jog, joy: () => joy, expo: () => EXPO, temasExpo: () => abrirTemasExpo(), decorar: () => entrarEdicaoExpo(), conteudoExpo: (id) => abrirConteudoExpo(id), grio: () => grio };   // 💬 PROMPT-232   // 🔠 PROMPT-231: conferir as letras   // 🏆 PROMPT-230
@@ -1052,7 +1045,8 @@ export async function iniciarJogo(sess) {
     aplicarIcones();
   } catch (e) { console.warn('[jogo-revisao] loja/pesca indisponíveis', e); }
   try {
-    await carregarSprites(); petsOk = true;
+    await Promise.all([carregarSprites(), carregarPetsCaixa()]); petsOk = true;   // ⚔️ PROMPT-280: as caixas dos pets nos duelos
+    if ((ehProfessora() || teste) && new URLSearchParams(location.search).get('teste') === 'pets-arena') setTimeout(abrirTestePetsArena, 300);   // 🧪 PROMPT-280
     liberarCoresDaConta();   // as cores vêm do sprites.json (carregado depois do progresso)
     const [qw, qh] = tamanhoQuadro();
     document.documentElement.style.setProperty('--pet-quadro', `${qw} / ${qh}`);   // proporção do lutador na batalha
@@ -8864,23 +8858,42 @@ function comecarDuelo(d) {
   }
 }
 
-// 🐾 PROMPT-277: os dois pets na tela do duelo entre colegas, na proporção do mapa (ALT_PET, a cor e a tinta de cada um). A arena
-// tem a altura de 1,6 personagem: o pet desenhado vai até essa altura (o dragão adulto, maior que isso, fica no limite).
-const PET_MAX_DUELO = 1.6 * ALT_BASE_PERSONAGEM;
-const altPetDuelo = (forma) => Math.min(altPet(forma), PET_MAX_DUELO);
+// 🐾 duelo entre colegas: os dois pets parados (sentado_girando), com a regra única dos duelos (PROMPT-280): a altura em % da arena,
+// os pés no chão dela e os corpos centrados em ~27% e ~73% (afastam se encostarem, sem diminuir)
 function montarPetsDuelo(du) {
   let algum = false;
   for (const [img, x] of [[$('dl-petL'), du?.eu], [$('dl-petR'), du?.outro]]) {
     const f = x?.pet_forma && temAnim(x.pet_forma, 'sentado_girando') ? x.pet_forma : null;
     img.hidden = !f;
+    img.dataset.forma = f || '';
     aplicarTinta(img, null);
     if (!f) { img.removeAttribute('src'); continue; }
     algum = true;
     img.src = quadrosDe(f, 'sentado_girando')[0];
-    img.style.height = (100 * altPetDuelo(f) / PET_MAX_DUELO / sentadoNoQuadro(f)).toFixed(1) + '%';
     if (x.pet_tinta) aplicarTinta(img, x.pet_tinta);
   }
   $('dl-arena').hidden = !algum;
+  vigiarArenas();
+  ajustarPetsDuelo();
+}
+function ajustarPetsDuelo() {
+  const arena = $('dl-arena');
+  if (!arena || arena.hidden) return;
+  const W = arena.clientWidth, H = arena.clientHeight;
+  if (!W || !H) return;   // ainda escondida: o ResizeObserver chama de novo quando a arena aparecer
+  const lado = (img) => {
+    const f = img.dataset.forma;
+    if (!f) return { img, h: 0, w: 0, c: [0.4, 0.6], bw: 0, base: 0 };
+    const [qw, qh] = tamanhoQuadro(f), cx = caixaPet(f, 'sentado_girando'), h = TELAS_DUELO.colegas(f) * H, w = h * qw / qh;
+    const c = [cx[0], cx[1]];   // sentado de frente: os dois lados sem espelho
+    return { img, f, h, w, c, bw: (c[1] - c[0]) * w, base: baseDueloFrac(f, 'sentado_girando') * H };
+  };
+  const E = lado($('dl-petL')), D = lado($('dl-petR'));
+  const [xE, xD] = posicionarDupla(W, E, D);
+  for (const [p, x] of [[E, xE], [D, xD - D.w]]) {
+    if (!p.f) continue;
+    Object.assign(p.img.style, { height: p.h.toFixed(1) + 'px', bottom: p.base.toFixed(1) + 'px', left: x.toFixed(1) + 'px' });
+  }
 }
 
 // Quem desafiou (lado A) gera as rodadas e fecha cada uma (o primeiro acerto, pelo relógio do servidor, ganha)
@@ -9627,7 +9640,7 @@ async function iniciarVisitante() {
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
     carregarFalasExpo();   // 🐾 PROMPT-255
-    const spr = carregarSprites().then(() => { petsOk = true; }).catch((e) => console.warn('[jogo-revisao] pets do visitante indisponíveis', e));   // 🐾 só o sprites.json; as imagens, do pet escolhido
+    const spr = Promise.all([carregarSprites(), carregarPetsCaixa()]).then(() => { petsOk = true; }).catch((e) => console.warn('[jogo-revisao] pets do visitante indisponíveis', e));   // 🐾 só o sprites.json; as imagens, do pet escolhido
     const [pers, expo] = await Promise.all([pegar('personagens.json'), pegar('exposicao.json'), spr]);
     definirPersonagens(pers);
     iniciarExposicao(expo);
@@ -16901,87 +16914,188 @@ const btLater = (fn, ms) => { const t = setTimeout(fn, ms); bt?.timers.push(t); 
 const btEsperar = (ms) => new Promise(ok => btLater(ok, ms));
 const btReduz = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// ⚔️ PROMPT-224: na batalha os dois pets ficam na proporção do mapa: altura da imagem = altImagemPet (o tamanho de cada pet
-// na tabela do mapa × TAM_ADULTO_TIGRE do adulto). O gato filhote continua com 52% da altura da arena, como antes. Se o maior
-// não couber na área dele, os dois diminuem juntos, pelo mesmo fator (a proporção não muda).
-// A largura e o topo do desenho dentro do quadro vêm da própria imagem (a parte não transparente), medidos uma vez por quadro.
-const BT_ALT_GATO = 0.52;
-const caixaDesenho = new Map();   // src → { x0, x1, y0 } em fração do quadro (null: não deu para medir)
-function medirDesenho(src) {
-  if (caixaDesenho.has(src)) return Promise.resolve(caixaDesenho.get(src));
-  return new Promise((ok) => {
-    const im = new Image();
-    const fim = (r) => { caixaDesenho.set(src, r); ok(r); };
-    im.onload = () => {
-      try {
-        const w = 160, h = Math.max(1, Math.round(w * im.naturalHeight / im.naturalWidth));
-        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
-        const cx = cv.getContext('2d', { willReadFrequently: true });
-        cx.drawImage(im, 0, 0, w, h);
-        const d = cx.getImageData(0, 0, w, h).data;
-        let x0 = w, x1 = -1, y0 = h;
-        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 40) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; }
-        fim(x1 < 0 ? null : { x0: x0 / w, x1: (x1 + 1) / w, y0: y0 / h });
-      } catch { fim(null); }
-    };
-    im.onerror = () => fim(null);
-    im.src = src;
-  });
+// ⚔️ PROMPT-280: TAMANHO DOS PETS NOS DUELOS — uma regra só, fixa por pet, em todas as telas (batalha dos mapas, torre, ginásio,
+// revisão da semana e duelo entre colegas). Altura da IMAGEM do pet = altImagemPet(forma) × ESCALA_ARENA × a altura da arena.
+//  - altImagemPet = a tabela do mapa (ALT_PET, adulto × filhote, escalaPet, as cores) ÷ a fração sentada do quadro: a proporção
+//    entre os pets é a mesma do mapa;
+//  - ESCALA_ARENA é UMA constante, calculada uma vez: o maior pet do jogo (o elefante adulto com o quadro alto do ataque) cabe
+//    inteiro na arena, dos pés (CHAO_ARENA) até TOPO_ARENA. Não depende do adversário, da pose nem da tela;
+//  - as caixas do desenho (a parte não transparente de cada animação) vêm prontas de dados/jogo/pets-caixa.json
+//    (scripts/medir-pets-caixa.js; a união dos quadros de cada animação e o 1º quadro): nada é medido durante o jogo, então o pet aparece direto no tamanho final;
+//  - a imagem tem sempre a mesma altura em todas as poses, alinhada pela base do quadro (o quadro alto do elefante também).
+// O chefe e o Morcego Campeão da torre têm tamanho próprio (CSS) e não entram nesta conta.
+const CHAO_ARENA = 0.05, TOPO_ARENA = 0.97;   // em fração da altura da arena: os pés do pet e o máximo do topo do desenho
+let PETS_CAIXA = null;   // forma → { q: [w, h], a: { anim: [x0, x1, y0, y1] } }
+let ESCALA_ARENA = null, MAIOR_ARENA = null;
+const carregarPetsCaixa = () => fetch(`${DADOS}/pets-caixa.json?v=280`).then(r => (r.ok ? r.json() : null))
+  .then((j) => { PETS_CAIXA = j?.formas || {}; }).catch(() => { PETS_CAIXA = {}; })
+  .finally(() => { if (!Object.keys(PETS_CAIXA || {}).length) console.warn('[duelo] pets-caixa.json indisponível: caixas padrão'); });
+const CAIXA_PADRAO = { filhote: [0.1, 0.9, 0.1, 0.99], adulto: [275 / 1219, 918 / 1219, 0.05, 0.99] };
+const avisouCaixa = new Set();
+const tabelaCaixa = (forma) => PETS_CAIXA?.[forma] || PETS_CAIXA?.[formaDeTamanho(forma)] || null;
+// a caixa do desenho de uma animação (sem ela na forma: a do sentado, como o quadrosDe); forma fora da tabela: a padrão + aviso
+function caixaPet(forma, anim, quadro1 = false) {   // quadro1: só a imagem parada (o 1º quadro), não a animação inteira
+  const t = tabelaCaixa(forma);
+  const c = t?.a?.[anim] || t?.a?.sentado_girando;
+  if (c) return quadro1 && c.length >= 8 ? c.slice(4, 8) : c.slice(0, 4);
+  if (!avisouCaixa.has(forma)) { avisouCaixa.add(forma); console.warn(`[duelo] ${forma} fora de dados/jogo/pets-caixa.json: caixa padrão (rode scripts/medir-pets-caixa.js)`); }
+  return ehFormaAdulta(forma) ? CAIXA_PADRAO.adulto : CAIXA_PADRAO.filhote;
 }
-// 🦄 PROMPT-225: o maior pet da batalha (pelo desenho, a altura da tabela do mapa) fica com 70% do tamanho que o unicórnio adulto
-// tinha aqui (a conta de antes, só com ele); os outros diminuem pelo mesmo fator (a proporção do PROMPT-224 continua). Nunca cresce.
-const BT_REF_MAIOR = 'unicornio_adulto', BT_MAIOR = 0.7;
+// o topo mais alto do desenho em qualquer pose (sem os bustos), na escala do quadro normal (o quadro alto sai negativo)
+const topoPet = (forma) => Math.min(...Object.entries(tabelaCaixa(forma)?.a || {}).filter(([a]) => !a.startsWith('busto')).map(([, c]) => c[2]), caixaPet(forma, 'sentado_girando')[2]);
+const pePet = (forma, anim = 'sentado_girando') => caixaPet(forma, anim)[3];   // a base do desenho (os pés) no quadro
+function escalaArena() {
+  if (ESCALA_ARENA) return ESCALA_ARENA;
+  let e = Infinity, maior = null;
+  for (const f of Object.keys(PETS_CAIXA || {})) {
+    if (!temAnim(f, 'sentado_girando')) continue;
+    const v = (TOPO_ARENA - CHAO_ARENA) / (altImagemPet(f) * (pePet(f) - topoPet(f)));
+    if (v < e) { e = v; maior = f; }
+  }
+  if (!Number.isFinite(e)) return (TOPO_ARENA - CHAO_ARENA) / (altImagemPet('elefante_adulto') * 1.25);   // sem a tabela (não guarda)
+  ESCALA_ARENA = e; MAIOR_ARENA = maior;
+  return e;
+}
+// altura da IMAGEM do pet em fração da altura da arena (a mesma em todas as telas e poses)
+const altDueloFrac = (forma) => altImagemPet(forma) * escalaArena();
+// onde fica a base da imagem para os pés pisarem no chão (fração da arena): a base do quadro fica abaixo dos pés
+const baseDueloFrac = (forma, anim, chao = CHAO_ARENA) => chao - (1 - pePet(forma, anim)) * altDueloFrac(forma);
+// cada tela usa a mesma conta (a tabela do console confere que dá o mesmo número em todas)
+const TELAS_DUELO = {
+  batalha: (f) => altDueloFrac(f), torre: (f) => altDueloFrac(f), colegas: (f) => altDueloFrac(f),
+  ginasio: (f) => altDueloFrac(f), revisao: (f) => altDueloFrac(f),
+};
+// corpos centrados em ~27% e ~73% da largura; se encostarem, afastam até a margem (nunca diminuem). x em px; c = caixa do desenho
+function posicionarDupla(W, E, D) {
+  const m = 0.03 * W, gap = 0.04 * W;
+  let e0 = Math.max(m, 0.27 * W - E.bw / 2), d1 = Math.min(W - m, 0.73 * W + D.bw / 2);
+  let sobra = e0 + E.bw + gap - (d1 - D.bw);
+  if (sobra > 0) {
+    const a = Math.min(sobra / 2, Math.max(0, e0 - m)); e0 -= a; sobra -= a;
+    const b = Math.min(sobra, Math.max(0, W - m - d1)); d1 += b; sobra -= b;
+    e0 -= Math.min(sobra, Math.max(0, e0 - m));
+  }
+  return [e0 - E.c[0] * E.w, d1 + (1 - D.c[1]) * D.w];   // a borda esquerda da imagem de E e a direita da de D
+}
+// todas as formas de pet do jogo: o filhote, o adulto e as cores de cada um
+function formasDosPets() {
+  const out = [];
+  for (const pet of PETS) {
+    const ad = formaAdulta(pet);
+    for (const f of [pet, ...coresDoPet(pet).map(c => formaComCor(pet, c))]) if (!out.includes(f)) out.push(f);
+    if (ad) for (const f of [ad, ...coresDoPet(pet).map(c => formaComCor(ad, c))]) if (!out.includes(f)) out.push(f);
+    if (aceitaCor(pet)) for (const c of Object.keys(coresDragao())) for (const f of [formaComCor(pet, c), ad && formaComCor(ad, c)]) if (f && !out.includes(f)) out.push(f);
+  }
+  return out.filter(f => temAnim(f, 'sentado_girando'));
+}
+// 🔎 console: a altura de cada pet em cada tela de duelo (% da altura da arena) — tem que dar o mesmo número em todas
+window.tabelaTamanhosDuelo = () => {
+  const pct = (v) => +(100 * v).toFixed(2);
+  const linhas = formasDosPets().map((f) => {
+    const t = Object.fromEntries(Object.entries(TELAS_DUELO).map(([k, fn]) => [k, pct(fn(f))]));
+    const vs = Object.values(t);
+    return { forma: f, ...t, iguais: vs.every(v => v === vs[0]) ? '✔' : '✘', 'desenho sentado %': pct(altDueloFrac(f) * sentadoNoQuadro(f)),
+      'px (arena 300)': Math.round(altDueloFrac(f) * 300), 'equipe % caixa': Math.round(100 * Math.max(MIN_DEQ, Math.min(1, altPet(f) / altPet(maiorDeq || 'elefante_adulto')))) };
+  });
+  console.log(`ESCALA_ARENA = ${escalaArena().toFixed(5)} (o maior: ${MAIOR_ARENA}) · pés a ${CHAO_ARENA * 100}% · topo até ${TOPO_ARENA * 100}% · altura = % da arena`);
+  console.table(linhas);
+  return linhas;
+};
+// 🧪 ?teste=pets-arena (só a conta da professora / modo teste): a arena do duelo com todos os pets lado a lado, na escala da arena
+const POSES_TESTE = {
+  parado: (f) => animParadoBt(f),
+  ataque: (f) => ['ataque_direita', 'ataque', 'ataque_fogo', 'ataque_arcoiris', 'rugido', 'bravo'].find(a => temAnim(f, a)) || 'sentado_girando',
+  apanhando: (f) => ['apanhou', 'apanhando', 'assustado', 'triste_fome', 'confuso', 'bravo'].find(a => temAnim(f, a)) || 'sentado_girando',
+  vitoria: (f) => ['orgulhoso', 'feliz', 'animado'].find(a => temAnim(f, a)) || 'sentado_girando',
+};
+function abrirTestePetsArena() {
+  document.getElementById('teste-pets-arena')?.remove();
+  const el = document.createElement('div');
+  el.id = 'teste-pets-arena';
+  el.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0d0f1a;color:#fff;display:flex;flex-direction:column;font:13px Inter,sans-serif';
+  el.innerHTML = `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 10px;background:#15102a">
+      <b style="font:700 16px Rajdhani,sans-serif;margin-right:6px">⚔️ Pets na arena (PROMPT-280)</b>
+      ${Object.keys(POSES_TESTE).map(k => `<button data-pose="${k}" style="padding:5px 10px;border-radius:8px;border:1px solid #7c5cfc;background:#1b1b36;color:#fff;cursor:pointer">${k}</button>`).join('')}
+      <label style="margin-left:6px"><input type="checkbox" data-cores/> com as cores</label>
+      <span data-info style="color:#9ca3af;margin-left:auto"></span>
+      <button data-fechar style="padding:5px 10px;border-radius:8px;border:none;background:#ff7b2e;color:#fff;cursor:pointer">✕ Fechar</button></div>
+    <div data-rolo style="flex:1;overflow:auto;padding:8px"><div data-arena style="position:relative;height:min(62dvh,520px);border-radius:14px;
+      background:#2d4a2a url(${IMG}/batalha/arena.webp) left 62%/auto 100% repeat-x"></div></div>`;
+  document.body.appendChild(el);
+  const arena = el.querySelector('[data-arena]');
+  let pose = 'parado', timer = 0;
+  const desenhar = () => {
+    clearInterval(timer);
+    const H = arena.clientHeight, gap = 18;
+    const fs = el.querySelector('[data-cores]').checked ? formasDosPets() : formasDosPets().filter(f => !petDaCor(f) && !adultoDaCor(f) && formaDeTamanho(f) === f);
+    let x = gap, html = '';
+    const itens = fs.map((f) => {
+      const a = POSES_TESTE[pose](f), [qw, qh] = tamanhoQuadro(f), h = altDueloFrac(f) * H, w = h * qw / qh;
+      const cs = Object.keys(POSES_TESTE).map(k => caixaPet(f, POSES_TESTE[k](f))), c = [Math.min(...cs.map(x => x[0])), Math.max(...cs.map(x => x[1]))];   // espaço para a pose mais larga
+      const left = x - c[0] * w; x += (c[1] - c[0]) * w + gap;
+      return { f, a, h, w, left, base: baseDueloFrac(f, animParadoBt(f)) * H, mid: left + (c[0] + c[1]) / 2 * w, qr: qh / qw };
+    });
+    arena.style.width = Math.max(x, el.clientWidth - 16) + 'px';
+    for (const it of itens) {
+      html += `<div style="position:absolute;left:${it.left.toFixed(1)}px;bottom:${it.base.toFixed(1)}px;width:${it.w.toFixed(1)}px;height:${it.h.toFixed(1)}px" data-f="${it.f}">
+        <img data-a="${it.a}" style="position:absolute;left:0;bottom:0;width:100%;height:100%;image-rendering:auto" src="${quadrosDe(it.f, it.a)[0]}" alt=""/></div>
+        <div style="position:absolute;left:${(it.mid - 60).toFixed(1)}px;width:120px;bottom:2px;text-align:center;font-size:10px;line-height:1.15;text-shadow:0 1px 2px #000">
+        <b>${esc(it.f)}</b><br>${(100 * altDueloFrac(it.f)).toFixed(1)}% · ${Math.round(it.h)} px</div>`;
+    }
+    arena.innerHTML = html;
+    // o quadro mais alto que o normal (o ataque do elefante adulto) fica com a base no lugar e a mesma largura: a altura da caixa não muda
+    const ajustar = (img, qr) => { if (img.naturalWidth) img.style.height = (100 * (img.naturalHeight / img.naturalWidth) / qr).toFixed(2) + '%'; };
+    const imgs = [...arena.querySelectorAll('img')].map((img, i) => ({ img, it: itens[i], q: 0 }));
+    for (const o of imgs) o.img.onload = () => ajustar(o.img, o.it.qr);
+    timer = setInterval(() => { if (!el.isConnected) { clearInterval(timer); return; }
+      for (const o of imgs) { const fr = quadrosDe(o.it.f, o.it.a); o.q = (o.q + 1) % fr.length; if (fr.length > 1) o.img.src = fr[o.q]; } }, 260);
+    el.querySelector('[data-info]').textContent = `pose: ${pose} · ESCALA_ARENA ${escalaArena().toFixed(4)} (o maior: ${MAIOR_ARENA}) · ${itens.length} formas`;
+    for (const b of el.querySelectorAll('[data-pose]')) b.style.background = b.dataset.pose === pose ? '#7c5cfc' : '#1b1b36';
+  };
+  el.addEventListener('click', (e) => {
+    if (e.target.closest('[data-fechar]')) { clearInterval(timer); el.remove(); return; }
+    const b = e.target.closest('[data-pose]'); if (b) { pose = b.dataset.pose; desenhar(); }
+  });
+  el.querySelector('[data-cores]').onchange = desenhar;
+  requestAnimationFrame(desenhar);
+  return el;
+}
+window.testePetsArena = () => ((ehProfessora() || teste) ? abrirTestePetsArena() : null);
+
 // 🐘 quadros mais altos que o resto do pet (o ataque do elefante adulto: 700 em vez de 566), alinhados pela base (CSS .quadro-alto)
 const QUADRO_ALTO = { elefante_adulto: { anim: 'ataque_direita', q: 2, alt: 700 } };   // q = o quadro mais alto (2: ele empina)
 function ajustarLutadores() {
   if (!bt) return;
   const arena = $('bt-arena'), W = arena.clientWidth, H = arena.clientHeight;
   if (!W || !H) return;
-  const ref = altImagemPet('gato');
-  const caixa = (src, padrao) => {
-    if (src && !caixaDesenho.has(src)) medirDesenho(src).then((r) => { if (r && bt) ajustarLutadores(); });
-    return (src && caixaDesenho.get(src)) || padrao;
+  const lutador = (l, forma) => {
+    const [qw, qh] = tamanhoQuadro(forma), pose = animParadoBt(forma), cx = caixaPet(forma, pose);
+    const h = altDueloFrac(forma) * H, w = h * qw / qh;
+    const c = l === 'R' ? [1 - cx[1], 1 - cx[0]] : [cx[0], cx[1]];   // o lado R é desenhado espelhado
+    return { h, w, c, bw: (c[1] - c[0]) * w, base: baseDueloFrac(forma, pose) * H };
   };
-  const lutador = (l, forma, pose = animParadoBt(forma)) => {
-    const [qw, qh] = tamanhoQuadro(forma), adulto = ehFormaAdulta(forma);
-    let c = caixa(quadrosDe(forma, pose)[0], adulto ? { x0: 275 / 1219, x1: 918 / 1219, y0: 0.05 } : { x0: 0.1, x1: 0.9, y0: 0.1 });
-    const alto = QUADRO_ALTO[formaDeTamanho(forma)];
-    if (alto && temAnim(forma, alto.anim)) {   // 🐘 o topo do quadro alto, na escala do quadro normal (a base é a mesma)
-      const ca = caixa(quadrosDe(forma, alto.anim)[alto.q - 1], null);
-      if (ca) c = { ...c, y0: Math.min(c.y0, 1 - (1 - ca.y0) * alto.alt / qh) };
-    }
-    if (l === 'R') c = { ...c, x0: 1 - c.x1, x1: 1 - c.x0 };   // o lado R é desenhado espelhado
-    // 🐾 PROMPT-277: a proporção real entre os dois pets, com o maior no máximo 1,6 × a altura do personagem (PET_MAX_DUELO)
-    return { l, forma, prop: qw / qh, c, h1: BT_ALT_GATO * H * (altPetDuelo(forma) / sentadoNoQuadro(forma)) / ref, chao: (adulto ? 0.03 : 0.09) * H };
-  };
-  const m = 0.03 * W, gap = 0.04 * W;
-  // quanto um lutador cabe sozinho: o corpo na metade dele (com margem e o espaço do meio) e o topo do desenho dentro da arena
-  const cabe = (p) => Math.min((W / 2 - m - gap / 2) / ((p.c.x1 - p.c.x0) * p.h1 * p.prop), (0.98 * H - p.chao) / (p.h1 * (1 - p.c.y0)));
-  const L = [lutador('L', bt.forma), lutador('R', bt.t.pet)];
-  const u = lutador('L', BT_REF_MAIOR, 'parado_lado'), corpo = (p) => p.h1 * sentadoNoQuadro(p.forma);
-  const s = Math.min(1, BT_MAIOR * corpo(u) * Math.min(1, cabe(u)) / Math.max(...L.map(corpo)));
-  for (const p of L) p.h1 *= s;
-  // fator comum: o topo do desenho dentro da arena e os dois corpos lado a lado, com margem e um espaço entre eles
-  // cada corpo cabe na metade dele (área de cada lado), o mesmo k para os dois
-  const k = Math.min(1, ...L.map(cabe));
-  for (const p of L) { p.h = p.h1 * k; p.w = p.h * p.prop; p.bw = (p.c.x1 - p.c.x0) * p.w; }
-  const [E, D] = L;
-  // corpos centrados em 27% e 73% da arena; se encostarem, afastam (sem passar da margem)
-  let e0 = Math.max(m, 0.27 * W - E.bw / 2), d1 = Math.min(W - m, 0.73 * W + D.bw / 2);
-  let sobra = e0 + E.bw + gap - (d1 - D.bw);
-  if (sobra > 0) {
-    const a = Math.min(sobra / 2, e0 - m); e0 -= a; sobra -= a;
-    const b = Math.min(sobra, W - m - d1); d1 += b; sobra -= b;
-    e0 -= Math.min(sobra, e0 - m);
-  }
-  for (const [p, el, x] of [[E, $('bt-L'), e0 - E.c.x0 * E.w], [D, $('bt-R'), d1 + (1 - D.c.x1) * D.w]]) {
+  const E = lutador('L', bt.forma), D = lutador('R', bt.t.pet);
+  const [xE, xD] = posicionarDupla(W, E, D);
+  for (const [p, el, x] of [[E, $('bt-L'), xE], [D, $('bt-R'), xD]]) {
     el.style.height = p.h.toFixed(1) + 'px';
-    el.style.bottom = p.chao.toFixed(1) + 'px';
+    el.style.bottom = p.base.toFixed(1) + 'px';
     if (p === E) { el.style.left = x.toFixed(1) + 'px'; el.style.right = 'auto'; }
     else { el.style.right = (W - x).toFixed(1) + 'px'; el.style.left = 'auto'; }
   }
 }
-addEventListener('resize', () => { if (bt && !$('batalha').hidden) ajustarLutadores(); });
+// a arena muda de tamanho depois de aparecer (o resto da tela termina o layout) e ao girar o celular: recalcula antes de pintar
+// (ResizeObserver roda antes do quadro ser desenhado: o pet nunca aparece num tamanho e depois em outro)
+let roArena = null;
+function vigiarArenas() {
+  if (roArena) return;
+  roArena = new ResizeObserver((es) => {
+    for (const e of es) {
+      if (e.target.id === 'bt-arena' && bt && !$('batalha').hidden) ajustarLutadores();
+      if (e.target.id === 'dl-arena' && duelo && !e.target.hidden) ajustarPetsDuelo();
+    }
+  });
+  for (const id of ['bt-arena', 'dl-arena']) if ($(id)) roArena.observe($(id));
+}
 
 // ⚔️ tTorre (PROMPT-273): o treinador da torre (treinadorDueloTorre), sem fome, descanso nem nível de desafio; o tempo é o da torre
 function iniciarBatalha(id, origem = 'lista', tTorre = null) {
@@ -17000,19 +17114,17 @@ function iniciarBatalha(id, origem = 'lista', tTorre = null) {
   soltarJoystick();
   pararFalaPet();
   preCarregarPet(bt.forma); preCarregarPet(t.pet);
-  // adulto: quadro mais largo (asas) e imagem maior; mesma vida e dano, muda só o visual
+  // adulto: quadro mais largo (asas); mesma vida e dano, muda só o visual. O tamanho: ajustarLutadores (PROMPT-280)
   const fL = $('bt-L'), [qw, qh] = tamanhoQuadro(bt.forma), adulto = ehFormaAdulta(bt.forma);
   fL.style.setProperty('--pet-quadro', `${qw} / ${qh}`);
-  fL.style.setProperty('--cresce', fatorForma(bt.pet, bt.forma));
-  fL.style.setProperty('--rel', relDuelo(bt.forma));   // adulto: o maior que couber na arena (CSS, PROMPT-81)
   fL.classList.toggle('adulto', adulto);
   fL.querySelector('.jr-fala-vitoria')?.remove();   // balão da comemoração da batalha anterior
   const fR = $('bt-R'), formaR = t.pet, [qwR, qhR] = tamanhoQuadro(formaR);   // o pet do treinador (hoje sempre filhote; adulto teria o mesmo cuidado)
   fR.style.setProperty('--pet-quadro', `${qwR} / ${qhR}`);
-  fR.style.setProperty('--cresce', ehFormaAdulta(formaR) ? 1 : tamVisual(formaR));   // a capivara do treinador também maior
   fR.classList.toggle('adulto', ehFormaAdulta(formaR));
   $('batalha').hidden = false;
-  ajustarLutadores();   // ⚔️ PROMPT-224: os dois pets na proporção do mapa
+  vigiarArenas();
+  ajustarLutadores();   // ⚔️ PROMPT-280: a regra única dos duelos
   $('bt-nomeL').innerHTML = `${esc(nomeAluno())}<small>· ${esc(nomePet(bt.pet))}</small>`;
   aplicarVisualPet($('bt-imgL'), bt.pet);
   aplicarTinta($('bt-imgR'), t.tinta);
@@ -18988,6 +19100,21 @@ function montarTelaDeq() {
 }
 const nomeMembroDeq = (s, u) => s?.membros?.[u]?.nome || nomeAlunoEq(u);
 const imgPetDeq = (forma) => quadrosDe(forma, 'andar_direita')[0] || srcIcone(forma) || '';
+// ⚔️ PROMPT-280: na caixa do cartão, a ordem de tamanho entre os pets: o maior pet do jogo (altPet) ocupa a caixa inteira e
+// nenhum fica com menos de 55% dela — altura do desenho mostrado = max(0,55; altPet / altPet do maior) × caixa.
+// Os pés na base da caixa, o corpo no meio; um corpo mais largo que a caixa alarga a caixa (nunca diminui o pet).
+const MIN_DEQ = 0.55;
+let maiorDeq = null;
+function attrPetDeq(forma, anim, espelho = false) {
+  if (!forma || !temAnim(forma, 'sentado_girando')) return '';
+  if (!maiorDeq) { const fs = Object.keys(PETS_CAIXA || {}).filter(f => temAnim(f, 'sentado_girando')); maiorDeq = fs.reduce((a, f) => (altPet(f) > altPet(a) ? f : a), fs[0] || forma); }
+  const c = caixaPet(forma, anim, true), [qw, qh] = tamanhoQuadro(forma);   // a imagem do cartão é o 1º quadro
+  const r = Math.max(MIN_DEQ, Math.min(1, altPet(forma) / altPet(maiorDeq)));
+  const hi = r / (c[3] - c[2]);   // o desenho que aparece (a caixa dele no quadro) com r × a altura da caixa
+  const mx = (c[0] + c[1]) / 2, asp = qw / qh;
+  const v = { hi, asp, mx: espelho ? 1 - mx : mx, b: -(1 - c[3]) * hi, wb: Math.max(1, hi * asp * (c[1] - c[0])) };
+  return ` style="${Object.entries(v).map(([k, n]) => `--${k}:${n.toFixed(3)}`).join(';')}"`;
+}
 function renderDeq() {
   const s = deq?.sala, el = $('deq');
   if (!s || !el) return;
@@ -19019,7 +19146,7 @@ function renderLadosDeq(s) {
   el.querySelector('.deq-eq').innerHTML = us.map(u => {
     const m = s.membros[u], fora = L.fora?.[u], hp = Math.max(0, Number(L.hp[u]) || 0);
     return `<div class="deq-pet${fora ? ' fora ' + fora : ''}${u === sessao.uid ? ' eu' : ''}" data-u="${esc(u)}">
-      <img class="deq-pet-img" src="${esc(imgPetDeq(m.forma))}" alt="" draggable="false" data-tinta="${esc(m.tinta || '')}"/>
+      <span class="deq-pet-cx"${attrPetDeq(m.forma, 'andar_direita')}><img class="deq-pet-img" src="${esc(imgPetDeq(m.forma))}" alt="" draggable="false" data-tinta="${esc(m.tinta || '')}"/></span>
       <div class="deq-pet-info"><b>${esc(nomeMembroDeq(s, u))}</b><small>${esc(m.pet_nome || NOME_PET[m.pet] || '')}</small>
       <div class="deq-hp"><i style="width:${pct(hp, L.max[u])}%"></i></div><small class="deq-hp-n">${fora === 'saiu' ? 'saiu' : fora ? 'desmaiou 💫' : `${hp} / ${L.max[u]}`}</small></div></div>`;
   }).join('');
@@ -19030,7 +19157,7 @@ function renderLadosDeq(s) {
   const bonus = Math.round(((fatorDeq(L.n) - 1) * 100));
   el.querySelector('.deq-tr').innerHTML = `<div class="deq-pet deq-treinador" data-u="T">
       ${busto ? `<img class="deq-busto" src="${esc(busto)}" alt="" draggable="false"/>` : ''}
-      <img class="deq-pet-img deq-espelho${s.tipo === 'torre' ? classeEstilo(A.estilo) : ''}" src="${esc(s.tipo === 'torre' ? urlPetTorre(pet) : imgPetDeq(pet))}" alt="" draggable="false"/>
+      <span class="deq-pet-cx"${attrPetDeq(pet, s.tipo === 'torre' ? 'sentado_girando' : 'andar_direita', true)}><img class="deq-pet-img deq-espelho${s.tipo === 'torre' ? classeEstilo(A.estilo) : ''}" src="${esc(s.tipo === 'torre' ? urlPetTorre(pet) : imgPetDeq(pet))}" alt="" draggable="false"/></span>
       <div class="deq-pet-info"><b>${esc(nome)}</b><small>${esc(NOME_PET[pet] || '')}${bonus ? ` · <span class="deq-bonus">+${bonus}%</span>` : ''}</small>
       <div class="deq-hp"><i style="width:${pct(Math.max(0, L.hp.T), L.max.T)}%"></i></div><small class="deq-hp-n">${Math.max(0, L.hp.T)} / ${L.max.T}</small></div></div>`;
   if (s.tipo === 'mapa' && tM?.tinta) aplicarTinta(el.querySelector('.deq-tr .deq-pet-img'), tM.tinta);
@@ -19963,7 +20090,7 @@ function registrarAjuda(q, tipo) {
   if (!pg.dificil) gravar({ [`respostas/${q.id}/ajuda`]: tipo });   // ⭐ o Difícil não entra no painel
 }
 
-const ARENA_PERS = 60, ARENA_TOPO_PET = 90;   // % da altura da arena do ginásio: o corpo do personagem; o alto do pet (pés a 7%)
+const ARENA_PERS = 60, ARENA_CHAO = 7;   // % da altura da arena do ginásio: o corpo do personagem; os pés
 function montarArena() {
   const rev = semAdversario();
   pg.status = {};   // posição da pergunta → 'certa' (de primeira) | 'errada'
@@ -19974,18 +20101,17 @@ function montarArena() {
   document.querySelector('.jr-arena-sombra.pet').hidden = !pet;
   pgPet = null;
   const forma = pet && formaDe(pet);
-  $('perg-pet').style.setProperty('--forma', fatorDuelo(pet, forma));   // adulto na revisão: imagem maior (quadro com asas), +30% (PROMPT-80)
-  // 🐾 PROMPT-277: no ginásio o pet fica na proporção do mapa com o personagem (ALT_PET: o adulto × o filhote; o corpo do personagem
-  // ocupa 60% da altura da arena = 55 da tabela), até 1,6 × o personagem e sem passar do alto da arena. Mais alto que o personagem:
-  // fica atrás dele (z-index menor), um pouco para o lado, sem cobrir o rosto. (No lugar do "o maior que couber" do PROMPT-81.)
-  const arena = $('perg-arena'), prop = !rev && !!pet;
+  // ⚔️ PROMPT-280: o pet com a regra única dos duelos (ESCALA_ARENA, a mesma da batalha e do duelo entre colegas), no ginásio
+  // e na revisão da semana; os pés no chão do personagem (7%). Mais alto que o personagem (o corpo dele = 60% da arena): fica atrás
+  // dele (PROMPT-277), um pouco para o lado, sem cobrir o rosto.
+  const arena = $('perg-arena');
   arena.classList.remove('pet-adulto');
-  arena.style.setProperty('--rel', 1);
-  arena.classList.toggle('pet-prop', prop);
-  if (prop) {
-    const alt = Math.min(altPet(forma), PET_MAX_DUELO, ALT_BASE_PERSONAGEM * ARENA_TOPO_PET / ARENA_PERS), [qw, qh] = tamanhoQuadro(forma);
-    arena.classList.toggle('pet-atras', alt > ALT_BASE_PERSONAGEM * 1.02);
-    arena.style.setProperty('--pet-h', (ARENA_PERS * alt / ALT_BASE_PERSONAGEM / sentadoNoQuadro(forma)).toFixed(2));
+  arena.classList.toggle('pet-prop', !!pet);
+  if (pet) {
+    const h = TELAS_DUELO[rev ? 'revisao' : 'ginasio'](forma), [qw, qh] = tamanhoQuadro(forma);
+    arena.classList.toggle('pet-atras', !rev && h * sentadoNoQuadro(forma) * 100 > ARENA_PERS * 1.02);
+    arena.style.setProperty('--pet-h', (100 * h).toFixed(2));
+    arena.style.setProperty('--pet-b', (100 * baseDueloFrac(forma, 'sentado_girando', ARENA_CHAO / 100)).toFixed(2));
     arena.style.setProperty('--pet-larg', (qw / qh).toFixed(3));
   } else arena.classList.remove('pet-atras');
   if (pet) {
