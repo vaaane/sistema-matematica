@@ -3,7 +3,7 @@
 
 import { db } from "./firebase-config.js";
 import { ref, get, set, update, remove, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { BIMESTRES } from "./constants.js";
+import { BIMESTRES, aulasNoDia, dentroDoAtestado, normalizarAtestados } from "./constants.js";
 import { carregarBibliotecaMapa, resolverAula } from "./biblioteca.js";
 import { isModoTeste } from "./auth.js";
 import { notaJogoRevisao } from "./jogo-revisao/nota.js";
@@ -80,6 +80,8 @@ export const CADERNO_EXTRA = { key:"cadExtra", label:"Caderno Extra", valor:0.5,
 export const BONUS_CADERNO_VISTOS = { key:"bonusCadernoVistos", label:"Bônus caderno", valor:0.5, limiarPct:90 };
 // Ponto extra fixo para TODOS os alunos do bimestre (flag bonusFixo no bonusConfig).
 // 3º bim: +1,0 para todos (06/10/2026). Entra junto com os demais bônus, depois do teto de 10.
+// 4º bim: +1,0 para todos, EXCETO quem tiver mais de 50% de faltas nas aulas do bimestre (26/11/2026) —
+// bonusFixoMaxFaltasPct no bonusConfig; a conta das faltas é buscarFaltasTurma (abaixo) e a regra é bonusFixoAtivo.
 export const BONUS_FIXO = { key:"bonusFixo", label:"Ponto extra do bimestre", valor:1 };
 // Caderno completo (4º bim): mesmo % de vistos feitos do Bônus caderno acima,
 // mas ≥ 80% dá +2,0. Chave nova — o Bônus caderno do 3º continua intacto.
@@ -130,7 +132,9 @@ export function campoDiferido(key) { return camposDiferidos().has(key); }
 export const BONUS_CONFIG_POR_BIMESTRE = {
   "3": { autoExtras: EXTRAS_JOGOS_ANTIGOS, cadExtra: false, rank: false, nivelPerfil: false, bonusCadernoVistos: true, bonusFixo: true },
   // 4º bim: nova pontuação dos jogos; sem o +0,5 (≥90%); Caderno completo (≥80% → +2,0) e Jogo de Revisão (0–10).
-  "4": { autoExtras: EXTRAS_JOGOS_B4,      cadExtra: false, rank: false, nivelPerfil: false, bonusCadernoVistos: false, cadernoCompleto: true, revisao: true },
+  // Ponto extra +1,0 para todos, exceto faltas > 50% das aulas do 4º bim (exatamente 50% ainda ganha).
+  "4": { autoExtras: EXTRAS_JOGOS_B4,      cadExtra: false, rank: false, nivelPerfil: false, bonusCadernoVistos: false, cadernoCompleto: true, revisao: true,
+         bonusFixo: true, bonusFixoMaxFaltasPct: 50 },
 };
 export function bonusConfig() {
   const cfg = BONUS_CONFIG_POR_BIMESTRE[BIMESTRE];
@@ -299,7 +303,7 @@ export function calcularBonus(progresso, registro) {
   }, 0);
   const bCadExtra  = (cfg.cadExtra && cadernoExtraAtivo(registro)) ? CADERNO_EXTRA.valor : 0;
   const bBonusCad  = (cfg.bonusCadernoVistos && bonusCadernoVistosAtivo(progresso?.pctCaderno)) ? BONUS_CADERNO_VISTOS.valor : 0;
-  const bFixo      = cfg.bonusFixo ? BONUS_FIXO.valor : 0;
+  const bFixo      = bonusFixoAtivo(progresso) ? BONUS_FIXO.valor : 0;
   const bRankAtiv4 = cfg.rank ? (progresso?.rankAtiv4Bonus ?? 0) : 0;
   const bNivelPerf = cfg.nivelPerfil ? EXTRA_NIVEL_PERFIL.calcular(progresso?.nivelPerfil ?? 0) : 0;
   const bCadCompl  = (cfg.cadernoCompleto && cadernoCompletoAtivo(progresso?.pctCaderno)) ? CADERNO_COMPLETO.valor : 0;
@@ -436,6 +440,53 @@ export async function buscarPctCaderno(turma, nome) {
     return Math.round((feitos / nVistos) * 100);
   } catch (e) { console.error("Falha ao calcular % Caderno:", e); return null; }
 }
+// ── Faltas do bimestre (4º bim: ponto extra só para quem faltou ≤ 50% das aulas) ──
+// Contagem por AULAS (dia de aula dupla = 2), igual ao professor/acompanhamento_aluno.html:
+//   chamada/{turma}/{bim} = { "YYYY-MM-DD": { aluno: true | "falta" | "atraso" | … } }
+//   falta = true ou "falta" (o estadoCham de lá); atraso NÃO conta; dia dentro de atestado NÃO conta.
+//   base (100%) = Σ aulasNoDia(turma, d) || 1 em cada data registrada na chamada da turma.
+// Lê a chamada e os atestados da turma uma vez só. Devolve { [nome]: { faltas, base, pct } } (pct 0–100, sem arredondar;
+// base 0 = sem chamada → pct null). Falha na leitura → {} (ninguém perde o ponto por erro de rede).
+export async function buscarFaltasTurma(turma, nomes = []) {
+  try {
+    const [sC, sA] = await Promise.all([
+      get(ref(db, `chamada/${turma}/${BIMESTRE}`)),
+      get(ref(db, `atestados/${turma}`)),
+    ]);
+    const chamada   = sC.exists() ? (sC.val() || {}) : {};
+    const atestados = normalizarAtestados(sA.exists() ? sA.val() : {});
+    const datas = Object.keys(chamada);
+    const aulas = Object.fromEntries(datas.map(d => [d, aulasNoDia(turma, d) || 1]));
+    const base  = datas.reduce((s, d) => s + aulas[d], 0);
+    const out = {};
+    const todos = new Set([...nomes, ...datas.flatMap(d => Object.keys(chamada[d] || {}))]);
+    todos.forEach(nome => {
+      let faltas = 0;
+      datas.forEach(d => {
+        const v = (chamada[d] || {})[nome];
+        if ((v === true || v === "falta") && !dentroDoAtestado(d, atestados[nome] || [])) faltas += aulas[d];
+      });
+      out[nome] = { faltas, base, pct: base ? (faltas / base) * 100 : null };
+    });
+    return out;
+  } catch (e) { console.error("Falha ao calcular faltas:", e); return {}; }
+}
+export async function buscarPctFaltas(turma, nome) {
+  return (await buscarFaltasTurma(turma, [nome]))[nome] || null;
+}
+// O ponto extra do bimestre vale para este aluno? progresso.faltasAulas / baseAulas / pctFaltas vêm de buscarFaltasTurma
+// (ou da foto do bimestre fechado). Sem limite de faltas no bimestre (3º) ou sem chamada → ganha. Exatamente no limite → ganha.
+export function bonusFixoAtivo(progresso, cfg = bonusConfig()) {
+  if (!cfg?.bonusFixo) return false;
+  const max = cfg.bonusFixoMaxFaltasPct;
+  if (max == null) return true;
+  const f = progresso?.faltasAulas, b = progresso?.baseAulas;
+  if (b > 0 && f != null) return f * 100 <= max * b;     // em inteiros: sem erro de arredondamento no 50% exato
+  const pct = progresso?.pctFaltas;
+  return pct == null || pct <= max;
+}
+export const fmtPctFaltas = (p) => (p == null ? "—" : `${Math.round(p)}%`);
+
 export function bonusCadernoVistosAtivo(pct) {
   return pct != null && pct >= BONUS_CADERNO_VISTOS.limiarPct;
 }
@@ -658,12 +709,14 @@ async function montarBoletimDoBimestre(turma, nome, opcoes) {
     querer("comportamento") ? buscarConselheiro(turma, nome, 2)   : Promise.resolve(null),
     cfgB.revisao            ? buscarNotaRevisao(turma, nome)      : Promise.resolve(null),
   ]);
+  const faltasInfo = cfgB.bonusFixo && cfgB.bonusFixoMaxFaltasPct != null ? await buscarPctFaltas(turma, nome) : null;
 
   const ativ4Info = ativ4Map[nome] || { fez:false, posicao:0, bonusRank:0 };
   progresso.rankAtiv4Bonus = ativ4Info.bonusRank;
   progresso.nivelPerfil    = nivelPerfil;
   progresso.pctCaderno     = pctCadernoRaw;
   progresso.notaRevisao    = notaRevRaw;
+  if (faltasInfo) { progresso.faltasAulas = faltasInfo.faltas; progresso.baseAulas = faltasInfo.base; progresso.pctFaltas = faltasInfo.pct; }
 
   // Ativ.4 e Triângulos: null = não participou/nunca jogou → conta como 0
   let ativ4Val      = ativ4Info.fez ? 0.5 : null;
@@ -701,6 +754,7 @@ async function montarBoletimDoBimestre(turma, nome, opcoes) {
     if (foto.cadernoB4     !== undefined) cadB4Val       = foto.cadernoB4;
     if (foto.comportamento !== undefined) comportVal     = foto.comportamento;
     if (foto.notaRevisao   !== undefined) progresso.notaRevisao = foto.notaRevisao;
+    if (foto.baseAulas     !== undefined) { progresso.faltasAulas = foto.faltasAulas; progresso.baseAulas = foto.baseAulas; progresso.pctFaltas = foto.pctFaltas; }
   }
 
   // Campos diferidos: só liberados ao aluno quando o bimestre está congelado.

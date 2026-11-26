@@ -15,7 +15,7 @@ import { db } from "/js/firebase-config.js";
 import { ref, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {
   BIMESTRE, setBimestre, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS, BONUS_FIXO,
-  CADERNO_COMPLETO, cadernoCompletoAtivo, buscarNotaRevisao,
+  CADERNO_COMPLETO, cadernoCompletoAtivo, buscarNotaRevisao, buscarFaltasTurma, bonusFixoAtivo,
   EXTRA_NIVEL_PERFIL, NOME_ATIV5, NOME_ATIV1_EQ, NOME_ATIV2_RP, slugNome as slug,
   buscarProgressoTabuada, buscarAtiv4, buscarNivelPerfil,
   buscarCadernoVistos, buscarConselheiro, buscarPDGeometria, buscarPctCaderno, bonusCadernoVistosAtivo,
@@ -51,7 +51,7 @@ export function calcularBonus(ctx, turma, nome, registro) {
   }, 0);
   const bCadExtra    = (cfg.cadExtra && cadernoExtraAtivo(registro)) ? CADERNO_EXTRA.valor : 0;
   const bBonusCad    = (cfg.bonusCadernoVistos && bonusCadernoVistosAtivo(a.pctCaderno)) ? BONUS_CADERNO_VISTOS.valor : 0;
-  const bFixo        = cfg.bonusFixo ? BONUS_FIXO.valor : 0;
+  const bFixo        = bonusFixoAtivo(a, cfg) ? BONUS_FIXO.valor : 0;   // 4º bim: só com faltas ≤ 50%
   const bRankAtiv4   = cfg.rank ? (a.rankAtiv4Bonus ?? 0) : 0;
   const bNivelPerfil = cfg.nivelPerfil ? ((a.nivelPerfil || 0) * EXTRA_NIVEL_PERFIL.valorPorNivel) : 0;
   const bCadCompl    = (cfg.cadernoCompleto && cadernoCompletoAtivo(a.pctCaderno)) ? CADERNO_COMPLETO.valor : 0;
@@ -154,6 +154,8 @@ async function carregarAutoCadernoConselheiro(turma) {
   const ativos = new Set(camposAtivos().map(c => c.key));
   const cfg = bonusConfig() || {};
   const out = {};
+  // 4º bim: as faltas da turma (chamada + atestados), lidas uma vez só, para o ponto extra
+  const faltas = cfg.bonusFixo && cfg.bonusFixoMaxFaltasPct != null ? await buscarFaltasTurma(turma, alunos) : null;
   await Promise.all(alunos.map(async nome => {
     const [caderno, conselheiro, pd, pctCaderno, cadernoB4, comportamento, notaRevisao] = await Promise.all([
       buscarCadernoVistos(turma, nome),
@@ -165,6 +167,7 @@ async function carregarAutoCadernoConselheiro(turma) {
       cfg.revisao                 ? buscarNotaRevisao(turma, nome)      : Promise.resolve(null),
     ]);
     out[nome] = { caderno, conselheiro, pd, pctCaderno, cadernoB4, comportamento, notaRevisao };
+    if (faltas) { const f = faltas[nome] || { faltas: 0, base: 0, pct: null }; Object.assign(out[nome], { faltasAulas: f.faltas, baseAulas: f.base, pctFaltas: f.pct }); }
   }));
   return out;
 }
@@ -254,6 +257,8 @@ export async function carregarDadosBimestre(ctx, turma, primeiraVez) {
     r.cadernoB4     = cc.cadernoB4 ?? null;
     r.comportamento = cc.comportamento ?? null;
     autoDados[turma][nome].notaRevisao = cc.notaRevisao ?? null;
+    // 4º bim — faltas para o ponto extra (só quando o bimestre tem limite de faltas)
+    if (cc.baseAulas !== undefined) Object.assign(autoDados[turma][nome], { faltasAulas: cc.faltasAulas, baseAulas: cc.baseAulas, pctFaltas: cc.pctFaltas });
   });
 
   // Se congelado, sobrepõe os automáticos pela foto (trava o bônus)
@@ -268,6 +273,7 @@ export async function carregarDadosBimestre(ctx, turma, primeiraVez) {
       ad.rankAtiv4Bonus = f.rankAtiv4Bonus ?? 0;
       ad.pctCaderno     = f.pctCaderno     ?? null;
       if (f.notaRevisao !== undefined)   ad.notaRevisao  = f.notaRevisao;
+      if (f.baseAulas !== undefined)     Object.assign(ad, { faltasAulas: f.faltasAulas ?? 0, baseAulas: f.baseAulas, pctFaltas: f.pctFaltas ?? null });
       const r = dados[chave][nome];
       if (f.ativ4 !== undefined)         r.ativ4         = f.ativ4;
       if (f.triangulos !== undefined)    r.triangulos    = f.triangulos;

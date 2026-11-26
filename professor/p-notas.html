@@ -279,7 +279,7 @@ import { db } from "/js/firebase-config.js";
 import { ref, get, query, orderByChild, equalTo, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {
   BIMESTRE, setBimestre, CAMPOS_NOTA as CAMPOS, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS, BONUS_FIXO,
-  CADERNO_COMPLETO, EXTRA_REVISAO, cadernoCompletoAtivo, buscarNotaRevisao,
+  CADERNO_COMPLETO, EXTRA_REVISAO, cadernoCompletoAtivo, buscarNotaRevisao, bonusFixoAtivo, fmtPctFaltas,
   EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL, NOME_ATIV5, NOME_ATIV1_EQ, NOME_ATIV2_RP,
   makeUid, slugNome as slug, fmtNota as fmt,
   buscarProgressoTabuada, buscarAtiv4, buscarNivelPerfil,
@@ -328,7 +328,16 @@ const COLUNAS_EXTRAS_B4 = [
     valor: (a, auto) => somaChaves(auto, ["esc50", "esc100b", "esc150"]), titulo:(a) => `nível ${a.melhorEscalada || 0}` },
   { k:"revisao",  t:"Revisão",  max:`0 a ${EXTRA_REVISAO.max}`,
     valor: (a) => a.notaRevisao || 0,                                titulo:() => "nota do Jogo de Revisão (entra inteira)" },
+  // 4º bim: +1,0 para todos, exceto faltas > 50% das aulas (a conta e a regra em js/notas.js)
+  { k:"bonusFixo", t:"Ponto extra", max:"+1 (faltas ≤ 50%)",
+    valor: (a) => bonusFixoAtivo(a) ? BONUS_FIXO.valor : 0,
+    titulo:(a) => tituloFaltas(a) },
 ];
+function tituloFaltas(a) {
+  if (a?.baseAulas == null) return "faltas: calculando…";
+  if (!a.baseAulas) return "faltas: sem chamada no bimestre";
+  return `faltas: ${a.faltasAulas} de ${a.baseAulas} aulas (${fmtPctFaltas(a.pctFaltas)})`;
+}
 const calcularTotal = (nome, registro) => calcularTotalNF(CTX, turmaAtual, nome, registro);
 
 // ── Render ──────────────────────────────────────────────────
@@ -371,7 +380,7 @@ function renderCabecalho() {
         .map(e => `<span class="legenda-chip auto">🔄 ${e.label} <b>+${fmt(e.valor)}</b></span>`);
       if (cfg.cadExtra) chips.push(`<span class="legenda-chip auto">🔄 ${CADERNO_EXTRA.label} (Caderno &gt; ${fmt(CADERNO_EXTRA.limiar)}) <b>+${fmt(CADERNO_EXTRA.valor)}</b></span>`);
       if (cfg.bonusCadernoVistos) chips.push(`<span class="legenda-chip auto">🔄 ${BONUS_CADERNO_VISTOS.label} (≥ ${BONUS_CADERNO_VISTOS.limiarPct}% do caderno) <b>+${fmt(BONUS_CADERNO_VISTOS.valor)}</b></span>`);
-      if (cfg.bonusFixo) chips.push(`<span class="legenda-chip auto">🎁 ${BONUS_FIXO.label} (todos os alunos) <b>+${fmt(BONUS_FIXO.valor)}</b></span>`);
+      if (cfg.bonusFixo) chips.push(`<span class="legenda-chip auto">🎁 ${BONUS_FIXO.label} (${cfg.bonusFixoMaxFaltasPct != null ? `todos, exceto faltas &gt; ${cfg.bonusFixoMaxFaltasPct}%` : "todos os alunos"}) <b>+${fmt(BONUS_FIXO.valor)}</b></span>`);
       if (cfg.cadernoCompleto) chips.push(`<span class="legenda-chip auto">🔄 ${CADERNO_COMPLETO.label} (≥ ${CADERNO_COMPLETO.limiarPct}% dos vistos) <b>+${fmt(CADERNO_COMPLETO.valor)}</b></span>`);
       if (cfg.revisao) chips.push(`<span class="legenda-chip auto">🔄 ${EXTRA_REVISAO.label} <b>nota 0 a ${EXTRA_REVISAO.max}</b></span>`);
       leg.innerHTML = chips.join("");
@@ -391,7 +400,7 @@ function renderTabela() {
     const total = calcularTotal(nome, r);
     const bonus = calcularBonus(nome, r);
     const auto = extrasAutoAtivos(nome);
-    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + (bonusCadernoVistosAtivo(autoDados[turmaAtual]?.[nome]?.pctCaderno) ? 1 : 0) + (bonusConfig()?.bonusFixo ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
+    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + (bonusCadernoVistosAtivo(autoDados[turmaAtual]?.[nome]?.pctCaderno) ? 1 : 0) + (bonusFixoAtivo(autoDados[turmaAtual]?.[nome]) ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
     return `
       <tr data-aluno="${slug(nome)}">
         <td class="col-aluno" title="${nome}">${nome}</td>
@@ -451,7 +460,7 @@ function atualizarLinha(nome) {
   if (btn) {
     const auto = extrasAutoAtivos(nome);
     const bonus = calcularBonus(nome, r);
-    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + (bonusCadernoVistosAtivo(autoDados[turmaAtual]?.[nome]?.pctCaderno) ? 1 : 0) + (bonusConfig()?.bonusFixo ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
+    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + (bonusCadernoVistosAtivo(autoDados[turmaAtual]?.[nome]?.pctCaderno) ? 1 : 0) + (bonusFixoAtivo(autoDados[turmaAtual]?.[nome]) ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
     btn.classList.toggle("on", !!nExtras);
     btn.innerHTML = `🎁 ${nExtras ? `+${fmt(bonus)}` : "Extras"}`;
   }
@@ -530,11 +539,14 @@ function abrirExtras(slugNome) {
     </div>`;
   })() + (() => {
     if (!cfg.bonusFixo) return "";
+    const fxOn = bonusFixoAtivo(a);
+    const info = cfg.bonusFixoMaxFaltasPct == null ? "para todos os alunos"
+      : `faltas: ${fmtPctFaltas(a.pctFaltas)} (máx. ${cfg.bonusFixoMaxFaltasPct}%)${a.baseAulas ? ` · ${a.faltasAulas} de ${a.baseAulas} aulas` : ""}`;
     return `
     <div class="extra-row auto">
-      <span class="status-dot atingiu">✓</span>
-      <span class="lbl">${BONUS_FIXO.label}<br><span class="nivel-info">para todos os alunos</span></span>
-      <span class="val">+${fmt(BONUS_FIXO.valor)}</span>
+      <span class="status-dot ${fxOn ? "atingiu" : "faltando"}">${fxOn ? "✓" : "·"}</span>
+      <span class="lbl">${BONUS_FIXO.label}<br><span class="nivel-info">${info}</span></span>
+      <span class="val" style="${fxOn ? "" : "color:var(--text-muted)"}">${fxOn ? `+${fmt(BONUS_FIXO.valor)}` : "—"}</span>
     </div>`;
   })() + (() => {
     if (!cfg.rank) return "";
@@ -684,6 +696,11 @@ document.getElementById("btnCongelar").addEventListener("click", async () => {
           cadernoB4:     r.cadernoB4     ?? null,
           comportamento: r.comportamento ?? null,
           notaRevisao:   ad.notaRevisao  ?? null,
+        } : {}),
+        ...(bonusConfig()?.bonusFixoMaxFaltasPct != null && ad.baseAulas != null ? {
+          faltasAulas: ad.faltasAulas ?? 0,
+          baseAulas:   ad.baseAulas,
+          pctFaltas:   ad.pctFaltas ?? null,
         } : {}),
       };
     });

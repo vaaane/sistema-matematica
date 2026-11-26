@@ -202,7 +202,7 @@ import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/
 import {
   CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS, BONUS_FIXO, EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL,
   BIMESTRE, setBimestre, camposAtivos, bonusAtivo, bonusConfig, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas, campoPendente, campoDiferido,
-  bonusCadernoVistosAtivo, campoAuto, CADERNO_COMPLETO, EXTRA_REVISAO, cadernoCompletoAtivo, fixarBimestre,
+  bonusCadernoVistosAtivo, campoAuto, CADERNO_COMPLETO, EXTRA_REVISAO, cadernoCompletoAtivo, fixarBimestre, bonusFixoAtivo,
 } from "/js/notas.js";
 import { BIMESTRES, bimestreAtual } from "/js/constants.js";
 import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
@@ -445,9 +445,13 @@ function blocoExtrasB4(boletim, encerrado) {
     pct: Math.min(100, Math.round(nr / EXTRA_REVISAO.max * 100)), barLabel: `${fmt(nr)}/${EXTRA_REVISAO.max}`,
     pts: `+${fmt(nr)}`, sub: `de +${fmt(EXTRA_REVISAO.max)}` });
 
+  // Ponto extra do bimestre (4º: exceto faltas > 50%). Quem não tem direito não vê o cartão — sem motivo nem % de faltas.
+  const fixo = !bonusFixoAtivo(progresso, cfg) ? "" : card({ on: true, cor: "gold", icon: IC.estrela, titulo: BONUS_FIXO.label,
+    desc: "Conquistado neste bimestre", pct: null, pts: `+${fmt(BONUS_FIXO.valor)}`, sub: "conquistado" });
+
   return `
     <div class="sec-label">Extras do bimestre</div>
-    <div class="prog-list">${cadCompl}
+    <div class="prog-list">${fixo}${cadCompl}
       ${jogo("Tabuada", ["t50", "t100", "t150b"], "orange", IC.grid)}
       ${jogo("Tabuada Negativa", ["tneg50b", "tneg100", "tneg150b"], "purple", IC.negativo)}
       ${jogo("Escalada Algébrica", ["esc50", "esc100b", "esc150"], "cyan", IC.estrela)}
