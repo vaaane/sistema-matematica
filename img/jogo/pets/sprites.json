@@ -852,6 +852,35 @@
     "pets/morcego_adulto/dar_rosa_2.webp",
     "pets/morcego_adulto/dar_rosa_3.webp",
     "pets/morcego_adulto/dar_rosa_4.webp"
+   ],
+   "voando": [
+    "pets/morcego_adulto/voando_1.webp",
+    "pets/morcego_adulto/voando_2.webp",
+    "pets/morcego_adulto/voando_3.webp",
+    "pets/morcego_adulto/voando_4.webp"
+   ],
+   "voando_frente": [
+    "pets/morcego_adulto/voando_frente_1.webp",
+    "pets/morcego_adulto/voando_frente_2.webp",
+    "pets/morcego_adulto/voando_frente_3.webp",
+    "pets/morcego_adulto/voando_frente_4.webp"
+   ],
+   "voando_costas": [
+    "pets/morcego_adulto/voando_costas_1.webp",
+    "pets/morcego_adulto/voando_costas_2.webp",
+    "pets/morcego_adulto/voando_costas_3.webp",
+    "pets/morcego_adulto/voando_costas_4.webp"
+   ],
+   "triste_fome": [
+    "pets/morcego_adulto/triste_fome_1.webp",
+    "pets/morcego_adulto/triste_fome_2.webp"
+   ],
+   "zangado": [
+    "pets/morcego_adulto/zangado_1.webp",
+    "pets/morcego_adulto/zangado_2.webp",
+    "pets/morcego_adulto/zangado_3.webp",
+    "pets/morcego_adulto/zangado_4.webp",
+    "pets/morcego_adulto/zangado_5.webp"
    ]
   },
   "tigre_adulto": {
@@ -3183,6 +3212,13 @@
     ["bravo", 3, 220],
     ["bravo", 4, 350],
     ["feliz", 1, 400]
+   ],
+   "perdeu": [
+    ["zangado", 1, 700],
+    ["zangado", 2, 450],
+    ["zangado", 3, 450],
+    ["zangado", 4, 1200],
+    ["zangado", 5, 1000]
    ]
   },
   "elefante_adulto": {

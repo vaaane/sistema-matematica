@@ -15,8 +15,8 @@ let SPR = null;
 export async function carregarSprites() {
   if (!SPR) {
     const [j, cores] = await Promise.all([
-      fetch(BASE + 'pets/sprites.json?v=287').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228, 232, 233, 277, 279, 284, 285, 286, 287)
-      fetch(BASE + 'pets/sprites-pets-cores.json?v=287').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
+      fetch(BASE + 'pets/sprites.json?v=288').then(r => { if (!r.ok) throw new Error('sprites.json'); return r.json(); }),   // ?v=: trocar ao mudar os quadros (PROMPT-227, 228, 232, 233, 277, 279, 284, 285, 286, 287, 288)
+      fetch(BASE + 'pets/sprites-pets-cores.json?v=288').then(r => (r.ok ? r.json() : null)).catch(() => null),   // 🎨 sem ele: os pets sem cores
     ]);
     for (const [f, a] of Object.entries(cores?.pets || {})) if ((petDaCor(f) || adultoDaCor(f)) && !j.pets[f]) j.pets[f] = a;
     await conferirFormasNovas(j);   // 🦇 PROMPT-277: o morcego rosa e o adulto só valem quando as imagens chegarem
@@ -329,10 +329,12 @@ function ritmo(anim, n, forma = '') {
   if (/^elefante_adulto/.test(forma) && anim === 'dormindo') return { ms: 1200, loop: true };
   if (/^elefante_adulto/.test(forma) && anim === 'triste_fome') return { ms: 2000, loop: true };
   if (/^elefante_adulto/.test(forma) && anim === 'feliz') return { ms: 300, loop: false, vezes: 2 };   // 🐘 PROMPT-224: o feliz completo duas vezes (tocar no Meu Pet)
+  if (/^morcego_adulto/.test(forma) && anim === 'triste_fome') return { ms: 500, loop: true };   // 🦇 PROMPT-288: triste (2 quadros) mais devagar
   switch (anim) {
     case 'correndo': return { ms: /^morcego/.test(forma) ? 120 : 90, loop: true };   // 🦇 o morcego corre voando (8 quadros, PROMPT-176)
     case 'voando': return { ms: 120, loop: true };   // 🦇 o morcego batendo as asas, de lado (8 quadros em loop)
     case 'voando_frente': return { ms: 150, loop: true };   // 🦇 voando de frente, vindo na direção da tela
+    case 'voando_costas': return { ms: 120, loop: true };   // 🦇 voando de costas, subindo na tela (morcego adulto, PROMPT-288)
     case 'costas_parado': return { ms: 250, loop: true };
     case 'sentado_girando': return { ms: 400, loop: true };
     case 'sentado_2': return { ms: n === 1 ? 2000 : 300, loop: false };   // adulto: 1 quadro (sentado de lado), segura ~2 s
@@ -601,12 +603,14 @@ export class PetSeguidor {
       if (andando) {
         // 🦇 vindo para baixo (na direção da tela): o morcego voa de frente no lugar de andar_frente (PROMPT-176)
         const deFrente = dy > 0 && Math.abs(dy) > Math.abs(dx) && temAnim(this.forma, 'voando_frente');
+        const deCostasVoando = dy < 0 && Math.abs(dy) > Math.abs(dx) && temAnim(this.forma, 'voando_costas');   // 🦇 subindo: voa de costas (morcego adulto, PROMPT-288)
         if (deFrente) this.trocar('voando_frente');
+        else if (deCostasVoando) this.trocar('voando_costas');
         else if (dispara && Math.abs(dy) > Math.abs(dx)) this.trocar(dy > 0 ? 'andar_frente' : 'andar_costas');   // 🦄 corre de frente / de costas
         else if (longe || dispara) { this.trocar(temAnim(this.forma, 'voando') ? 'voando' : 'correndo'); this.espelhar = dx < 0; }   // correndo (e o voando do morcego) é virado para a direita
         else if (Math.abs(dx) >= Math.abs(dy)) this.trocar(dx > 0 ? 'andar_direita' : 'andar_esquerda');
         else this.trocar(this.andarVertical(dy > 0 ? 'andar_frente' : 'andar_costas'));
-        this.deCostas = this.anim === 'andar_costas';   // 🐘 PROMPT-224: qualquer outra direção tira o de costas
+        this.deCostas = this.anim === 'andar_costas' || this.anim === 'voando_costas';   // 🐘 PROMPT-224: qualquer outra direção tira o de costas (🦇 voando_costas também, PROMPT-288)
         this.proxOcioso = 6000 + Math.random() * 1000;   // parado há mais de ~6 s: a 1ª variação
         this.ocioso = false;
         this.esperaAcao = MS_ANTES_ACAO;
