@@ -1,5 +1,5 @@
 {
- "_nota": "PROMPT-269: notas do 1º e do 2º bimestre copiadas do diário oficial (Rendimento médio do estudante). Chave = nome do aluno como em ALUNOS_POR_TURMA. null = sem nota no bimestre (chegou depois). Alunos que trocaram de turma levam a nota da turma em que estavam (Dandara 8D→8H, Sandra 8G→8D, Pedro Riquelme 8H→8D). _excluir = contas de teste que não aparecem na nota final.",
+ "_nota": "PROMPT-269: notas do 1º e do 2º bimestre copiadas do diário oficial (Rendimento médio do estudante). Chave = nome do aluno como em ALUNOS_POR_TURMA. null = sem nota no bimestre (chegou depois). Alunos que trocaram de turma levam a nota da turma em que estavam (Dandara 8D→8H, Sandra 8G→8D, Pedro Riquelme 8H→8D). _excluir = contas de teste que não aparecem na nota final. PROMPT-288: extraFinal fixo para completar a Nota final até 20 de quem estava com mais de 19,5 em 27/11/2026.",
  "_excluir": {
   "8H": [
    "Ricardo"
@@ -134,7 +134,8 @@
   },
   "Jonathan": {
    "b1": 2.7,
-   "b2": 3.3
+   "b2": 3.3,
+   "extraFinal": 0.22
   },
   "Kauã": {
    "b1": 3.4,
@@ -142,7 +143,8 @@
   },
   "Lívia": {
    "b1": 3.9,
-   "b2": 5.35
+   "b2": 5.35,
+   "extraFinal": 0.31
   },
   "Luiz Felipe": {
    "b1": 4.1,
@@ -402,7 +404,8 @@
   },
   "Isabela": {
    "b1": 2.3,
-   "b2": 4.7
+   "b2": 4.7,
+   "extraFinal": 0.13
   },
   "Karlos": {
    "b1": 2.14,
@@ -597,7 +600,8 @@
   },
   "Samuel": {
    "b1": 5.2,
-   "b2": 5
+   "b2": 5,
+   "extraFinal": 0.21
   },
   "Sophia": {
    "b1": 2.44,
