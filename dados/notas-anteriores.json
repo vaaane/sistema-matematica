@@ -1,5 +1,5 @@
 {
- "_nota": "PROMPT-269: notas do 1º e do 2º bimestre copiadas do diário oficial (Rendimento médio do estudante). Chave = nome do aluno como em ALUNOS_POR_TURMA. null = sem nota no bimestre (chegou depois). Alunos que trocaram de turma levam a nota da turma em que estavam (Dandara 8D→8H, Sandra 8G→8D, Pedro Riquelme 8H→8D). _excluir = contas de teste que não aparecem na nota final. PROMPT-288: extraFinal fixo para completar a Nota final até 20 de quem estava com mais de 19,5 em 27/11/2026. PROMPT-289: +1,0 de extra para todos os alunos no extraFinal (27/11/2026).",
+ "_nota": "PROMPT-269: notas do 1º e do 2º bimestre copiadas do diário oficial (Rendimento médio do estudante). Chave = nome do aluno como em ALUNOS_POR_TURMA. null = sem nota no bimestre (chegou depois). Alunos que trocaram de turma levam a nota da turma em que estavam (Dandara 8D→8H, Sandra 8G→8D, Pedro Riquelme 8H→8D). _excluir = contas de teste que não aparecem na nota final. PROMPT-288: extraFinal fixo para completar a Nota final até 20 de quem estava com mais de 19,5 em 27/11/2026. PROMPT-289: +1,0 de extra para todos os alunos no extraFinal (27/11/2026). PROMPT-290: extraFinal completado até 20 para quem estava acima de 19 (Ana Julia, Miguel Henrique, Thalles Davi 8D; Kayla, Luana, Nathalia 8F; Helena 8G) (27/11/2026).",
  "_excluir": {
   "8H": [
    "Ricardo"
@@ -19,7 +19,7 @@
   "Ana Julia": {
    "b1": 3.65,
    "b2": 4.2,
-   "extraFinal": 1
+   "extraFinal": 1.15
   },
   "Arthur": {
    "b1": 9,
@@ -79,7 +79,7 @@
   "Miguel Henrique": {
    "b1": 1.2,
    "b2": 3.5,
-   "extraFinal": 1
+   "extraFinal": 1.18
   },
   "Miguel Nascimento": {
    "b1": 1.5,
@@ -104,7 +104,7 @@
   "Thalles Davi": {
    "b1": null,
    "b2": null,
-   "extraFinal": 1
+   "extraFinal": 1.5
   },
   "Pedro Riquelme": {
    "b1": 1.94,
@@ -368,12 +368,12 @@
   "Kayla": {
    "b1": 4.4,
    "b2": 4.3,
-   "extraFinal": 1
+   "extraFinal": 1.77
   },
   "Luana": {
    "b1": 1.9,
    "b2": 5,
-   "extraFinal": 1
+   "extraFinal": 1.66
   },
   "Maria Elisangela": {
    "b1": 8.5,
@@ -403,7 +403,7 @@
   "Nathalia": {
    "b1": 1.6,
    "b2": 4.35,
-   "extraFinal": 1
+   "extraFinal": 1.99
   },
   "Pedro Lucas": {
    "b1": 2.3,
@@ -495,7 +495,7 @@
   "Helena": {
    "b1": 6.3,
    "b2": 5.7,
-   "extraFinal": 1
+   "extraFinal": 1.82
   },
   "Isabela": {
    "b1": 2.3,
